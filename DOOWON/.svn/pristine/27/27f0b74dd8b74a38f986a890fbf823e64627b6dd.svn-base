@@ -1,0 +1,552 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>서류관리</title>
+  <script src="/pf/js/function.js"></script>
+  <script src="/pf/js/rpt/calculate.js" charset="UTF-8"></script>
+  <script src="/pf/js/rpt/calculateCalendar.js" charset="UTF-8"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.4/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+</head>
+<body class="flex flex-col max-h-fit">
+
+<main class="p-2 grow flex flex-col gap-2">
+  <form
+    class="w-full shrink-0 grid grid-rows-3 grid-cols-[auto_repeat(5,1fr)_auto_repeat(5,1fr)]
+    row-start-1 col-start-1 col-span-2 bg-white dark:bg-slate-800 shadow-sm rounded-lg
+    border border-slate-200 dark:border-slate-700 px-4 py-3 gap-1 z-1 text-base *:text-base
+    items-center">
+    <div class="row-start-1 col-span-6 col-end-13 flex flex-row gap-2 items-end justify-end">
+      <button 
+      	type="button"
+        onclick="fn_searchCalView()"
+        class="text-white bg-primary-700 hover:bg-secondary-800 border border-primary-700
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none
+        duration-300 row-start-1">
+        <i class="fa-regular fa-search mr-1"></i>
+       	 검색
+      </button>
+      <button
+      	type="button"
+      	onclick="fn_clearCalView()"
+        class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300">
+        <i class="fa-regular fa-times mr-1"></i>
+                 초기화
+      </button>
+    </div>
+    
+    <!-- 검색구분 -->
+    <label class="col-start-1 row-start-1 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+             검색구분
+    </label>
+    
+    <div
+      id="item-radio"
+      class="flex flex-row flex-wrap gap-4 col-start-2 col-span-5 row-start-1
+      items-center *:flex *:flex-row *:items-center *:gap-2 font-medium text-gray-900">
+      <label for="default-radio-2">
+        <input
+          id="default-radio-2"
+          type="radio"
+          value="02"
+          name="calculate_srch1"
+          checked
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+        >
+        <span>수입</span>
+      </label>
+      <label for="default-radio-3">
+        <input
+          id="default-radio-3"
+          type="radio"
+          value="03"
+          name="calculate_srch1"
+          onclick="handleRadioChange()"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+        >
+        <span>수출</span>
+      </label>
+    </div>
+    
+    <!-- 검색기간 -->
+    <label
+      class="col-start-1 row-start-2 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2"
+    >
+      등록일자
+    </label>
+    <select
+      id="calculate_day"
+      name="calculate_day"
+      class="row-start-2 col-start-2 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+      <option value="01" selected>신고일자</option>
+      <option value="02">수리일자</option>
+    </select>
+    <!-- Calendar -->
+    <div
+      date-rangepicker410
+      id="calculate_div1"
+      class="col-start-3 row-start-2 col-span-4 flex flex-wrap md:flex-nowrap items-center gap-1
+    ">
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor" viewBox="0 0 20 20">
+            <path
+                d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input name="calculate1_date" type="text" id="calculate_srch2"
+                class="text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 "
+                onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" onkeyUp="fn_dateInputForm($(this))" 
+				placeholder="yyyy-mm-dd" autocomplete="off" readonly>
+      </div>
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor" viewBox="0 0 20 20">
+            <path
+                d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input name="calculate2_date" type="text" id="calculate_srch3"
+                class="text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 "
+                onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" 
+				onkeyUp="fn_dateInputForm($(this))"
+				placeholder="yyyy-mm-dd" autocomplete="off" readonly>
+      </div>
+      <!-- Range Button -->
+
+    </div>
+
+    <div id="calculate_div1" class="col-start-7 row-start-2 col-span-4 flex items-center gap-1">
+      <button
+          type="button"
+          id="today-button"
+          onclick="fn_chgDate1()"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+      6개월
+      </button>
+      <button
+          type="button"
+          id="week-button"
+          onclick="fn_chgDate2()"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+        1년
+      </button>
+      <button
+          type="button"
+          id="last-month-button"
+          onclick="fn_chgDate3()"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+        3년
+      </button>
+      <button
+          type="button"
+          id="this-month-button"
+          onclick="fn_chgDate4()"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+        5년
+      </button>
+    </div>
+    <!-- 신고번호 -->
+    <label for="n2" class="row-start-3 col-start-1 flex items-center font-medium text-gray-900 pr-2">
+      	신고번호
+    </label>
+    <input
+      type="text"
+      id="calculate_srch6"
+      onkeyup="enterkey()"
+      class="row-start-3 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="신고번호를 입력해주세요."
+    >
+    <!-- B/L 번호 -->
+    <label for="n3" id="blNoLabel" class="row-start-3 col-start-7 flex items-center font-medium text-gray-900 px-2">
+      B/L 번호
+    </label>
+    <input
+      type="text"
+      id="calculate_srch7"
+      onkeyup="enterkey()"
+      class="row-start-3 col-start-8 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="B/L번호를 입력해주세요."
+    >
+    <!-- 공장코드 -->
+    <label for="n1" class="row-start-4 col-start-1 flex items-center font-medium text-gray-900 pr-2">공장코드 </label>
+    <select type="text" id="calculate_srch8"
+            class="row-start-4 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1">
+      <option value="">공장코드를 선택해주세요.</option>
+      <option value="1">공장코드1</option>
+      <option value="2">공장코드2</option>
+      <option value="3">공장코드3</option>
+    </select>
+    <!-- PO 번호 -->
+    <label for="n5" id="poNoLabel" class="row-start-4 col-start-7 flex items-center font-medium text-gray-900 px-2">
+      PO 번호
+    </label>
+    <input
+      type="text"
+      id="calculate_srch9"
+      onkeyup="enterkey()"
+      class="row-start-4 col-start-8 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="PO번호를 입력해주세요.">
+  </form>
+
+  <div class="flex items-center justify-between w-full shrink-0">
+    <div class="flex items-center gap-4">
+      <h2 class="shrink-0 flex items-center gap-1">
+        <i class="fa-duotone fa-feather text-primary-900"></i>
+        결과: <span id="calculateCnt">${totCnt}</span>
+      </h2>
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="download-button-docu h-9 text-white bg-primary-700 hover:bg-secondary-800 font-medium rounded px-2.5 py-2 text-base border border-primary-700 hover:border-secondary-400"
+      	onclick="fn_excelUploadPopUp()"
+      >
+        <i class="fa-regular fa-upload"></i>
+        Excel 업로드
+      </button>
+      <select 
+        id="calculatePageCnt"
+      	name="calculatePageCnt"
+      	class="w-36 h-9 text-gray bg-primary-100 hover:bg-primary-200 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded text-base px-2.5 py-1.5 text-center inline-flex items-center border-primary-500 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+        <option value="50" selected>ROWS [50]</option>
+        <option value="100">ROWS [100]</option>
+        <option value="200">ROWS [200]</option>
+        <option value="500">ROWS [500]</option>
+      </select>
+    </div>
+  </div>
+  <!-- MainTable -->
+  <div id="calculateTable"
+       class="grow bg-white shadow-sm h-full max-h-[100rem] rounded-lg border border-slate-200 z-0">
+  </div>
+  
+  <div class="grow grid grid-cols-22">
+	   <div class="flex items-center justify-between w-full shrink-0">
+	    <div class="flex items-center gap-4">
+	      <h2 class="shrink-0 flex items-center gap-1">
+	        <i class="fa-duotone fa-feather text-primary-900"></i>
+	       		 세부비용
+	      </h2>
+	    </div>
+	    </div>
+	   <div class="flex items-center justify-between w-full shrink-0">
+	    <div class="flex items-center gap-4">
+	      <h2 class="shrink-0 flex items-center gap-1">
+	        <i class="fa-duotone fa-feather text-primary-900"></i>
+	      		  상세정보
+	      </h2>
+	    </div>
+	    </div>
+    </div>
+   <div class="grow grid grid-cols-22 min-h-[10rem] grid-rows-[1fr] gap-0">
+    <div class="bg-white shadow-sm rounded-lg border border-slate-200" id="calculateDetailTable"></div>
+    <div class="bg-white shadow-sm rounded-lg border border-slate-200" id="calculateDetailTable2"></div>
+  </div>
+  <!-- MainTable -->
+</main>
+
+
+
+
+<!-- Download Modal -->
+   <div class="modal fade fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center duration-300" id="excelUploadPopUp"
+		tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+		aria-hidden="true" style="display: none;">
+		<div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+		<div class="modal-dialog modal-xl" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width:1500px;" >
+			<div class="modal-content bg-white shadow-lg relative rounded min-w-80 overflow-hidden">
+				<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center">
+						 <label
+						      class="col-span-1 row-span-1 flex items-center font-medium pr-2 text-white"
+						    >
+						      구분
+						    </label>
+						    <select
+						      id="partn_type"
+						      name="partn_type"
+						      class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+						      <option value="" selected>선택</option>
+						      <option value="01" >세관</option>
+						      <option value="02" >관세사</option>
+						      <option value="03" >창고</option>
+						      <option value="04" >포워더</option>
+						    </select>
+						 <div id="cal1" style="width:340px; display: flex; align-items: center; margin-left:30px;">
+						 <label style="margin-left:10px;"
+						      class="col-span-1 row-span-1 flex items-center font-medium pr-2 text-white"
+						    >
+						      업체
+						    </label>
+						    <select
+						      id="partn_cmpny"
+						      name="partn_cmpny"
+						      class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+						      <option value="" selected>선택</option>
+						    </select>
+						    
+						     <input
+						      type="text"
+						      id="partnCmpnyInsert"
+						      style="display:none;"
+						      class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+						      placeholder="회사명을  입력해주세요.">
+						    <button type="button" id="partnCmpnySaveBtn" style="display:none;" class="px-2 py-1 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700">
+		        				저장
+		      				</button>
+						    <button type="button" id="partnCmpnyCancelBtn" style="display:none;" class="px-2 py-1 rounded-lg text-white hover:opacity-50 duration-150 bg-rose-600">
+		        				취소
+		      				</button>
+						    <button type="button" id="partnCmpnyBtn" class="px-2 py-1 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700">
+		        				추가
+		      				</button>
+						 </div>
+						 <div id="cal2" style="width:950px; display: flex; align-items: center;">
+						 <label style="margin-left:10px;"
+						      class="col-span-1 row-span-1 flex items-center font-medium pr-2 text-white"
+						    >
+						      공통코드
+						    </label>
+						    <select
+						      id="cmmn_code"
+						      name="cmmn_code"
+						      class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+						      <option value="" selected>선택</option>
+						    </select>
+						    
+						    <input
+						      type="text"
+						      id="cmmnCodeInsert"
+						      style="display:none;"
+						      class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+						      placeholder="비용명을 입력해주세요.">
+						    <button type="button" id="cmmnCodeSaveBtn" style="display:none;" class="px-2 py-1 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700">
+		        				저장
+		      				</button>
+						    <button type="button" id="cmmnCodeCancelBtn" style="display:none;" class="px-2 py-1 rounded-lg text-white hover:opacity-50 duration-150 bg-rose-600">
+		        				취소
+		      				</button>
+		      				
+						     <button type="button" id="cmmnCodeBtn" class="calcul-code-button px-2 py-1 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700">
+		        				추가
+		      				</button>
+		      				
+						 <label style="margin-left:10px;"
+						      class="col-span-1 row-span-1 flex items-center font-medium pr-2 text-white"
+						    >
+						      비용코드
+						    </label>
+						    <select
+						      id="calcul_code"
+						      name="calcul_code"
+						      class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+						      <option value="" selected>선택</option>
+						    </select>
+						    
+						    <input
+						      type="text"
+						      id="calCodeInsert"
+						      style="display:none;"
+						      class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+						      placeholder="비용명을 입력해주세요.">
+						    <button type="button" id="calcodeSaveBtn" style="display:none;" class="px-2 py-1 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700">
+		        				저장
+		      				</button>
+						    <button type="button" id="calcodeCancelBtn" style="display:none;" class="px-2 py-1 rounded-lg text-white hover:opacity-50 duration-150 bg-rose-600">
+		        				취소
+		      				</button>
+		      				
+						     <button type="button" id="calculCodeBtn" class="calcul-code-button px-2 py-1 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700">
+		        				추가
+		      				</button>
+						 </div>
+				</div>
+				<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center">
+					<input id="excelUploadFile" type="file" accept=".xlsx, .xls" class="absolute top-0 left-0 opacity-0" style="display:none;">
+					<button type="button" class="excel-upload-button px-3 py-2 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700" style="margin-right: 10px;">
+        				<i class="fa-regular fa-floppy-disk"></i>
+        				업로드
+      				</button>
+      				
+      				<button type="button" class="excel-save-button px-3 py-2 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700">
+        				<i class="fa-regular fa-floppy-disk"></i>
+        				저장
+      				</button>
+				<div style="flex-grow: 1;"></div> 
+    
+				    <div>
+				        <button type="button" onclick="excelUploadClose()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+				    </div>		
+				    
+				    
+				</div>
+				 <div class="modal-body">
+					 <div class="grow
+						  bg-white shadow-sm h-full max-h-[100rem] rounded-lg border border-slate-200
+						  z-0" id="excelUploadPopUpTable">
+					</div>
+				</div> 
+			</div>
+		</div>
+	</div>
+<!-- Download Modal -->
+
+<footer class="w-full
+    mx-auto flex justify-between justify-self-end items-center
+    shrink-0 bg-primary-900 text-gray-200 px-6 py-2 gap-4">
+
+    <span>KORD Systems Inc.</span>
+    <span class="mr-auto">Copyright KORD Systems Inc. All rights reserved.</span>
+
+    <a href="mailto:kord@kordsystems.com">
+      <i class="fa-regular fa-envelopes"></i>
+      kord@kordsystems.com
+    </a>
+    <p>
+      <i class="fa-regular fa-phone-volume"></i>
+      +82-2-2038-8299
+    </p>
+
+    <a href="#" class="hover:underline">시스템소개</a>
+    <a href="#" class="hover:underline">사용자매뉴얼</a>
+    <!-- Start -->
+    <div class="relative inline-flex" x-data="{ open: false, selected: 0 }">
+      <button
+          class="btn justify-between min-w-40 bg-white/30 dark:bg-slate-800 border-slate-200 hover:border-slate-300 text-white hover:text-slate-200 py-1"
+          aria-label="Select date range"
+          aria-haspopup="true"
+          @click.prevent="open = !open"
+          :aria-expanded="open"
+      >
+                  <span class="flex items-center">
+                      <span x-text="$refs.options.children[selected].children[1].innerHTML"></span>
+                  </span>
+        <svg class="shrink-0 ml-1 fill-current text-slate-400" width="11" height="7" viewBox="0 0 11 7">
+          <path d="M5.4 6.8L0 1.4 1.4 0l4 4 4-4 1.4 1.4z"/>
+        </svg>
+      </button>
+      <div
+          class="z-10 absolute bottom-full left-0 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-1.5 rounded shadow-lg overflow-hidden mt-1"
+          @click.outside="open = false"
+          @keydown.escape.window="open = false"
+          x-show="open"
+          x-transition:enter="transition ease-out duration-100 transform"
+          x-transition:enter-start="opacity-0 -translate-y-2"
+          x-transition:enter-end="opacity-100 translate-y-0"
+          x-transition:leave="transition ease-out duration-100"
+          x-transition:leave-start="opacity-100"
+          x-transition:leave-end="opacity-0"
+          x-cloak
+      >
+        <div class="font-medium text-sm text-slate-600 dark:text-slate-300" x-ref="options">
+
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 0 && 'text-primary-900'"
+              @click="selected = 0;open = false"
+              @focus="open = true"
+              @focusout="open = false"
+          >
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 0 && 'invisible'"
+                 width="12" height="9" viewBox="0 0 12 9">
+              <path
+                  d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>참고사이트</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 1 && 'text-primary-900'"
+              @click="selected = 1;open = false"
+              @focus="open = true"
+              @focusout="open = false"
+          >
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 1 && 'invisible'"
+                 width="12" height="9" viewBox="0 0 12 9">
+              <path
+                  d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>유니패스</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 2 && 'text-primary-900'"
+              @click="selected = 2;open = false"
+              @focus="open = true"
+              @focusout="open = false"
+          >
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 2 && 'invisible'"
+                 width="12" height="9" viewBox="0 0 12 9">
+              <path
+                  d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>관세법령정보포털</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 3 && 'text-primary-900'"
+              @click="selected = 3;open = false"
+              @focus="open = true"
+              @focusout="open = false"
+          >
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 3 && 'invisible'"
+                 width="12" height="9" viewBox="0 0 12 9">
+              <path
+                  d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>FTA 포털</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 4 && 'text-primary-900'"
+              @click="selected = 4;open = false"
+              @focus="open = true"
+              @focusout="open = false"
+          >
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 4 && 'invisible'"
+                 width="12" height="9" viewBox="0 0 12 9">
+              <path
+                  d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>트레이드테비</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- End -->
+	<script>
+    $(".portal-renderer").slideUp(0)
+    $("#portal-rendering-button").on("click", function () {
+      $(".portal-renderer").slideToggle(200)
+      $(this).children(".fa-chevron-down").toggleClass("rotate-180")
+    });
+  </script>
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.16.0.final using JasperReports Library version 6.16.0-48579d909b7943b64690c65c71e07e0b80981928  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Form_EAV" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="20" isIgnorePagination="true" uuid="908d5882-7d77-46d0-8b67-ba96641a7b75">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="kord"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="i_prm1" class="java.lang.String"/>
+	<parameter name="i_prm2" class="java.lang.Integer"/>
+	<parameter name="i_prm3" class="java.lang.Integer"/>
+	<parameter name="i_prm4" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT CONCAT(EXPRT_NM, '<BR>', EXPRT_ADRS, ', ', EXPRT_COUNTRY, '<BR>', EXPRT_TEL, '/' , EXPRT_FAX, '<BR>' , EXPRT_EMAIL) as prm1,
+       CONCAT(IMPRT_NM, '<BR>', IMPRT_ADRS, ', ', IMPRT_COUNTRY, '<BR>', IMPRT_TEL, '/' , IMPRT_FAX, '<BR>' , IMPRT_EMAIL) as prm2,
+		 MNSF_TRNSPRT as prm3,
+		 'VIET NAM' as prm4,
+		 IMPRT_COUNTRY as prm5,
+		 '' as prm6,
+		 '' as prm7,
+		 EXPRT_COUNTRY as prm8,
+		 DATE_FORMAT(SYSDATE(),'%b %d, %Y') as prm9,
+		 RFRNC_NO as prm10
+FROM crft_co_hist
+WHERE issu_no =$P{i_prm1} LIMIT 1]]>
+	</queryString>
+	<field name="prm1" class="java.lang.String"/>
+	<field name="prm2" class="java.lang.String"/>
+	<field name="prm3" class="java.lang.String"/>
+	<field name="prm4" class="java.lang.String"/>
+	<field name="prm5" class="java.lang.String"/>
+	<field name="prm6" class="java.lang.String"/>
+	<field name="prm7" class="java.lang.String"/>
+	<field name="prm8" class="java.lang.String"/>
+	<field name="prm9" class="java.lang.String"/>
+	<field name="prm10" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<columnHeader>
+		<band height="311" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField>
+				<reportElement x="43" y="55" width="244" height="63" uuid="25be05ca-d9b0-4687-8c71-a2b19323c982">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement markup="html">
+					<font fontName="Noto Sans" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm1}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="43" y="130" width="244" height="59" uuid="0d384c9c-1f0b-4421-a2b1-15b13c60cdc8">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement markup="html">
+					<font fontName="Noto Sans" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="32" y="218" width="255" height="52" uuid="fbda06af-ade0-4c4e-a590-8e8372ba9ab8">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm3}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="335" y="125" width="190" height="14" uuid="30f567ed-2977-4486-90b5-639f503eeb37">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm4}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="368" y="160" width="161" height="14" uuid="8388dc2e-c07b-45a4-bc88-45f5e5d92d9b">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm5}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="334" y="39" width="134" height="12" uuid="5182d7bc-fbb1-4a44-a0a8-ad1404925b5c">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm10}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="297" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<subreport>
+				<reportElement x="14" y="0" width="535" height="297" uuid="27cca824-1a2e-4393-aa60-2b248e922cef"/>
+				<subreportParameter name="REPORT_CONNECTION">
+					<subreportParameterExpression><![CDATA[$P{REPORT_CONNECTION}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm1">
+					<subreportParameterExpression><![CDATA[$P{i_prm1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm2">
+					<subreportParameterExpression><![CDATA[$P{i_prm2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm3">
+					<subreportParameterExpression><![CDATA[$P{i_prm3}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportExpression><![CDATA[$P{i_prm4} + "/templet/FormEAV_1_sub_P.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="214" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField>
+				<reportElement x="29" y="180" width="255" height="16" uuid="c0939cf7-f4a9-4041-bff6-25c5db987656">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm7}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="293" y="40" width="252" height="15" uuid="a8b3964c-ff16-4878-8855-cc5d531ffbee">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm8}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="368" y="180" width="184" height="15" uuid="46463340-7f99-468a-895c-82d4d7554f64">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm9}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnFooter>
+</jasperReport>

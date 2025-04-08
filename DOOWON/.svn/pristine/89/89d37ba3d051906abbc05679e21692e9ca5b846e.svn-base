@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.cmmn.service.impl.CmmnCdMapper">
+
+	<!-- 공통코드 목록 조회 -->
+	<select id="selectPfCmmnCdList" parameterType="searchVO" resultType="egovMap">
+		 SELECT GRP_CD
+			 , CMMN_CD
+			 , CMMN_NM
+			 , CMMN_NM_EN
+			 , ORDR_SN
+			 , DIST_CD
+			 , DISP_YN
+		  FROM CMMN_CD 
+		  WHERE DEL_YN = 'N'
+            <if test="srch2 != null and srch2 != ''">
+               AND CMMN_NM_EN LIKE CONCAT('%',UPPER(#{srch2}),'%')
+            </if>
+            <if test="srch3 != null and srch3 != ''">
+               AND CMMN_NM LIKE CONCAT('%',UPPER(#{srch3}),'%')
+            </if>
+            <if test="srch4 != null and srch4 != ''">
+               AND GRP_CD LIKE CONCAT('%',UPPER(#{srch4}),'%')
+            </if>
+            <if test="srch5 != null and srch5 != ''">
+               AND DISP_YN = #{srch5}
+            </if>
+	        <choose>
+	        	<when test="alignItem == 'GRP_CD'">
+	        		ORDER BY GRP_CD, ORDR_SN
+	        	</when>
+	        	<when test="alignItem == 'GRP_CD_DESC'">
+	        		ORDER BY GRP_CD DESC, ORDR_SN
+	        	</when>
+	        	<when test="alignItem == 'GRP_NM_EN'">
+	        		ORDER BY CMMN_NM_EN
+	        	</when>
+	        	<when test="alignItem == 'GRP_NM_EN_DESC'">
+	        		ORDER BY GRP_NM_EN DESC
+	        	</when>
+	        	<when test="alignItem == 'GRP_NM_KR'">
+	        		ORDER BY GRP_NM
+	        	</when>
+	        	<when test="alignItem == 'GRP_NM_KR_DESC'">
+	        		ORDER BY GRP_NM DESC
+	        	</when>
+	        	<otherwise>
+	        		ORDER BY GRP_CD, ORDR_SN
+	        	</otherwise>
+	        </choose>
+         LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+	
+	<select id="selectPfCmmnCdListCnt" parameterType="searchVO" resultType="int">
+		 SELECT COUNT(*)
+		  FROM CMMN_CD 
+		  WHERE DEL_YN = 'N'
+            <if test="srch2 != null and srch2 != ''">
+               AND CMMN_NM_EN LIKE CONCAT('%',UPPER(#{srch2}),'%')
+            </if>
+            <if test="srch3 != null and srch3 != ''">
+               AND CMMN_NM LIKE CONCAT('%',UPPER(#{srch3}),'%')
+            </if>
+            <if test="srch4 != null and srch4 != ''">
+               AND GRP_CD LIKE CONCAT('%',UPPER(#{srch4}),'%')
+            </if>
+            <if test="srch5 != null and srch5 != ''">
+               AND DISP_YN = #{srch5}
+            </if>
+	</select>
+	
+	<select id="selectCmmnGrpDropdown" resultType="egovMap">
+			SELECT DISTINCT GRP_CD
+			 FROM cmmn_cd
+			 WHERE DEL_YN = 'N'
+			 GROUP BY CMMN_CD
+	</select>
+	
+	<insert id="insertPfCmmnCd"  parameterType="egovframework.pf.cmmn.service.SaveCmmnCdVO">
+		   INSERT
+		   INTO CMMN_CD (
+						  GRP_CD
+						, CMMN_CD
+						, CMMN_NM_EN
+						, CMMN_NM
+						, ORDR_SN
+						, DIST_CD
+						, DISP_YN
+						, DEL_YN
+						, REG_DT
+						, REG_ID
+	       ) VALUES (
+						  #{grpCd}
+						, #{cmmnCd}
+						, #{cmmnNmEn}
+						, #{cmmnNmKr}
+						, #{ordrSn}
+						, #{distCd}
+						, #{dispYn}
+						, 'N'
+						, DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+						, #{regId}
+	       ) ON DUPLICATE KEY
+	            UPDATE 
+					   CMMN_NM_EN = #{cmmnNmEn}
+					 , CMMN_NM = #{cmmnNmKr}
+					 , ORDR_SN = #{ordrSn}
+					 , DIST_CD = #{distCd}
+					 , DISP_YN = #{dispYn}
+					 , EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+					 , EDT_ID = #{regId}
+	</insert>
+	
+	
+	
+	
+</mapper>

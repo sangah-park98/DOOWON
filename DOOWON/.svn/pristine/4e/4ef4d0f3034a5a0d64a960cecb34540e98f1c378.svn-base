@@ -1,0 +1,46 @@
+package egovframework.pf.exp.service;
+
+import java.util.List;
+import java.util.Map;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+
+/**
+ * @Class Name : CusExpUpdateService.java
+ * @Description : CusExpUpdateService Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       20240.08.07                  권예지         			최초 생성
+ *
+ */
+
+public interface CusExpUploadService {
+
+	//Map<String, Integer> insertExportTempExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+
+	int insertExportTempDataUploadLog(Map<String, Object> excelData, Map<String, Object> returnData,
+			UserSessionVO loginUser);
+
+	int deleteTempData(Map<String, Object> loginUser);
+
+	List<?> selectCusExpViewList(SearchVO vo);
+
+	List<?> selectCusFileList(SearchVO vo);
+
+	List<?> selectCusExpViewLanList(SearchVO vo);
+
+	List<?> selectCusExpViewSpecList(SearchVO vo);
+
+	void deleteExportView(SearchVO vo);
+
+	Map<String, Integer> insertExpReadyExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+
+	Map<String, Integer> insertExpEncomExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+
+
+	
+	
+}

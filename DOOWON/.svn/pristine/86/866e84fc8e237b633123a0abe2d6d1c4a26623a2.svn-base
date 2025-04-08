@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/jdbc  http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd">
+        
+     
+   <!-- 운영서버    -->
+<!-- 
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://125.212.234.139:3306/vcsfta_db?autoReconnect=true" />        
+        <property name="username" value="vcsfta_user"/>
+        <property name="password" value="vcsfta_!@#$%"/>
+        <property name="validationQuery" value="SELECT 1" />
+        <property name="testWhileIdle" value="true" />
+    </bean>  -->
+
+  <!-- 개발서버 -->
+<!--    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://203.242.143.196:3306/platform?autoReconnect=true" />        
+        <property name="username" value="pf_user"/>
+        <property name="password" value="pf_!@#$%"/>
+        <property name="validationQuery" value="SELECT 1" />
+        <property name="testWhileIdle" value="true" />
+    </bean>   --> 
+    
+    <bean id="dataSource1" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		 <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://203.242.143.196:3306/platform?autoReconnect=true" />
+        <!--         
+        <property name="username" value="pf_user"/>
+        <property name="password" value="pf_!@#$%"/>
+         -->
+        <property name="username" value="pi_team"/>
+        <property name="password" value="shin8299!@"/>
+        <property name="validationQuery" value="SELECT 1" />
+        <property name="testWhileIdle" value="true" />
+    </bean>
+       
+	<bean id="dataSource2" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
+		<property name="url" value="jdbc:sqlserver://210.181.209.50:1433;databaseName=edicus;" />
+		<!-- <property name="url" value="jdbc:sqlserver://203.242.143.195:1433;databaseName=edicus"/>  -->
+		<property name="username" value="edicus"/>
+		<property name="password" value="fpelchlrh"/>
+		<property name="validationQuery" value="SELECT 1" />
+		<property name="testWhileIdle" value="true" />
+	</bean>
+
+</beans>

@@ -1,0 +1,866 @@
+
+$(document).ready(function() {
+	var dashboardYy = new Date().getFullYear();
+	
+	
+	$('.band-calendar').each(function(){ regCaldash(this) ;})
+	  //캘린더 포맷
+	$('.datepicker').datepicker("option","dateFormat",dashFormat);
+
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,7);
+	  
+	  $("#dashbordDate").val(today);
+
+	// 대시보드 정보검색
+	//fn_selectDashboadInfo();
+	//fn_moreNotice($("#moreNoticeList"));
+	$("#chartTarget a").click(function() {
+		$('.subOutter ol li #' + $(this).attr('id')).click();
+		$('.subOutter, .bg').hide();
+
+	})
+
+	let nowYear = new Date().getFullYear();
+	let nowMonth = new Date().getMonth() + 1;
+	const objYMList = [];
+	const yearMonthList = [];
+	
+	for (let i = nowYear; i >= 2020; i--) {
+		for (let j = 12; j >= 1; j--) {
+			if (i == nowYear && j > nowMonth) continue;
+			
+			let obj = i + "-" + (j <= 9 ? "0" + j : j);
+			objYMList.push({ i: obj });
+			yearMonthList.push(obj);
+		}
+	}
+	
+	const currentDate = `${nowYear}-${nowMonth <= 9 ? "0" + nowMonth : nowMonth}`;
+	const yearMonthOptions = fn_makeSelect(objYMList, currentDate);
+	document.getElementById("dashbordDate").innerHTML = yearMonthOptions;
+
+
+	
+	//fn_dashInfo1("02");
+	//fn_dashManagerInfo();
+});
+
+
+
+
+function fn_makeSelect(objList, curVal) {
+    let result = "";
+    const optionHtml = "<option value='{key}' {selected}>{val}</option>";
+    for (let i = 0; i < objList.length; i++) {
+        const obj = objList[i];
+        for (let x in obj) {
+            let key = obj[x]; // 'i'
+            let selected = key === curVal ? "selected" : "";
+            const curObj = { key: key, val: key, selected: selected };
+            result += fn_makeObj(curObj, optionHtml);
+        }
+    }
+    return result;
+}
+
+function fn_makeObj(obj, template) {
+    return template
+        .replace("{key}", obj.key)
+        .replace("{val}", obj.val)
+        .replace("{selected}", obj.selected);
+}
+
+
+function fn_dashSrch(){
+	
+	const activeElement = document.querySelector("#chartType li.active");
+	
+	// 값 선언
+	let activeValue = null;
+
+    if (activeElement.classList.contains("status-tab-imp")) {
+        activeValue = "02"; // 수입
+    } else if (activeElement.classList.contains("status-tab-exp")) {
+        activeValue = "01"; // 수출
+    }
+	
+    var dashDate = $("#dashbordDate").val();
+	
+    fn_dashInfo1(activeValue);
+	
+}
+
+
+function fn_rptType(type){
+	if (type=="01"){
+		const tabType1 = document.querySelector('.status-tab-exp');
+		const tabType2 = document.querySelector('.status-tab-imp');
+		tabType1.classList.add("active");
+	    tabType2.classList.remove("active");
+	} else {
+		const tabType1 = document.querySelector('.status-tab-exp');
+		const tabType2 = document.querySelector('.status-tab-imp');
+	    tabType1.classList.remove("active");
+	    tabType2.classList.add("active");
+	}
+	fn_dashInfo1(type);
+}
+
+function fn_dashInfo1(type){
+	
+	
+	fn_loading(true);
+	var sData = {};
+	sData["srch1"] = type;
+	sData["srch2"] = $("#dashbordDate").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/dash/selectDashboardInfo1.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : "json",
+		success : function(data) {
+			$("#dashInfo1").html('');
+			document.querySelector('#myChart').remove();
+		    document.querySelector('.myChartClass').innerHTML = '<canvas id="myChart" height="225"></canvas>'
+			var newRow = "";
+			var labelDate = [];  		// x축 값
+			var expCnt = [];  		// 건수 값
+			var expKrw = []; 
+			// 금액 값
+			var impCnt = [];  		// 건수 값
+			var impKrw = []; 		// 금액 값
+			var impTax = []; 		// 금액 값
+				
+				for (var i = 0; i < data.resultList.length; i++) {
+					newRow = "<tr>" +
+								 "<td id='sumDate'>"+data.resultList[i].sumDate + "</td>" +
+								 "<td>"+data.resultList2[i].cnt + "</td>" +
+								 "<td>"+data.resultList2[i].sumTax + "</td>" +
+								 "<td>"+data.resultList2[i].sumKrw + "</td>" +
+								 "<td>"+data.resultList[i].cnt + "</td>" +
+								 "<td>"+data.resultList[i].sumKrw + "</td>" +
+								 "</tr>"
+					$("#dashInfo1").append(newRow);
+				}
+				
+				for (var i = data.resultList.length - 1; i >= 0; i--) {
+					labelDate.push(data.resultList[i].sumDate);
+					expCnt.push(data.resultList[i].cnt);
+					
+					impCnt.push(data.resultList2[i].cnt);
+					
+					var strNumber = data.resultList[i].sumKrw;
+					var number = parseInt(strNumber.replace(/,/g, ""), 10);
+					
+					var strNumber2 = data.resultList2[i].sumKrw;
+					var number2 = parseInt(strNumber2.replace(/,/g, ""), 10);
+					
+					var strNumber3 = data.resultList2[i].sumTax;
+					var number3 = parseInt(strNumber3.replace(/,/g, ""), 10);
+					expKrw.push(number);
+					impKrw.push(number2);
+					impTax.push(number3);
+				}
+			// 차트 생성
+		if (type == "01"){
+		  	var ctx = document.getElementById('myChart').getContext('2d');
+		  	var myChart = new Chart(ctx, {
+		    	type: 'bar',
+		    	data: {
+		      		labels: labelDate,
+		      		datasets: [
+		        		{
+		          			type: 'bar',
+		          			label: '수출가격(KRW)',
+		          			data: expKrw,
+		          			backgroundColor: 'rgba(255, 99, 132, 0.2)',
+		          			borderColor: 'rgba(255, 99, 132, 1)',
+		          			borderWidth: 1,
+		          			yAxisID: 'bar-y-axis'
+		        		},
+		        		{
+		          			type: 'line',
+		          			label: '건수',
+		          			data: expCnt,
+		          			backgroundColor: 'rgba(54, 162, 235, 0.2)',
+		          			borderColor: 'rgba(54, 162, 235, 1)',
+		          			borderWidth: 1,
+		          			fill: false,
+		          			yAxisID: 'line-y-axis'
+		        		}
+		      		]
+		    	},
+		    options: {
+			    	responsive: true,
+			        maintainAspectRatio: false,
+		      		scales: {
+		      			'bar-y-axis': {
+		  					id: 'bar-y-axis',
+		  					type: 'linear',
+		  					position: 'left',
+		  					beginAtZero: true
+						},
+		        		'line-y-axis': {
+		  					id: 'line-y-axis',
+		  					type: 'linear',
+		  					position: 'right',
+		 	 				beginAtZero: true
+		        		}
+		    		}
+		    	}
+			});
+				} else {
+					var ctx = document.getElementById('myChart').getContext('2d');
+				  	var myChart = new Chart(ctx, {
+				    	type: 'bar',
+				    	data: {
+				      		labels: labelDate,
+				      		datasets: [
+				        		{
+				          			type: 'bar',
+				          			label: '수입가격(KRW)',
+				          			data: impKrw,
+				          			backgroundColor: 'rgba(255, 99, 132, 0.2)',
+				          			borderColor: 'rgba(255, 99, 132, 1)',
+				          			borderWidth: 1,
+				          			yAxisID: 'bar-y-axis'
+				        		},
+				        		{
+				          			type: 'bar',
+				          			label: '납부세액(KRW)',
+				          			data: impTax,
+				          			backgroundColor: 'rgba(155, 200, 50, 0.2)',
+				          			borderColor: 'rgba(155, 200, 50, 1)',
+				          			borderWidth: 1,
+				          			yAxisID: 'bar-y-axis'
+				        		},
+				        		{
+				          			type: 'line',
+				          			label: '건수',
+				          			data: impCnt,
+				          			backgroundColor: 'rgba(54, 162, 235, 0.2)',
+				          			borderColor: 'rgba(54, 162, 235, 1)',
+				          			borderWidth: 1,
+				          			fill: false,
+				          			yAxisID: 'line-y-axis'
+				        		}
+				      		]
+				    	},
+				    options: {
+					    	responsive: true,
+					        maintainAspectRatio: false,
+				      		scales: {
+				      			'bar-y-axis': {
+				  					id: 'bar-y-axis',
+				  					type: 'linear',
+				  					position: 'left',
+				  					beginAtZero: true
+								},
+								
+				        		'line-y-axis': {
+				  					id: 'line-y-axis',
+				  					type: 'linear',
+				  					position: 'right',
+				 	 				beginAtZero: true
+				        		}
+				    		}
+				    	}
+					});
+				}
+			fn_loading(false);
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+        	}
+		}
+	});
+}
+
+
+function fn_dashManagerInfo(){
+    var sData = {};
+    
+    $.ajax({
+        type : "POST",
+        url : "/dash/selectDashManagerInfo.do",
+        data : sData,
+        beforeSend : function(xmlHttpRequest){
+            xmlHttpRequest.setRequestHeader("AJAX", "true");
+        },
+        dataType : "json",
+        success : function(data) {
+            $("#dashManagerInfo").html('');
+            var newRow = "";
+            
+            if (data.resultList.length == 0) {
+                newRow = "<tr>" +
+                         "<td style='text-align: center;'></td>" +
+                         "<td style='text-align: center;'>" + '-' + "</td>" +
+                         "<td style='text-align: center;'>" + '-' + "</td>" +
+                         "<td style='text-align: center;'>" + '-' + "</td>" +
+                         "</tr>";
+                $("#dashManagerInfo").append(newRow);
+            } else {
+                for (var i = 0; i < data.resultList.length; i++) {
+                    newRow = "<tr>" +
+                             "<td style='text-align: center;'>" + data.resultList[i].usrType + "</td>" +
+                             "<td style='text-align: center;'>" + data.resultList[i].usrNm + "</td>" +
+                             "<td style='text-align: center;'>" + data.resultList[i].usrEmail + "</td>" +
+                             "<td style='text-align: center;'>" + data.resultList[i].usrTel + "</td>" +
+                             "</tr>";
+                    $("#dashManagerInfo").append(newRow);
+                }
+            }
+        },
+        error : function(e, textStatus, errorThrown) {
+            if(e.status == 400){
+                alert("Your request is up. Please log back in if you wish to continue");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert("There was an error processing your request.");
+            }
+        }
+    });
+}
+
+
+// 공지사항 클릭
+function fn_callNoticePop(noticeSeq) {
+	$("#dashNoticePop").find("input").val(null);
+	$("#dashNoticePop").find("textarea").val(null);
+	$("#dashNoticePop").modal("show");
+	$("#notiIcon" + noticeSeq + " #newicon").hide();
+
+	var uData = {};
+	uData["srch1"] = noticeSeq;
+	$.ajax({
+		type : "POST",
+		url : "/base/updateReadNotice.do",
+		data : JSON.stringify(uData),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		contentType : "application/json; charset=utf-8",
+		success : function(data) {
+			if (data == "success") {
+				fn_searchDashNotice(noticeSeq);
+			}
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+				console.log(errorThrown);
+				alert(msgSaveError);
+        	}
+		}
+	});
+
+};
+
+// 공지사항 팝업검색
+function fn_searchDashNotice(noticeSeq) {
+	var sData = {};
+	sData["srch1"] = noticeSeq;
+
+	$.ajax({
+		type : "POST",
+		url : "/dash/selectDashNoticeInfo.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : "json",
+		success : function(data) {
+			if (data.result.dashFileNm == undefined
+					|| data.result.dashFileNm == "") {
+				$("#dashNoticeAttach").hide();
+			} else {
+				$("#dashNoticeAttach").show();
+			}
+
+			$.each(data.result, function(key, value) {
+				$("#dashNoticePop").find("input[name='" + key + "']")
+						.val(value);
+				$("#dashNoticePop").find("textarea[name='" + key + "']").val(
+						value);
+			});
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+        	}
+		}
+	});
+
+};
+
+// 읽음체크
+function fn_noticeReadCheck() {
+	for (i = 0; i < colReadList.length; i++) {
+		$("#notiIcon" + colReadList[i] + " #newicon").hide();
+	}
+}
+
+// 공지사항 조회
+function fn_moreNotice(elemVal) {
+	elemVal.val(Number(elemVal.val()) + 10);
+	var nData = {};
+	nData["startPoint"] = Number(elemVal.val());
+	$.ajax({
+		type : "POST",
+		url : "/base/selectMoreNoticeList.do",
+		data : nData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : "json",
+		success : function(data) {
+			colNoticecnt = data.totCnt;
+			setTimeout(function() {
+				fn_noticeList(data)
+			}, 0.0001);
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+				console.log(errorThrown);
+				// alert(msgSearchError);
+        	}
+		}
+	});
+
+}
+
+// 리스트 그려주는 부분
+function fn_noticeList(data) {
+	if (data.totCnt > Number($("#moreNoticeList").val()) - 10
+			|| $("#moreNoticeList").val() == "0") {
+		$("#noticeTbl tbody").children().remove();
+		var rowData;
+		for (var i = 0; i < data.noticeList.length; i++) {
+			rowData = data.noticeList[i];
+			var rowText = "<tr>";
+			rowText = rowText + "<tr onclick='fn_callNoticePop("
+					+ rowData.noticeSeq + ")' style='cursor:pointer;'>";
+			rowText = rowText + "<td>" + rowData.noticeSn + "</td>";
+			rowText = rowText + "<td align='left' id='notiTit"
+					+ rowData.noticeSeq + "'>" + rowData.title + "</td>";
+			rowText = rowText
+					+ "<td id='notiIcon"
+					+ rowData.noticeSeq
+					+ "'><span class='badge badge-info' style='margin-right:5px' id='newicon'>NEW</span></td>"
+			rowText = rowText + "<td >" + rowData.regDt + "</td> ";
+			rowText = rowText + "</tr>";
+			$("#noticeTbl tbody").append(rowText);
+			$("#noticeTbl").css("border-collapse", "collapse")
+			$("#noticeTbl tbody").css("overflow-y", "hidden ")
+			// $("#noticeTbl tbody").css("height","300px")
+		}
+		fn_noticeReadCheck();
+	} else {
+		alert(msgNotice);
+	}
+};
+
+// notice modal popup
+$('ul.bg-white li').on('click', function(){
+	var dashNoticeSeq = $(this).find('p.text-sm:hidden').text();
+    $('#dashNoticePop').show();
+    fn_dashNoticeModalContentPopUp(dashNoticeSeq);
+});
+
+
+function fn_dashNoticeModalContentPopUp(dashNoticeSeq){
+	var sData = {};
+	sData["srch3"] = dashNoticeSeq;
+	$.ajax({
+		type : "POST",
+		url : "/base/selectDashNoticeViewList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	fillDashNoticeModalContent(data.resultList);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+function fillDashNoticeModalContent(resultList) {
+    var notice = resultList[0];
+    var noticeDt = notice.noticeDt;
+    var year = noticeDt.substring(0, 4);
+    var month = noticeDt.substring(4, 6);
+    var day = noticeDt.substring(6, 8);
+    var formattedNoticeDt = year + "." + month + "." + day;
+    
+    var edtDt = notice.edtDt;
+
+    document.querySelector('.dashNotice-modal h3').textContent = notice.titleKr;
+    document.querySelector('.dashNotice-modal span').textContent = notice.date;
+    // document.querySelector('.dashNotice-modal span').textContent = notice.edtDt;
+    document.querySelector('.dashNotice-modal textarea').textContent = notice.cnKr;
+    
+    var strHtml = "";
+    if (notice.fileOrgNm) {
+        strHtml = '<a href="#" id="dashDownload" style="color:#030303"><i class="fa-regular fa-floppy-disk"></i> 첨부파일 : ' + notice.fileOrgNm + '</a>';
+    }
+    
+    var dateInfo = document.querySelector('.dashNotice-modal .text-sm');
+    if(edtDt == '' || edtDt == null) {
+    	dateInfo.textContent = '등록일: ' + formattedNoticeDt;
+    } else {
+    	/*var edtyear = edtDt.substring(0, 4);
+        var edtmonth = edtDt.substring(4, 6);
+        var edtday = edtDt.substring(6, 8);
+        var formattedEdtDt = edtyear + "." + edtmonth + "." + edtday;
+    	dateInfo.textContent = '등록일: ' + formattedNoticeDt + ' , 수정일: ' + formattedEdtDt;*/
+    }
+    dateInfo.style.fontSize = '13px';
+    
+    document.querySelector('.dashNotice-modal .text-base').innerHTML = strHtml;
+    
+    var dashDownloadLink = document.getElementById('dashDownload');
+    if (notice.fileOrgNm) {
+	    dashDownloadLink.addEventListener('mouseenter', function() {
+	    dashDownloadLink.style.color = 'rgb(45 126 98)';
+	    dashDownloadLink.style.fontWeight = 'bold';
+	    });
+	
+		dashDownloadLink.addEventListener('mouseleave', function() {
+			 dashDownloadLink.style.color = '#030303';
+			 dashDownloadLink.style.fontWeight = '';
+		});
+    }
+}
+
+
+$(document).on('click', '#dashDownload', function(){
+	const htmlContent = event.target.innerHTML.trim();
+	const fileOrgNm = htmlContent.split(' 첨부파일 : ')[1];
+    $("#dashFileDown").val(fileOrgNm);
+    document.dashFileDownForm.action = "/cmmn/dashFileDown.do";
+    document.dashFileDownForm.submit();
+})
+
+// news modal popUp 
+function dashNoticeClose(){
+	$("#dashNoticePop").hide();
+}
+
+$('div.bg-blue li').on('click', function(){
+	var dashNewsSeq = $(this).find('p.text-sm:hidden').text();
+    $('#dashNewsPop').show();
+    fn_dashNewsModalContentPopUp(dashNewsSeq);
+});
+
+
+function fn_dashNewsModalContentPopUp(dashNewsSeq){
+	var sData = {};
+	sData["srch3"] = dashNewsSeq;
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/selectNewsModalViewList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	filldashNewsModalContent(data.resultList);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+function filldashNewsModalContent(resultList) {
+    var news = resultList[0];
+    var regDt = news.regDt;
+    var year = regDt.substring(0, 4);
+    var month = regDt.substring(4, 6);
+    var day = regDt.substring(6, 8);
+    var formattedNewsDt = year + "." + month + "." + day;
+
+    var edtDt = news.edtDt;
+
+    document.querySelector('.dashNews-modal h3').textContent = news.titleKr || '';
+    document.querySelector('.dashNews-modal span').textContent = news.regDt || '';
+    
+    var strHtml = '';
+    if (news.fileName && news.fileName.trim() !== '') {
+        var fileNames = news.fileName.split('/');
+        strHtml = fileNames.map(function(name) {
+            return '<a href="#" class="news-file-name" style="color:#030303;">' + '&nbsp;&nbsp;&nbsp;&nbsp;' + name + '</a>';
+        }).join('<br>');
+        strHtml = '<i class="fa-regular fa-floppy-disk"></i> 첨부파일 :<br>' + strHtml;
+    }
+
+    document.getElementById('mainNewsFileName').innerHTML = strHtml;
+
+    setTimeout(function() {
+        var fileNameElements = document.querySelectorAll('.news-file-name');
+        fileNameElements.forEach(function(element) {
+            element.addEventListener('mouseenter', function() {
+                element.style.color = 'rgb(45, 126, 98)';
+                element.style.fontWeight = 'bold';
+            });
+
+            element.addEventListener('mouseleave', function() {
+                element.style.color = '#030303';
+                element.style.fontWeight = '';
+            });
+        });
+    }, 0);
+
+    $("#dashNewsContent").html(news.cnKr || '');
+    $('#dashNewsContent a').attr('target', '_blank');
+
+    var dateInfo = document.querySelector('.dashNews-modal .text-sm');
+    if (!edtDt) {
+        dateInfo.textContent = '등록일: ' + formattedNewsDt;
+    } else {
+        var edtyear = edtDt.substring(0, 4);
+        var edtmonth = edtDt.substring(4, 6);
+        var edtday = edtDt.substring(6, 8);
+        var formattedEdtDt = edtyear + "." + edtmonth + "." + edtday;
+
+        dateInfo.textContent = '등록일: ' + formattedNewsDt + ' , 수정일: ' + formattedEdtDt;
+    }
+    dateInfo.style.fontSize = '13px';
+}
+
+
+
+//첨부파일
+$(document).on('click', '.dash-file-name', function(event) {
+    const htmlContent = event.target.innerHTML.trim();
+    const fileName = htmlContent.replace(/&nbsp;/g, '').trim();
+    $("#noticeFileDown").val(fileName);
+    document.dashNewsFileDownForm.action = "/cmmn/noticesFileDown.do";
+    document.dashNewsFileDownForm.submit();
+});
+
+// 대시보드 내 관세뉴스 
+$(document).on('click', '.news-file-name', function (event) {
+    event.preventDefault();
+    const htmlContent = event.target.innerHTML.trim();
+    const fileName = htmlContent.replace(/&nbsp;/g, '').trim();
+    $("#mainNewsFileDown").val(fileName);
+    const form = document.mainNewsFileDown;
+    form.action = "/cmmn/mainNewsFileDown.do";
+    form.submit();
+});
+
+function dashNewsClose(){
+	$("#dashNewsPop").hide();
+}
+
+
+
+function dashExcelDownload(){
+	
+	fn_loading(true);
+	var exCol = "";
+	var exTit = "";
+	var exTitDiv = "";
+			//수출입현황
+	exCol = "markCont|htLeft|180||cnt1|htRight|70||sum1|htRight|130||cnt2|htRight|70||sum2|htRight|130||cnt3|htRight|70||" +
+			"sum3|htRight|130||cnt4|htRight|70||sum4|htRight|130||cnt5|htRight|70||sum5|htRight|130||cnt6|htRight|70||sum6|htRight|150|||" +
+			"markCont|htLeft|180||cnt1|htRight|70||sum1|htRight|130||cnt2|htRight|70||sum2|htRight|130||cnt3|htRight|70||sum3|htRight|130||" +
+			"cnt4|htRight|70||sum4|htRight|130||cnt5|htRight|70||sum5|htRight|130||cnt6|htRight|70||sum6|htRight|150|||supFirm|htLeft|200||" +
+			"cnt1|htRight|80||sum1|htRight|150||cnt2|htRight|80||sum2|htRight|150||cnt3|htRight|80||sum3|htRight|150|||buyFirm|htLeft|200||" +
+			"cnt1|htRight|80||sum1|htRight|150||cnt2|htRight|80||sum2|htRight|150||cnt3|htRight|80||sum3|htRight|150|||fodMark|htCenter|80||" +
+			"title|htLeft|200||traMetCont|htLeft|160||conCod|htCenter|80||cnt|htRight|80||freKrw|htRight|120||totWt|htRight|100||" +
+			"totTaxKrw|htRight|150||cal1|htRight|100||cal2|htRight|100|||fodMark|htCenter|80||title|htLeft|200||traMetCont|htLeft|160||" +
+			"conCod|htCenter|80||cnt|htRight|80||insuKrw|htRight|120||totWt|htRight|100||totTaxKrw|htRight|150||cal1|htRight|100||cal2|" +
+			"htRight|100|||" +
+			//수출입현황
+			//단가분석
+			"plant|htLeft|150||invoice|htLeft|100||rptNo|htCenter|130||expLisDay|htCenter|150||totRptKrw|htRight|80||" +
+			"excDivi|htCenter|80||excDiviCont|htLeft|80|||plant|htLeft|150||po|htLeft|100||blNo|htLeft|130||rptNo|htCenter|140||ranNo|htCenter|65||" +
+			"sil|htCenter|65||lisDay|htCenter|95||rgCode|htCenter|130||upi|htRight|90||ut|htCenter|80||conKi|htCenter|80||supFirm|htLeft|140||" +
+			"conCur|htCenter|75||upiWon|htRight|110||max|htRight|110||min|htRight|110||avg|htRight|110||maxDiff|htRight|110||minDiff|htRight|110||" +
+			"avgDiff|htRight|110||maxPer|htRight|140||minPer|htRight|140||avgPer|htRight|140|||plant|htLeft|150||po|htLeft|100||blNo|htLeft|150||" +
+			"rptNo|htCenter|150||ranNo|htCenter|80||sil|htCenter|80||lisDay|htCenter|100||rgCode|htCenter|130||upi|htRight|150||ut|htCenter|80||" +
+			"conKi|htCenter|80||supFirm|htLeft|200||conCur|htCenter|100||upiWon|htRight|130||avg|htRight|130|||plant|htLeft|200||rgCode|htLeft|150||" +
+			"supFirm|htLeft|200||conCur|htCenter|100||rptCnt|htRight|80||rptSum|htRight|200|||" +
+			//단가분석
+			//수출입데이터 분석
+			"rgCode|htCenter|120||hs|htCenter|120||stdGName1|htLeft|200||" +
+			"rptNo|htCenter|150||ranNo|htCenter|80||sil|htCenter|80||gsDivi|htCenter|80||gsRate|htRight|100||oriStMark1|htCenter|80||fodMark|htCenter|80||" +
+			"qty|htRight|100||conAmt|htRight|100||conCur|htCenter|100||upiWon|htRight|200||gs|htRight|200|||rgCode|htCenter|120||hs|htCenter|120||" +
+			"stdGName1|htLeft|200||rptNo|htCenter|150||ranNo|htCenter|80||sil|htCenter|80||gsDivi|htCenter|80||gsRate|htRight|100||oriStMark1|htCenter|80||" +
+			"fodMark|htCenter|80||qty|htRight|100||conAmt|htRight|100||conCur|htCenter|100||upiWon|htRight|200||gs|htRight|200|||supFirm|htLeft|200||" +
+			"rptNo|htCenter|150||ranNo|htCenter|80||stdName|htLeft|200||rmvRptNo|htCenter|150||rmvRanNo|htCenter|80||rmvStdName|htLeft|200||" +
+			"gsDivi|htCenter|80||gsRate|htCenter|80||gs|htRight|150||vatDivi|htCenter|80||vatRate|htRight|80||vat|htRight|200||gsRmvMark|htCenter|100||" +
+			"gsRmvRate|htRight|100||rmv|htRight|200||vatRmvMark|htCenter|100||vatRmvRate|htRight|100||vatRmv|htRight|200|||rgCode|htLeft|200||rptNo|htCenter|200||" +
+			"ranNo|htCenter|200||sil|htCenter|200||hs|htCenter|200||taxKiDivi|htCenter|200||gxRate|htRight|200||oriStMark1|htCenter|200||fodMark|htCenter|200||lisDay|htCenter|200";
+			//수출입데이터 분석
+	
+			//수출입 현황
+	exTit = "null|null||2020|2||2021|2||2022|2||2023|2||2024-05-29|2||합계|2|||거래구분|null||수입(건)|null||수입(KRW)|null||수입(건)|null||" +
+			"수입(KRW)|null||수입(건)|null||수입(KRW)|null||수입(건)|null||수입(KRW)|null||수입(건)|null||수입(KRW)|null||수입(건)|null||" +
+			"수입(KRW)|null||||null|null||2020|2||2021|2||2022|2||2023|2||2024-05-29|2||합계|2|||거래구분|null||수출(건)|null||수출(KRW)|null||" +
+			"수출(건)|null||수출(KRW)|null||수출(건)|null||수출(KRW)|null||수출(건)|null||수출(KRW)|null||수출(건)|null||수출(KRW)|null||수출(건)|null||" +
+			"수출(KRW)|null||||해외거래처|null||일반수입(건)|null||수입(KRW)|null||기타수입(건)|null||수입(KRW)|null||수입합계(건)|null||수입합계(KRW)|null||||" +
+			"해외거래처|null||일반수출(건)|null||수출(KRW)|null||기타수출(건)|null||수출(KRW)|null||수출합계(건)|null||수출합계(KRW)|null||||적출국|null||" +
+			"해외거래처|null||운송형태|null||인도조건|null||신고건수|null||운임|null||총중량(KG)|null||과세가격(KRW)|null||운임/중량(KRW)|null||운임/과세가격(%)|null||||" +
+			"적출국|null||해외거래처|null||운송형태|null||인도조건|null||신고건수|null||보험료|null||총중량(KG)|null||과세가격(KRW)|null||보험료/중량(KRW)|null||" +
+			"보험료/과세가격(%)|null||||PO|null||인보이스번호|null||신고번호|null||수리일자|null||신고가격|null||수출코드|null||외환신고대상여부|null||||" +
+			//수출입 현황
+			//단가분석
+			"공장코드|null||PO|null||B/L|null||신고번호|null||란|null||규격|null||수리일자|null||자재코드|null||신고단가|null||신고단위|null||결제방법|null||해외거래처|null||" +
+			"결제통화|null||원화단가|null||최고단가|null||최저단가|null||평균단가|null||단가차이(최고)|null||단가차이(최저)|null||단가차이(평균)|null||단가차이 비율(최고)|null||" +
+			"단가차이 비율(최저)|null||단가차이 비율(평균)|null||||공장코드|null||PO|null||B/L|null||신고번호|null||란|null||규격|null||수리일자|null||자재코드|null||" +
+			"신고단가|null||신고단위|null||결제방법|null||해외거래처|null||결제통화|null||원화단가|null||평균단가|null||||공장코드|null||자재코드|null||해외거래처|null||" +
+			"결제통화|null||신고건수|null||신고금액(원화)|null||||자재코드|null||세번부호|null||거래품명|null||수입신고번호|null||란번호|null||규격|null||관세구분|null||관세율|null||" +
+			"원산지|null||적출국|null||수량|null||결제금액|null||결제통화|null||원화금액|null||납부관세액|null||||" +
+			//단가분석
+			//수출입 데이터 분석
+			"자재코드|null||세번부호|null||거래품명|null||수입신고번호|null||" +
+			"란번호|null||규격|null||관세구분|null||관세율|null||원산지|null||적출국|null||수량|null||결제금액|null||결제통화|null||원화금액|null||납부관세액|null||||null|null||" +
+			"관세감면적용 건 수|3||관세감면미적용 건 수|3||총관세액|3||총부가세액|3||관세감면세액|3||부가세감면세액|3|||해외거래처|null||수입신고번호|null||란|null||거래품명|null||" +
+			"수입신고번호|null||란|null||거래품명|null||관세구분|null||관세율|null||관세액|null||부가세구분|null||부가세율|null||부가세액|null||관세감면부호|null||관세감면율|null||" +
+			"관세감면세액|null||부가세감면부호|null||부가세감면율|null||부가세감면세액|null||||자재코드|null||수입신고번호|null||란|null||규격|null||HS CODE|null||세종|null||세율|null||원산지|null||적출국|null||수입신고 수리일|null";
+			//수출입 데이터 분석
+	
+	exTitDiv = "1|5년치_수입실적||2|5년치_수출실적||3|해외거래처별_수입실적||4|해외거래처별_수출실적||5|운임_비교||6|보험료_비교||7|외환신고대상_수출||" + //수출입 현황
+			   "8|수입물품_단가비교||9|유무상_수입건_과세가격_비교||10|동일거래,_결제통화_변경점검||" +  //단가분석
+			   "11|동일자재코드_품목분류_상이점검||12|동일자재코드_관세구분_상이점검||13|감면_적용_일관성_검토||14|FTA_직접운송원칙"; //수출입 데이터 분석
+	
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var startDt = new Date();
+	startDt.setMonth(startDt.getMonth() - 1);
+	startDt.setDate(1);
+	
+	var endDt = new Date();
+	endDt.setMonth(endDt.getMonth(), 1);
+	endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10);
+	var mtoday = endDt.toISOString().substring(0,10);
+	
+	$("#importUp_srch2").val(today);
+	$("#importUp_srch3").val(mtoday);
+	
+	var parameters = {exCol : "", exTit: "", exTitDiv: "", exType: "", srch2: "", srch3: "", srch40: ""};
+	
+	
+	parameters.exCol = exCol.replace(/ /g,"_");
+	parameters.exTit = exTit.replace(/ /g,"_");
+	parameters.exTitDiv = exTitDiv.replace(/ /g,"_");
+	parameters.exType = "01";
+	parameters.srch2 = today;
+	parameters.srch3 = mtoday;
+	parameters.srch40 = "TEST";
+	
+	
+	$.ajax({
+		 url: "/dashboard/dashDownloadExcel.do",
+		 data: parameters,
+		 type: 'POST',
+		 cache: false,
+		 timeout: 200000,
+		 xhrFields: {
+			 responseType: "blob",
+		 },
+	    success: function(blob, status, xhr) {
+	    	try {
+				// check for a filename
+				 var fileName = "";
+				 var disposition = xhr.getResponseHeader("Content-Disposition");
+
+			       if (disposition && disposition.indexOf("attachment") !== -1) {
+			      	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+			           var matches = filenameRegex.exec(disposition);
+
+			           if (matches != null && matches[1]) {
+			               fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+			           }
+			       }
+
+			       // for IE
+			       if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+			           window.navigator.msSaveOrOpenBlob(blob, fileName);
+			       } else {
+			           var URL = window.URL || window.webkitURL;
+			           var downloadUrl = URL.createObjectURL(blob);
+
+			           if (fileName) {
+			               var a = document.createElement("a");
+
+			               // for safari
+			               if (a.download === undefined) {
+			                   window.location.href = downloadUrl;
+			               } else {
+			                   a.href = downloadUrl;
+			                   a.download = fileName;
+			                   document.body.appendChild(a);
+			                   a.click();
+			               }
+			           } else {
+			               window.location.href = downloadUrl;
+			           }
+			       }
+		       fn_loading(false);
+			} catch (e) {
+				console.log(e);
+				fn_loading(false);
+			};
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+	
+}

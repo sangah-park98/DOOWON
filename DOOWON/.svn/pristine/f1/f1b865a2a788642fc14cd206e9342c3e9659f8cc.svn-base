@@ -1,0 +1,217 @@
+package egovframework.pf.rpt.service.web;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import egovframework.pf.cmmn.service.CmmnService;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.rpt.service.CalculService;
+import egovframework.pf.rpt.service.SaveCalCodeVO;
+import egovframework.pf.rpt.service.SaveCalculateListVO;
+import egovframework.pf.rpt.service.SaveCalculateVO;
+
+/**
+ * @Class Name : KPIController.java
+ * @Description : KPI 컨트롤러
+ * @Modification Information
+ * @
+ * @  수정일          			 수정자              			 수정내용
+ * @ ---------        ----------     -------------------------------
+ * @ 2024.04.02			이재성              				 최초생성
+ *
+ * @author 이재성
+ * @since 2024.04.02
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by MOPAS All right reserved.
+ */
+
+@Controller
+public class CalController {
+
+	@Resource(name = "CmmnService")
+	private CmmnService CmmnService;
+	
+	@Resource(name = "calculService")
+	private CalculService calculService;
+	
+	// kpi 화면 호출
+	@RequestMapping(value = "/rpt/calculate.do")
+	public String calculate(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		model.addAttribute("writable","Y".equals(userVO.getAdminYn())?"Y":CmmnService.selectWriteCheck(request.getServletPath(), userVO));
+		SearchVO vo = new SearchVO();
+		String lang = userVO.getLang();
+		vo.setLang(lang);
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		model.addAttribute("lang", lang);
+		model.addAttribute("userCmpnyCd", userVO.getCmpnyCd());
+			
+		return "rpt/calculate";
+	}
+	
+	
+	@RequestMapping(value = "/rpt/saveCalExcel.do", method = RequestMethod.POST)
+	@ResponseBody
+	public String saveBomInfo(@RequestBody SaveCalculateListVO calculateList, HttpServletRequest request) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		
+		List<SaveCalculateVO> voList = calculateList.getDbArray();
+		List<SaveCalCodeVO> calList = calculateList.getCalCode();
+		
+		System.out.println(calList);
+		for (SaveCalCodeVO vo : calList) {
+			System.out.println("111 : " + vo.getPartnType());
+			System.out.println("222 : " + vo.getPartnCmpnyNm());
+			System.out.println("333 : " + vo.getCalCode());
+		}
+		String SaveStatus = calculService.saveCalCodeList(calList, userVO);
+		String SaveStatus2 = calculService.saveCalExcel(voList, userVO);
+		/*if(!SaveStatus.equals("success") && !SaveStatus2.equals("success")) {
+			return "fail";
+		}*/
+		return "success";
+	}
+/*	@RequestMapping(value = "/rpt/saveCalExcel.do", method = RequestMethod.POST)
+	@ResponseBody
+	public String saveBomInfo(@RequestBody List<SaveCalculateVO> voList, HttpServletRequest request) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		String SaveStatus = calculService.saveCalExcel(voList, userVO);
+		if(!SaveStatus.equals("success")) {
+			return "fail";
+		}
+		return "success";
+	}
+*/	
+	@RequestMapping(value = "/rpt/selectCalculInfo.do")
+	public ModelAndView selectCalculInfo(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		vo.setCorpNo(userVO.getCorpNo());
+
+		List<?> resultList = calculService.selectCalculInfo(vo);
+		model.addAttribute("resultList", resultList);
+
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/rpt/selectCalculDetailInfo.do")
+	public ModelAndView selectCalculDetailInfo(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		vo.setCorpNo(userVO.getCorpNo());
+		System.out.println(vo.getSrch3());
+		List<?> resultList = calculService.selectCalculDetailInfo(vo);
+		List<?> resultList2 = null;
+		if(vo.getSrch3().equals("01")) {
+			resultList2 = calculService.selectCalculDetailViewInfo(vo);
+		} else {
+			resultList2 = calculService.selectCalculDetailViewInfoExp(vo);
+		}
+		
+		model.addAttribute("resultList", resultList);
+		model.addAttribute("resultList2", resultList2);
+		
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/rpt/selectCalculPartnList.do")
+	public ModelAndView selectCalculPartnList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		vo.setCorpNo(userVO.getCorpNo());
+		
+		List<?> resultList = calculService.selectCalculPartnList(vo);
+		model.addAttribute("resultList", resultList);
+		
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/rpt/partnCmpnySave.do" , method = RequestMethod.POST)
+	@ResponseBody
+	public ModelAndView partnCmpnySave(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		String SaveStatus = calculService.partnCmpnySave(vo, userVO);
+		model.addAttribute("SaveStatus", SaveStatus);
+
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/rpt/calCodeSave.do" , method = RequestMethod.POST)
+	@ResponseBody
+	public ModelAndView partnCmpncalCodeSaveySave(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		vo.setCorpNo(userVO.getCorpNo());
+		String SaveStatus = calculService.calCodeSave(vo, userVO);
+		model.addAttribute("SaveStatus", SaveStatus);
+		
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/rpt/selectCalculCodeList.do")
+	public ModelAndView selectCalculCodeList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		vo.setCorpNo(userVO.getCorpNo());
+
+		List<?> resultList = calculService.selectCalculCodeList(vo);
+		List<?> resultList2 = calculService.selectCmmnCodeList(vo);
+		model.addAttribute("resultList", resultList);
+		model.addAttribute("resultList2", resultList2);
+
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	
+	@RequestMapping(value = "/rpt/selectCalCodeList.do")
+	public ModelAndView selectCalCodeList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		vo.setCorpNo(userVO.getCorpNo());
+		
+		List<?> resultList = calculService.selectCalCodeList(vo);
+		model.addAttribute("resultList", resultList);
+		
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	 
+}

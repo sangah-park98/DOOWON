@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.shipping.service.impl.ShippingMapper">
+
+	<select id="selectShippingViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			'' as orderType,
+			rpt_no,
+			bl_no,
+			order_seq,
+			'' as orderPhnNo,
+			car_number,
+			driver_name,
+			driver_phn_no,
+			'' as driverRegDt,
+			from_dt,
+			'' as arriveDt,
+			'' as arriveDt2,
+			to_addr,
+			to_name,
+			to_phn_no,
+			estimated_charge,
+			fixed_charge
+		FROM shipping_order
+		WHERE 1=1
+		
+	</select>
+	
+	<select id="selectShippingDstnList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			addr_nm,
+			phn_no,
+			base_addr,
+			dtls_addr 
+		FROM shipping_address;
+	</select>
+	
+	<insert id="insertAddr" parameterType="egovframework.pf.shipping.service.ShippingAddressVO">
+		INSERT INTO
+		shipping_address(
+			id,
+			corp_no,
+			addr_nm,
+			phn_no, 
+			zip_code,
+			base_addr,
+			dtls_addr,
+			reg_dt
+		)
+		VALUES(
+			#{id},
+			#{corpNo},
+			#{addrNm},
+			#{phnNo},
+			#{zipCode},
+			#{baseAddr},
+			#{dtlsAddr},
+			#{regDt}
+		)
+	</insert>
+	
+	<delete id="deleteAddr" parameterType="egovframework.pf.shipping.service.ShippingAddressVO">
+		DELETE FROM shipping_address
+		WHERE 1=1
+		AND addr_nm = #{addrNm}
+		AND phn_no = #{phnNo}
+	</delete>
+	
+</mapper>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.dashboard.service.impl.DashboardMapper">
+
+	<select id="selectDashManagerInfo" parameterType="searchVO" resultType="egovMap">
+	SELECT * FROM 
+		(
+		SELECT 
+		chr_type1 as usrType,
+	    chr_name1 as usrNm,
+	    chr_email1 as usrEmail,
+	    chr_tel1 as usrTel
+		FROM 
+		    cmpny_charge_info
+		WHERE 
+		    tax_no = #{corpNo}
+		UNION 
+		
+		SELECT 
+		chr_type2 as usrType,
+	    chr_name2 as usrNm,
+	    chr_email2 as usrEmail,
+	    chr_tel2 as usrTel
+		FROM 
+		    cmpny_charge_info
+		WHERE 
+		    tax_no = #{corpNo}
+		    
+		UNION 
+		
+		SELECT 
+		chr_type3 as usrType,
+		chr_name3 as usrNm,
+	    chr_email3 as usrEmail,
+	    chr_tel3 as usrTel
+		FROM 
+		    cmpny_charge_info
+		WHERE 
+		    tax_no = #{corpNo}
+			
+		UNION
+		
+		SELECT 
+		chr_type4 as usrType,
+		chr_name4 as usrNm,
+	    chr_email4 as usrEmail,
+	    chr_tel4 as usrTel
+		FROM 
+		    cmpny_charge_info
+		WHERE 
+		    tax_no = #{corpNo}
+			
+		UNION
+		
+		SELECT
+		'IT담당자' as usrType,
+		'박상아' as usrNm,
+		'sapark@customsservice.co.kr' as usrEmail,
+		'070-4343-7732' as usrTel
+		) A
+		WHERE 1=1
+		AND usrNm != ''
+	</select>
+	
+	
+	<select id="selectDashboardInfoImp1" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+	    CONCAT(SUBSTR(YEAR(NOW() - INTERVAL (t.n) MONTH),3,2),'년 ', LPAD(MONTH(NOW() - INTERVAL (t.n) MONTH), 2, '0'),'월') AS sumDate,
+	    COUNT(cda.lis_day) AS cnt,
+	    FORMAT(COALESCE(SUM(cda.tot_tax_sum), 0), 0) AS sumTax,
+	    FORMAT(COALESCE(SUM(cda.tot_tax_krw), 0), 0) AS sumKrw
+		FROM (
+		    SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+		    UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
+		    UNION ALL SELECT 10 UNION ALL SELECT 11
+		) AS t
+		LEFT JOIN cusdec929a1 AS cda ON SUBSTR(cda.lis_day, 1, 6) = CONCAT(YEAR(NOW() - INTERVAL (t.n) MONTH), LPAD(MONTH(NOW() - INTERVAL (t.n) MONTH), 2, '0'))
+		AND cda.rpt_seq = '00'
+		<if test="list != null and list.size() > 0">
+            AND cda.nab_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+		</if>
+		GROUP BY YEAR(NOW() - INTERVAL (t.n) MONTH), MONTH(NOW() - INTERVAL (t.n) MONTH)
+		ORDER BY YEAR(NOW() - INTERVAL (t.n) MONTH) DESC, MONTH(NOW() - INTERVAL (t.n) MONTH) DESC;
+	</select>
+	
+	<select id="selectDashboardInfoExp1" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+	    CONCAT(SUBSTR(YEAR(NOW() - INTERVAL (t.n) MONTH),3,2),'년 ', LPAD(MONTH(NOW() - INTERVAL (t.n) MONTH), 2, '0'),'월') AS sumDate,
+	    COUNT(cda.exp_lis_day) AS cnt,
+	    FORMAT(COALESCE(SUM(cda.tot_rpt_krw), 0), 0) AS sumKrw
+		FROM (
+		    SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+		    UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
+		    UNION ALL SELECT 10 UNION ALL SELECT 11
+		) AS t
+		LEFT JOIN cusdec830a1 AS cda ON SUBSTR(cda.exp_lis_day, 1, 6) = CONCAT(YEAR(NOW() - INTERVAL (t.n) MONTH), LPAD(MONTH(NOW() - INTERVAL (t.n) MONTH), 2, '0'))
+		AND cda.rpt_seq = '00'
+		<if test="list != null and list.size() > 0">
+            AND cda.exp_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+		</if>
+		GROUP BY YEAR(NOW() - INTERVAL (t.n) MONTH), MONTH(NOW() - INTERVAL (t.n) MONTH)
+		ORDER BY YEAR(NOW() - INTERVAL (t.n) MONTH) DESC, MONTH(NOW() - INTERVAL (t.n) MONTH) DESC;
+	</select>
+	
+	<select id="selectDashboardNoticeList" parameterType="searchVO" resultType="egovMap">
+	SELECT NOTICE_TYPE, TITLE_KR, NOTICE_SEQ, file_Org_Nm, DATE_FORMAT(STR_TO_DATE(NOTICE_DT, '%Y%m%d'), '%Y.%m.%d') as NOTICE_DT FROM notice_info
+	ORDER BY notice_type DESC, notice_seq DESC
+	LIMIT 5;
+	</select>
+	
+	<select id="selectDashboardNewsList" parameterType="searchVO" resultType="egovMap">
+	SELECT TITLE_KR, SEQ, DATE_FORMAT(STR_TO_DATE(REG_DT, '%Y%m%d'), '%Y.%m.%d') as REG_DT FROM news_info
+	ORDER BY REG_DT DESC
+	LIMIT 5;
+	</select>
+	
+	<select id="selectDashNoticeViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			notice_seq,
+		    title_Kr,
+		    user_Name,
+		    notice_Dt,
+		    cn_kr,
+		    edt_dt,
+		    file_Org_Nm,
+		    notice_type,
+		    reg_id
+		FROM notice_info
+		WHERE notice_seq = #{srch3}
+		ORDER BY notice_seq DESC;
+	</select>
+</mapper>

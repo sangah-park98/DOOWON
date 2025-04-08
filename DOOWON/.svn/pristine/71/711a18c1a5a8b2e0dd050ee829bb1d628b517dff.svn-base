@@ -1,0 +1,83 @@
+package egovframework.pf.member.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.ui.Model;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.member.sevice.SaveCompnyVO;
+import egovframework.pf.member.sevice.SaveMemberVO;
+import egovframework.rte.psl.dataaccess.mapper.Mapper;
+
+@Mapper("memberMapper")
+public interface MemberMapper {
+	// 아이디 중복 확인
+	public int selectIdCheck(String parm) throws Exception;
+	//메일 인증번호 저장
+	public int insertCertNumber(Map<String, Object> param);
+	// 인증시간 
+	public void updateCertNumberTimeOut(Map<String, Object> param);
+	// 
+	public Map<String, Object> selectMailCode(Map<String, Object> param);
+	
+	public int updateMailTimeout(String email);
+	
+	public int selectcertNumber(Map<String, Object> param);
+	//인증번호 데이터 업데이트
+	public int updateCertNumber(Map<String, Object> param);
+	// 회사중복 확인
+	public int selectCompnyCheck(Map<String, Object> param);
+	// 회원등록
+	public int insertMember(SaveMemberVO member)throws Exception;
+	// 회사등록
+	public int insertCompny(Map<String, Object> params);
+	// user_cmpny_info 등록
+	public int insertUserCompny(Map<String, Object> params);
+	
+	public String selectManagerEmail(Map<String, Object> params);
+	public int selectCompnyManager(SaveCompnyVO compny);
+	//회사 중복 확인
+	public int selectCompny(Map<String, Object> params);
+	//기존회원 체크
+	public int selectMemberCheck(Map<String, Object> param);
+	//회원 찾기 디테일 정보 
+	public List<Map<String, Object>> selectMemberSearch(Map<String, Object> param);
+	
+	public int updateNewPassword(Map<String, Object> userMap);
+	// 마이페이지 리스트
+	// user_info
+	public List<?> selectMyPageUserInfo(SaveMemberVO vo);
+	//user_cmpny_info
+	public List<?> selectMyPageCmpnyInfo(SaveCompnyVO vo);
+	
+	public int selectPassCheck(Map<String, Object> param);
+	
+	public int updateMember(SaveMemberVO member)throws Exception;
+	
+	public void deleteCmpnyUserInfo(SaveCompnyVO compny)throws Exception;
+	
+	public int comRegNoConfirm(String compRegNo)throws Exception;
+	
+	public List<?> selectCmpnyInfo(String compRegNo)throws Exception;
+	// 관리자 승인 
+	public void updateManagerApprove(Map<String, String> paramMap)throws Exception;
+	// 관리자 승인 된 사업자번호 select 
+	public List<String> selectCmpnyTaxNo(SearchVO vo);
+	// 관리자 이메일 유무 
+	public List<String> selectCmpnyManger(String compRegNo);
+	// 매니저가 없는 경우 처음 등록한 회원의 이메일 insert
+	public void insertMangerEmail(SearchVO vo);
+	// 마이페이지 수정전 사업자 정보
+	public List<String> selectMyPageCmpnyTaxNo(SaveCompnyVO compny);
+	
+	public String selectMyPageCmpnyManger(String compRegNo);
+
+	
+	
+	
+	
+
+}
+
+

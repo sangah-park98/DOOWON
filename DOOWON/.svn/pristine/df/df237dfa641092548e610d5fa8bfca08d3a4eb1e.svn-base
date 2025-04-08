@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.news.service.impl.pfNewsMapper">
+	
+	<select id="selectNewsViewList" parameterType="searchVO" resultType="egovMap">
+		WITH SortedNews AS (
+	    SELECT
+	        ROW_NUMBER() OVER (ORDER BY reg_Dt ASC, SEQ) AS newsSeq,
+	        SEQ,
+	        title_kr,
+	        source,
+	        reg_Dt
+		    FROM news_info
+		    WHERE active = 'Y'
+		)
+		SELECT
+		    newsSeq,
+		    SEQ,
+		    title_kr,
+		    source,
+		    reg_Dt
+		FROM SortedNews
+		ORDER BY newsSeq DESC
+		LIMIT 10 OFFSET #{recordCountPerPage};
+	</select>
+	
+	<select id="selectNewsViewAllList" parameterType="searchVO" resultType="egovMap">
+		WITH SortedNews AS (
+	    SELECT
+	        ROW_NUMBER() OVER (ORDER BY reg_Dt ASC, SEQ) AS newsSeq,
+	        SEQ,
+	        title_kr,
+	        source,
+	        reg_Dt
+		    FROM news_info
+		)
+		SELECT
+		    newsSeq,
+		    SEQ,
+		    title_kr,
+		    source,
+		    reg_Dt
+		FROM SortedNews
+		ORDER BY newsSeq DESC
+		LIMIT 10 OFFSET #{recordCountPerPage};
+	</select>
+		
+	<select id="selectNewsViewtotCnt" parameterType="searchVO" resultType="int">
+		SELECT CEIL(COUNT(*) / 10) AS total_pages 
+		FROM news_info;
+	</select>
+	
+	<select id="selectNewsModalViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			SEQ,
+			active,
+		    title_Kr,
+		    cn_kr,
+		    file_name,
+		    reg_dt,
+		    edt_dt,
+		    reg_id,
+		    edt_id
+		FROM news_info
+		WHERE SEQ = #{srch3};
+	</select>
+	
+	<delete id="deleteNewsViewList" parameterType="searchVO">
+		DELETE FROM news_info WHERE seq = #{srch3};
+	</delete>
+	
+	<update id="updateNewsActive" parameterType="searchVO">
+		UPDATE news_info
+		SET active = CASE 
+		    WHEN active = 'Y' THEN 'N'
+		    WHEN active = 'N' THEN 'Y'
+		    ELSE active
+		END
+		WHERE seq = #{srch3};
+	</update>
+	
+	<select id="selectNewsActiveStatus" parameterType="searchVO" resultType="egovMap">
+		SELECT active FROM news_info WHERE SEQ = #{srch3};
+	</select>
+</mapper>

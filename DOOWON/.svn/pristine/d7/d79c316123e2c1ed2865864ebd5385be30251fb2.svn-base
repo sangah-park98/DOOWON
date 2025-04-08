@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.rpt.service.impl.reportAnalysisMapper">
+
+	<select id="selectImportStatus" parameterType="searchVO" resultType="egovMap">
+			WITH CTE AS (
+			SELECT
+			    DATE_FORMAT(Lis_Day, '%Y-%m-%d')  AS LIS_DAY
+			  , COUNT(*) AS CNT
+			  , SUM(Tot_Tax_Krw) AS AMOUNT_KRW
+			  , SUM(CASE WHEN EXC_DIVI_MARK in ('11', '93') THEN 1 ELSE 0 END) AS TX_TYPE1
+			  , SUM(CASE WHEN EXC_DIVI_MARK ='83' THEN 1 ELSE 0 END) AS TX_TYPE2
+			  , SUM(CASE WHEN EXC_DIVI_MARK ='87' THEN 1 ELSE 0 END) AS TX_TYPE3
+			  , SUM(CASE WHEN EXC_DIVI_MARK ='94' THEN 1 ELSE 0 END) AS TX_TYPE4
+			  , SUM(CASE WHEN EXC_DIVI_MARK NOT IN ('11', '83', '87', '94', '93') THEN 1 ELSE 0 END) AS TX_TYPE5
+			  , SUM(CASE WHEN Rece_Result LIKE '%제출%' THEN 1 ELSE 0 END) AS TX_PRC2
+			  , SUM(CASE WHEN Rece_Result LIKE '%검사%' THEN 1 ELSE 0 END) AS TX_PRC3
+			    FROM CUSDEC929A1
+			    WHERE  LIS_DAY BETWEEN #{srch1} AND #{srch2}
+			    AND  RPT_SEQ = '00'
+			    AND  NAB_SDNO = #{corpNo}
+			    GROUP BY LIS_DAY
+			)
+			SELECT 	LIS_DAY,
+						CNT,
+						AMOUNT_KRW,
+						TX_TYPE1,
+						TX_TYPE2,
+						TX_TYPE3,
+						TX_TYPE4,
+						TX_TYPE5,
+						CNT - TX_PRC2 - TX_PRC3 AS TX_PRC1,
+						TX_PRC2,
+						TX_PRC3	
+			FROM CTE			
+				ORDER BY LIS_DAY
+	</select>
+	
+	<select id="selectTaxStatus" parameterType="searchVO" resultType="egovMap">
+			SELECT 
+			    DATE_FORMAT(Lis_Day, '%Y-%m-%d')  AS LIS_DAY,
+			    COUNT(*) AS Cnt_Imp,
+			    SUM(Tot_Gs) AS Tot_Gs,
+			    SUM(Tot_Vat) AS Tot_Vat,
+			    SUM(Tot_Ts) AS Tot_Ts,
+			    SUM(Tot_Gt) AS Tot_Gt,
+			    SUM(Tot_Hof) AS Tot_Hof,
+			    SUM(Tot_Ky) AS Tot_Ky,
+			    SUM(Tot_Nt) AS Tot_Nt,
+			    SUM(Tot_Dly_Tax) AS Tot_Dly_Tax,
+			    SUM(Tot_Add_Tax) AS Tot_Add_Tax,
+			    SUM(Tot_Tax_Sum) AS Tot_Tax_Sum
+			FROM CUSDEC929A1
+			WHERE Lis_Day BETWEEN #{srch1} AND #{srch2}
+			    AND RPT_SEQ = '00'
+			    AND NAB_SDNO = #{corpNo}
+			GROUP BY Lis_Day
+			ORDER BY Lis_Day;
+	</select>
+	
+	<select id="selectTaxCount" parameterType="searchVO" resultType="egovMap">
+			  SELECT		
+			    SUBSTRING(LIS_DAY,1,6)   AS LIS_DAY
+				 , COUNT(*) AS Cnt_Imp
+				 , SUM(Tot_Tax_Krw)  AS  Amount_Imp
+				FROM CUSDEC929A1
+			    WHERE  1=1	
+			      AND SUBSTRING(LIS_DAY,1,6) &gt;= #{srch3}	
+			      AND SUBSTRING(LIS_DAY,1,6) &lt;= #{srch4}	
+			      AND  RPT_SEQ = '00'	
+			      AND  NAB_SDNO = #{corpNo}	
+			    GROUP BY SUBSTRING(LIS_DAY,1,6) 	
+	</select>
+	
+	
+	
+</mapper>

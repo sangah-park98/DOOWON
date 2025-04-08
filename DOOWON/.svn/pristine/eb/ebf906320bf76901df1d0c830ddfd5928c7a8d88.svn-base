@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+
+	<!-- SqlSession setup for MyBatis Database Layer -->
+	<!-- <bean id="sqlSession" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:/egovframework/sqlmap/fta/sql-mapper-config.xml" />
+		<property name="mapperLocations" value="classpath:/egovframework/sqlmap/*/*/*.xml" />
+	</bean> -->
+
+	<!-- MapperConfigurer setup for MyBatis Database Layer with @Mapper("deptMapper") in DeptMapper Interface -->
+ <!-- 	<bean class="egovframework.rte.psl.dataaccess.mapper.MapperConfigurer">
+		<property name="basePackage" value="egovframework.fta.*.service.impl" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSession"/>
+	</bean>
+	  -->
+	
+	<bean id="sqlSession1" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource1" />
+		<property name="configLocation" value="classpath:/egovframework/sqlmap/pf/sql-mapper-config.xml" />
+		<property name="mapperLocations" value="classpath:/egovframework/sqlmap/pf/*/*.xml" />
+	</bean>
+	<bean class="egovframework.rte.psl.dataaccess.mapper.MapperConfigurer">
+		<property name="basePackage" value="egovframework.pf.*.service.impl" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSession1"/>
+		<!-- <property name="sqlSessionFactoryBeanName" value="sqlSession2"/> -->
+	</bean>
+
+    <bean id="sqlSession2" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource2" />
+		<property name="configLocation" value="classpath:/egovframework/sqlmap/ms/sql-mapper-config.xml" />
+		<property name="mapperLocations" value="classpath:/egovframework/sqlmap/ms/*/*.xml" />
+	</bean>
+	<bean class="egovframework.rte.psl.dataaccess.mapper.MapperConfigurer">
+		<property name="basePackage" value="egovframework.ms.*.service.impl" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSession2"/>
+		<!-- <property name="sqlSessionFactoryBeanName" value="sqlSession2"/> -->
+	</bean>
+    
+    
+    
+</beans>

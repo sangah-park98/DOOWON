@@ -1,0 +1,1833 @@
+var importViewHot;
+var importViewSettings;
+var importViewPopupSettings;
+var importViewIndex = 9999;
+var importViewScrollTp = true;
+var importViewLanHot;
+var importViewLanSettings;
+var importViewSpecHot;
+var importViewSpecSettings;
+var loadDstnListHot;
+var loadDstnPopupSettings;
+var hotInstance;
+var blNo;
+var rptNo;
+
+var numberValidator = function (value, callback) {
+	var tmpStr='';
+	var valueStr = (''+value).replace(/\s/g, '');
+	for(var i = 0 ; i<valueStr.length; i++){
+		tmpStr =valueStr.substring(i, i+1);
+		if(    tmpStr == '0' || tmpStr == '1' || tmpStr == '2'
+                        || tmpStr == '3' || tmpStr == '4' || tmpStr == '5'
+                        || tmpStr == '6' || tmpStr == '7' || tmpStr == '8'
+                        || tmpStr == '9' || tmpStr == ',' || tmpStr == '.'){
+
+		}else{
+			callback(false);
+			break;
+		}
+		callback(true);
+	}
+
+};
+
+$( document ).ready(function() {
+	 //달력 사용시 반드시 넣어주세요.
+    $('.band-calendar').each(function(){ regCal(this) ;})
+	  //캘린더 포맷
+    $('.datepicker').datepicker("option","dateFormat",calFormat);
+
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	  
+	  $("#importView_srch2").val(mtoday);
+	  $("#importView_srch3").val(today);
+	  
+	  var importViewElement = document.querySelector('#importViewTable');
+	  var importViewElementContainer = importViewElement.parentNode;
+
+
+	  importViewHot = new Handsontable(importViewElement, importViewSettings);
+	  
+	  var importViewLanElement = document.querySelector('#importViewLanTable');
+	  var importViewLanElementContainer = importViewLanElement.parentNode;
+
+
+	  importViewLanHot = new Handsontable(importViewLanElement, importViewLanSettings);
+	  
+	  var importViewSpecElement = document.querySelector('#importViewSpecTable');
+	  var importViewSpecElementContainer = importViewSpecElement.parentNode;
+	  importViewSpecHot = new Handsontable(importViewSpecElement, importViewSpecSettings);
+	  
+	  
+	  var impViewListPopupElement = document.querySelector('#impViewListPopupTable');
+	  var impViewListPopupElementContainer = impViewListPopupElement.parentNode;
+	  impViewListPopupSettings = fn_handsonGridImpViewListPopupOption();
+	  impViewListHot = new Handsontable(impViewListPopupElement, impViewListPopupSettings);
+	  
+	  var loadDstnPopupElement = document.querySelector('#loadAddrListPopupTable');
+	  var loadDstnPopupElementContainer = loadDstnPopupElement.parentNode;
+	  loadDstnPopupSettings = fn_handsonGridLoadDstnListPopupOption();
+	  loadDstnListHot = new Handsontable(loadDstnPopupElement, loadDstnPopupSettings);
+
+	  fn_changeImportView('read');
+	  
+	  //scroll 이벤트
+	  fn_impViewasEventReg();
+	  //importViewUseEventReg();
+	  $("#impViewTextView").text("전체");
+      $("#impViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+	  
+
+	  $(document).on("click", '.itemCdClass', function(){
+		  alert($(this).index());
+	  });
+});
+/** 이벤트 Start **/
+
+
+$(document).mousedown(function(e){	
+	if(e.target.name == "importView1_date" || e.target.name == "importView2_date" || e.target.name == "toDt" || e.target.name == "fromDt" ){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}	
+	}
+});
+
+
+$("input:radio[name=importView_srch20]").change(function(){
+	$("input[name=importViewType][value=read]").prop("checked", true);
+	fn_changeImportView("read");
+})
+
+//테이블 타입 변경
+$("input[name=importViewType]").change(function(){
+	  fn_changeImportView($(this).val());
+});
+
+
+$("input[name=importView_srch1]").change(function(){
+	
+	var selectedValue = $(this).val();
+    if(selectedValue === "01") {
+        $("#impViewTextView").text("전체");
+        $("#impViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "02") {
+        $("#impViewTextView").text("수리");
+        $("#impViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "03") {
+        $("#impViewTextView").text("대기");
+        $("#impViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "04") {
+        $("#impViewTextView").text("결재");
+        $("#impViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "05") {
+        $("#impViewTextView").text("미결");
+        $("#impViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "06") {
+        $("#impViewTextView").text("신고 전");
+        $("#impViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else {
+        $("#impViewTextView").text("신고 후");
+        $("#impViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    }
+});
+
+function fn_impViewchgDate1() {
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var day = date.getDay();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10);
+	  
+	  $("#importView_srch2").val(today);
+	  $("#importView_srch3").val(today);
+	  //$("#importView_srch3").val(today);
+}
+
+function fn_impViewchgDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10);
+	
+	$("#importView_srch2").val(mtoday);
+	$("#importView_srch3").val(today);
+}
+function fn_impViewchgDate3() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10);
+	
+	$("#importView_srch2").val(mtoday);
+	$("#importView_srch3").val(today);
+}
+function fn_impViewchgDate4() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	  var startDt = new Date();
+	  startDt.setDate(1);
+	  startDt.setMonth(startDt.getMonth() - 1);
+
+	  var endDt = new Date();
+	  endDt.setMonth(endDt.getMonth(), 1);
+	  endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10);
+	var mtoday = endDt.toISOString().substring(0,10);
+	
+	$("#importView_srch2").val(today);
+	$("#importView_srch3").val(mtoday);
+}
+
+//정렬항목
+/*$("select[name=alignImportView]").change(function(){
+	  fn_searchImportView();
+});
+*/
+//row 수
+$("select[name=importViewPageCnt]").change(function(){
+	  fn_searchImportView();
+});
+
+
+function fn_impViewasEventReg(){
+	
+ $("#importViewTable .wtHolder").scroll(function(){
+	  //fn_impViewFileList(row, col)
+  	  var scrollTop = $("#importViewTable .wtHolder").scrollTop();
+  	  var countPerPage = $("#importViewPageCnt option:selected").val();
+  	  var rowHeight = importViewHot.getRowHeight();
+  	  var addCnt = 790;
+  	  if(countPerPage == "50"){
+  		  addCnt = 790;
+  	  }else if(countPerPage == "100"){
+  		  addCnt = 2040;
+  	  }else if(countPerPage == "200"){
+  		  addCnt = 3290;
+  	  }else if(countPerPage == "500"){
+  		  addCnt = 4540;
+  	  }
+
+  	  if(importViewScrollTp && importViewIndex != 9999 && scrollTop >= (countPerPage * importViewIndex * rowHeight) + addCnt){
+  		  fn_importViewScroll();
+  	  }
+  });
+}
+/** 이벤트 End **/
+//스크롤
+function fn_importViewScroll(){
+	if( $("input[name=importViewType]:checked").val() == "enrol")
+		return;
+	fn_loading(true);
+	importViewScrollTp = false;
+	importViewIndex++;
+	var data = fn_setImportViewForm();
+	
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportViewList.do",
+		data : JSON.stringify(data),
+		contentType: "application/json; charset=utf-8", 
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	var getData = importViewHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	importViewHot.loadData(meargeJson);
+        	importViewScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	//alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+//검색
+function fn_searchImportView(){
+	importViewIndex = 0;
+
+	var data = fn_setImportViewForm();
+	
+	fn_loading(true);
+	
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportViewList.do",
+		data : JSON.stringify(data),
+		contentType: "application/json; charset=utf-8",
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        		importViewHot.loadData([]);
+        		importViewSpecHot.loadData([]);
+        		importViewLanHot.loadData([]);
+            	importViewHot.loadData(data.resultList);
+            	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+            	$("#importViewCnt").text(totCnt); //검색결과 총 갯수
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+function fn_searchImportViewLan(rptNo) {
+	fn_loading(true);
+	rptNo = rptNo.replace(/-/g, '');
+	
+	var lData = {};
+	lData["srch2"] = rptNo;
+	
+	lData["recordCountPerPage"] = $("#importViewPageCnt option:selected").val();
+	lData["pageIndex"] = importViewIndex;
+	
+	
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportViewLanList.do",
+		data : lData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        		importViewSpecHot.loadData([]);
+        		importViewLanHot.loadData([]);
+            	importViewLanHot.loadData(data.resultList);
+            	importViewLanHot.updateSettings({
+            	        autoColumnSize: {samplingRatio: 30}
+            	    });
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+function fn_searchImportViewSpec(rptNo, ranNo) {
+	
+	fn_loading(true);
+	
+	var pData = {};
+	pData["srch2"] = rptNo;
+	pData["srch3"] = ranNo;
+	
+	pData["recordCountPerPage"] = $("#importViewPageCnt option:selected").val();
+	pData["pageIndex"] = importViewIndex;
+	
+	
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportViewSpecList.do",
+		data : pData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+				importViewSpecHot.loadData([]);
+				importViewSpecHot.loadData(data.resultList);
+			fn_loading(false);
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("Your request is up. Please log back in if you wish continue");
+				location.href = document.referrer;
+			} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+};
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchImportView();
+    }
+}
+
+
+//검색조건 생성
+function fn_setImportViewForm(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=importView_srch1]:checked").val();
+	sData["srch2"] = $("#importView_srch2").val();
+	sData["srch3"] = $("#importView_srch3").val();
+	sData["srch4"] = $("#importView_srch4").val();
+	sData["srch5"] = $("#importView_srch5").val();
+	var list2 = sData["srch5"].split(/[, ]+/).map(function(item) {
+        return item.trim();
+    }).filter(function(item) {
+        return item.length > 0;
+    });
+	sData["list2"] = list2;
+
+	sData["srch8"] = $("#importViewDateType option:selected").val();
+	sData["recordCountPerPage"] = $("#importViewPageCnt option:selected").val();
+	sData["pageIndex"] = importViewIndex;
+	
+	sData["srchType1"] = $("#importViewSrchType1 option:selected").val();
+	sData["srchText1"] = $("#importViewSrchText1").val();
+	
+	sData["srchType2"] = $("#importViewSrchType2 option:selected").val();
+	sData["srchText2"] = $("#importViewSrchText2").val();
+	
+	
+	return sData;
+};
+
+//검색조건 초기화
+function fn_clearImportView(){
+	
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	
+	$("input:radio[name=importView_srch1][value=01]").prop('checked', true);
+	$("#importView_srch2").val(mtoday);
+	$("#importView_srch3").val(today);
+	$("#importView_srch4").val("");
+	$("#importView_srch5").val("");
+	$("#importViewDateType").val("01");
+	
+	$("#importViewSrchType1").val("");
+	$("#importViewSrchType2").val("");
+	
+	$("#importViewSrchText1").val("");
+	$("#importViewSrchText2").val("");
+	
+};
+
+function fn_memoSave(row, col){
+	var rowData = importViewHot.getSourceDataAtRow(row);
+	
+	var rptNo = rowData.rptNo;
+	var value2 = $("#unreMemo"+row).val();
+	
+	var sData = {};
+	sData["srch1"] = rptNo;
+	sData["srch2"] = value2;
+	
+	if(confirm("저장하시겠습니까?")){
+		
+		$.ajax({
+			type : "POST",
+			url : "/import/saveImportMemo.do",
+			data : sData,
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			dataType: "json",
+			success : function(data) {
+				alert('저장되었습니다.')
+				fn_searchImportView();
+				
+			},
+			error : function(e, textStatus, errorThrown) {
+				if(e.status == 400){
+					alert("Your request is up. Please log back in if you wish continue");
+					location.href = document.referrer;
+				} else {
+					console.log(errorThrown);
+					alert(msgSearchError);
+				}
+			}
+		});
+	} else {
+		return;
+	}
+}
+
+
+//테이블 컬럼
+function fn_impViewTableCol(){
+	var tableType = $("input:radio[name=importViewType]:checked").val();
+	// 사용여부
+	var importView_srch20 = $("input:radio[name=importView_srch20]:checked").val(); 
+
+	var impViewFileLoadRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+        var $fileButton;
+        if (value != '' && value != null) {
+            $fileButton = $('<i class="fas fa-search search-icon" style="cursor:pointer;" onclick="fn_impViewFileList('+row+','+col+')"></i>');
+        } else {}
+        $(td).empty().append($fileButton).append("  " + value);
+	};
+	
+	var cusMemoRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		var $cusMemo = $('<input type="text" style="height:14px;" id="cusMemo" /><div class="btn btn-primary new-button">SAVE</div>');
+		$(td).empty().append(value+"	").append($cusMemo).css("text-align", "right");
+		};
+	
+	var unreMemoRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+	    var $unreMemoInput = $('<input type="text" class="row-start-3 col-start-2 bg-gray-50 border border-gray-300 rounded-lg" id="unreMemo' + row + '" style="height:8px; width:150px;" value="' + value + '"/>');
+	    var $unreMemoButton = $('<button type="button" onclick="fn_memoSave(' + row + ',' + col + ')" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-rose-700 ml-1 hover:bg-rose-500">저장</button>');
+	    $(td).empty().append($unreMemoInput).append($unreMemoButton).css("text-align", "right");
+	    $unreMemoInput.css({
+	        'font-family': '맑은 고딕',
+	        'font-size': '13px'
+	    });
+	    $unreMemoButton.css({
+	        'font-family': '맑은 고딕',
+	        'font-size': '13px'
+	    });
+	    $unreMemoInput.val(value);
+	};
+
+	
+	var chipRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		  td.classList.add('chip-cell');
+		  td.classList.add('text-center');
+		  switch (value) {
+		    case "예":
+		    case "접수":
+		    case "Y":
+		      td.innerHTML = `<span class="chip chip-blue">${value}</span>`
+		      break
+		    case "수리":
+		      td.innerHTML = `<span class="chip chip-green">${value}</span>`
+		      break
+		    case "N":
+		    case "서류 미비":
+		      td.innerHTML = `<span class="chip chip-red">${value}</span>`
+		      break
+		    case "자수":
+		      td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+		      break
+		    case "":
+	    	  td.innerHTML = `<span>${value}</span>`
+    		  break
+		    default:
+		      td.innerHTML = `<span class="chip chip-primary">${value}</span>`
+		      break
+		  }
+	};
+	
+	var transRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		td.classList.add('chip-cell');
+		td.classList.add('text-center');
+		
+	    var $transRequestButton = $('<button type="button" onclick="fn_shipReqBtn(' + row + ',' + col + ')" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-primary-700 ml-1 hover:bg-primary-500">의뢰</button>');
+	    $(td).empty().append($transRequestButton);
+	    $transRequestButton.css({
+	        'font-family': '맑은 고딕',
+	        'font-size': '13px'
+	    });
+	};
+	
+	function saveRenderer(instance, td, row, col, prop, value, cellProperties) {
+		  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		  td.classList.add('save-cell');
+		  td.classList.add('text-center');
+		  td.classList.add('text-center');
+		  td.innerHTML = `${value}<button type="button" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-rose-700 ml-1 hover:bg-rose-500">저장</button>`
+		}
+
+	this.impViewCol = [
+		{data : '', className : "htCenter", width: 50, wordWrap: false, className : "htCenter", readOnly:true, renderer : transRenderer},
+		{data : 'rece', className : "htCenter", width: 50,wordWrap: false, className : "htCenter", readOnly:true, renderer : chipRenderer},
+		//{data : 'unreMemo', className : "htCenter",wordWrap: false, className : "htCenter", readOnly:true, renderer : unreMemoRenderer},
+		{data : 'cs', className : "htCenter", width: 60,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter", readOnly:true, renderer : impViewFileLoadRenderer},
+		{data : 'blno', className : "htCenter", width: 130,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'nabFirm', className : "htCenter",width: 180, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'supFirm', className : "htCenter", width: 200,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'incDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'lisDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'excCot', className : "htCenter", width: 110,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conKiCot', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conCod', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'freKrw', className : "htCenter", width: 90,wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'insuKrw', className : "htCenter",width: 90, wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'totWt', className : "htCenter",width: 120, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'totPackCnt', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conCur', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conTotAmt', className : "htCenter",width: 120, wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'lawCd', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'supSt', className : "htCenter", width: 120,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'fodMark', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'oriStPrfYn', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true,renderer : chipRenderer},
+		{data : 'rmv', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true,renderer : chipRenderer},
+		{data : 'rptYn', className : "htCenter",width: 110, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'plntCd', className : "htCenter",width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'prOrdr', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'userMemo', className : "htCenter", width: 250,wordWrap: false, className : "htCenter", readOnly:true, renderer : unreMemoRenderer},
+		{data : 'reporter', className : "htCenter", width: 120,wordWrap: false, className : "htCenter", readOnly:true},
+	] ;
+		
+
+	//판정 사용 내역 컬럼
+		
+		  Handsontable.renderers.registerRenderer('chip', chipRenderer);
+		  Handsontable.renderers.registerRenderer('save', saveRenderer);
+}
+//테이블 헤더
+function fn_impViewTableHeader(){
+	var tableType = $("input:radio[name=importViewType]:checked").val();
+	// 사용여부
+	//var importView_srch20 = $("input:radio[name=importView_srch20]:checked").val(); 
+	
+	this.impViewHeader = [
+		"운송", "상태", "C/S검사", "신고번호", "B/L번호", "납세의무자", "무역거래처",  "반입일자", "신고일자", "수리일자", "거래구분",
+		"결제방법", "인코텀즈", "운임", "보험료", "총중량", "총포장개수", "통화단위", "신고금액",  "요건승인", "해외공급자국가부호", "적출국(부호)", "FTA적용여부", "감면여부", "확정신고대상여부",
+		"부서코드", "PO", "사용자메모", "신고인"
+	 ] ;
+}
+
+
+function fn_impViewLanTableCol(){
+	this.impViewLanCol = [
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter"},
+		{data : 'ranNo', className : "htCenter", width: 100,wordWrap: false, className : "htCenter"},
+		{data : 'hs', className : "htCenter", width: 100,wordWrap: false, className : "htCenter"},
+		{data : 'na', className : "htCenter", width: 100,wordWrap: false, className : "htCenter"},
+		{data : 'gsRate', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'stdGname1', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'excGname1', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'taxUsd', wordWrap: false, width: 100, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true},
+		{data : 'gs', wordWrap: false, width: 100, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'vat', wordWrap: false, width: 100, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'csChkCot', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"}
+	];
+}
+
+function fn_impViewLanTableHeader(){
+	this.impViewLanHeader = [
+		"신고번호","란번호","세번부호","구분","세율","품명","거래품명","과세가격원화","관세","부가세","CS"
+	];
+}
+
+function fn_impViewSpecTableCol(){
+	this.impViewSpecCol = [
+		{data : 'rptNo', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'ranNo', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'sil', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'impGname1', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'qty', wordWrap: false, type : 'numeric', width: 100, className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'ut', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'upi', wordWrap: false, type : 'numeric', width: 100, className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'amt', wordWrap: false, type : 'numeric', width: 100, className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'impGname2', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'compoent1', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'compoent2', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		];
+}
+
+function fn_impViewSpecTableHeader(){
+	this.impViewSpecHeader = [
+		"신고번호","란번호","규격번호","품명","수량","단위","단가","금액","품명2","성분1","성분2"
+		];
+}
+
+//테이블 히든컬럼
+function fn_impViewTableHidden(){
+	this.impViewHidden = [];
+}
+
+function fn_impViewLanTableHidden(){
+	this.impViewLanHidden = [0];
+}
+
+function fn_impViewSpecTableHidden(){
+	this.impViewSpecHidden = [0];
+}
+
+
+//table
+function fn_handsonGridViewOption(col, header, hidden){
+	var tableType = $("input:radio[name=importViewType]:checked").val();
+
+	importViewSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 300,
+	  rowHeights : 27,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualRowMove : true,
+	  manualColumnResize : true,
+	  manualColumnMove : false,
+	  licenseKey: 'non-commercial-and-evaluation', // for non-commercial use only
+	  //dropdownMenu : true,
+
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+	  autoColumnSize : {samplingRatio : 30},
+      mergeCells : false,
+      wordWrap : true,
+      afterOnCellMouseDown : function(event, coords){
+    	  
+    	  var excludedColumns = [0,27];
+    	  
+    	  if (excludedColumns.includes(coords.col)) {
+    	        return; // 함수 실행 중단
+    	    }
+    	  //26
+    	  var dataList = "";
+    	  var rptNo = "";
+    	  var dataList = importViewHot.getSourceData(coords.row, 35);
+    	  var rptNo = dataList[dataList.length-1].rptNo.replace(/-/g, '');
+          fn_searchImportViewLan(rptNo);
+          setTimeout(function() {
+              fn_searchImportViewSpec(rptNo, "001");
+          }, 1);
+      }
+	};
+
+	return importViewSettings;
+}
+
+function fn_handsonGridLanOption(col, header, hidden){
+	var tableType = $("input:radio[name=importViewType]:checked").val();
+
+	
+	importViewLanSettings = {
+			columns : col,
+			colHeaders : header,
+			hiddenColumns : {
+				copyPasteEnabled : false,
+				indicators : false,
+				columns : hidden
+			},
+			stretchH : 'all',
+			width : '100%',
+			autoWrapRow : true,
+			height : 200,
+			border : 1,
+			rowHeights : 25,
+			columnHeaderHeight : 25,
+			manualRowResize : true,
+			manualColumnResize : true,
+			manualRowMove : true,
+			manualColumnMove : false,
+			licenseKey: 'non-commercial-and-evaluation',
+			  filters : true,
+			  readOnly :  true ,
+			  allowInsertRow : true,
+			  allowRemoveRow : true,
+			 // columnSorting : {indicator : true},
+			  autoColumnSize : {samplingRatio : 30},
+		      mergeCells : false,
+		      wordWrap : true,
+
+			afterOnCellMouseDown : function(event, coords){
+				var dataList = "";
+				var rptNo = "";
+				var ranNo = "";
+				var dataList = importViewLanHot.getSourceData(coords.row, 35);
+				var rptNo = dataList[dataList.length-1].rptNo;
+				var ranNo = dataList[dataList.length-1].ranNo;
+				fn_searchImportViewSpec(rptNo, ranNo);
+			}
+	};
+	
+	return importViewLanSettings;
+}
+
+function fn_handsonGridSpecOption(col, header, hidden){
+	
+	importViewSpecSettings = {
+			columns : col,
+			colHeaders : header,
+			hiddenColumns : {
+				copyPasteEnabled : false,
+				indicators : false,
+				columns : hidden
+			},
+			stretchH : 'all',
+			width : '100%',
+			autoWrapRow : true,
+			height : 200,
+			rowHeights : 25,
+			columnHeaderHeight : 25,
+			manualRowResize : true,
+			manualColumnResize : true,
+			licenseKey: 'non-commercial-and-evaluation',
+			manualRowMove : true,
+			manualColumnMove : false,
+			
+			filters : true,
+			readOnly : true ,
+			allowInsertRow : true,
+			allowRemoveRow : true,
+			autoColumnSize : {samplingRatio : 30},
+			mergeCells : false,
+			wordWrap : true,
+	};
+	
+	return importViewSpecSettings;
+}
+
+//검색 그리드
+function fn_searchGridPurchOption(type){
+	if(type){
+		$("#impViewEnrol").show();
+		$("#importView_div1").show();
+		$("#importView_div2").show();
+		$("#importView_div3").hide();
+		$("#importView_div4").hide();
+		$("#importView_div12").hide();
+		$("#importView_div5").show();
+		$("#importView_div6").show();
+		$("#importView_div7").show();
+		$("#importView_div8").show();
+		$("#impViewInfo1").hide();
+		$("#impViewInfo2").hide();
+		$("#docBtn").show();
+	}else{
+		$("#impViewEnrol").hide();
+		$("#importView_div1").show();
+		$("#importView_div2").hide();
+		$("#importView_div3").show();
+		$("#importView_div4").show();
+		$("#importView_div5").hide();
+		$("#importView_div12").hide();
+		$("#importView_div6").show();
+		$("#importView_div7").hide();
+		$("#importView_div8").show();
+		$("#impViewInfo1").show();
+		$("#impViewInfo2").show();
+		$("#docBtn").hide();
+	}
+}
+
+function fn_searchGridPurchOption2(){
+	
+		$("#impViewEnrol").show();
+		$("#importView_div1").show();
+		$("#importView_div12").show();
+		$("#importView_div2").hide();
+		$("#importView_div3").hide();
+		$("#importView_div4").hide();
+		$("#importView_div5").hide();
+		$("#importView_div6").hide();
+		$("#importView_div7").hide();
+		$("#importView_div8").hide();
+		$("#impViewInfo1").hide();
+		$("#impViewInfo2").hide();
+		$("#docBtn").hide();		
+}
+
+//테이블 타입 변경
+function fn_changeImportView(type){
+
+	var searchTp = $("input:radio[name=importView_srch1]:checked").val();
+
+	importViewHot.updateSettings({readOnly:true, contextMenu : false});
+	$("#btnImportViewSave").hide();
+	$("#impExcel").show();
+	$("#docBtn").children().show();
+	fn_changeImportViewType(searchTp);
+};
+
+//검색구분 변경
+function fn_changeImportViewType(type){
+	let impViewCol = new fn_impViewTableCol();
+	let impViewHeader = new fn_impViewTableHeader();
+	let impViewHidden = new fn_impViewTableHidden();
+	
+	let impViewLanCol = new fn_impViewLanTableCol();
+	let impViewLanHeader = new fn_impViewLanTableHeader();
+	let impViewLanHidden = new fn_impViewLanTableHidden();
+	
+	let impViewSpecCol = new fn_impViewSpecTableCol();
+	let impViewSpecHeader = new fn_impViewSpecTableHeader();
+	let impViewSpecHidden = new fn_impViewSpecTableHidden();
+	
+	var col, header, hidden, col2, header2, hidden2, col3, header3, hidden3 ;
+
+	//$('#alignImportView option:eq(0)').prop('selected', true);
+
+	fn_searchGridPurchOption(true);
+	col = impViewCol.impViewCol;
+	header = impViewHeader.impViewHeader;
+	hidden = impViewHidden.impViewHidden;
+	
+	col2 = impViewLanCol.impViewLanCol;
+	header2 = impViewLanHeader.impViewLanHeader;
+	hidden2 = impViewLanHidden.impViewLanHidden;
+	
+	col3 = impViewSpecCol.impViewSpecCol;
+	header3 = impViewSpecHeader.impViewSpecHeader;
+	hidden3 = impViewSpecHidden.impViewSpecHidden;
+	
+	importViewHot.updateSettings(fn_handsonGridViewOption(col, header, hidden));
+	importViewLanHot.updateSettings(fn_handsonGridLanOption(col2, header2, hidden2));
+	importViewSpecHot.updateSettings(fn_handsonGridSpecOption(col3, header3, hidden3));
+	fn_searchImportView();
+};
+
+
+function fn_impViewExcelSrch(type){
+	$("#impViewSrch1").val($("input:radio[name=importView_srch1]:checked").val());
+	if(type == '01'){
+		$("#impViewExTit").val(colPurchLedgrInfo);
+		$("#impViewExCol").val(String([colPlntCd+"*",colVndrCd+"*",colPurchsNo+"*",colSaleOrdr+"*",colItemAllCd+"*",colItemNm,colTaxbilNo,colImportViewDt+"*",colInvoiceNo,
+		     colCustomImpNo,colStndrdNo,colNatCd+"*",colImportViewQty+"*",colUsedQty,colLeftQty,
+		      colInctrm,colPuchaseAmt,colCurrentUnt,colExchngRt,colImportViewAmtVn+"*",colPurchPriceCif])+",");
+		$("#impViewExCd").val("plntCd,vndrCd,importViewNo,importViewOrdr,itemCd,itemNm,taxbilNo,importViewDt,invoiceNo,customImpNo,stndrdNo,natCd,importViewQty,usedQty,leftQty,incoterms,importViewPriceVn,crrncyUnt,exchngRt,importViewPriceFr,importViewCifPrice,");
+		$("#impViewExType").val("cd,cd,cd,cd,cd,text,cd,cd,cd,cd,cd,cd,floatString,floatString,floatString,cd,floatString,cd,floatString,floatString,floatString,");
+	}else if(type == '02'){
+		$("#impViewExTit").val(colOriginCnftmnInfo);
+		$("#impViewExCol").val(String([colPlntCd+"*",colVndrCd+"*",colImportViewNo+"*",colImportViewOrdr+"*",colItemAllCd+"*",colFtaCd+"*",colHsVer,colHsCd,
+			colPsr+"*",colReqDtm,colDocuFile,colOriginYn,colConfmSttus,colRecvDt,colStateMsg+","]));
+		$("#impViewExCd").val("plntCd,vndrCd,importViewNo,importViewOrdr,itemCd,ftaCd,hsVer,hsCd,psrSumry,reqDtm,docuOrgFile,originYn,approvedState,recvDtm,stateMsg,");
+		$("#impViewExType").val("cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,");
+	} else{
+		$("#impViewExTit").val(colImportViewUsed);
+		$("#impViewExCol").val(String([colPlntCd+"*",colVndrCd+"*",colPurchsNo+"*",colSaleOrdr+"*",colItemAllCd+"*",colTaxbilNo,colImportViewDt+"*",colInvoiceNo,
+		     colCustomImpNo,colSalesNo,colUsedQty])+",");
+		$("#impViewExCd").val("plntCd,vndrCd,importViewNo,importViewOrdr,itemCd,taxbilNo,importViewDt,invoiceNo,customImpNo,salesNo,importViewQty,");
+		$("#impViewExType").val("cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,floatString,");
+	}
+
+}
+
+
+function fn_impViewFileList(row, col){
+
+	var data = importViewHot.getSourceDataAtRow(row);
+	console.log(data);
+	$("#impViewFileListPopUp").modal("show");
+	
+	var rptNoTitle = "신고번호: " + data.rptNo;
+    
+    var uploadImpViewFileListTitle = document.querySelector('.modal-content .impModal-title span');
+	uploadImpViewFileListTitle.textContent = rptNoTitle;
+	
+    var sData = fn_rptNoForPopup(data);
+    fn_searchImpViewFilesPopup(sData);
+};
+
+function fn_rptNoForPopup(selectedRow){
+	var sData = {};
+
+	sData["srch1"] = selectedRow["rptNo"].replace(/-/g, '');
+	sData["srch2"] = selectedRow["name"];
+	sData["srch3"] = selectedRow["orgFileName"];
+	return sData;
+}
+
+
+function fn_searchImpViewFilesPopup(data){
+	
+		fn_loading(true);
+	
+    	$.ajax({
+		type : "POST",
+		url : "/import/selectImpViewFilesList.do",
+		data : data,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	impViewListHot.loadData([]);
+        	impViewListHot.loadData(data.impViewList);
+			setTimeout(function() {impViewListHot.render()}, 200);
+			fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("에러 발생");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+function fn_handsonGridImpViewListPopupOption() {
+	impViewListPopupSettings = {
+        columns: [
+        	{ data :'checkBox', type :'text', className :"htCenter", width: 30, type:'checkbox', checkedTemplate:'yes', uncheckedTemplate:'no', readOnly:false },
+        	{ data : 'rptNo', type: 'text', className: "htCenter", readOnly: true, 
+        		renderer: function(instance, td, row, col, prop, value, cellProperties) {
+                value = value.replace(/^(\d{5})(\d{2})(\d{6})(\w)$/, '$1-$2-$3$4');
+                Handsontable.renderers.TextRenderer.apply(this, arguments);
+                }
+        	  },
+            {
+                data: 'docuType',
+                type: 'text',
+                className: "htCenter",
+                readOnly: true, width: 50,
+                renderer: function (instance, td, row, col, prop, value, cellProperties) {
+                	if (value === 'CI') {
+                        td.innerHTML = '<div style="text-align: center;">Invoice</div>';
+                    } else if (value === 'PL') {
+                        td.innerHTML = '<div style="text-align: center;">Packing List</div>';
+                    } else if (value === 'DC') {
+                        td.innerHTML = '<div style="text-align: center;">신고필증</div>';
+                    } else if (value === 'CB') {
+                        td.innerHTML = '<div style="text-align: center;">통합</div>';
+                    } else if (value === 'UC') {
+                        td.innerHTML = '<div style="text-align: center;">정정 통합</div>';
+                    } else if (value === 'CO') {
+                        td.innerHTML = '<div style="text-align: center;">원산지증명서</div>';
+                    } else if (value === 'RQ') {
+                        td.innerHTML = '<div style="text-align: center;">요건 서류</div>';
+                    } else if (value === 'OT') {
+                        td.innerHTML = '<div style="text-align: center;">기타</div>';
+                    } else if (value === 'AC') {
+                        td.innerHTML = '<div style="text-align: center;">정산서</div>';
+                    } else {
+                        td.innerHTML = '<div style="text-align: center;">B/L</div>';
+                    }
+                }
+            },
+            { data: 'docuOrgFile', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'docuFile', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'uploadDt', type: 'text', width : 50, className: "htCenter", readOnly: true },
+            { data: 'docuPath', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'blno', type: 'text', className: "htCenter", readOnly: true }
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["", "신고번호", "파일 타입", "파일명", "", "업로드 일자", "파일 경로"],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [1,4,6,7]},
+        afterGetColHeader: function(col, TH){
+        	if(col == 0){
+          	TH.innerHTML = "<input type='checkbox'  class='checker' id='id_impViewAllClick' onclick='fn_impViewAllClick();'>";
+          }
+        }
+    };
+
+    return impViewListPopupSettings;
+}
+
+
+function fn_impViewAllClick(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_impViewAllClick").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+
+	var data = impViewListHot.getData();
+
+	for(var i=0; i<data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	impViewListHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_impViewAllClick").prop("checked", true);
+	} else {
+		$("#id_impViewAllClick").prop("checked", false);
+	}
+}
+
+$("#importViewTable .wtHolder").scroll(function(){
+    var scrollTop = $("#impViewListPopupTable .wtHolder").scrollTop();
+    var countPerPage = 50;
+    var rowHeight = overHot.getRowHeight();
+    var addCnt = 790;
+});
+
+
+$("#popOverTable .wtHolder").scroll(function(){
+	fn_impViewFileList(row, col)
+	var data = importViewHot.getSourceData();
+	var scrollTop = $("#importViewTable .wtHolder").scrollTop();
+	var countPerPage = 50;
+	var rowHeight = filesHot.getRowHeight();
+	var addCnt = 790;
+	
+});
+
+function fn_impViewFileDown(){
+    var data = impViewListHot.getSourceData();
+    var selectedData = [];
+    var rptNo = data[0].rptNo;
+    var blNo = data[0].blno;
+    var cnt = 0;
+    
+    for (var i = 0; i < data.length; i++) {
+    	if (data[i].checkBox === "yes") { 
+    		selectedData.push(data[i]);
+    		cnt++;
+    	}
+    }
+    
+    if (cnt == 0){
+    	alert("다운로드할 파일을 선택해 주세요.");
+    	return;
+    }
+    if (cnt == 1) {
+        $("#docuPath").val(selectedData[0].docuPath);
+        $("#docuFile").val(selectedData[0].docuFile);
+        $("#docuOrgFile").val(selectedData[0].docuOrgFile);
+        document.impViewZipDownForm.action = "/base/downloadFile.do";
+        document.impViewZipDownForm.submit();
+    } else {
+	    $.ajax({
+	        type: "POST",
+	        url: "/import/impViewZipCreate.do",
+	        data: JSON.stringify(selectedData), 
+	        contentType: 'application/json',
+	        beforeSend: function(xhr) {
+	            xhr.setRequestHeader("AJAX", "true");
+	        },
+	        success: function(response) {
+	        	$("#impViewZipDown").val(blNo + "_" + rptNo);
+	        	document.impViewZipDownForm.action = "/import/downloadImpViewFile.do";
+	          	document.impViewZipDownForm.submit();
+	        },
+	        error: function(xhr, status, error) {
+	            console.error("다운로드 실패:", error);
+	        }
+	    });
+    }
+};
+
+
+function impViewFileListClose(){
+	$("#impViewFileListPopUp").modal("hide");
+}
+
+function fn_importViewExcelDownload(){
+	fn_loading(true);
+	 var type = $("input:radio[name=importView_srch1]:checked").val();
+	
+	//엑셀옵션
+	var exTitArr = [];
+	var exTit = "";
+	var exColArr = [];
+	var exCol = "";
+    var exTitDivArr = [];
+    var exTitDiv = "";
+	
+	let impViewCol = new fn_impViewTableCol();
+	let impViewHeader = new fn_impViewTableHeader();
+	
+	let impViewLanCol = new fn_impViewLanTableCol();
+	let impViewLanHeader = new fn_impViewLanTableHeader();
+	
+	let impViewSpecCol = new fn_impViewSpecTableCol();
+	let impViewSpecHeader = new fn_impViewSpecTableHeader();
+    
+    exColArr.push(fn_getExcelCol(impViewCol.impViewCol));
+	exColArr.push(fn_getExcelCol(impViewLanCol.impViewLanCol));
+	exColArr.push(fn_getExcelCol(impViewSpecCol.impViewSpecCol));
+	
+	exTitArr.push(fn_getExcelHead(impViewHeader.impViewHeader));
+	exTitArr.push(fn_getExcelHead(impViewLanHeader.impViewLanHeader));
+	exTitArr.push(fn_getExcelHead(impViewSpecHeader.impViewSpecHeader));
+	
+ 	exCol = exColArr.join("|||");
+	exTit = exTitArr.join("||||");
+	exTitDiv = "1|수입신고현황||2|수입신고란||3|수입신고규격";
+		
+   var parameters = {exCol : "", exTit: "", exTitDiv: "", exType: "", srch40: ""};
+	
+   // 검색옵션
+   $.each(fn_setImportViewForm(), function(attrName, attrValue){
+   	parameters[attrName] = attrValue;
+   });
+	
+	parameters.exCol = exCol.replace(/ /g,"_");
+	parameters.exTit = exTit.replace(/ /g,"_");
+	parameters.exTitDiv = exTitDiv.replace(/ /g,"_");
+	parameters.exType = type;
+	parameters.srch40 = "수입신고현황";
+	
+	$.ajax({
+		 url: "/import/importDownloadExcel.do",
+		 data: parameters,
+		 type: 'POST',
+		 cache: false,
+		 xhrFields: {
+			 responseType: "blob",
+		 },
+	    success: function(blob, status, xhr) {
+	    	try {
+				// check for a filename
+				 var fileName = "";
+				 var disposition = xhr.getResponseHeader("Content-Disposition");
+
+			       if (disposition && disposition.indexOf("attachment") !== -1) {
+			      	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+			           var matches = filenameRegex.exec(disposition);
+
+			           if (matches != null && matches[1]) {
+			               fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+			           }
+			       }
+
+			       // for IE
+			       if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+			           window.navigator.msSaveOrOpenBlob(blob, fileName);
+			       } else {
+			           var URL = window.URL || window.webkitURL;
+			           var downloadUrl = URL.createObjectURL(blob);
+
+			           if (fileName) {
+			               var a = document.createElement("a");
+
+			               // for safari
+			               if (a.download === undefined) {
+			                   window.location.href = downloadUrl;
+			               } else {
+			                   a.href = downloadUrl;
+			                   a.download = fileName;
+			                   document.body.appendChild(a);
+			                   a.click();
+			               }
+			           } else {
+			               window.location.href = downloadUrl;
+			           }
+			       }
+		        fn_loading(false);
+			} catch (e) {
+				console.log(e);
+				fn_loading(false);
+			};
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+	
+}
+
+function fn_getExcelCol(viewCol){
+    return viewCol.map(item => item['data'] + '|' + item['className'] + '|' + item['width']).join("||");
+}
+ 
+function fn_getExcelHead(viewHead){
+    var result = [];
+    
+    if(viewHead.length > 1 && typeof(viewHead[0][0]) == 'object') {
+        for(var i=0; i < viewHead.length; i++) {
+            if(i == viewHead.length -1){
+                result.push(viewHead[i].join("|null||") + "|null");
+            }else {
+                result.push(viewHead[i].map(item => (item['label'] ? item['label'] : 'null') + '|' + (item['colspan'] ? item['colspan'] : 'null')).join("||"));
+            }
+        }
+        return result.join("|||");
+    }else{
+        return viewHead.join("|null||") + "|null";
+    };
+}
+
+
+function getCurrentTime() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+function fn_shipReqBtn(row, col) {
+	var rowData = importViewHot.getSourceDataAtRow(row);
+	blNo = rowData.blno;
+	rptNo = rowData.rptNo.replace(/-/g, '');
+	$("#shipReqViewListPopUp").modal("show");
+	var blNoTitle = "B/L 번호: " + blNo;
+	
+	const fileListDiv = document.getElementById('fileList');
+	filesList = [];
+	fileListDiv.innerHTML = '';
+	
+    var shipReqModalTitle = document.querySelector('.modal-content .shipReqModal-title span');
+    shipReqModalTitle.textContent = blNoTitle;
+    
+    var date = new Date();
+	var today = new Date().toISOString().substring(0,10);
+	  
+	$("#fromDt0").val(today);
+	$("#toDt0").val(today);
+	$("#fromTime0").val(getCurrentTime())
+	$("#toTime0").val(getCurrentTime())
+
+	var shipReqModalTime = document.querySelector('.modal-content .shipReqModal-time span');
+	shipReqModalTime.textContent = today + " " + getCurrentTime();
+	
+	var sData = {};
+	sData["srch1"] = rptNo;
+	sData["srch2"] = blNo;
+	
+	$.ajax({
+		type : "POST",
+		url : "/shipping/selectShippingTempList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+			if(data.resultList.length > 0){
+	    	$("#toStaff").val(data.resultList[0].toStaff);
+	    	$("#toPhnNo").val(data.resultList[0].toPhnNo.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3'));
+	    	$("#toAddr").val(data.resultList[0].toAddr);
+	    	$("#consignorName").val(data.resultList[0].consignorName);
+	    	$("#consignorCode").val(data.resultList[0].consignorCode);
+	    	$("#consignorStaff").val(data.resultList[0].consignorStaff);
+	    	$("#consignorEmail").val(data.resultList[0].consignorEmail);
+        	
+           for (var i = 0; i < data.resultList.length; i++) {
+              if(i >= 1){
+            	  addShipInfo();
+           	  }
+              
+              var ctNo = document.getElementById('ctNo' + i).value;
+      		  var fromSpecifics = document.getElementById('fromSpecifics' + i).value;
+      		  var fromDt = document.getElementById('fromDt' + i).value;
+      		  var formattedFromDt = data.resultList[0].fromDt.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3');
+      		  var fromTime = document.getElementById('fromTime' + i).value;
+      		  var fromAddr = document.getElementById('fromAddr' + i).value;
+      		  var toDt = document.getElementById('toDt' + i);
+      		  var formattedToDt = data.resultList[0].toDt.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3');
+      		  var toTime = document.getElementById('toTime' + i).value;
+      		  var goodsName = document.getElementById('goodsName' + i).value;
+      		  var mixYn = document.getElementById('mixYn' + i).value;
+      		  var fromReq = document.getElementById('fromReq' + i).value;
+      		  
+           	  $("#ctNo"+i).val(data.resultList[0].ctNo);
+           	  $("#fromSpecifics"+i).val(data.resultList[0].fromSpecifics);
+           	  $("#fromDt" + i).val(formattedFromDt);
+           	  $("#fromTime"+i).val(data.resultList[0].fromTime);
+           	  $("#fromAddr"+i).val(data.resultList[0].fromAddr);
+           	  $("#toDt"+i).val(formattedToDt);
+           	  $("#toTime"+i).val(data.resultList[0].toTime);
+           	  $("#goodsName"+i).val(data.resultList[0].goodsName);
+           	  $("#mixYn"+i).val(data.resultList[0].mixYn);
+           	  $("#fromReq"+i).val(data.resultList[0].fromReq);
+			}
+			}
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("Your request is up. Please log back in if you wish continue");
+				location.href = document.referrer;
+			} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+}
+
+function shipReqModalClose(){
+	$("#shipReqViewListPopUp").modal("hide");
+	fn_clearShipReqBtn();
+}
+
+
+var rowCount = 1;
+function addShipInfo() {
+    const newRow = document.createElement('div');
+    newRow.classList.add('flex', 'col-span-8', 'items-center', 'justify-between');
+    newRow.innerHTML = `
+    	<div id="transInfo-container" class="container mx-auto p-3 border border-gray-300" style="width: 100%; height: 130px;">
+		    <div class="grid grid-cols-8 gap-1">
+		        <div class="flex items-center justify-end font-bold col-span-8 text-base">
+		            <button type="button"
+		                onclick="removeTransInfo(this)"
+		                class="p-1.5 text-white flex items-center justify-center bg-rose-600 rounded-lg hover:opacity-50 duration-200">
+		                <i class="fa-solid fa-minus"></i>
+		            </button>
+		        </div>
+		        <div class="flex col-span-8 items-center justify-between">
+		            <div class="flex items-center">
+		                <label class="font-medium text-gray-900 text-base mr-2 w-20">컨테이너 번호</label>
+		                <input id="ctNo${rowCount}" type="text" class="border border-gray-300 rounded-lg text-base p-1" style="width: 220px;">
+		            </div>
+		            <div class="flex items-center">
+		                <label class="font-medium text-gray-900 text-base mr-2 w-20">특이사항</label>
+		                <input id="fromSpecifics${rowCount}" type="text" class="border border-gray-300 rounded-lg text-base p-1" style="width: 220px;">
+		            </div>
+		        </div>
+		        <div class="flex col-span-8 items-center justify-between">
+		            <div class="flex items-center">
+		                <label class="font-medium text-gray-900 text-base mr-2 w-20">도착시간</label>
+		                <input id="toTime${rowCount}" type="time" style="width: 220px; font-size: 14px;"
+		                    class="font-medium bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+		            </div>
+		        </div>
+		    </div>
+		</div>	
+    `;
+
+    const container = document.querySelector('#addContainer');
+    container.appendChild(newRow);
+    
+    var date = new Date();
+    var today = new Date().toISOString().substring(0,10);
+  
+    $("#fromDt" + rowCount).val(today);
+  	$("#toDt" + rowCount).val(today);
+  	$("#fromTime" + rowCount).val(getCurrentTime());
+  	$("#toTime" + rowCount).val(getCurrentTime());
+
+    rowCount++;
+}
+
+
+function removeTransInfo(button) {
+	var container = button.closest('.container');
+	container.parentNode.removeChild(container);
+}
+
+
+function fn_loadAddrList() {
+	$("#loadAddrListPopUp").modal("show");
+	var sData = {};
+	fn_loading(true);
+
+	$.ajax({
+		type : "POST",
+		url : "/shipping/selectShippingDstnList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+	    success : function(data) {
+	    	loadDstnListHot.loadData([]);
+	    	loadDstnListHot.loadData(data.resultList);
+			setTimeout(function() {loadDstnListHot.render()}, 10);
+			fn_loading(false);
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("에러 발생");
+		    	location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+}
+
+function fn_handsonGridLoadDstnListPopupOption() {
+	loadDstnPopupSettings = {
+        columns: [
+            { data: 'checkBox', type: 'checkbox', className: "htCenter", checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly: false },
+            { data: 'addrNm', type: 'text', className: "htCenter", readOnly: true},
+            { data: 'phnNo', 
+                type: 'text', 
+                className: "htCenter", 
+                readOnly: true,
+                renderer: function(instance, td, row, col, prop, value, cellProperties) {
+                    if (value) {
+                        value = value.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3');
+                        td.innerHTML = value;
+                    }
+                    Handsontable.renderers.TextRenderer.apply(this, arguments);
+                }
+            },
+            { data: 'baseAddr', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'dtlsAddr', type: 'text', className: "htCenter", readOnly: true },
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["", "수령자", "연락처", "주소", "상세주소"],
+        colWidths: [30, 60, 90, 150, 150],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+    };
+    return loadDstnPopupSettings;
+}
+
+function loadAddrListClose(){
+	$("#loadAddrListPopUp").modal("hide");
+}
+
+function fn_regist() {
+	$("#addrRegistPopUp").modal("show");
+}
+
+function fn_addrDel() {
+	var rowData = loadDstnListHot.getSourceData();
+	let selected = [];
+    var cnt = 0;
+    for (let i = 0; i < rowData.length; i++) {
+        if (rowData[i].checkBox === "yes") {
+        	selected.push(rowData[i]);
+        	cnt++;
+        }
+    }
+    if (cnt == 0){
+    	alert("도착지를 선택해주세요.");
+    	return;
+    }
+    if (confirm("선택하신 도착지를 삭제하시겠습니까?")) {
+        $.ajax({
+        	type: "POST",
+            url: "/shipping/deleteAddr.do",
+            data: JSON.stringify(selected), 
+            contentType: 'application/json', 
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("AJAX", "true");
+            },
+            success: function(data) {
+            	console.log(selected);
+            	for (let i = selected.length - 1; i >= 0; i--) {
+                    loadDstnListHot.alter('remove_row', selected[i]);
+                }
+                fn_loadAddrList(data);
+                data = [];
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                if (xhr.status == 400) {
+                    alert("에러 발생");
+                    location.href = document.referrer;
+                } else {
+                    console.log(errorThrown);
+                    alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+                }
+            }
+        });
+    }
+}
+
+function addrRegistPopupClose(){
+	$("#addrRegistPopUp").modal("hide");
+	document.getElementById('addrNm').value = '';
+
+    const contactInputs = document.querySelectorAll('input[type="text"].w-24');
+    contactInputs.forEach(input => input.value = '');
+
+    document.getElementById('addrNm').value = '';
+    document.getElementById('zipCode').value = '';
+    document.getElementById('toAddr').value = '';
+}
+
+function fn_addrRegist() {
+	var addrNm = document.getElementById('addrNm').value;
+	var phnNo1 = document.getElementById('phnNo1').value;
+	var phnNo2 = document.getElementById('phnNo2').value;
+	var phnNo3 = document.getElementById('phnNo3').value;
+    var phnNo = phnNo1 + phnNo2 + phnNo3;
+    var zipCode = document.getElementById('zipCode').value;
+    var baseAddr = document.getElementById('baseAddr').value;
+    var dtlsAddr = document.getElementById('dtlsAddr').value;
+    
+    if (!addrNm) {
+        alert("수령자를 입력하세요.");
+        document.getElementById('addrNm').focus();
+        return;
+    }
+    if (!phnNo1 || !phnNo2 || !phnNo3) {
+        alert("연락처를 입력하세요.");
+        const phnNoElement = !phnNo1 ? 'phnNo1' : (!phnNo2 ? 'phnNo2' : 'phnNo3');
+        document.getElementById(phnNoElement).focus();
+        return;
+    }
+    if (phnNo2.length !== 4 || phnNo3.length !== 4) {
+        alert("연락처 뒷자리는 4자리 이상이어야 합니다.");
+        if (phnNo2.length !== 4) {
+            document.getElementById('phnNo2').focus();
+        } else {
+            document.getElementById('phnNo3').focus();
+        }
+        return;
+    }
+    if (!zipCode) {
+        alert("주소를 입력하세요.");
+        document.getElementById('zipCode').focus();
+        return;
+    }
+    if (!baseAddr) {
+        alert("주소를 입력하세요.");
+        document.getElementById('baseAddr').focus();
+        return;
+    }
+    if (!dtlsAddr) {
+    	if(!confirm("상세주소를 입력하지 않았습니다. 그대로 저장하시겠습니까?")) {
+            document.getElementById('dtlsAddr').focus();
+            return;
+        }
+    }
+    
+    var aData = {};
+    aData["addrNm"] = addrNm;
+    aData["phnNo"] = phnNo;
+    aData["zipCode"] = zipCode;
+    aData["baseAddr"] = baseAddr;
+    aData["dtlsAddr"] = dtlsAddr;
+    
+	$.ajax({
+		type : "POST",
+		url : "/shipping/insertAddr.do",
+		data : aData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+	    success : function(data) {
+	    	$("#addrRegistPopUp").modal("hide");
+	    	var rowData = loadDstnListHot.getSourceData();
+	    	let selected = [];
+	        for (let i = 0; i < rowData.length; i++) {
+	        	loadDstnListHot.alter('insert_row_below', i, 1);
+	        }
+	    	fn_loadAddrList(data);
+			data = [];
+			
+	    	document.getElementById('addrNm').value = '';
+
+	        const contactInputs = document.querySelectorAll('input[type="text"].w-24');
+	        contactInputs.forEach(input => input.value = '');
+
+	        document.getElementById('addrNm').value = '';
+	        document.getElementById('zipCode').value = '';
+	        document.getElementById('baseAddr').value = '';
+	        document.getElementById('dtlsAddr').value = '';
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("에러 발생");
+		    	location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+}
+
+function fn_searchAddr() {
+	new daum.Postcode({
+		oncomplete: function(data) {
+			var addr = ''; // 주소 변수
+	
+			if (data.userSelectedType === 'R') { // 도로명 주소
+				addr = data.roadAddress;
+			} else { // 지번 주소
+				addr = data.jibunAddress;
+			}
+			document.getElementById('zipCode').value = data.zonecode;
+			document.getElementById("baseAddr").value = addr;
+			document.getElementById("dtlsAddr").focus();
+	    }
+    }).open();
+}
+
+
+function fn_saveAddr() {
+	var rowData = loadDstnListHot.getSourceData();
+	let selected = [];
+    var cnt = 0;
+    for (let i = 0; i < rowData.length; i++) {
+        if (rowData[i].checkBox === "yes") {
+        	selected.push(rowData[i]);
+        	cnt++;
+        	console.log(selected);
+        }
+    }
+    if (cnt > 1){
+    	alert("도착지는 한 개만 선택 가능합니다.");
+    	return;
+    }
+    
+    document.getElementById('toStaff').value = selected[0].addrNm;
+    var formattedPhoneNo = selected[0].phnNo.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+    document.getElementById('toPhnNo').value = formattedPhoneNo;
+    var address = selected[0].baseAddr + selected[0].dtlsAddr;
+    document.getElementById('toAddr').value = address;
+    $("#loadAddrListPopUp").modal("hide");
+}
+
+function fn_addrTempSave() {
+	var basicData = [];
+	var toStaff = document.getElementById('toStaff').value;
+	var toPhnNo = document.getElementById('toPhnNo').value.replace(/-/g, '');;
+	var toAddr = document.getElementById('toAddr').value;
+	var consignorName = document.getElementById('consignorName').value;
+	var consignorCode = document.getElementById('consignorCode').value;
+	var consignorStaff = document.getElementById('consignorStaff').value;
+	var consignorEmail = document.getElementById('consignorEmail').value;
+	
+	for (var i = 0; i < rowCount; i++) {
+		var orderSeq = i+1;
+		var ctNo = document.getElementById('ctNo' + i).value;
+		var fromSpecifics = document.getElementById('fromSpecifics' + i).value;
+		var fromDt = document.getElementById('fromDt' + i).value.replace(/-/g, '');
+		var fromTime = document.getElementById('fromTime' + i).value;
+		var fromAddr = document.getElementById('fromAddr' + i).value;
+		var toDt = document.getElementById('toDt' + i).value.replace(/-/g, '');;
+		var toTime = document.getElementById('toTime' + i).value;
+		var goodsName = document.getElementById('goodsName' + i).value;
+		var mixYn = document.getElementById('mixYn' + i).value;
+		var fromReq = document.getElementById('fromReq' + i).value;
+		basicData.push({
+			orderSeq, blNo, rptNo, ctNo, fromSpecifics, fromDt, fromTime, fromAddr, 
+	    	toDt, toTime, goodsName, mixYn, fromReq,
+	    	toStaff, toPhnNo, toAddr, consignorName, consignorCode, consignorStaff, consignorEmail
+		})
+	}
+	console.log(fromDt);
+	$.ajax({
+	   type: "POST",
+	   url: "/shipping/insertShippingTempList.do",
+	   data: JSON.stringify(basicData),
+	   beforeSend: function(xmlHttpRequest){
+	       xmlHttpRequest.setRequestHeader("AJAX", "true");
+	   },
+	   contentType: "application/json; charset=utf-8",
+	   success: function(data) {
+	       if(data === "success") {
+	           alert("잔여 여부 및 파일은 임시저장되지 않습니다.\n임시저장이 완료되었습니다.");
+	       }   
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	       if(e.status == 400){
+	           alert("Your request is up. Please log back in if you wish continue");
+	           location.href = document.referrer;
+	       } else {
+	           console.log(errorThrown);
+	           alert(msgSaveError);
+	       }
+	    }
+	});
+}
+
+function fn_clearShipReqBtn() {
+	var date = new Date();
+	var today = new Date().toISOString().substring(0,10);
+	
+	for (var i = 1; i < rowCount; i++) {
+		var container = document.querySelector(`#ctNo${i}`).closest('#transInfo-container');
+        if (container) {
+            container.remove();
+        }
+    }
+    rowCount = 1;
+	  
+	$("#fromDt0").val(today);
+	$("#toDt0").val(today);
+	$("#fromTime0").val(getCurrentTime());
+	$("#toTime0").val(getCurrentTime());
+	$("#ctNo0").val("");
+	$("#fromSpecifics0").val("");
+	$("#fromAddr0").val("");
+	$("#goodsName0").val("");
+	$("#mixYn0").val("Y");
+	$("#fromReq0").val("");
+	$("#toStaff").val("");
+	$("#toPhnNo").val("");
+	$("#toAddr").val("");
+	$("#consignorName").val("");
+	$("#consignorCode").val("");
+	$("#consignorStaff").val("");
+	$("#consignorEmail").val("");
+	
+}

@@ -1,0 +1,294 @@
+package egovframework.pf.shipping.utill;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import egovframework.pf.api.service.ApiShippingService;
+import egovframework.pf.shipping.service.ShippingOrderVO;
+
+@Component
+public class ShippingEmailUtill {
+
+	private static final Log LOGGER = LogFactory.getLog(ShippingEmailUtill.class);
+	private static ApiShippingService apiShippingService;
+
+	@Autowired
+	public void setCodeService(ApiShippingService apiShippingService) {
+		ShippingEmailUtill.apiShippingService = apiShippingService;
+	}
+	
+	public static String sendEmailWithFile(ShippingOrderVO svo, String email, boolean isModified) throws Exception {
+	    System.out.println("fileName : " + svo.getFileName());
+	    
+	    String blNo = svo.getBlNo();
+	    String cmpnyCd = svo.getCmpnyNm();
+	    String fileName = svo.getFileName();
+	    String managerNm = svo.getManagerNm();
+	    String billEmail = svo.getBillEmail();
+	    String shipperManager = svo.getShipperManager();
+	    String shipperMail = svo.getShipperMail();
+	    String transDetails = svo.getTransDetails();
+	    String taxInvoice = svo.getTaxInvoice();
+	    
+	    // 이메일 발송 정보 설정
+	    String host = "smtp.worksmobile.com"; // 이메일 발송에 사용할 SMTP 서버 호스트
+	    int port = 587; // 이메일 발송에 사용할 SMTP 서버 포트
+	    String username = "ioom@kordsystems.com"; // 이메일 발송 계정 아이디
+	    String password = "rdl8SWfngllP"; // 이메일 발송 계정 비밀번호
+	    
+	    Map<String, Object> contentMap =
+	            setEmailContent(blNo, cmpnyCd, managerNm, billEmail, shipperManager, shipperMail, transDetails, taxInvoice, email, isModified);
+	    
+	    Properties props = new Properties();
+	    props.put("mail.smtp.auth", "true");
+	    props.put("mail.smtp.starttls.enable", "true");
+	    props.put("mail.smtp.host", host);
+	    props.put("mail.smtp.port", port);
+	    props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+	    
+	    Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+	        protected PasswordAuthentication getPasswordAuthentication() {
+	            return new PasswordAuthentication(username, password);
+	        }
+	    });
+	    
+	    try {
+	        Message message = new MimeMessage(session);
+	        message.setSentDate(new Date()); //보내는 날짜
+	        message.setFrom(new InternetAddress(username)); //발송자
+	        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(contentMap.get("recipient").toString())); //수신자
+	        message.setSubject(contentMap.get("subject").toString()); //메일제목
+
+	        Multipart multipart = new MimeMultipart();
+	        
+	        MimeBodyPart textBodyPart = new MimeBodyPart();
+	        textBodyPart.setContent(contentMap.get("content").toString(), "text/html; charset=utf-8");
+	        multipart.addBodyPart(textBodyPart); // 본문을 Multipart에 추가
+	        
+	        if (fileName != null && !fileName.isEmpty()) {
+	            String[] fileNames = fileName.split("/");
+	            for (String singleFileName : fileNames) {
+	                File file = new File("/home/files/" + singleFileName.trim());
+	                //System.out.println("파일: " + file.getAbsolutePath());
+	                if (file.exists()) {
+	                    DataSource source = new FileDataSource(file);
+	                    BodyPart attachmentBodyPart = new MimeBodyPart();
+	                    attachmentBodyPart.setDataHandler(new DataHandler(source));
+	                    attachmentBodyPart.setFileName(MimeUtility.encodeText(file.getName(), "UTF-8", "B"));
+	                    attachmentBodyPart.setHeader("Content-Type", "application/zip");
+	                    multipart.addBodyPart(attachmentBodyPart); // 첨부 파일 추가
+	                } else {
+	                    System.out.println("File not found: " + file.getAbsolutePath());
+	                }
+	            }
+	        }
+	        message.setContent(multipart);
+	        Transport.send(message);
+	        return "success";
+	        
+	    } catch (MessagingException e) {
+	        System.out.println(e);
+	        return "false";
+	    }
+	}
+
+	
+	private static Map<String, Object> setEmailContent(String blNo, String cmpnyCd, String managerNm, String billEmail,
+			String shipperManager, String shipperMail, String transDetails, String taxInvoice, String email, boolean isModified
+			) {
+		Map<String, Object> returnData = new HashMap<>();
+	    returnData.put("recipient", email);
+	    
+	    String prefix = isModified ? "수정요청_" : "";
+	    String subject = String.format("%sBL번호: %s, 화주명: %s", prefix, blNo, cmpnyCd);
+	    returnData.put("subject", subject);
+	    
+	    // 내용 설정
+	    StringBuilder contentBuilder = new StringBuilder();
+	    contentBuilder.append("<p><strong>신한 담당자:</strong> ").append(managerNm).append("</p>")
+	                  .append("<p><strong>신한 메일:</strong> ").append(billEmail).append("</p>")
+	                  .append("<p><strong>화주 담당자:</strong> ").append(shipperManager.isEmpty() ? "없음" : shipperManager).append("</p>")
+	                  .append("<p><strong>화주 메일:</strong> ").append(shipperMail.isEmpty() ? "없음" : shipperMail).append("</p>");
+	    returnData.put("content", contentBuilder.toString());
+
+	    return returnData;
+	}
+	
+	
+	public static String sendEmailStatus(String rptNo, String blNo, String cmpnyNm, String email, String Status) throws Exception {
+	    
+	    // 이메일 발송 정보 설정
+	    String host = "smtp.worksmobile.com"; // 이메일 발송에 사용할 SMTP 서버 호스트
+	    int port = 587; // 이메일 발송에 사용할 SMTP 서버 포트
+	    String username = "ioom@kordsystems.com"; // 이메일 발송 계정 아이디
+	    String password = "rdl8SWfngllP"; // 이메일 발송 계정 비밀번호
+	    
+	    Map<String, Object> contentMap =
+	    		setEmailStatus(rptNo, blNo, cmpnyNm, email, Status);
+	    
+	    Properties props = new Properties();
+	    props.put("mail.smtp.auth", "true");
+	    props.put("mail.smtp.starttls.enable", "true");
+	    props.put("mail.smtp.host", host);
+	    props.put("mail.smtp.port", port);
+	    props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+	    
+	    Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+	        protected PasswordAuthentication getPasswordAuthentication() {
+	            return new PasswordAuthentication(username, password);
+	        }
+	    });
+	    
+	    try {
+	        Message message = new MimeMessage(session);
+	        message.setSentDate(new Date()); //보내는 날짜
+	        message.setFrom(new InternetAddress(username)); //발송자
+	        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(contentMap.get("recipient").toString())); //수신자
+	        message.setSubject(contentMap.get("subject").toString()); //메일제목
+
+	        Multipart multipart = new MimeMultipart();
+	        
+	        MimeBodyPart textBodyPart = new MimeBodyPart();
+	        textBodyPart.setContent(contentMap.get("content").toString(), "text/html; charset=utf-8");
+	        multipart.addBodyPart(textBodyPart); // 본문을 Multipart에 추가
+	        
+	        message.setContent(multipart);
+	        Transport.send(message);
+	        return "success";
+	        
+	    } catch (MessagingException e) {
+	        System.out.println(e);
+	        return "false";
+	    }
+	}
+	
+	private static Map<String, Object> setEmailStatus(String rptNo, String blNo, String cmpnyNm, String email, String Status
+			) {
+		Map<String, Object> returnData = new HashMap<>();
+		
+		returnData.put("recipient", email);
+	    
+	    String subject = String.format("BL번호: %s, 화주명: %s, 운송현황: %s", blNo, cmpnyNm, Status);
+	    returnData.put("subject", subject);
+	    
+	    // 내용 설정
+	    StringBuilder contentBuilder = new StringBuilder();
+	    contentBuilder.append("<p><strong>해당 운송 요청건이  " + Status + "완료 되었습니다.</strong></p>");
+	    returnData.put("content", contentBuilder.toString());
+
+	    return returnData;
+	}
+	
+	public static String sendEmailAlloc(String rptNo, String blNo, String cmpnyNm, String email, String Status, String ctNo, String shipperMail, String carNo, String carNm, String carPhnNo) throws Exception {
+		
+		// 이메일 발송 정보 설정
+		String host = "smtp.worksmobile.com"; // 이메일 발송에 사용할 SMTP 서버 호스트
+		int port = 587; // 이메일 발송에 사용할 SMTP 서버 포트
+		String username = "ioom@kordsystems.com"; // 이메일 발송 계정 아이디
+		String password = "rdl8SWfngllP"; // 이메일 발송 계정 비밀번호
+		
+		List<String> emails  = Arrays.asList(email, shipperMail);
+		
+		Map<String, Object> contentMap =
+				setEmailAlloc(rptNo, blNo, cmpnyNm,  Status,ctNo, carNo, carNm, carPhnNo);
+		
+		Properties props = new Properties();
+		props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.starttls.enable", "true");
+		props.put("mail.smtp.host", host);
+		props.put("mail.smtp.port", port);
+		props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+		
+		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(username, password);
+			}
+		});
+		
+		try {
+			
+			InternetAddress[] recipients = convertToInternetAddresses(emails);
+			
+			Message message = new MimeMessage(session);
+			message.setSentDate(new Date()); //보내는 날짜
+			message.setFrom(new InternetAddress(username)); //발송자
+			message.setRecipients(Message.RecipientType.TO, recipients); //수신자
+			message.setSubject(contentMap.get("subject").toString()); //메일제목
+			
+			Multipart multipart = new MimeMultipart();
+			
+			MimeBodyPart textBodyPart = new MimeBodyPart();
+			textBodyPart.setContent(contentMap.get("content").toString(), "text/html; charset=utf-8");
+			multipart.addBodyPart(textBodyPart); // 본문을 Multipart에 추가
+			
+			message.setContent(multipart);
+			Transport.send(message);
+			return "success";
+			
+		} catch (MessagingException e) {
+			System.out.println(e);
+			return "false";
+		}
+	}
+	
+	private static Map<String, Object> setEmailAlloc(String rptNo, String blNo, String cmpnyNm, String Status, String ctNo, String carNo, String carNm, String carPhnNo
+			) {
+		Map<String, Object> returnData = new HashMap<>();
+		
+		String subject = String.format("BL번호: %s, 화주명: %s, 운송현황: %s", blNo, cmpnyNm, Status);
+		returnData.put("subject", subject);
+		
+		// 내용 설정
+		StringBuilder contentBuilder = new StringBuilder();
+		contentBuilder.append("<p><strong>해당 운송 요청건이  " + Status + "완료 되었습니다.</strong></p>");
+		if(!ctNo.equals("")) {
+			contentBuilder.append("<p><strong>컨테이너 번호  : " + ctNo + "</strong></p>");
+		}
+		contentBuilder.append("<p><strong>차량 번호  : " + carNo + "</strong></p>");
+		contentBuilder.append("<p><strong>차량 기사 : " + carNm + "</strong></p>");
+		contentBuilder.append("<p><strong>기사 연락처 : " + carPhnNo + "</strong></p>");
+		returnData.put("content", contentBuilder.toString());
+		
+		return returnData;
+	}
+
+	
+	private static InternetAddress[] convertToInternetAddresses(List<String> emails) throws Exception {
+	    return emails.stream()
+	            .filter(email -> email != null && !email.trim().isEmpty()) // null 또는 빈 문자열 제외
+	            .map(email -> {
+	                try {
+	                    return new InternetAddress(email.trim());
+	                } catch (Exception e) {
+	                    throw new RuntimeException("Invalid email address: " + email, e);
+	                }
+	            })
+	            .toArray(InternetAddress[]::new);
+	}
+}

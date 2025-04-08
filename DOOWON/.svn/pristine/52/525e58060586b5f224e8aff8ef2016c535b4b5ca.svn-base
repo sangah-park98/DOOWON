@@ -1,0 +1,698 @@
+var deadLineViewHot;
+var deadLineViewSettings;
+var deadLineViewPopupSettings;
+var deadLineViewIndex = 9999;
+var deadLineViewScrollTp = true;
+var deadLineViewData = {};
+var deadLineViewCol = [];
+var deadLineViewHeader = [];
+
+
+$( document ).ready(function() {
+	
+	  $('.band-calendar').each(function(){ regCal(this) ;})
+	  $('.datepicker').datepicker("option","dateFormat",calFormat);
+	
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().substring(0, 10);
+	  
+	  $("#deadLineView_srch2").val(mtoday);
+	  $("#deadLineView_srch3").val(today);
+	
+	  var deadLineViewElement = document.querySelector('#deadLineViewTable');
+	  var deadLineViewElementContainer = deadLineViewElement.parentNode;
+
+
+	  deadLineViewHot = new Handsontable(deadLineViewElement, deadLineViewSettings);
+	  
+	  //fn_changeImportBl('read');
+	  fn_changeDeadLineView('read');
+	  
+	  $(".export-view").hide();
+      $(".import-view").show();
+      $("#deadLineTextView").text("수입");
+      $("#deadLineTextView").prepend('<i class="fa-duotone fa-feather text-primary-900"></i>'); 
+	  
+	  //scroll 이벤트
+      fn_deadLineViewasEventReg();
+	  
+
+	  $(document).on("click", '.itemCdClass', function(){
+		  alert($(this).index());
+	  });
+	  
+	  
+	    $("#deadLineSrchType1 option").remove();
+		$("#deadLineSrchType1").append('<option value="">조건선택</option>');
+		$("#deadLineSrchType1").append('<option value="nab_firm">납세의무자</option>');
+		$("#deadLineSrchType1").append('<option value="levForm">납부형태</option>');
+		$("#deadLineSrchType1").append('<option value="tgPlnMark">통관계획부호</option>');
+		$("#deadLineSrchType1").append('<option value="tgPlnCot">통관계획</option>');
+		$("#deadLineSrchType1").append('<option value="plantCd">부서코드</option>');
+		$("#deadLineSrchType1").append('<option value="po">PO</option>');
+		$("#deadLineSrchType1").append('<option value="reporter">신고인</option>');
+		
+		$("#deadLineSrchType2 option").remove();
+		$("#deadLineSrchType2").append('<option value="">조건선택</option>');
+		$("#deadLineSrchType2").append('<option value="nab_firm">납세의무자</option>');
+		$("#deadLineSrchType2").append('<option value="levForm">납부형태</option>');
+		$("#deadLineSrchType2").append('<option value="tgPlnMark">통관계획부호</option>');
+		$("#deadLineSrchType2").append('<option value="tgPlnCot">통관계획</option>');
+		$("#deadLineSrchType2").append('<option value="plantCd">부서코드</option>');
+		$("#deadLineSrchType2").append('<option value="po">PO</option>');
+		$("#deadLineSrchType2").append('<option value="reporter">신고인</option>');
+	  
+	  
+});
+
+$(document).mousedown(function(e){
+	if(e.target.name == "deadLineView1_date" || e.target.name == "deadLineView2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}
+	}
+});
+
+//검색구분 변경
+$("input[name=deadLineView_srch1]").change(function(){
+	
+	var selectedValue = $(this).val();
+    if(selectedValue === "01") {
+        // 수입 선택 시
+    	$(".export-view").hide();
+        $(".import-view").show();
+        $("#deadLineTextView").text("수입");
+        $("#deadLineTextView").prepend('<i class="fa-duotone fa-feather text-primary-900"></i>'); 
+        
+        $("#deadLineSrchType1 option").remove();
+		$("#deadLineSrchType1").append('<option value="">조건선택</option>');
+		$("#deadLineSrchType1").append('<option value="nab_firm">납세의무자</option>');
+		$("#deadLineSrchType1").append('<option value="levForm">납부형태</option>');
+		$("#deadLineSrchType1").append('<option value="tgPlnMark">통관계획부호</option>');
+		$("#deadLineSrchType1").append('<option value="tgPlnCot">통관계획</option>');
+		$("#deadLineSrchType1").append('<option value="plantCd">부서코드</option>');
+		$("#deadLineSrchType1").append('<option value="po">PO</option>');
+		$("#deadLineSrchType1").append('<option value="reporter">신고인</option>');
+		
+		$("#deadLineSrchType2 option").remove();
+		$("#deadLineSrchType2").append('<option value="">조건선택</option>');
+		$("#deadLineSrchType2").append('<option value="nab_firm">납세의무자</option>');
+		$("#deadLineSrchType2").append('<option value="levForm">납부형태</option>');
+		$("#deadLineSrchType2").append('<option value="tgPlnMark">통관계획부호</option>');
+		$("#deadLineSrchType2").append('<option value="tgPlnCot">통관계획</option>');
+		$("#deadLineSrchType2").append('<option value="plantCd">부서코드</option>');
+		$("#deadLineSrchType2").append('<option value="po">PO</option>');
+		$("#deadLineSrchType2").append('<option value="reporter">신고인</option>');
+	  
+		
+    } else {
+    	// 수출 선택 시
+        $(".export-view").show();
+	    $(".import-view").hide();
+        $("#deadLineTextView").text("수출");
+        $("#deadLineTextView").prepend('<i class="fa-duotone fa-feather text-primary-900"></i>'); 
+        
+        
+        $("#deadLineSrchType1 option").remove();
+		$("#deadLineSrchType1").append('<option value="">조건선택</option>');
+		$("#deadLineSrchType1").append('<option value="exp_firm">수출자</option>');
+		$("#deadLineSrchType1").append('<option value="nation">수출국</option>');
+		$("#deadLineSrchType1").append('<option value="reporter">신고인</option>');
+		
+		$("#deadLineSrchType2 option").remove();
+		$("#deadLineSrchType2").append('<option value="">조건선택</option>');
+		$("#deadLineSrchType2").append('<option value="exp_firm">수출자</option>');
+		$("#deadLineSrchType2").append('<option value="nation">수출국</option>');
+		$("#deadLineSrchType2").append('<option value="reporter">신고인</option>');
+        
+    }
+	fn_changeDeadLineView();
+});
+
+
+//테이블 타입 변경
+function fn_changeDeadLineView(){
+	var searchTp = $("input:radio[name=deadLineView_srch1]:checked").val();
+		
+		$("#itemExcel").hide();
+		$("#docBtn").children().hide();
+		fn_changedeadLineType(searchTp);
+};
+
+//검색구분 변경
+function fn_changedeadLineType(type){
+	 deadLineViewCol = new fn_deadLineViewTableCol();
+	 deadLineViewHeader = new fn_deadLineViewTableHeader();
+	 deadLineViewHidden = new fn_deadLineViewTableHidden();
+	
+	var col, header, hidden;
+
+	fn_searchGridPurchOption(true);
+	col =   deadLineViewCol.deadLineViewCol;
+	header = deadLineViewHeader.deadLineViewHeader;
+	hidden = deadLineViewHidden.deadLineViewHidden;
+		
+	deadLineViewHot.updateSettings(fn_handsonGridDeadOption(col, header, hidden));
+	fn_searchdeadLine();
+};
+
+
+function fn_chgDate1() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10);
+	
+	$("#deadLineView_srch2").val(mtoday);
+	$("#deadLineView_srch3").val(today);
+}
+
+function fn_chgDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setMonth(month - 3)).toISOString().substring(0,10);
+	
+	$("#deadLineView_srch2").val(mtoday);
+	$("#deadLineView_srch3").val(today);
+}
+function fn_chgDate3() {
+	 var date = new Date();
+    var sixMonthsAgo = new Date(date);
+    sixMonthsAgo.setMonth(date.getMonth() - 6);
+
+    var today = date.toISOString().substring(0, 10);
+    var sixMonthsAgoFormatted = sixMonthsAgo.toISOString().substring(0, 10);
+
+    $("#deadLineView_srch2").val(sixMonthsAgoFormatted);
+    $("#deadLineView_srch3").val(today);
+}
+
+function fn_chgDate4() {
+    var date = new Date();
+    var oneYearAgo = new Date(date);
+    oneYearAgo.setFullYear(date.getFullYear() - 1);
+
+    var today = date.toISOString().substring(0, 10);
+    var oneYearAgoFormatted = oneYearAgo.toISOString().substring(0, 10);
+
+    $("#deadLineView_srch2").val(oneYearAgoFormatted);
+    $("#deadLineView_srch3").val(today);
+}
+
+//row 수
+$("select[name=deadLineViewPageCnt]").change(function(){
+	  fn_searchdeadLine();
+});
+
+
+function fn_deadLineViewasEventReg(){
+	
+ $("#deadLineViewTable .wtHolder").scroll(function(){
+	  	  var scrollTop = $("#deadLineViewTable .wtHolder").scrollTop();
+	  	  var countPerPage = $("#deadLineViewPageCnt option:selected").val();
+	  	  var rowHeight = deadLineViewHot.getRowHeight();
+	  
+	  	  var addCnt = 727;
+	  	  if(countPerPage == "50"){
+	  		  addCnt = 727;
+	  	  }else if(countPerPage == "100"){
+	  		  addCnt = 1966;
+	  	  }else if(countPerPage == "200"){
+	  		  addCnt = 4463;
+	  	  }else if(countPerPage == "500"){
+	  		  addCnt = 4540;
+	  	  }
+	  	 
+	  	  if(deadLineViewScrollTp && deadLineViewIndex != 9999 && scrollTop >= (countPerPage * deadLineViewIndex * rowHeight) + addCnt){
+	  		  fn_deadLineViewScroll();
+	  	  }
+	  });
+
+}
+
+/** 이벤트 End **/
+//스크롤
+function fn_deadLineViewScroll(){
+	fn_loading(true);
+	deadLineViewScrollTp = false;
+	deadLineViewIndex++;
+
+	$.ajax({
+		type : "POST",
+		url : "/rpt/selectdeadLine.do",
+		data : fn_setDeadLineForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	var getData = deadLineViewHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	deadLineViewHot.loadData(meargeJson);
+        	deadLineViewScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+//Popup 테이블 스크롤
+
+//검색
+function fn_searchdeadLine(){
+	deadLineViewIndex = 0;
+
+	var data = fn_setDeadLineForm();
+	var valid = fn_validateSearchDate(data["srch2"], data["srch3"]);
+	
+
+	if(valid === "false"){
+		data["srch2"] = null;
+		data["srch3"] = null;
+		$("#deadLineView_srch2").val("");
+		$("#deadLineView_srch3").val("");
+		return;
+	} else {
+		data["srch2"] = $("#deadLineView_srch2").val();
+		data["srch3"] = $("#deadLineView_srch3").val();
+	}
+	
+	if(data["srch2"] == null || data["srch2"] == "" || data["srch3"] == "" || data["srch3"] == null){
+		alert("날짜를 입력해주세요.");
+		return;
+	}
+	
+	
+	fn_loading(true);
+
+	$.ajax({
+		type : "POST",
+		url : "/rpt/selectdeadLine.do",
+		data : fn_setDeadLineForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        		deadLineViewHot.loadData([]);
+            	deadLineViewHot.loadData(data.resultList);
+            	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+            	$("#deadLineViewCnt").text(totCnt); //검색결과 총 갯수
+            	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchdeadLine();
+    }
+}
+
+// 수입신고기한 표시 클릭
+function fn_apiClick(){
+	var searchTp = $("input:radio[name=deadLineView_srch1]:checked").val();	
+	fn_changedeadLineType(searchTp);
+}
+
+
+//검색조건 생성
+function fn_setDeadLineForm(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=deadLineView_srch1]:checked").val(); //검색구분
+	sData["srch2"] = $("#deadLineView_srch2").val(); //시작날짜
+	sData["srch3"] = $("#deadLineView_srch3").val(); // 종료날짜
+	sData["srch4"] = $("#deadLineView_srch4").val(); //신고번호 
+	sData["srch5"] = $("#deadLineView_srch5").val(); //bl번호
+	sData["srch6"] = $("#deadLineView_srch6").val(); //invoice번호
+	sData["srch13"] = $("input:checkbox[name=deadLineView_srch13]:checked").val(); //검색구분
+	sData["pageIndex"] = deadLineViewIndex;
+	
+	sData["srchType1"] = $("#deadLineSrchType1 option:selected").val();
+	sData["srchText1"] = $("#deadLineSrchText1").val();
+	
+	sData["srchType2"] = $("#deadLineSrchType2 option:selected").val();
+	sData["srchText2"] = $("#deadLineSrchText2").val();
+	
+	return sData;
+};
+
+//검색조건 초기화
+function fn_cleardeadLine(){
+	$("#deadLineView_srch2").val("");
+	$("#deadLineView_srch3").val("");
+	$("#deadLineView_srch4").val("");
+	$("#deadLineView_srch5").val("");
+	$("#deadLineView_srch6").val("");
+	$("#deadLineView_srch7").val("");
+	
+	$("#deadLineSrchType1").val("");
+	$("#deadLineSrchType2").val("");
+	
+	$("#deadLineSrchText1").val("");
+	$("#deadLineSrchText2").val("");
+};
+
+//저장버튼 클릭
+function fn_saveImportBlCheck(){
+	if(deadLineViewHot.getData().length < 1){
+		alert(msgSaveEmpty);
+		return;
+	}
+	fn_validateImportBl();
+};
+
+//정합성 체크
+function fn_validateImportBl(){
+	deadLineViewHot.validateCells(function(result) {
+		if(result){
+			fn_saveImportBlData();
+		}else{
+			alert(msgSaveCheck);
+			if($("input:radio[name=deadLineView_srch1]:checked").val()=="01"){
+				if($("input:radio[name=deadLineViewType]:checked").val()=="enrol"){
+					if(deadLineViewHot.getDataAtCell(0,1)==null){
+						deadLineViewHot.setDataAtCell(0, 1, '');
+					}
+					if(deadLineViewHot.getDataAtCell(0,4)==null){
+						deadLineViewHot.setDataAtCell(0, 4, '');
+					}
+				}
+			}
+
+			deadLineViewHot.render();
+		}
+    });
+};
+
+
+
+//테이블 컬럼
+function fn_deadLineViewTableCol(){
+	var tableType = $("input:radio[name=deadLineView_srch1]:checked").val();
+	var checkBox = $("input:checkbox[name=deadLineView_srch13]:checked").val();
+	var chipRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		  
+		 Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		  td.classList.add('chip-cell');
+		  td.classList.add('text-center');
+		  switch (value) {
+		    case "접수":
+		    case "Y":
+		      td.innerHTML = `<span class="chip chip-blue">${value}</span>`
+		      break
+		    case "수리":
+		      td.innerHTML = `<span class="chip chip-green">${value}</span>`
+		      break
+		    case "N":
+		    case "서류 미비":
+		      td.innerHTML = `<span class="chip chip-red">${value}</span>`
+		      break
+		    case "자수":
+		      td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+		      break
+		    case "":
+	    	  td.innerHTML = `<span>${value}</span>`
+    		  break
+		    default:
+		      td.innerHTML = `<span class="chip chip-primary">${value}</span>`
+		      break
+		  }
+	};
+	
+
+	this.deadLineViewCol = (tableType == "01" && checkBox == "01") ? [
+		/*{data : 'checkBox', type : 'text', className : "htCenter", width: 40,type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},*/
+		{data : 'nabFirm', className : "htCenter",width: 110, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'blNo', className : "htCenter", wordWrap: false, width: 100,readOnly:true},  	//bl
+		{data : 'banIpDay', className : "htCenter", wordWrap: false, width: 90, readOnly:true}, //반입일자
+		{data : 'date4', className : "htCenter", wordWrap: false, width: 90, readOnly:true}, //수입신고기한
+		{data : 'rptNo', className : "htCenter", wordWrap: false, width: 150, readOnly:true},   //신고번호
+		{data : 'rptDay', className : "htCenter", wordWrap: false, width: 90, readOnly:true}, //신고일자
+		{data : 'lisDay', className : "htCenter", wordWrap: false, width: 90,  readOnly:true}, //수리일자
+		{data : 'date5', className : "htCenter", wordWrap: false, width: 90, readOnly:true}, //반출기한
+		{data : 'date1', className : "htCenter", wordWrap: false,width: 90,  readOnly:true},   //납부기한
+		{data : 'date2', className : "htCenter", wordWrap: false ,width: 90,  readOnly:true},  //납부일자
+		{data : 'levForm', className : "htCenter", wordWrap: false,width: 100, readOnly:true},  //납부형태
+		{data : 'fta', className : "htCenter", wordWrap: false, width: 130,readOnly:true},    //fta 사후적용기한
+		{data : 'date3', className : "htCenter", wordWrap: false,width: 120, readOnly:true},  //재수출 이행일자
+		{data : 'date6', className : "htCenter", wordWrap: false, width: 90, readOnly:true}, //보정기한
+		{data : 'tgPlnMark', className : "htCenter", wordWrap: false,width: 90, readOnly:true},  //통관계획 부호
+		{data : 'tgPlnCot', className : "htCenter", wordWrap: false,width: 110, readOnly:true},  //통관계획 설명
+		/*{data : 'date7', className : "htCenter", wordWrap: false, width: 90,readOnly:true}, //가격확정예정시기
+*/		{data : 'plantCd', className : "htCenter", wordWrap: false,width: 110,  readOnly:true},  //공장코드
+		{data : 'po', className : "htCenter", wordWrap: false, width: 110, readOnly:true},      //po
+		{data : 'reporter', className : "htCenter", wordWrap: false,width: 120, readOnly:true}  	//신고인
+	]: (tableType == "01" && checkBox == undefined) ? [
+		/*{data : 'checkBox', type : 'text', className : "htCenter", width: 40,type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},*/
+		{data : 'nabFirm', className : "htCenter",width: 110, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'blNo', className : "htCenter", wordWrap: false, width: 100,readOnly:true},  	//bl
+		//{data : 'banIpDay', className : "htCenter", wordWrap: false, width: 90, readOnly:true}, //반입일자
+		//{data : 'date4', className : "htCenter", wordWrap: false, width: 90, readOnly:true}, //수입신고기한
+		{data : 'rptNo', className : "htCenter", wordWrap: false, width: 150, readOnly:true},   //신고번호
+		{data : 'rptDay', className : "htCenter", wordWrap: false, width: 90, readOnly:true}, //신고일자
+		{data : 'lisDay', className : "htCenter", wordWrap: false, width: 90,  readOnly:true}, //수리일자
+		{data : 'date5', className : "htCenter", wordWrap: false, width: 90, readOnly:true}, //반출기한
+		{data : 'date1', className : "htCenter", wordWrap: false,width: 90,  readOnly:true},   //납부기한
+		{data : 'date2', className : "htCenter", wordWrap: false ,width: 90,  readOnly:true},  //납부일자
+		{data : 'levForm', className : "htCenter", wordWrap: false,width: 100, readOnly:true},  //납부형태
+		{data : 'fta', className : "htCenter", wordWrap: false, width: 130,readOnly:true},    //fta 사후적용기한
+		{data : 'date3', className : "htCenter", wordWrap: false,width: 120, readOnly:true},  //재수출 이행일자
+		{data : 'date6', className : "htCenter", wordWrap: false, width: 90, readOnly:true}, //보정기한
+		{data : 'tgPlnMark', className : "htCenter", wordWrap: false,width: 110, readOnly:true},  //통관계획 부호
+		{data : 'tgPlnCot', className : "htCenter", wordWrap: false,width: 100, readOnly:true},  //통관계획 설명
+		/*{data : 'date7', className : "htCenter", wordWrap: false, width: 90,readOnly:true}, //가격확정예정시기
+*/		{data : 'plantCd', className : "htCenter", wordWrap: false,width: 110,  readOnly:true},  //공장코드
+		{data : 'po', className : "htCenter", wordWrap: false, width: 110, readOnly:true},      //po
+		{data : 'reporter', className : "htCenter", wordWrap: false,width: 120, readOnly:true}  	//신고인
+	]:  [
+		/*{data : 'checkBox', type : 'text', className : "htCenter", width: 40,type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},*/
+		{data : 'expFirm', className : "htCenter", wordWrap: false, width: 110, className : "htCenter", readOnly:true},
+		{data : 'rptNo', className : "htCenter", wordWrap: false, width: 110,readOnly:true}, //신고번호
+		{data : 'nation', className : "htCenter", wordWrap: false,width: 110, readOnly:true}, //수출국
+		/*{data : 'blNo', className : "htCenter", wordWrap: false, readOnly:true},*/
+		{data : 'rptDay', className : "htCenter", wordWrap: false,width: 90, readOnly:true}, //신고일자
+		{data : 'explisDay', className : "htCenter", wordWrap: false,width: 90, readOnly:true}, //수리일자
+		{data : 'jukDay', className : "htCenter", wordWrap: false,width: 90, readOnly:true}, //선적기한
+		{data : 'shipDay', className : "htCenter", wordWrap: false,width: 90, readOnly:true}, //선적일자
+		{data : 'plantCd', className : "htCenter", wordWrap: false,width: 100, readOnly:true}, // 공장코드
+		{data : 'so', className : "htCenter", wordWrap: false,width: 100, readOnly:true}, //so
+		{data : 'mgCode', className : "htCenter", wordWrap: false,width: 100, readOnly:true}, //lnvoice
+		{data : 'reporter', className : "htCenter", wordWrap: false,width: 120, readOnly:true}  	//신고인
+	];
+}
+//테이블 헤더
+function fn_deadLineViewTableHeader(){
+	var tableType = $("input:radio[name=deadLineView_srch1]:checked").val();
+	var checkBox = $("input:checkbox[name=deadLineView_srch13]:checked").val();
+	
+	this.deadLineViewHeader = (tableType == "01" && checkBox == "01") ? [
+		/* "",*/"납세의무자", "B/L","반입일자","수입신고기한","신고번호","신고일자","수리일자","반출기한","납부기한","납부일자","납부형태","FTA사후적용기한","재수출이행일자","보정기한",/*"가격확정예정시기"*/
+		 "통관계획부호","통관계획","부서코드","PO","신고인"
+	] : (tableType == "01" && checkBox == undefined) ? [
+		/* "",*/"납세의무자", "B/L","신고번호","신고일자","수리일자","반출기한","납부기한","납부일자","납부형태","FTA사후적용기한","재수출이행일자","보정기한",/*"가격확정예정시기"*/
+		 "통관계획부호","통관계획","부서코드","PO","신고인"
+	] :[
+		 /*"",*/ "수출자", "신고번호","수출국"/*,"목적국"*/,"신고일자","수리일자","선적기한","선적일자","부서코드","SO","Invoice","신고인"
+	];
+
+}
+
+
+
+
+//테이블 히든컬럼
+function fn_deadLineViewTableHidden(){
+	var tableType = $("input:radio[name=deadLineViewType]:checked").val();
+	this.deadLineViewHidden = [];
+
+	this.deadLineViewOrgHidden = [];
+}
+
+
+//table
+function fn_handsonGridDeadOption(col, header, hidden){
+	var tableType = $("input:radio[name=deadLineViewType]:checked").val();
+	deadLineViewSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 550,
+	  rowHeights : 25,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualColumnResize : true,
+	  manualRowMove : true,
+	  manualColumnMove : false,
+	  dropdownMenu : {
+		  items: {
+			    'filter_by_value': {
+			      name: 'Filter by value'
+			    },
+			    'filter_action_bar': {
+                    name: 'OK and Cancel buttons'  
+                }
+			  }
+			},
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	  columnSorting : {indicator : true},
+      autoColumnSize : {samplingRatio : 23},
+      mergeCells : false,
+      wordWrap : true,
+      afterGetColHeader: function(col, TH){
+    	  
+        	/*if(col == 0){
+          	TH.innerHTML = "<input type='checkbox'  class='checker' id='id_checkdeadLineAll' onclick='fn_deadLineAllClick();'>";
+          }*/
+    	  
+        },
+	};
+	return deadLineViewSettings;
+}
+
+
+
+//검색 그리드
+function fn_searchGridPurchOption(type){
+var tableType = $("input:radio[name=deadLineView_srch1]:checked").val();
+	if(tableType == "01"){
+		$("#deadLineView_div7").show();
+	}else{
+		$("#deadLineView_div7").hide();
+	}
+}
+
+function fn_searchGridPurchOption2(){
+	
+		$("#deadLineViewEnrol").show();
+		$("#deadLineView_div1").show();
+		$("#deadLineView_div12").show();
+		$("#deadLineView_div2").hide();
+		$("#deadLineView_div3").hide();
+		$("#deadLineView_div4").hide();
+		$("#deadLineView_div5").hide();
+		$("#deadLineView_div6").hide();
+		$("#deadLineView_div7").hide();
+		$("#deadLineView_div8").hide();
+		$("#deadLineViewInfo1").hide();
+		$("#deadLineViewInfo2").hide();
+		$("#docBtn").hide();		
+}
+
+function fn_deadLineAllClick(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_checkdeadLineAll").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+
+	var data = deadLineViewHot.getData();
+
+	for(var i=0; i< data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	deadLineViewHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_checkdeadLineAll").prop("checked", true);
+	} else {
+		$("#id_checkdeadLineAll").prop("checked", false);
+	}
+}
+
+function fn_deadLineExcelDownload(){
+    var type = $("input:radio[name=deadLineView_srch1]:checked").val();
+    $("#deadLineExcelForm").html("");
+    $("#deadLineExcelForm").attr("action","/deadLine/downloadExcel.do");
+    
+    //검색조건
+    $.each(fn_setDeadLineForm(),function(attrName,attrValue){
+        $("#deadLineExcelForm").append("<input type='hidden' value=" + attrValue + " name=" + attrName + ">");
+    });
+    
+    //엑셀 옵션
+    var exTit = "";
+    var exCol = "";
+    
+    var deadLineViewCol = new fn_deadLineViewTableCol();
+	var deadLineViewHeader = new fn_deadLineViewTableHeader();
+	exCol = fn_getExcelCol(deadLineViewCol.deadLineViewCol); 
+    exTit = fn_getExcelHead(deadLineViewHeader.deadLineViewHeader); 
+   
+    
+    $("#deadLineExcelForm").append("<input type='hidden' name='exCol' value="+ exCol +">");
+    $("#deadLineExcelForm").append("<input type='hidden' name='exTit' value="+ exTit +">");
+    $("#deadLineExcelForm").append("<input type='hidden' name='exType' value="+ type +">");
+     
+    $("#deadLineExcelForm").submit();
+    
+    function fn_getExcelCol(viewCol){
+        return viewCol.map(item => item['data'] + '|' + item['className'] + '|' + item['width']).join("||");
+    }
+     
+    function fn_getExcelHead(viewHead){
+        var result = [];
+        
+        if(viewHead.length > 1 && typeof(viewHead[0][0]) == 'object') {
+            for(var i=0; i < viewHead.length; i++) {
+                if(i == viewHead.length -1){
+                    result.push(viewHead[i].join("|null||") + "|null");
+                }else {
+                    result.push(viewHead[i].map(item => (item['label'] ? item['label'] : 'null') + '|' + (item['colspan'] ? item['colspan'] : 'null')).join("||"));
+                }
+            }
+            return result.join("|||");
+        }else{
+            return viewHead.join("|null||") + "|null";
+        };
+    }
+}

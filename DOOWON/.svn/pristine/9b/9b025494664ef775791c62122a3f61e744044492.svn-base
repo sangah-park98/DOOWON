@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.shipping.service.impl.ShippingMapper">
+
+	<select id="selectShippingViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			COUNT(*) OVER() AS cnt,
+			b.order_id,
+		    order_state,
+		    CONCAT(SUBSTRING(b.rpt_no, 1, 5), '-', SUBSTRING(b.rpt_no, 6, 2), '-', SUBSTRING(b.rpt_no, 8, 7)) AS rpt_no,
+		    a.blno AS bl_no,
+		    MAX(b.order_seq) AS orderSeq,
+		    shipping_nm,
+		    shipping_phn_no,
+		    b.car_no,
+		    b.car_nm,
+		    b.car_phn_no,
+		    dispatch_dt,
+		    b.to_dt,
+		    arrive_est_dt,
+		    arrive_dt,
+		    to_addr,
+		    b.to_staff,
+		    b.to_phn_no,
+		    b.est_charge,
+		    b.fixed_charge
+		FROM shipping_order b
+		LEFT JOIN cusdec929a1 a ON a.rpt_no = b.rpt_no
+		WHERE 1 = 1
+		<if test="list != null and list.size() > 0">
+		    AND b.corp_no IN 
+		    <foreach item="id" collection="list" open="(" separator="," close=")">
+		        #{id}
+		    </foreach>
+		</if>
+		 <choose>
+			<when test="srch6 =='01'">
+			 AND b.reg_dt Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			</when>
+			<otherwise>
+			 AND b.arrive_dt Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			</otherwise>
+		</choose> 
+		<if test="srch4 != null and srch4 != ''">
+		    AND b.rpt_no LIKE CONCAT('%', UPPER(REPLACE(#{srch4},'-','')),'%')
+		</if>
+		<if test="list2 != null and list2.size() > 0">
+		    AND (
+		        <foreach item="blNo" collection="list2" open="(" separator="OR" close=")">
+		            a.blno LIKE CONCAT('%', UPPER(#{blNo}),'%')
+		        </foreach>
+		    )
+		</if>
+		GROUP BY b.rpt_no
+	</select>
+	
+	<select id="selectShippingDstnList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			addr_nm,
+			phn_no,
+			base_addr,
+			dtls_addr
+		FROM shipping_address
+		WHERE corp_no = #{corpNo};
+	</select>
+	
+	<insert id="insertAddr" parameterType="egovframework.pf.shipping.service.ShippingAddressVO">
+		INSERT INTO
+		shipping_address(
+			id,
+			corp_no,
+			addr_nm,
+			phn_no, 
+			zip_code,
+			base_addr,
+			dtls_addr,
+			reg_dt
+		)
+		VALUES(
+			#{id},
+			#{corpNo},
+			#{addrNm},
+			#{phnNo},
+			#{zipCode},
+			#{baseAddr},
+			#{dtlsAddr},
+			DATE_FORMAT(NOW(), '%Y%m%d')
+		)
+	</insert>
+	
+	<delete id="deleteAddr" parameterType="egovframework.pf.shipping.service.ShippingAddressVO">
+		DELETE FROM shipping_address
+		WHERE 1=1
+		AND addr_nm = #{addrNm}
+		AND phn_no = #{phnNo}
+	</delete>
+	
+	<insert id="insertShippingTempList" parameterType="egovframework.pf.shipping.service.ShippingAddressVO">
+		INSERT INTO shipping_order_temp(
+			order_seq,
+			corp_no,
+		 	rpt_no,
+		 	bl_no,
+		 	ct_no,
+		 	from_specifics,
+		 	from_dt,
+		 	from_time,
+		 	from_addr,
+		 	to_dt,
+		 	to_time,
+		 	goods_weights,
+		 	mix_yn,
+		 	from_req,
+		 	to_staff,
+		 	to_phn_no,
+		 	to_addr,
+		 	cmpny_nm,
+		 	manager_nm,
+		 	bill_email,
+		 	reg_dt,
+		 	reg_id
+		)VALUES(
+			#{orderSeq},
+			#{corpNo},
+			#{rptNo},
+			#{blNo},
+			#{ctNo},
+			#{fromSpecifics},
+			#{fromDt},
+			#{fromTime},
+			#{fromAddr},
+			#{toDt},
+			#{toTime},
+			#{goodsWeights},
+			#{mixYn},
+			#{fromReq},
+			#{toStaff},
+			#{toPhnNo},
+			#{toAddr},
+			#{cmpnyNm},
+			#{managerNm},
+			#{billEmail},
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		#{regId}
+	  	) ON DUPLICATE KEY UPDATE
+	  		ct_no = #{ctNo},
+		    from_specifics = #{fromSpecifics},
+		    from_dt = #{fromDt},
+		    from_time = #{fromTime},
+		    from_addr = #{fromAddr},
+		    to_dt = #{toDt},
+		    to_time = #{toTime},
+		    goods_weights = #{goodsWeights},
+		    mix_yn = #{mixYn},
+		    from_req = #{fromReq},
+		    to_staff = #{toStaff},
+		    to_phn_no = #{toPhnNo},
+		    to_addr = #{toAddr},
+		    cmpny_nm = #{cmpnyNm},
+		    corp_no = #{corpNo},
+		    manager_nm = #{managerNm},
+		    bill_email = #{billEmail},
+		    edt_dt = DATE_FORMAT(NOW(), '%Y%m%d'),
+		    edt_id = #{regId}
+	</insert>
+		
+	<select id="selectShippingTempList" parameterType="searchVO" resultType="egovMap">
+		SELECT * FROM shipping_order_temp
+		WHERE rpt_no = #{srch1} AND bl_no = #{srch2};
+	</select>
+	
+	<select id="selectShippingReqList" parameterType="searchVO" resultType="egovMap">
+		<!-- SELECT * FROM shipping_order
+		WHERE rpt_no = #{srch1} AND bl_no = #{srch2}; -->
+		SELECT 
+		    c.contCnt,
+		    COUNT(b.ct_no) OVER() AS ctNoCnt,
+		    b.rpt_no,
+		    b.bl_no,
+		    b.order_id,
+		    b.order_seq,
+		    b.order_state,
+		    b.rpt_type,
+		    b.ct_no,
+		    b.from_specifics,
+		    b.from_dt,
+		    b.from_time,
+		    b.from_addr,
+		    b.to_dt,
+		    b.to_time,
+		    b.est_charge,
+		    b.goods_weights,
+		    b.mix_yn,
+		    b.from_req,
+		    b.to_staff,
+		    b.to_phn_no,
+		    b.to_addr,
+		    b.cmpny_nm,
+		    b.corp_no,
+		    b.manager_nm,
+		    b.bill_email,
+		    b.file_name,
+		    b.reg_dt
+		FROM shipping_order b
+		LEFT JOIN (
+		    SELECT 
+		        COUNT(DISTINCT cont_no) AS contCnt
+		    FROM cusdec929b3 
+		    WHERE rpt_no = #{srch1}
+		) AS c ON 1=1  
+		WHERE b.rpt_no = #{srch1}
+		and b.order_state != '배차'
+	</select>
+	
+	<select id="selectShippingOrderSeqList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			order_seq,
+			order_id,
+			ct_no,
+			car_no,
+			car_nm,
+			car_phn_no,
+			dispatch_dt,
+			to_dt,
+			arrive_est_dt,
+			arrive_dt,
+			to_addr,
+			to_staff,
+			to_phn_no,
+			from_req
+		FROM shipping_order
+		WHERE rpt_no = #{srch1} AND bl_no = #{srch2};
+	</select>
+	
+	<select id="selectCtNoList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			cont_seq,
+			cont_no
+		FROM cusdec929b3
+		WHERE rpt_no = #{srch1}
+		AND rpt_seq = '00'
+	</select>
+	
+	<insert id="insertShippingReqList" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		INSERT INTO shipping_order(
+		    order_seq,
+		    ct_no,
+		    bl_no,
+		    rpt_no,
+		    est_charge,
+		    to_staff,
+		    to_phn_no,
+		    to_addr,
+		    shipper_manager,
+		    shipper_mail,
+		    to_dt,
+		    cmpny_nm,
+		    corp_no,
+		    manager_nm,
+		    from_dt,
+		    from_addr,
+		    bill_email,
+		    trans_details,
+		    tax_invoice,
+		    goods_weights,
+		    mix_yn,
+		    from_req,
+		    from_time,
+		    to_time,
+		    from_specifics,
+		    file_name,
+		    <!-- //////////// -->
+		    order_id,
+		    rpt_type,
+		    order_state,
+		    shipping_nm,
+		    shipping_phn_no,
+		    car_no,
+		    car_nm,
+		    car_phn_no,
+		    dispatch_dt,
+		    arrive_req_dt,
+		    arrive_est_dt,
+		    arrive_dt,
+		    arrive_addr,
+		    recv_nm,
+		    recv_phn_no,
+		    fixed_charge,
+		    reg_dt,
+		    reg_id
+		) VALUES (
+			#{orderSeq},
+			#{ctNo},
+		    #{blNo},
+		    #{rptNo},
+		    #{estCharge}, <!-- 0 -->
+		    #{toStaff},
+		    #{toPhnNo},
+		    #{toAddr},
+		    #{shipperManager},
+		    #{shipperMail},
+		    #{toDt}, <!-- 도착일시 -->
+		    #{cmpnyNm},
+		    #{corpNo},
+		    #{managerNm},
+		    #{fromDt},
+		    #{fromAddr},
+		    #{billEmail},
+		    #{transDetails},
+		    #{taxInvoice},
+		    #{goodsWeights},
+		    #{mixYn},
+		    #{fromReq},
+		    #{fromTime},
+		    #{toTime}, <!-- 도착시간 -->
+		    #{fromSpecifics},
+		    #{fileName},
+		    '', <!-- orderId -->
+		    #{rptType},
+		    '접수', <!-- 운송현황 -->
+		    '', <!-- 운송사 담당자 -->
+		    '', <!-- 운송사 연락처 -->
+		    '', <!-- 차량번호 -->
+		    '', <!-- 차량기사  -->
+		    '', <!-- 기사 연락처 -->
+		    '', <!-- 배차일시 -->
+		    '', <!-- 도착요청일시 -->
+		    '', <!-- 도착예정일시 -->
+		    '', <!-- 도착일시 -->
+		    '', <!-- 도착지주소 -->
+		    '', <!-- 수령자 -->
+		    '', <!-- 수령자 연락처 -->
+		    0, <!-- 확정 운송료 -->
+		    DATE_FORMAT(NOW(), '%Y%m%d'),
+		    #{regId}
+		) ON DUPLICATE KEY UPDATE
+		    order_seq = #{orderSeq},
+		    ct_no = #{ctNo},
+		    bl_no = #{blNo},
+		    rpt_no = #{rptNo},
+		    est_charge = #{estCharge},
+		    to_staff = #{toStaff},
+		    to_phn_no = #{toPhnNo},
+		    to_addr = #{toAddr},
+		    shipper_manager = #{shipperManager},
+		    shipper_mail = #{shipperMail},
+		    to_dt = #{toDt},  <!-- 도착일시 -->
+		    cmpny_nm = #{cmpnyNm},
+		    corp_no = #{corpNo},
+		    manager_nm = #{managerNm},
+		    from_dt = #{fromDt},
+		    from_addr = #{fromAddr},
+		    bill_email = #{billEmail},
+		    goods_weights = #{goodsWeights},
+		    mix_yn = #{mixYn},
+		    from_req = #{fromReq},
+		    from_time = #{fromTime},
+		    to_time = #{toTime},  <!-- 도착시간 -->
+		    from_specifics = #{fromSpecifics},
+		    file_name = #{fileName},
+			order_id = '',
+		    rpt_type = #{rptType},
+		    edt_dt = DATE_FORMAT(NOW(), '%Y%m%d'),
+		    edt_id = #{regId}
+	</insert>
+	
+	<update id="orderCancel" parameterType="egovframework.pf.api.service.ApiOrderCancelVO">
+			UPDATE SHIPPING_ORDER
+			SET ORDER_STATE = '운송 취소'
+			WHERE ORDER_ID = #{orderId}
+	</update>
+	
+	<update id="updateShippingReqList" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+			UPDATE SHIPPING_ORDER SET
+				order_seq = #{orderSeq},
+				rpt_no = #{rptNo},
+				bl_no = #{blNo},
+				cmpny_nm = #{cmpnyNm},
+				corp_no = #{corpNo},
+				ct_no = #{ctNo},
+				from_specifics = #{fromSpecifics},
+				from_dt = #{fromDt},
+				from_time = #{fromTime},
+				from_addr = #{fromAddr},
+				est_charge = 0,
+				goods_weights = #{goodsWeights},
+				mix_yn = #{mixYn},
+				from_req = #{fromReq},
+				to_staff = #{toStaff},
+				to_phn_no = #{toPhnNo},
+				to_addr = #{toAddr},
+				to_dt = #{toDt},
+				to_time = #{toTime},
+				manager_nm = #{managerNm},
+				bill_email = #{billEmail},
+				shipper_manager = #{shipperManager},
+				shipper_mail = #{shipperMail},
+				trans_details = #{transDetails},
+				tax_invoice = #{taxInvoice},
+				file_name = #{fileName},
+				reg_dt = #{regDt}
+			WHERE ORDER_ID = #{orderId}
+	</update>
+	
+	<!-- <select id="selectShippingOrderDetailChk" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			order_id,
+			req_cust_id,
+			req_dept_id,
+			in_out_sctn,
+			truck_type_code,
+			s_com_name,
+			s_addr,
+			s_addr_detail,
+			s_date,
+			s_staff,
+			s_tel,
+			s_memo,
+			e_com_name,
+			e_addr,
+			e_addr_detail,
+			e_date,
+			e_staff,
+			e_tel,
+			e_memo,
+			goods_name,
+			goods_weights,
+			goods_qty,
+			qty_unit_code,
+			s_way_code,
+			e_way_code,
+			mix_yn,
+			mix_size,
+			return_yn,
+			car_ton_code,
+			car_type_code,
+			charge_type,
+			req_memo,
+			driver_memo,
+			item_code,
+			alloc_state,
+			reg_id,
+			reg_date,
+			sell_charge,
+			alloc_date,
+			car_num,
+			driver_name,
+			driver_tel,
+			alloc_nm,
+			alloc_tel,
+			external_infomation,
+			external_number
+		FROM shipping_order
+		WHERE external_number = #{srch1} AND external_infomation = #{srch2};
+	</select> -->
+</mapper>

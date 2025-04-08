@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>피드백 반영 수입신고</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha512-+NqPlbbtM1QqiK8ZAo4Yrj2c4lNQoGv8P79DPtKzj++l5jnN39rHA/xsqn8zE9l0uSoxaCdrOgFs6yjyfbBxSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><script
+			  src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
+			  integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0="
+			  crossorigin="anonymous"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/handsontable@7.4.2/dist/handsontable.full.min.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@7.4.2/dist/handsontable.full.min.css"> -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css" />
+  <script type="module" crossorigin src="/trade-platform-design/assets/modulepreload-polyfill.js"></script>
+  <script type="module" crossorigin src="/trade-platform-design/assets/vendor.js"></script>
+  <script type="module" crossorigin src="/trade-platform-design/assets/main-font.js"></script>
+  <script type="module" crossorigin src="/trade-platform-design/assets/dropdown-init.js"></script>
+  <script type="module" crossorigin src="/trade-platform-design/assets/datepicker-init.js"></script>
+  <link rel="stylesheet" crossorigin href="/trade-platform-design/assets/main-font.css">
+  <link rel="stylesheet" crossorigin href="/trade-platform-design/assets/style.css">
+</head>
+<body class="flex flex-col max-h-fit">
+<header class="z-[51] w-full shrink-0 bg-primary-50 relative">
+  <!-- Navbar -->
+  <div class="w-full pt-3 pb-1 px-4 flex flex-row gap-4 justify-between items-center relative z-50">
+    <!-- Logo -->
+    <a href="/trade-platform-design/main/main" class="grow-0 flex items-center justify-start">
+      <img src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='UTF-8'?%3e%3csvg%20id='Layer_1'%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20587.75%20180'%3e%3cpath%20d='M28.99,36.85H0V0h41.27v26.38c0,7.05-4.03,10.47-12.28,10.47ZM.4,180V52.95h40.67v112.95c0,8.25-7.45,14.09-16.11,14.09H.4Z'%20style='fill:%23006e51;%20stroke-width:0px;'/%3e%3cpath%20d='M426.67,180V5.64h45.3l35.23,100.27,35.03-100.27h45.5v160.27c0,8.25-7.45,14.09-16.11,14.09h-24.76v-82.15c0-.6,0-2.21.2-4.63.2-2.62.2-4.23.2-5.03l-.81,4.23c-.2,2.21-.6,3.83-.81,4.43l-19.53,56.78c-2.21,6.64-7.25,10.47-14.3,10.47h-19.53l-22.95-68.46c-.6-1.81-1.21-7.85-2.01-9.66.2,1.21.2,3.22.2,5.84v74.09c0,8.25-7.45,14.09-16.11,14.09h-24.76Z'%20style='fill:%23006e51;%20stroke-width:0px;'/%3e%3cpath%20d='M318.23,180c-31.16,0-58.88-30.95-69.64-44.69-2.94-3.75-3.21-8.95-.71-13l11.83-19.15c.76-1.23,2.5-1.33,3.4-.19,7.32,9.3,35.19,42.95,55.13,42.95,29.11,0,52.79-23.68,52.79-52.79s-23.68-52.79-52.79-52.79c-10.54,0-26.53,10.63-43.88,29.17-15.17,16.21-26.15,32.81-26.26,32.98,0,0-19.46,25.96-29.92,37.18-24.95,26.77-48.21,40.34-69.12,40.34-47.9,0-86.88-38.97-86.88-86.88S101.15,6.25,149.05,6.25c34.14,0,59.41,25.94,72.99,42.63,3.57,4.39,3.64,10.65.14,15.09l-14.41,18.29c-.69.87-2,.89-2.71.03-6.58-8.02-35.61-41.96-56-41.96-29.11,0-52.79,23.68-52.79,52.79s23.68,52.79,52.79,52.79c10.54,0,26.53-10.63,43.88-29.17,15.17-16.21,26.15-32.81,26.26-32.98l5.76-7.68c5.16-7.13,13.69-18.28,24.16-29.5,24.95-26.77,48.21-40.34,69.12-40.34,47.9,0,86.88,38.97,86.88,86.88s-38.97,86.88-86.88,86.88Z'%20style='fill:%23006e51;%20stroke-width:0px;'/%3e%3c/svg%3e" class="h-8" alt="Platform Logo">
+    </a>
+    <!-- /Logo -->
+    <!--  Navbar Links -->
+    <nav class="grow flex items-center justify-center max-w-5xl @container group/navigation hover:shadow-xl duration-300 rounded-lg text-xs sm:text-sm md:text-base relative gap-0 md:gap-1 px-2 xl:gap-2 *:grow">
+      <div class="group/button duration-200 relative z-10">
+        <div class="py-1 duration-200 hover:text-primary-600 relative block rounded overflow-hidden"><span class="flex items-center justify-center gap-2 duration-200 text-nowrap cursor-pointer pb-1 pt-2 px-2 font-bold">
+              <i class="fa-duotone fa-bullhorn"></i>공지사항</span>
+          <span class="block h-1 bg-primary-500 w-full scale-x-0 group-hover/button:scale-x-100 duration-200"></span></div>
+        <div class="absolute top-[100%] left-0 w-full h-0 group-hover/navigation:h-[260px] flex items-center justify-start flex-col overflow-hidden duration-200 ease-in-out px-1 group-hover/button:bg-primary-400/10">
+          <a href="#" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">공지사항</a>
+          <a href="#" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">관세뉴스</a>
+        </div>
+      </div>
+      <div class="group/button duration-200 relative z-10">
+        <div class="py-1 duration-200 hover:text-primary-600 relative block rounded overflow-hidden"><span class="flex items-center justify-center gap-2 duration-200 text-nowrap cursor-pointer pb-1 pt-2 px-2 font-bold"><i class="fa-duotone fa-inbox-in fa-rotate-270"></i>수입신고</span><span class="block h-1 bg-primary-500 w-full scale-x-0 group-hover/button:scale-x-100 duration-200"></span></div>
+        <div class="absolute top-[100%] left-0 w-full h-0 group-hover/navigation:h-[260px] flex items-center justify-start flex-col overflow-hidden duration-200 ease-in-out px-1 group-hover/button:bg-primary-400/10">
+          <a href="/trade-platform-design/import/bl-register" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">BL등록</a>
+          <a href="/trade-platform-design/import/import" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">수입 신고 현황</a>
+          <a href="/trade-platform-design/import/import-editor" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">수입 신고 정정</a>
+        </div>
+      </div>
+      <div class="group/button duration-200 relative z-10">
+        <div class="py-1 duration-200 hover:text-primary-600 relative block rounded overflow-hidden"><span class="flex items-center justify-center gap-2 duration-200 text-nowrap cursor-pointer pb-1 pt-2 px-2 font-bold"><i class="fa-duotone fa-inbox-out fa-rotate-90"></i>수출신고</span><span class="block h-1 bg-primary-500 w-full scale-x-0 group-hover/button:scale-x-100 duration-200"></span></div>
+        <div class="absolute top-[100%] left-0 w-full h-0 group-hover/navigation:h-[260px] flex items-center justify-start flex-col overflow-hidden duration-200 ease-in-out px-1 group-hover/button:bg-primary-400/10">
+          <a href="/trade-platform-design/export/invoice-register" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">INVOICE 등록</a>
+          <a href="/trade-platform-design/export/export" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">수출 신고 현황</a>
+          <a href="/trade-platform-design/export/export-editor" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">수출 신고 정정</a>
+        </div>
+      </div>
+      <div class="group/button duration-200 relative z-10">
+        <div class="py-1 duration-200 hover:text-primary-600 relative block rounded overflow-hidden"><span class="flex items-center justify-center gap-2 duration-200 text-nowrap cursor-pointer
+  pb-1 pt-2 px-2
+   font-bold"><i class="fa-duotone fa-cart-flatbed-boxes"></i>ITEM 관리</span><span class="block h-1 bg-primary-500 w-full scale-x-0 group-hover/button:scale-x-100 duration-200"></span></div>
+        <div class="absolute top-[100%] left-0 w-full h-0 group-hover/navigation:h-[260px] flex items-center justify-start flex-col overflow-hidden duration-200 ease-in-out px-1 group-hover/button:bg-primary-400/10">
+          <a href="/trade-platform-design/item/item" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">ITEM 정보</a>
+        </div>
+      </div>
+      <div class="group/button duration-200 relative z-10">
+        <div class="py-1 duration-200 hover:text-primary-600 relative block rounded overflow-hidden"><span class="flex items-center justify-center gap-2 duration-200 text-nowrap cursor-pointer
+ font-bold
+  pb-1 pt-2 px-2
+  "><i class="fa-duotone fa-file-circle-check"></i>서류관리</span><span class="block h-1 bg-primary-500 w-full scale-x-0 group-hover/button:scale-x-100 duration-200"></span></div>
+        <div class="absolute top-[100%] left-0 w-full h-0 group-hover/navigation:h-[260px] flex items-center justify-start flex-col overflow-hidden duration-200 ease-in-out px-1 group-hover/button:bg-primary-400/10">
+          <a href="/trade-platform-design/document/management" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">서류관리</a>
+        </div>
+      </div>
+      <div class="group/button duration-200 relative z-10">
+        <div class="py-1 duration-200 hover:text-primary-600 relative block rounded overflow-hidden"><span class="flex items-center justify-center gap-2 duration-200 text-nowrap cursor-pointer
+       font-bold
+  pb-1 pt-2 px-2
+  "><i class="fa-duotone fa-display-chart-up-circle-currency"></i>분석 및 리스크</span><span class="block h-1 bg-primary-500 w-full scale-x-0 group-hover/button:scale-x-100 duration-200"></span></div>
+        <div class="absolute top-[100%] left-0 w-full h-0 group-hover/navigation:h-[260px] flex items-center justify-start flex-col overflow-hidden duration-200 ease-in-out px-1 group-hover/button:bg-primary-400/10">
+          <a href="/trade-platform-design/analytics/schedule" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">기한 관리</a>
+          <a href="/trade-platform-design/analytics/kpi" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">KPI 관리</a>
+          <a href="/trade-platform-design/analytics/analytics" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">통계 분석</a>
+          <a href="/trade-platform-design/analytics/cost" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">비용정산</a>
+        </div>
+      </div>
+      <div class="group/button duration-200 relative z-10">
+        <div class="py-1 duration-200 hover:text-primary-600 relative block rounded overflow-hidden"><span class="
+
+        font-bold
+        flex items-center justify-center gap-2 duration-200 text-nowrap cursor-pointer pb-1 pt-2 px-2"><i class="fa-duotone fa-gears"></i>시스템 관리</span><span class="block h-1 bg-primary-500 w-full scale-x-0 group-hover/button:scale-x-100 duration-200"></span></div>
+        <div class="absolute top-[100%] left-0 w-full h-0 group-hover/navigation:h-[260px] flex items-center justify-start flex-col overflow-hidden duration-200 ease-in-out px-1 group-hover/button:bg-primary-400/10">
+          <a href="#" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">사용자 관리</a>
+          <a href="#" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">협력사 계정</a>
+          <a href="#" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">메뉴</a>
+          <a href="#" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">권한</a>
+          <a href="#" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">시스템 코드</a>
+          <a href="#" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">접속 정보</a>
+          <a href="#" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">메시지</a>
+          <a href="#" class="py-1 rounded hover:bg-primary-500/30 text-nowrap duration-200 px-3 first:mt-3 last:mb-3 hover:font-bold">공지사항</a>
+        </div>
+      </div>
+      <div class="absolute left-0 top-0 z-0 w-full h-0 group-hover/navigation:h-[310px] group-hover/navigation:bg-white roup-hover/navigation:shadow-2xl rounded-xl duration-300"></div>
+    </nav>
+    <!--  // Navbar Links -->
+    <div class="col-end-13 col-span-3 flex flex-wrap gap-2 justify-between items-center text-base lg:order-2">
+      <a class="">사이트맵</a>
+      <form class="flex items-center">
+        <i class="fa-regular fa-search mr-2"></i>
+        <label for="simple-search" class="sr-only">검색</label>
+        <input 
+          type="text"
+          id="simple-search"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-36 transition-all p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+          placeholder="검색"
+          required=""
+        />
+      </form>
+
+      <div class="relative">
+        <button 
+          type="button"
+          id="userMenuDropdownButton"
+          class="flex mx-3 text-sm bg-gray-800 rounded-full md:mr-0 flex-shrink-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+        >
+          <img class="w-6 h-6 rounded-full" src="/trade-platform-design/assets/shinhanlogo.svg"
+              alt="user photo">
+        </button>
+
+        <!-- User menu dropdown -->
+        <div
+          id="userMenuDropdown"
+          class="dropdown-component z-50 my-4 w-56 text-base list-none bg-white rounded absolute right-0 top-full translate-x-6 shadow-xl"
+        >
+          <div class="py-3 px-4">
+            <span class="block text-sm font-semibold text-gray-900 dark:text-white">홍길동</span>
+            <span class="block text-sm text-primary-700 truncate dark:text-gray-400">KORD SYSTEMS</span>
+            <span class="block text-sm font-light text-gray-500 truncate dark:text-gray-400">name@test.com</span>
+          </div>
+          <ul class="py-1 font-light text-gray-500 dark:text-gray-400 text-sm">
+            <li>
+              <a href="#"
+                class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white">계정
+                정보</a>
+            </li>
+            <li>
+              <a href="#"
+                class="block text-rose-600 font-semibold py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white">계정
+                전월 Report 출력 (PDF)</a>
+            </li>
+            <li class="company-selector">
+              <button id="company-selector__dropdown" class="w-full px-4 py-2 flex items-center justify-start gap-2 hover:bg-gray-100">본지사 구분<span class="icon duration-150"><i class="fa-solid fa-chevron-down"></i></span></button>
+              <ul id="company-selector" class="dropdown-component mx-4 py-0 px-1.5 bg-slate-100 rounded text-slate-700 overflow-hidden">
+                <li><button class="px-1.5 py-0.5 rounded hover:bg-slate-600 hover:text-white duration-150 block w-full text-left active">KORD SYSTEMS</button></li>
+                <li><button class="px-1.5 py-0.5 rounded hover:bg-slate-600 hover:text-white duration-150 block w-full text-left">CONG TV TNHH AMO VINA</button></li>
+                <li><button class="px-1.5 py-0.5 rounded hover:bg-slate-600 hover:text-white duration-150 block w-full text-left">ESTEC PHU THO CO.LTD</button></li>
+                <li><button class="px-1.5 py-0.5 rounded hover:bg-slate-600 hover:text-white duration-150 block w-full text-left">KSV</button></li>
+                <li><button class="px-1.5 py-0.5 rounded hover:bg-slate-600 hover:text-white duration-150 block w-full text-left">Test SIS</button></li>
+              </ul>
+            </li>
+            <li>
+              <a href="./login"
+                class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">로그아웃 </a>
+            </li>
+          </ul>
+        </div>
+        <!-- / User menu dropdown -->
+      </div>
+      <!-- language seletor -->
+      <div class="relative">
+        <button 
+          type="button"
+          id="language-selector-button"
+          class="ml-3 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600 flex itmes-center">
+          <i class="fa-regular fa-globe text-[1.5rem]"></i>
+        </button>
+        <div id="language-selector" class="dropdown-component absolute right-0 top-full bg-white dark:bg-slate-800 rounded shadow-lg divide-y divide-gray-100 dark:divide-gray-600 translate-y-2 overflow-hidden p-3" aria-labelledby="language-selector-button">
+          <h3 class="text-center px-3 py-1 font-bold text-primary-500 border-b-2 mb-1">Language</h3>
+          <ul>
+            <li><a href="#" class="block py-1 px-4 hover:bg-primary-100 duration-200 rounded text-center">KOR</a></li>
+            <li><a href="#" class="block py-1 px-4 hover:bg-primary-100 duration-200 rounded text-center">ENG</a></li>
+          </ul>
+        </div>
+      </div>
+      <script>
+        $("#userMenuDropdown").slideUp(0)
+        $("#userMenuDropdownButton").on("click", function () {
+          $('.dropdown-component').stop().slideUp(200)
+          $("#userMenuDropdown").stop().slideToggle(200)
+        });
+        $("#company-selector").slideUp(0)
+        $("#company-selector__dropdown").on("click", function () {
+          $('.dropdown-component').stop().slideUp(200)
+          $("#company-selector").stop().slideToggle(200)
+        });
+        $("#language-selector").slideUp(0)
+        $("#language-selector-button").on("click", function () {
+          $('.dropdown-component').stop().slideUp(200)
+          $("#language-selector").stop().slideToggle(200)
+        });
+      </script>
+      <!-- / language seletor -->
+    </div>
+
+  </div>
+  <!-- / Navbar -->
+  <!-- Tabs -->
+  <div class="tab-button px-4 gap-2 flex flex-wrap text-base font-medium text-center text-gray-500 dark:text-gray-400 border-b border-b-primary-800">
+    <a
+      href="/trade-platform-design/main/main"
+      class="inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2"
+    >
+      <i class="fa-duotone fa-grid-2"></i>
+      Dashboard
+    </a>
+    <a
+      href="#"
+      class="tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2"
+    >
+       <i class="fa-duotone fa-display-chart-up-circle-currency"></i>
+      분석 및 Risk관리
+      <!-- 삭제 버튼 -->
+      <i class="ml-1 rounded p-1 hover:bg-red-500 hover:text-white far fa-xmark"></i>
+      <!-- / 삭제 버튼 -->
+    </a>
+    <a
+    href="/trade-platform-design/import/import"
+      class="tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2"
+    >
+      <i class="fa-duotone fa-inbox-out fa-rotate-90"></i>
+      수입신고 현황
+      <!-- 삭제 버튼 -->
+      <i class="ml-1 rounded p-1 hover:bg-red-500 hover:text-white far fa-xmark"></i>
+      <!-- / 삭제 버튼 -->
+    </a>
+    <a
+      href="/trade-platform-design/export/invoice-register"
+      class="tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2"
+    >
+      <i class="fa-duotone fa-file-circle-check"></i>
+      서류 관리
+      <!-- 삭제 버튼 -->
+      <i class="ml-1 rounded p-1 hover:bg-red-500 hover:text-white far fa-xmark"></i>
+      <!-- / 삭제 버튼 -->
+    </a>
+    <a
+      href="/trade-platform-design/export/invoice-register"
+      class="tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active"
+      aria-current="page"
+    >
+      <i class="fa-duotone fa-display-chart-up-circle-currency"></i>
+      KPI 관리
+      <!-- 삭제 버튼 -->
+      <i class="ml-1 rounded p-1 hover:bg-red-500 hover:text-white far fa-xmark"></i>
+      <!-- / 삭제 버튼 -->
+    </a>
+  </div>
+  <!-- / Tabs -->
+</header>
+
+<main class="p-2 grow flex flex-col gap-2 relative z-0">
+  <form
+    class="w-full shrink-0 grid grid-rows-3 grid-cols-[auto_repeat(5,1fr)_auto_repeat(5,1fr)]
+    row-start-1 col-start-1 col-span-2 bg-white dark:bg-slate-800 shadow-sm rounded-lg
+    border border-slate-200 dark:border-slate-700 px-4 py-3 gap-1 z-1 text-base *:text-base
+    items-center
+  ">
+    <div
+      class="row-start-1 col-span-6 col-end-13 flex flex-row gap-2 items-end justify-end"
+    >
+      <button
+        class="text-white bg-primary-700 hover:bg-secondary-800 border border-primary-700
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none
+        duration-300 row-start-1
+      ">
+        <i class="fa-regular fa-search mr-1"></i>
+        검색
+      </button>
+      <button
+        class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300
+      ">
+        <i class="fa-regular fa-times mr-1"></i>
+        초기화
+      </button>
+    </div>
+    <!-- 검색구분 -->
+    <label class="col-start-1 row-start-1 col-span-1 row-span-1
+       flex items-center font-medium text-gray-900 pr-2">
+      검색구분
+    </label>
+    <div
+      class="flex flex-row flex-wrap gap-4 col-start-2 col-span-5 row-start-1
+      items-center *:flex *:flex-row *:items-center *:gap-2 font-medium text-gray-900
+    ">
+      <label for="kpi-management-mode">
+        <input
+          type="radio"
+          id="kpi-management-mode"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          value="kpi-management-view"
+          name="kpi-view-mode"
+          checked
+        >
+        <span>정확성 관리</span>
+      </label>
+      <label for="kpi-leadtime-mode">
+        <input
+          id="kpi-leadtime-mode"
+          type="radio"
+          value="kpi-leadtime-view"
+          name="kpi-view-mode"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+        >
+        <span>수입신고 Lead-Time</span>
+      </label>
+    </div>
+    <!-- 검색기간 -->
+    <label
+      class="col-start-1 row-start-2 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2"
+    >
+      등록일자
+    </label>
+    <select
+      id="date-type"
+      class="row-start-2 col-start-2 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+    >
+      <option selected>승인일자</option>
+      <option >신고일자</option>
+      <option>수리일자</option>
+    </select>
+    <!-- Calendar -->
+    <div
+      date-rangepicker
+      class="col-start-3 row-start-2 col-span-4 flex flex-wrap md:flex-nowrap items-center gap-1
+    ">
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor" viewBox="0 0 20 20">
+            <path
+                d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input name="start" type="text"
+                class="text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 "
+                placeholder="시작일자">
+      </div>
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor" viewBox="0 0 20 20">
+            <path
+                d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input name="end" type="text"
+                class="text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 "
+                placeholder="종료일자">
+      </div>
+    </div>
+    <!-- Range Button -->
+    <div class="col-start-7 row-start-2 col-span-4 flex items-center gap-1">
+      <button
+          type="button"
+          id="today-button"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700
+        ">
+        당일
+      </button>
+      <button
+          type="button"
+          id="week-button"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700
+        ">
+        이번주
+      </button>
+      <button
+          type="button"
+          id="last-month-button"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700
+        ">
+        전월
+      </button>
+      <button
+          type="button"
+          id="this-month-button"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700
+        ">
+        당월
+      </button>
+    </div>
+
+    <!-- 범위 선택 스크립트 로딩 -->
+    <!-- / 범위 선택 스크립트 로딩 -->
+    <!-- 신고번호 -->
+    <label
+      for="n2"
+      class="row-start-3 col-start-1 flex items-center font-medium text-gray-900 pr-2"
+    >
+      신고번호
+    </label>
+    <input
+      type="text"
+      id="n2"
+      class="row-start-3 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="신고번호를 입력해주세요."
+    >
+    <!-- B/L 번호 -->
+    <label
+      for="n3"
+      class="row-start-3 col-start-7 flex items-center font-medium text-gray-900 px-2"
+    >
+      B/L 번호
+    </label>
+    <input
+      type="text"
+      id="n3"
+      class="row-start-3 col-start-8 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="B/L번호를 입력해주세요."
+    >
+    <!-- 공장코드 -->
+    <label for="n1" class="row-start-4 col-start-1 flex items-center font-medium text-gray-900 pr-2">공장코드 </label>
+    <select type="text" id="n1"
+            class="row-start-4 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1">
+      <option value="">공장코드를 선택해주세요.</option>
+      <option value="1">공장코드1</option>
+      <option value="2">공장코드2</option>
+      <option value="3">공장코드3</option>
+    </select>
+    <!-- PO 번호 -->
+    <label
+      for="n5"
+      class="row-start-4 col-start-7 flex items-center font-medium text-gray-900 px-2"
+    >
+    PO 번호
+    </label>
+    <input
+      type="text"
+      id="n5"
+      class="row-start-4 col-start-8 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="PO번호를 입력해주세요."
+    >
+  </form>
+  <section class="h-full w-full overflow-hidden kpi-management-view relative z-0">
+    <div class="flex items-center justify-between w-full shrink-0 py-1">
+      <div class="flex items-center gap-4">
+        <h2 class="shrink-0 flex items-center gap-1">
+          <i class="fa-duotone fa-feather text-primary-900"></i>
+          정확성 관리
+        </h2>
+        <label for="kpi-sub-import-view">
+          <input
+            id="kpi-sub-import-view"
+            type="radio"
+            value="kpi-sub-import"
+            name="kpi-sub-view"
+            checked
+            class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          >
+          <span>수입</span>
+        </label>
+        <label for="kpi-sub-export-view">
+          <input
+            id="kpi-sub-export-view"
+            type="radio"
+            value="kpi-sub-export"
+            name="kpi-sub-view"
+            class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          >
+          <span>수출</span>
+        </label>
+      </div>
+    </div>
+    <div id="kpi-summary-table"></div>
+    <!-- import table -->
+    <article class="h-full w-full kpi-management-import-view">
+      <div class="flex items-center justify-between w-full shrink-0 p-1">
+        <div class="flex items-center gap-4">
+          <h2 class="shrink-0 flex items-center gap-1">
+            <i class="fa-duotone fa-feather text-primary-900"></i>
+            수입
+          </h2>
+          <label for="kpi-sub-import-read">
+            <input
+              id="kpi-sub-import-read"
+              type="radio"
+              value=""
+              name=""
+              checked
+              class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            >
+            <span>읽기</span>
+          </label>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- <a href="#" class="text-base text-primary-600 hover:underline">Excel 다운로드</a> -->
+          <button
+	      	type="button"
+	        class="text-white bg-primary-700 hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-2.5 py-1.5 focus:outline-noneduration-300 row-start-1 text-base">
+         <i class="fa-regular fa-download"></i>
+        	Excel 다운로드
+      	</button>	
+          <button
+            type="button"
+            class="upload-button h-9 text-white bg-primary-700 hover:bg-secondary-800 font-medium rounded px-2.5 py-2 text-base border border-primary-700 hover:border-secondary-400"
+          >
+            <i class="fa-regular fa-file-pdf mr-1"></i>
+            PDF 생성
+          </button>
+          <select class="w-36 h-9 text-gray bg-primary-100 hover:bg-primary-200 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded text-base px-2.5 py-1.5 text-center inline-flex items-center border-primary-500 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+            <option>ROWS[20]</option>
+            <option>ROWS[30]</option>
+            <option>ROWS[40]</option>
+            <option>ROWS[50]</option>
+            <option>ROWS[60]</option>
+          </select>
+        </div>
+      </div>
+      <div class="grow bg-white shadow-sm max-h-[40rem] rounded-lg overflow-auto z-0">
+        <div id="kpi-import-table"></div>
+      </div> 
+    </article>
+    <!-- export table -->
+    <article class="h-full w-full kpi-management-export-view">
+      <div class="flex items-center justify-between w-full shrink-0 p-1">
+        <div class="flex items-center gap-4">
+          <h2 class="shrink-0 flex items-center gap-1">
+            <i class="fa-duotone fa-feather text-primary-900"></i>
+            수출
+          </h2>
+          <label for="kpi-sub-export-read">
+            <input
+              id="kpi-sub-export-read"
+              type="radio"
+              value=""
+              name=""
+              checked
+              class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            >
+            <span>읽기</span>
+          </label>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- <a href="#" class="text-base text-primary-600 hover:underline">Excel 다운로드</a> -->
+          <button
+	      	type="button"
+	        class="text-white bg-primary-700 hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-2.5 py-1.5 focus:outline-noneduration-300 row-start-1 text-base">
+         <i class="fa-regular fa-download"></i>
+        	Excel 다운로드
+      	</button>	
+          <button
+            type="button"
+            class="upload-button h-9 text-white bg-primary-700 hover:bg-secondary-800 font-medium rounded px-2.5 py-2 text-base border border-primary-700 hover:border-secondary-400"
+          >
+            <i class="fa-regular fa-file-pdf mr-1"></i>
+            PDF 생성
+          </button>
+          <select class="w-36 h-9 text-gray bg-primary-100 hover:bg-primary-200 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded text-base px-2.5 py-1.5 text-center inline-flex items-center border-primary-500 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+            <option>ROWS[20]</option>
+            <option>ROWS[30]</option>
+            <option>ROWS[40]</option>
+            <option>ROWS[50]</option>
+            <option>ROWS[60]</option>
+          </select>
+        </div>
+      </div>
+      <div class="grow bg-white shadow-sm max-h-[40rem] rounded-lg border border-slate-200 overflow-auto z-0">
+        <div id="kpi-export-table"></div>
+      </div> 
+    </article>
+  </section>
+  <!-- Lead Time Section -->
+  <section class="h-full w-full overflow-hidden kpi-leadtime-view relative z-0">
+    <div class="flex items-center justify-between w-full shrink-0 py-1">
+      <div class="flex items-center gap-4">
+        <h2 class="shrink-0 flex items-center gap-1">
+          <i class="fa-duotone fa-feather text-primary-900"></i>
+          수입신고 Lead-Time
+        </h2>
+        <label for="kpi-sub-import-view">
+          <input
+            id="kpi-leadtime-read"
+            type="radio"
+            value="kpi-leadtime-mode"
+            name="kpi-leadtime-data"
+            checked
+            class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          >
+          <span>읽기</span>
+        </label>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- <a href="#" class="text-base text-primary-600 hover:underline">Excel 다운로드</a> -->
+        <button
+	      	type="button"
+	        class="text-white bg-primary-700 hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-2.5 py-1.5 focus:outline-noneduration-300 row-start-1 text-base">
+         <i class="fa-regular fa-download"></i>
+        	Excel 다운로드
+      	</button>	
+        <button
+          type="button"
+          class="upload-button h-9 text-white bg-primary-700 hover:bg-secondary-800 font-medium rounded px-2.5 py-2 text-base border border-primary-700 hover:border-secondary-400"
+        >
+          <i class="fa-regular fa-file-pdf mr-1"></i>
+          PDF 생성
+        </button>
+        <select class="w-36 h-9 text-gray bg-primary-100 hover:bg-primary-200 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded text-base px-2.5 py-1.5 text-center inline-flex items-center border-primary-500 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+          <option>ROWS[20]</option>
+          <option>ROWS[30]</option>
+          <option>ROWS[40]</option>
+          <option>ROWS[50]</option>
+          <option>ROWS[60]</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grow bg-white shadow-sm h-full max-h-[40rem] rounded-lg border border-slate-200 overflow-auto z-0">
+      <div id="kpi-leadtime-table"></div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer class="w-full
+    mx-auto flex justify-between justify-self-end items-center
+    shrink-0 bg-primary-900 text-gray-200 px-6 py-2 gap-4">
+
+  <span>KORD Systems Inc.</span>
+  <span class="mr-auto">Copyright KORD Systems Inc. All rights reserved.</span>
+
+  <a href="mailto:kord@kordsystems.com">
+    <i class="fa-regular fa-envelopes"></i>
+    kord@kordsystems.com
+  </a>
+  <a href="tel:+82-02-2038-8299">
+    <i class="fa-regular fa-phone-volume"></i>
+    +82-02-2038-8299
+  </a>
+
+  <a href="#" class="hover:underline">시스템소개</a>
+  <a href="#" class="hover:underline">사용자매뉴얼</a>
+  <div class="relative text-sm">
+    <button type="button" id="portal-rendering-button" class="border rounded border-white  bg-primary-400 text-white flex items-center justify-between w-48 py-1.5 px-4">
+      <span class="text-base">참고사이트</span><i class="fa-solid fa-chevron-down rotate-180 duration-200"></i>
+    </button>
+    <div class="portal-renderer w-full absolute left-0 top-0 -translate-y-full bg-white border border-gray-300 rounded-lg shadow-xl text-gray-700 px-2 py-3">
+      <ul>
+        <li><a href="#" class="block py-1 px-2 rounded hover:bg-primary-100 duration-200 hover:text-primary-700">유니패스</a></li>
+        <li><a href="#" class="block py-1 px-2 rounded hover:bg-primary-100 duration-200 hover:text-primary-700">관세법령정보포털</a></li>
+        <li><a href="#" class="block py-1 px-2 rounded hover:bg-primary-100 duration-200 hover:text-primary-700">FTA포털</a></li>
+        <li><a href="#" class="block py-1 px-2 rounded hover:bg-primary-100 duration-200 hover:text-primary-700">트레이드테비</a></li>
+      </ul>
+    </div>
+  </div>
+  <script>
+    $(".portal-renderer").slideUp(0)
+    $("#portal-rendering-button").on("click", function () {
+      $(".portal-renderer").slideToggle(200)
+      $(this).children(".fa-chevron-down").toggleClass("rotate-180")
+    });
+  </script>
+</footer>
+<!-- /Footer -->
+
+<script>
+//summary table
+const kpiSummaryData = [
+  [ "미통관", 10, 20, 30 ],
+  [ "검사", 23, 12, 6 ],
+  [ "PL" ,7, 13, 24 ],
+  [ "사후제출", 5, 4, 3 ]
+]
+const kpiSummaryTable = new Handsontable(document.getElementById('kpi-summary-table'), {
+  className: 'ioom-table',
+  data: kpiSummaryData,
+  colHeaders: ["","1일이내 통관", "1~2일", "3일 이상"],
+  columnSorting: true,
+  
+  width: 'auto',
+  height: 'auto',
+  contextMenu: true,
+  manualColumnResize: true,
+  columnSorting: true,
+  // 선택된 헤더의 클래스명을 지정, 기본값은 'ht__highlight ht__active_highlight'
+  //currentHeaderClassName: ['selected-header'
+  licenseKey: 'non-commercial-and-evaluation', // for non-commercial use only
+})
+// Dummy Data
+const kpiTaxStatus = 10000000
+const kpiCostStatus = 18028000
+const kpiImportNestedHeaders = [
+  [ "", "", "", "", "", "", "", "", "", kpiTaxStatus, kpiCostStatus  ],
+  [
+    "체크", "공장코드", "PO 번호", "B/L", "신고번호", "납세", "납세의무자", "사유코드", "정정사유", "세액증감내역", "납부금액", "가산세", "세관", "수리일자", "신청일자", "승인일자"
+  ]
+]
+const kpiImportCol = [
+  {title: "체크", type: "checkbox", className: "htCenter"},
+  {title: '공장코드', wordWrap: false},
+  {title: 'PO 번호', wordWrap: false},
+  {title: 'B/L', wordWrap: false},
+  {title: '신고번호', wordWrap: false},
+  {title: '납세', wordWrap: false},
+  {title: '납세의무자', wordWrap: false},
+  {title: '사유코드', wordWrap: false},
+  {title: '정정사유', wordWrap: false},
+  {title: '세액증감내역', wordWrap: false},
+  {title: '납부금액', wordWrap: false},
+  {title: '가산세', wordWrap: false},
+  {title: '세관', wordWrap: false},
+  {title: '수리일자', type: 'date', format: 'YYYY-MM-DD', wordWrap: false},
+  {title: '신청일자', type: 'date', format: 'YYYY-MM-DD', wordWrap: false},
+  {title: '승인일자', type: 'date', format: 'YYYY-MM-DD', wordWrap: false},
+];
+
+const kpiImportData = [
+  [
+    false,
+    "FAC9813204",
+    "PO90168106581290",
+    "BL90168106581290",
+    "SG90168106581290",
+    "완료",
+    "Phong Thuan Co., Ltd",
+    "SOD",
+    "",
+    90168235,
+    1000000,
+    100000,
+    "인천세관",
+    "2023-01-12",
+    "2023-01-12",
+    "2023-01-12"
+  ]
+]
+function chipRenderer(hotInstance, td, row, column, prop, value, cellProperties) {
+  // Optionally include `BaseRenderer` which is responsible for
+  // adding/removing CSS classes to/from the table cells.
+  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+  td.classList.add('chip-cell');
+  td.classList.add('text-center');
+  switch (value) {
+    case "수출":
+      td.innerHTML = `<span class="chip chip-blue">${value}</span>`
+      break
+    case "수입":
+      td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+      break
+    default:
+      td.innerHTML = ``
+      break
+  }
+
+  // ...your custom logic of the renderer
+}
+let popupState = false
+function uploaderRenderer(hotInstance, td, row, column, prop, value, cellProperties) {
+  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+  td.classList.add('uploader-cell');
+  td.classList.add('text-center');
+  td.innerText = value
+  td.addEventListener('click', () => {
+    popupState = true
+    const modal = document.querySelector('.modal')
+    const uploaderModal = document.querySelector('.uploader-modal')
+    const fileList = document.querySelector('.file-list')
+    modal.classList.remove('hidden')
+    modal.classList.add('flex')
+    uploaderModal.classList.remove('hidden')
+    uploaderModal.classList.add('block')
+    fileList.innerHTML = `
+      <li class="flex items-center py-1 px-4 rounded justify-between hover:bg-gray-100 duration-150 gap-10">
+        <p class="flex items-end gap-2">
+          <a
+            href="#"
+            target="_blank"
+            class="font-semibold text-xl underline"
+          >
+            ${value}
+          </a>
+          <span class="text-base pl-3 text-gray-400">2023-01-12</span>
+          <button type="button" class="delete-button hover:opacity-50 text-rose-600"><i class="fa-regular fa-trash-can"></i></button>
+        </p>
+        <select
+          id="file${row}"
+          class="min-w-40 text-primary-700 bg-primary-50 border border-primary-500 hover:bg-primary-200 focus:ring-4 focus:outline-none focus:ring-primary-400 font-medium rounded-lg text-sm px-3 py-1.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+        >
+          <option value="">구분</option>
+          <option value="bl">BL</option>
+          <option value="iv">INVOICE</option>
+          <option value="pl">PACKING LIST</option>
+          <option value="re">RECEIPT</option>
+        </select>
+      </li>
+    `
+  })
+}
+function saveRenderer(hotInstance, td, row, column, prop, value, cellProperties) {
+  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+  td.classList.add('save-cell');
+  td.classList.add('text-center');
+  td.classList.add('text-center');
+  if(value === null) {
+    value = ''
+  }
+  td.innerHTML = `${value}<button type="button" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-rose-700 ml-1 hover:bg-rose-500">저장</button>`
+}
+Handsontable.renderers.registerRenderer('chip', chipRenderer);
+Handsontable.renderers.registerRenderer('file', uploaderRenderer);
+Handsontable.renderers.registerRenderer('save', saveRenderer);
+
+
+const makeResizableTable = (el, columns, rows, data, minRows,nestedHeaders) =>
+  new Handsontable(el, {
+    className: 'ioom-table',
+    minRows,
+    data,
+    columns,
+    width: '100%',
+    height: 'auto',
+    contextMenu: true,
+    stretchH: 'all',
+    stretchV: 'all',
+    manualColumnResize: true,
+    columnSorting: true,
+    nestedHeaders,
+    // 선택된 헤더의 클래스명을 지정, 기본값은 'ht__highlight ht__active_highlight'
+    licenseKey: 'non-commercial-and-evaluation', // for non-commercial use only
+  })
+const kpiImportTableEl = document.getElementById('kpi-import-table')
+const kpiImportTable = makeResizableTable(kpiImportTableEl, kpiImportCol, false, kpiImportData, 5, kpiImportNestedHeaders)
+
+// Export Table
+const kpiExportCol = [
+  {title: "체크", type: "checkbox", className: "htCenter"},
+  {title: '공장코드', wordWrap: false},
+  {title: 'SO 번호', wordWrap: false},
+  {title: 'Invoice', wordWrap: false},
+  {title: '신고번호', wordWrap: false},
+  {title: '수출자', wordWrap: false},
+  {title: '귀책코드', wordWrap: false},
+  {title: '정정사유', wordWrap: false},
+  {title: '수신상태', wordWrap: false},
+  {title: '송품장번호', wordWrap: false},
+  {title: '세관', wordWrap: false},
+  {title: '수리일자', type: 'date', format: 'YYYY-MM-DD', wordWrap: false},
+  {title: '신청일자', type: 'date', format: 'YYYY-MM-DD', wordWrap: false},
+  {title: '승인일자', type: 'date', format: 'YYYY-MM-DD', wordWrap: false},
+]
+
+const kpiExportData = [
+  [
+    false,
+    "FAC001",
+    "SO212123501298",
+    "IV212123501298",
+    "SO123142156_01",
+    "Kohn Pooung Co., Ltd.",
+    "SDI",
+    "정정사유",
+    "수신상태",
+    "SPN123142156",
+    "인천제2터미널",
+    "2023-01-12",
+    "2023-01-12",
+    "2023-01-12"
+  ]
+]
+const kpiExportTableEl = document.getElementById('kpi-export-table')
+const kpiExportTable = makeResizableTable(kpiExportTableEl, kpiExportCol, false, kpiExportData, 5)
+
+const kpiLeadtimeCol = [
+  {title: "체크", type: "checkbox", className: "htCenter"},
+  {title: '공장코드', wordWrap: false},
+  {title: 'PO 번호', wordWrap: false},
+  {title: 'B/L', wordWrap: false},
+  {title: '신고번호', wordWrap: false},
+  {title: '신고일자', type: 'date', format: 'YYYY-MM-DD', wordWrap: false},
+  {title: '수리일자', type: 'date', format: 'YYYY-MM-DD', wordWrap: false},
+  {title: '선별결과', wordWrap: false},
+  {title: '통관계획', wordWrap: false},
+  {title: '징수', wordWrap: false},
+  {title: '납세자상호', wordWrap: false},
+  {title: '반입일시', type: 'date', format: 'YYYY-MM-DD', wordWrap: false},
+  {title: '수리일시', type: 'date', format: 'YYYY-MM-DD', wordWrap: false},
+  {title: '소요시간', wordWrap: false},
+]
+const kpiLeadtimeData = [
+  [
+    false,
+    "FAC001",
+    "PO123142156",
+    "BL123142156_01",
+    "SO123142156_01",
+    "2023-01-12",
+    "2023-01-12",
+    "A:pl/사후",
+    "",
+    "43",
+    "Kohn Pooung Co., Ltd.",
+    "2023-01-12",
+    "2023-01-12",
+    "72",
+  ],
+  [
+    false,
+    "FAC001",
+    "PO123142156",
+    "BL123142156_01",
+    "SO123142156_01",
+    "2023-01-12",
+    "2023-01-12",
+    "B: 전체/검사",
+    "",
+    "43",
+    "Kohn Pooung Co., Ltd.",
+    "2023-01-12",
+    "2023-01-12",
+    "72",
+  ],
+
+]
+const kpiLeadtimeTableEl = document.getElementById('kpi-leadtime-table')
+const kpiLeadtimeTable = makeResizableTable(kpiLeadtimeTableEl, kpiLeadtimeCol, false, kpiLeadtimeData, 5)
+
+
+
+// Modal Action
+const uploaderButton = document.querySelector('.upload-button')
+uploaderButton.addEventListener('click', () => {
+  const modal = document.querySelector('.modal')
+  const uploaderModal = document.querySelector('.uploader-modal')
+  modal.classList.remove('hidden')
+  modal.classList.add('flex')
+  uploaderModal.classList.remove('hidden')
+  uploaderModal.classList.add('block')
+
+  const files = [
+    "SO123142156_01.pdf",
+    "SO123142156_02.pdf",
+    "SO123142156_03.pdf",
+    "SO123142156_04.pdf",
+    "SO123142156_05.pdf",
+  ]
+  const file = files.map((f, i) => {
+    return `
+    <li class="flex items-center py-1 px-4 rounded justify-between hover:bg-gray-100 duration-150 gap-10">
+        <p class="flex items-end gap-2">
+          <a
+            href="#"
+            target="_blank"
+            class="font-semibold text-xl underline"
+          >
+            ${f}
+          </a>
+          <span class="text-base pl-3 text-gray-400">2023-01-12</span>
+          <button type="button" class="delete-button hover:opacity-50 text-rose-600"><i class="fa-regular fa-trash-can"></i></button>
+        </p>
+        <select
+          id="file${i}"
+          class="min-w-40 text-primary-700 bg-primary-50 border border-primary-500 hover:bg-primary-200 focus:ring-4 focus:outline-none focus:ring-primary-400 font-medium rounded-lg text-sm px-3 py-1.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+        >
+          <option value="sg">신고필증</option>
+          <option value="iv">INVOICE</option>
+          <option value="pl">PACKING LIST</option>
+          <option value="bl">BL</option>
+          <option value="oa">원산지증명서</option>
+          <option value="do">요건서류</option>
+          <option value="et">기타</option>
+          <option value="re">정산서</option>
+        </select>
+      </li>
+    `
+  })
+  const fileList = document.querySelector('.file-list')
+  fileList.innerHTML = file.join('')
+})
+
+const modalClose = document.querySelectorAll('.modal-close')
+modalClose.forEach((el) => {
+  el.addEventListener('click', () => {
+    const modal = document.querySelector('.modal')
+    const uploaderModal = document.querySelector('.uploader-modal')
+    modal.classList.remove('flex')
+    modal.classList.add('hidden')
+    uploaderModal.classList.remove('block')
+    uploaderModal.classList.add('hidden')
+    popupState = false
+  })
+})
+
+// Alternative View Mode (JQuery)
+$(".kpi-leadtime-view").fadeOut(0);
+$(".kpi-management-export-view").fadeOut(0);
+const kpiViewMode = document.querySelectorAll('input[name="kpi-view-mode"]');
+const kpiSubViewMode = document.querySelectorAll('input[name="kpi-sub-view"]');
+kpiViewMode.forEach((el) => {
+  el.addEventListener('change', () => {
+    if (el.value === "kpi-leadtime-view") {
+      $(".kpi-leadtime-view").fadeIn(200);
+      $(".kpi-management-view").fadeOut(0);
+      kpiLeadtimeTable.render()
+    } else if(el.value === "kpi-management-view") {
+      $(".kpi-leadtime-view").fadeOut(0);
+      $(".kpi-management-view").fadeIn(200);
+      kpiSummaryTable.render()
+      kpiImportTable.render()
+      kpiExportTable.render()
+    }
+  })
+})
+kpiSubViewMode.forEach((el) => {
+  el.addEventListener('change', () => {
+    if (el.value === "kpi-sub-import") {
+      $(".kpi-management-import-view").fadeIn(200);
+      $(".kpi-management-export-view").fadeOut(0);
+      kpiImportTable.render()
+    } else if(el.value === "kpi-sub-export") {
+      $(".kpi-management-import-view").fadeOut(0);
+      $(".kpi-management-export-view").fadeIn(200);
+      kpiExportTable.render()
+    }
+  })
+})
+</script>
+</body>
+</html>

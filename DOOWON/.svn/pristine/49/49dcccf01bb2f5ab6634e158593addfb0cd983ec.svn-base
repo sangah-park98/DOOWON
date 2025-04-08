@@ -1,0 +1,1612 @@
+/*[list] 초기 데이터 get*/
+var notPdfDate ="";
+/*[list] 초기 데이터 get*/
+$( document ).ready(function() {
+	//setTimeout(exportPdf, 500);
+});
+
+$(document).ready(function() {
+	var dashboardYy = new Date().getFullYear();
+	
+	
+	$('.band-calendar').each(function(){ regCaldash(this) ;})
+	  //캘린더 포맷
+	$('.datepicker').datepicker("option","dateFormat",dashFormat);
+
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,7);
+	  
+	  $("#dashbordDate").val(today);
+
+	// 대시보드 정보검색
+	//fn_selectDashboadInfo();
+	//fn_moreNotice($("#moreNoticeList"));
+	$("#chartTarget a").click(function() {
+		$('.subOutter ol li #' + $(this).attr('id')).click();
+		$('.subOutter, .bg').hide();
+
+	})
+
+	let nowYear = new Date().getFullYear();
+	let nowMonth = new Date().getMonth() + 1;
+	const objYMList = [];
+	const yearMonthList = [];
+	
+	for (let i = nowYear; i >= 2020; i--) {
+		for (let j = 12; j >= 1; j--) {
+			if (i == nowYear && j > nowMonth) continue;
+			
+			let obj = i + "-" + (j <= 9 ? "0" + j : j);
+			objYMList.push({ i: obj });
+			yearMonthList.push(obj);
+		}
+	}
+	
+	const currentDate = `${nowYear}-${nowMonth <= 9 ? "0" + nowMonth : nowMonth}`;
+	const yearMonthOptions = fn_makeSelect(objYMList, currentDate);
+	document.getElementById("dashbordDate").innerHTML = yearMonthOptions;
+
+
+	
+	fn_dashInfo1("02");
+	fn_dashManagerInfo();
+});
+
+
+
+
+function fn_makeSelect(objList, curVal) {
+    let result = "";
+    const optionHtml = "<option value='{key}' {selected}>{val}</option>";
+    for (let i = 0; i < objList.length; i++) {
+        const obj = objList[i];
+        for (let x in obj) {
+            let key = obj[x]; // 'i'
+            let selected = key === curVal ? "selected" : "";
+            const curObj = { key: key, val: key, selected: selected };
+            result += fn_makeObj(curObj, optionHtml);
+        }
+    }
+    return result;
+}
+
+function fn_makeObj(obj, template) {
+    return template
+        .replace("{key}", obj.key)
+        .replace("{val}", obj.val)
+        .replace("{selected}", obj.selected);
+}
+
+
+function fn_dashSrch(){
+	
+	const activeElement = document.querySelector("#chartType li.active");
+	
+	// 값 선언
+	let activeValue = null;
+
+    if (activeElement.classList.contains("status-tab-imp")) {
+        activeValue = "02"; // 수입
+    } else if (activeElement.classList.contains("status-tab-exp")) {
+        activeValue = "01"; // 수출
+    }
+	
+    var dashDate = $("#dashbordDate").val();
+	
+    fn_dashInfo1(activeValue);
+	
+}
+
+
+function fn_rptType(type){
+	if (type=="01"){
+		const tabType1 = document.querySelector('.status-tab-exp');
+		const tabType2 = document.querySelector('.status-tab-imp');
+		tabType1.classList.add("active");
+	    tabType2.classList.remove("active");
+	} else {
+		const tabType1 = document.querySelector('.status-tab-exp');
+		const tabType2 = document.querySelector('.status-tab-imp');
+	    tabType1.classList.remove("active");
+	    tabType2.classList.add("active");
+	}
+	fn_dashInfo1(type);
+}
+
+function fn_dashInfo1(type){
+	
+	
+	fn_loading(true);
+	var sData = {};
+	sData["srch1"] = type;
+	sData["srch2"] = $("#dashbordDate").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/dash/selectDashboardInfo1.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : "json",
+		success : function(data) {
+			$("#dashInfo1").html('');
+			document.querySelector('#myChart').remove();
+		    document.querySelector('.myChartClass').innerHTML = '<canvas id="myChart" height="225"></canvas>'
+			var newRow = "";
+			var labelDate = [];  		// x축 값
+			var expCnt = [];  		// 건수 값
+			var expKrw = []; 
+			// 금액 값
+			var impCnt = [];  		// 건수 값
+			var impKrw = []; 		// 금액 값
+			var impTax = []; 		// 금액 값
+				
+				for (var i = 0; i < data.resultList.length; i++) {
+					newRow = "<tr>" +
+								 "<td id='sumDate' style='text-align: center;'>"+data.resultList[i].sumDate + "</td>" +
+								 "<td>"+data.resultList2[i].cnt + "</td>" +
+								 "<td>"+data.resultList2[i].sumTax + "</td>" +
+								 "<td>"+data.resultList2[i].sumKrw + "</td>" +
+								 "<td>"+data.resultList[i].cnt + "</td>" +
+								 "<td>"+data.resultList[i].sumKrw + "</td>" +
+								 "</tr>"
+					$("#dashInfo1").append(newRow);
+				}
+				
+				for (var i = data.resultList.length - 1; i >= 0; i--) {
+					labelDate.push(data.resultList[i].sumDate);
+					expCnt.push(data.resultList[i].cnt);
+					
+					impCnt.push(data.resultList2[i].cnt);
+					
+					var strNumber = data.resultList[i].sumKrw;
+					var number = parseInt(strNumber.replace(/,/g, ""), 10);
+					
+					var strNumber2 = data.resultList2[i].sumKrw;
+					var number2 = parseInt(strNumber2.replace(/,/g, ""), 10);
+					
+					var strNumber3 = data.resultList2[i].sumTax;
+					var number3 = parseInt(strNumber3.replace(/,/g, ""), 10);
+					expKrw.push(number);
+					impKrw.push(number2);
+					impTax.push(number3);
+				}
+			// 차트 생성
+		if (type == "01"){
+		  	var ctx = document.getElementById('myChart').getContext('2d');
+		  	var myChart = new Chart(ctx, {
+		    	type: 'bar',
+		    	data: {
+		      		labels: labelDate,
+		      		datasets: [
+		        		{
+		          			type: 'bar',
+		          			label: expVal /*'수출가격(KRW)'*/,
+		          			data: expKrw,
+		          			backgroundColor: 'rgba(255, 99, 132, 0.2)',
+		          			borderColor: 'rgba(255, 99, 132, 1)',
+		          			borderWidth: 1,
+		          			yAxisID: 'bar-y-axis'
+		        		},
+		        		{
+		          			type: 'line',
+		          			label: cnt /*'건수'*/,
+		          			data: expCnt,
+		          			backgroundColor: 'rgba(54, 162, 235, 0.2)',
+		          			borderColor: 'rgba(54, 162, 235, 1)',
+		          			borderWidth: 1,
+		          			fill: false,
+		          			yAxisID: 'line-y-axis'
+		        		}
+		      		]
+		    	},
+		    options: {
+			    	responsive: true,
+			        maintainAspectRatio: false,
+		      		scales: {
+		      			'bar-y-axis': {
+		  					id: 'bar-y-axis',
+		  					type: 'linear',
+		  					position: 'left',
+		  					beginAtZero: true
+						},
+		        		'line-y-axis': {
+		  					id: 'line-y-axis',
+		  					type: 'linear',
+		  					position: 'right',
+		 	 				beginAtZero: true
+		        		}
+		    		}
+		    	}
+			});
+				} else {
+					var ctx = document.getElementById('myChart').getContext('2d');
+				  	var myChart = new Chart(ctx, {
+				    	type: 'bar',
+				    	data: {
+				      		labels: labelDate,
+				      		datasets: [
+				        		{
+				          			type: 'bar',
+				          			label: impVal /*'수입가격(KRW)'*/,
+				          			data: impKrw,
+				          			backgroundColor: 'rgba(255, 99, 132, 0.2)',
+				          			borderColor: 'rgba(255, 99, 132, 1)',
+				          			borderWidth: 1,
+				          			yAxisID: 'bar-y-axis'
+				        		},
+				        		{
+				          			type: 'bar',
+				          			label: taxPaid /*'납부세액(KRW)'*/,
+				          			data: impTax,
+				          			backgroundColor: 'rgba(155, 200, 50, 0.2)',
+				          			borderColor: 'rgba(155, 200, 50, 1)',
+				          			borderWidth: 1,
+				          			yAxisID: 'bar-y-axis'
+				        		},
+				        		{
+				          			type: 'line',
+				          			label: cnt /*'건수'*/,
+				          			data: impCnt,
+				          			backgroundColor: 'rgba(54, 162, 235, 0.2)',
+				          			borderColor: 'rgba(54, 162, 235, 1)',
+				          			borderWidth: 1,
+				          			fill: false,
+				          			yAxisID: 'line-y-axis'
+				        		}
+				      		]
+				    	},
+				    options: {
+					    	responsive: true,
+					        maintainAspectRatio: false,
+				      		scales: {
+				      			'bar-y-axis': {
+				  					id: 'bar-y-axis',
+				  					type: 'linear',
+				  					position: 'left',
+				  					beginAtZero: true
+								},
+								
+				        		'line-y-axis': {
+				  					id: 'line-y-axis',
+				  					type: 'linear',
+				  					position: 'right',
+				 	 				beginAtZero: true
+				        		}
+				    		}
+				    	}
+					});
+				}
+			fn_loading(false);
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+        	}
+		}
+	});
+}
+
+
+function fn_dashManagerInfo(){
+    var sData = {};
+    $.ajax({
+        type : "POST",
+        url : "/dash/selectDashManagerInfo.do",
+        data : sData,
+        beforeSend : function(xmlHttpRequest){
+            xmlHttpRequest.setRequestHeader("AJAX", "true");
+        },
+        dataType : "json",
+        success : function(data) {
+            $("#dashManagerInfo").html('');
+            var newRow = "";
+            
+            if (data.resultList.length == 0) {
+                newRow = "<tr>" +
+                         "<td style='text-align: center;'></td>" +
+                         "<td style='text-align: center;'>" + '-' + "</td>" +
+                         "<td style='text-align: center;'>" + '-' + "</td>" +
+                         "<td style='text-align: center;'>" + '-' + "</td>" +
+                         "</tr>";
+                $("#dashManagerInfo").append(newRow);
+            } else if(lang == 'en') {
+            	for (var i = 0; i < data.resultList.length; i++) {
+                    newRow = "<tr>" +
+	                             "<td style='text-align: center;'>" + data.resultList[i].usrType + "</td>" +
+	                             "<td style='text-align: center;'>" + data.resultList[i].usrEmail + "</td>" +
+	                             "<td style='text-align: center;'>" + data.resultList[i].usrTel + "</td>" +
+                             "</tr>";
+                    $("#dashManagerInfo").append(newRow);
+            	}
+            } else {
+                for (var i = 0; i < data.resultList.length; i++) {
+                    newRow = "<tr>" +
+	                             "<td style='text-align: center;'>" + data.resultList[i].usrType + "</td>" +
+	                             "<td style='text-align: center;'>" + data.resultList[i].usrNm + "</td>" +
+	                             "<td style='text-align: center;'>" + data.resultList[i].usrEmail + "</td>" +
+	                             "<td style='text-align: center;'>" + data.resultList[i].usrTel + "</td>" +
+                             "</tr>";
+                    $("#dashManagerInfo").append(newRow);
+                }
+            }
+        },
+        error : function(e, textStatus, errorThrown) {
+            if(e.status == 400){
+                alert("Your request is up. Please log back in if you wish to continue");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert("There was an error processing your request.");
+            }
+        }
+    });
+}
+
+
+// 공지사항 클릭
+function fn_callNoticePop(noticeSeq) {
+	$("#dashNoticePop").find("input").val(null);
+	$("#dashNoticePop").find("textarea").val(null);
+	$("#dashNoticePop").modal("show");
+	$("#notiIcon" + noticeSeq + " #newicon").hide();
+
+	var uData = {};
+	uData["srch1"] = noticeSeq;
+	$.ajax({
+		type : "POST",
+		url : "/base/updateReadNotice.do",
+		data : JSON.stringify(uData),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		contentType : "application/json; charset=utf-8",
+		success : function(data) {
+			if (data == "success") {
+				fn_searchDashNotice(noticeSeq);
+			}
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+				console.log(errorThrown);
+				alert(msgSaveError);
+        	}
+		}
+	});
+
+};
+
+// 공지사항 팝업검색
+function fn_searchDashNotice(noticeSeq) {
+	var sData = {};
+	sData["srch1"] = noticeSeq;
+
+	$.ajax({
+		type : "POST",
+		url : "/dash/selectDashNoticeInfo.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : "json",
+		success : function(data) {
+			if (data.result.dashFileNm == undefined
+					|| data.result.dashFileNm == "") {
+				$("#dashNoticeAttach").hide();
+			} else {
+				$("#dashNoticeAttach").show();
+			}
+
+			$.each(data.result, function(key, value) {
+				$("#dashNoticePop").find("input[name='" + key + "']")
+						.val(value);
+				$("#dashNoticePop").find("textarea[name='" + key + "']").val(
+						value);
+			});
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+        	}
+		}
+	});
+
+};
+
+// 읽음체크
+function fn_noticeReadCheck() {
+	for (i = 0; i < colReadList.length; i++) {
+		$("#notiIcon" + colReadList[i] + " #newicon").hide();
+	}
+}
+
+// 공지사항 조회
+function fn_moreNotice(elemVal) {
+	elemVal.val(Number(elemVal.val()) + 10);
+	var nData = {};
+	nData["startPoint"] = Number(elemVal.val());
+	$.ajax({
+		type : "POST",
+		url : "/base/selectMoreNoticeList.do",
+		data : nData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : "json",
+		success : function(data) {
+			colNoticecnt = data.totCnt;
+			setTimeout(function() {
+				fn_noticeList(data)
+			}, 0.0001);
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+				console.log(errorThrown);
+				// alert(msgSearchError);
+        	}
+		}
+	});
+
+}
+
+// 리스트 그려주는 부분
+function fn_noticeList(data) {
+	if (data.totCnt > Number($("#moreNoticeList").val()) - 10
+			|| $("#moreNoticeList").val() == "0") {
+		$("#noticeTbl tbody").children().remove();
+		var rowData;
+		for (var i = 0; i < data.noticeList.length; i++) {
+			rowData = data.noticeList[i];
+			var rowText = "<tr>";
+			rowText = rowText + "<tr onclick='fn_callNoticePop("
+					+ rowData.noticeSeq + ")' style='cursor:pointer;'>";
+			rowText = rowText + "<td>" + rowData.noticeSn + "</td>";
+			rowText = rowText + "<td align='left' id='notiTit"
+					+ rowData.noticeSeq + "'>" + rowData.title + "</td>";
+			rowText = rowText
+					+ "<td id='notiIcon"
+					+ rowData.noticeSeq
+					+ "'><span class='badge badge-info' style='margin-right:5px' id='newicon'>NEW</span></td>"
+			rowText = rowText + "<td >" + rowData.regDt + "</td> ";
+			rowText = rowText + "</tr>";
+			$("#noticeTbl tbody").append(rowText);
+			$("#noticeTbl").css("border-collapse", "collapse")
+			$("#noticeTbl tbody").css("overflow-y", "hidden ")
+			// $("#noticeTbl tbody").css("height","300px")
+		}
+		fn_noticeReadCheck();
+	} else {
+		alert(msgNotice);
+	}
+};
+
+// notice modal popup
+$('ul.bg-white li').on('click', function(){
+	var dashNoticeSeq = $(this).find('p.text-sm:hidden').text();
+    $('#dashNoticePop').show();
+    fn_dashNoticeModalContentPopUp(dashNoticeSeq);
+});
+
+
+function fn_dashNoticeModalContentPopUp(dashNoticeSeq){
+	var sData = {};
+	sData["srch3"] = dashNoticeSeq;
+	$.ajax({
+		type : "POST",
+		url : "/base/selectDashNoticeViewList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	fillDashNoticeModalContent(data.resultList);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+function fillDashNoticeModalContent(resultList) {
+    var notice = resultList[0];
+    var noticeDt = notice.noticeDt;
+    var year = noticeDt.substring(0, 4);
+    var month = noticeDt.substring(4, 6);
+    var day = noticeDt.substring(6, 8);
+    var formattedNoticeDt = year + "." + month + "." + day;
+    
+    var edtDt = notice.edtDt;
+
+    document.querySelector('.dashNotice-modal h3').textContent = notice.titleKr;
+    document.querySelector('.dashNotice-modal span').textContent = notice.date;
+    // document.querySelector('.dashNotice-modal span').textContent = notice.edtDt;
+    document.querySelector('.dashNotice-modal textarea').textContent = notice.cnKr;
+    
+    var strHtml = "";
+    if (notice.fileOrgNm) {
+        strHtml = '<a href="#" id="dashDownload" style="color:#030303"><i class="fa-regular fa-floppy-disk"></i> 첨부파일 : ' + notice.fileOrgNm + '</a>';
+    }
+    
+    var dateInfo = document.querySelector('.dashNotice-modal .text-sm');
+    if(edtDt == '' || edtDt == null) {
+    	dateInfo.textContent = '등록일: ' + formattedNoticeDt;
+    } else {
+    	/*var edtyear = edtDt.substring(0, 4);
+        var edtmonth = edtDt.substring(4, 6);
+        var edtday = edtDt.substring(6, 8);
+        var formattedEdtDt = edtyear + "." + edtmonth + "." + edtday;
+    	dateInfo.textContent = '등록일: ' + formattedNoticeDt + ' , 수정일: ' + formattedEdtDt;*/
+    }
+    dateInfo.style.fontSize = '13px';
+    
+    document.querySelector('.dashNotice-modal .text-base').innerHTML = strHtml;
+    
+    var dashDownloadLink = document.getElementById('dashDownload');
+    if (notice.fileOrgNm) {
+	    dashDownloadLink.addEventListener('mouseenter', function() {
+	    dashDownloadLink.style.color = 'rgb(45 126 98)';
+	    dashDownloadLink.style.fontWeight = 'bold';
+	    });
+	
+		dashDownloadLink.addEventListener('mouseleave', function() {
+			 dashDownloadLink.style.color = '#030303';
+			 dashDownloadLink.style.fontWeight = '';
+		});
+    }
+}
+
+
+$(document).on('click', '#dashDownload', function(){
+	const htmlContent = event.target.innerHTML.trim();
+	const fileOrgNm = htmlContent.split(' 첨부파일 : ')[1];
+    $("#dashFileDown").val(fileOrgNm);
+    document.dashFileDownForm.action = "/cmmn/dashFileDown.do";
+    document.dashFileDownForm.submit();
+})
+
+// news modal popUp 
+function dashNoticeClose(){
+	$("#dashNoticePop").hide();
+}
+
+$('div.bg-blue li').on('click', function(){
+	var dashNewsSeq = $(this).find('p.text-sm:hidden').text();
+    $('#dashNewsPop').show();
+    fn_dashNewsModalContentPopUp(dashNewsSeq);
+});
+
+
+function fn_dashNewsModalContentPopUp(dashNewsSeq){
+	var sData = {};
+	sData["srch3"] = dashNewsSeq;
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/selectNewsModalViewList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	filldashNewsModalContent(data.resultList);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+function filldashNewsModalContent(resultList) {
+    var news = resultList[0];
+    var regDt = news.regDt;
+    var year = regDt.substring(0, 4);
+    var month = regDt.substring(4, 6);
+    var day = regDt.substring(6, 8);
+    var formattedNewsDt = year + "." + month + "." + day;
+
+    var edtDt = news.edtDt;
+
+    document.querySelector('.dashNews-modal h3').textContent = news.titleKr || '';
+    document.querySelector('.dashNews-modal span').textContent = news.regDt || '';
+    
+    var strHtml = '';
+    if (news.fileName && news.fileName.trim() !== '') {
+        var fileNames = news.fileName.split('/');
+        strHtml = fileNames.map(function(name) {
+            return '<a href="#" class="news-file-name" style="color:#030303;">' + '&nbsp;&nbsp;&nbsp;&nbsp;' + name + '</a>';
+        }).join('<br>');
+        strHtml = '<i class="fa-regular fa-floppy-disk"></i> 첨부파일 :<br>' + strHtml;
+    }
+
+    document.getElementById('mainNewsFileName').innerHTML = strHtml;
+
+    setTimeout(function() {
+        var fileNameElements = document.querySelectorAll('.news-file-name');
+        fileNameElements.forEach(function(element) {
+            element.addEventListener('mouseenter', function() {
+                element.style.color = 'rgb(45, 126, 98)';
+                element.style.fontWeight = 'bold';
+            });
+
+            element.addEventListener('mouseleave', function() {
+                element.style.color = '#030303';
+                element.style.fontWeight = '';
+            });
+        });
+    }, 0);
+
+    $("#dashNewsContent").html(news.cnKr || '');
+    $('#dashNewsContent a').attr('target', '_blank');
+
+    var dateInfo = document.querySelector('.dashNews-modal .text-sm');
+    if (!edtDt) {
+        dateInfo.textContent = '등록일: ' + formattedNewsDt;
+    } else {
+        var edtyear = edtDt.substring(0, 4);
+        var edtmonth = edtDt.substring(4, 6);
+        var edtday = edtDt.substring(6, 8);
+        var formattedEdtDt = edtyear + "." + edtmonth + "." + edtday;
+
+        dateInfo.textContent = '등록일: ' + formattedNewsDt + ' , 수정일: ' + formattedEdtDt;
+    }
+    dateInfo.style.fontSize = '13px';
+}
+
+
+
+//첨부파일
+$(document).on('click', '.dash-file-name', function(event) {
+    const htmlContent = event.target.innerHTML.trim();
+    const fileName = htmlContent.replace(/&nbsp;/g, '').trim();
+    $("#noticeFileDown").val(fileName);
+    document.dashNewsFileDownForm.action = "/cmmn/noticesFileDown.do";
+    document.dashNewsFileDownForm.submit();
+});
+
+// 대시보드 내 관세뉴스 
+$(document).on('click', '.news-file-name', function (event) {
+    event.preventDefault();
+    const htmlContent = event.target.innerHTML.trim();
+    const fileName = htmlContent.replace(/&nbsp;/g, '').trim();
+    $("#mainNewsFileDown").val(fileName);
+    const form = document.mainNewsFileDown;
+    form.action = "/cmmn/mainNewsFileDown.do";
+    form.submit();
+});
+
+function dashNewsClose(){
+	$("#dashNewsPop").hide();
+}
+
+
+
+function dashExcelDownload(){
+	
+	fn_loading(true);
+	var exCol = "";
+	var exTit = "";
+	var exTitDiv = "";
+			//수출입현황
+	exCol = "markCont|htLeft|180||cnt1|htRight|70||sum1|htRight|130||cnt2|htRight|70||sum2|htRight|130||cnt3|htRight|70||" +
+			"sum3|htRight|130||cnt4|htRight|70||sum4|htRight|130||cnt5|htRight|70||sum5|htRight|130||cnt6|htRight|70||sum6|htRight|150|||" +
+			"markCont|htLeft|180||cnt1|htRight|70||sum1|htRight|130||cnt2|htRight|70||sum2|htRight|130||cnt3|htRight|70||sum3|htRight|130||" +
+			"cnt4|htRight|70||sum4|htRight|130||cnt5|htRight|70||sum5|htRight|130||cnt6|htRight|70||sum6|htRight|150|||supFirm|htLeft|200||" +
+			"cnt1|htRight|80||sum1|htRight|150||cnt2|htRight|80||sum2|htRight|150||cnt3|htRight|80||sum3|htRight|150|||buyFirm|htLeft|200||" +
+			"cnt1|htRight|80||sum1|htRight|150||cnt2|htRight|80||sum2|htRight|150||cnt3|htRight|80||sum3|htRight|150|||fodMark|htCenter|80||" +
+			"title|htLeft|200||traMetCont|htLeft|160||conCod|htCenter|80||cnt|htRight|80||freKrw|htRight|120||totWt|htRight|100||" +
+			"totTaxKrw|htRight|150||cal1|htRight|100||cal2|htRight|100|||fodMark|htCenter|80||title|htLeft|200||traMetCont|htLeft|160||" +
+			"conCod|htCenter|80||cnt|htRight|80||insuKrw|htRight|120||totWt|htRight|100||totTaxKrw|htRight|150||cal1|htRight|100||cal2|" +
+			"htRight|100|||" +
+			//수출입현황
+			//단가분석
+			"plant|htLeft|150||invoice|htLeft|100||rptNo|htCenter|130||expLisDay|htCenter|150||totRptKrw|htRight|80||" +
+			"excDivi|htCenter|80||excDiviCont|htLeft|80|||plant|htLeft|150||po|htLeft|100||blNo|htLeft|130||rptNo|htCenter|140||ranNo|htCenter|65||" +
+			"sil|htCenter|65||lisDay|htCenter|95||rgCode|htCenter|130||upi|htRight|90||ut|htCenter|80||conKi|htCenter|80||supFirm|htLeft|140||" +
+			"conCur|htCenter|75||upiWon|htRight|110||max|htRight|110||min|htRight|110||avg|htRight|110||maxDiff|htRight|110||minDiff|htRight|110||" +
+			"avgDiff|htRight|110||maxPer|htRight|140||minPer|htRight|140||avgPer|htRight|140|||plant|htLeft|150||po|htLeft|100||blNo|htLeft|150||" +
+			"rptNo|htCenter|150||ranNo|htCenter|80||sil|htCenter|80||lisDay|htCenter|100||rgCode|htCenter|130||upi|htRight|150||ut|htCenter|80||" +
+			"conKi|htCenter|80||supFirm|htLeft|200||conCur|htCenter|100||upiWon|htRight|130||avg|htRight|130|||plant|htLeft|200||rgCode|htLeft|150||" +
+			"supFirm|htLeft|200||conCur|htCenter|100||rptCnt|htRight|80||rptSum|htRight|200|||" +
+			//단가분석
+			//수출입데이터 분석
+			"rgCode|htCenter|120||hs|htCenter|120||stdGName1|htLeft|200||" +
+			"rptNo|htCenter|150||ranNo|htCenter|80||sil|htCenter|80||gsDivi|htCenter|80||gsRate|htRight|100||oriStMark1|htCenter|80||fodMark|htCenter|80||" +
+			"qty|htRight|100||conAmt|htRight|100||conCur|htCenter|100||upiWon|htRight|200||gs|htRight|200|||rgCode|htCenter|120||hs|htCenter|120||" +
+			"stdGName1|htLeft|200||rptNo|htCenter|150||ranNo|htCenter|80||sil|htCenter|80||gsDivi|htCenter|80||gsRate|htRight|100||oriStMark1|htCenter|80||" +
+			"fodMark|htCenter|80||qty|htRight|100||conAmt|htRight|100||conCur|htCenter|100||upiWon|htRight|200||gs|htRight|200|||supFirm|htLeft|200||" +
+			"rptNo|htCenter|150||ranNo|htCenter|80||stdName|htLeft|200||rmvRptNo|htCenter|150||rmvRanNo|htCenter|80||rmvStdName|htLeft|200||" +
+			"gsDivi|htCenter|80||gsRate|htCenter|80||gs|htRight|150||vatDivi|htCenter|80||vatRate|htRight|80||vat|htRight|200||gsRmvMark|htCenter|100||" +
+			"gsRmvRate|htRight|100||rmv|htRight|200||vatRmvMark|htCenter|100||vatRmvRate|htRight|100||vatRmv|htRight|200|||rgCode|htLeft|200||rptNo|htCenter|200||" +
+			"ranNo|htCenter|200||sil|htCenter|200||hs|htCenter|200||taxKiDivi|htCenter|200||gxRate|htRight|200||oriStMark1|htCenter|200||fodMark|htCenter|200||lisDay|htCenter|200";
+			//수출입데이터 분석
+	
+			//수출입 현황
+	exTit = "null|null||2020|2||2021|2||2022|2||2023|2||2024-05-29|2||합계|2|||거래구분|null||수입(건)|null||수입(KRW)|null||수입(건)|null||" +
+			"수입(KRW)|null||수입(건)|null||수입(KRW)|null||수입(건)|null||수입(KRW)|null||수입(건)|null||수입(KRW)|null||수입(건)|null||" +
+			"수입(KRW)|null||||null|null||2020|2||2021|2||2022|2||2023|2||2024-05-29|2||합계|2|||거래구분|null||수출(건)|null||수출(KRW)|null||" +
+			"수출(건)|null||수출(KRW)|null||수출(건)|null||수출(KRW)|null||수출(건)|null||수출(KRW)|null||수출(건)|null||수출(KRW)|null||수출(건)|null||" +
+			"수출(KRW)|null||||해외거래처|null||일반수입(건)|null||수입(KRW)|null||기타수입(건)|null||수입(KRW)|null||수입합계(건)|null||수입합계(KRW)|null||||" +
+			"해외거래처|null||일반수출(건)|null||수출(KRW)|null||기타수출(건)|null||수출(KRW)|null||수출합계(건)|null||수출합계(KRW)|null||||적출국|null||" +
+			"해외거래처|null||운송형태|null||인도조건|null||신고건수|null||운임|null||총중량(KG)|null||과세가격(KRW)|null||운임/중량(KRW)|null||운임/과세가격(%)|null||||" +
+			"적출국|null||해외거래처|null||운송형태|null||인도조건|null||신고건수|null||보험료|null||총중량(KG)|null||과세가격(KRW)|null||보험료/중량(KRW)|null||" +
+			"보험료/과세가격(%)|null||||PO|null||인보이스번호|null||신고번호|null||수리일자|null||신고가격|null||수출코드|null||외환신고대상여부|null||||" +
+			//수출입 현황
+			//단가분석
+			"공장코드|null||PO|null||B/L|null||신고번호|null||란|null||규격|null||수리일자|null||자재코드|null||신고단가|null||신고단위|null||결제방법|null||해외거래처|null||" +
+			"결제통화|null||원화단가|null||최고단가|null||최저단가|null||평균단가|null||단가차이(최고)|null||단가차이(최저)|null||단가차이(평균)|null||단가차이 비율(최고)|null||" +
+			"단가차이 비율(최저)|null||단가차이 비율(평균)|null||||공장코드|null||PO|null||B/L|null||신고번호|null||란|null||규격|null||수리일자|null||자재코드|null||" +
+			"신고단가|null||신고단위|null||결제방법|null||해외거래처|null||결제통화|null||원화단가|null||평균단가|null||||공장코드|null||자재코드|null||해외거래처|null||" +
+			"결제통화|null||신고건수|null||신고금액(원화)|null||||자재코드|null||세번부호|null||거래품명|null||수입신고번호|null||란번호|null||규격|null||관세구분|null||관세율|null||" +
+			"원산지|null||적출국|null||수량|null||결제금액|null||결제통화|null||원화금액|null||납부관세액|null||||" +
+			//단가분석
+			//수출입 데이터 분석
+			"자재코드|null||세번부호|null||거래품명|null||수입신고번호|null||" +
+			"란번호|null||규격|null||관세구분|null||관세율|null||원산지|null||적출국|null||수량|null||결제금액|null||결제통화|null||원화금액|null||납부관세액|null||||null|null||" +
+			"관세감면적용 건 수|3||관세감면미적용 건 수|3||총관세액|3||총부가세액|3||관세감면세액|3||부가세감면세액|3|||해외거래처|null||수입신고번호|null||란|null||거래품명|null||" +
+			"수입신고번호|null||란|null||거래품명|null||관세구분|null||관세율|null||관세액|null||부가세구분|null||부가세율|null||부가세액|null||관세감면부호|null||관세감면율|null||" +
+			"관세감면세액|null||부가세감면부호|null||부가세감면율|null||부가세감면세액|null||||자재코드|null||수입신고번호|null||란|null||규격|null||HS CODE|null||세종|null||세율|null||원산지|null||적출국|null||수입신고 수리일|null";
+			//수출입 데이터 분석
+	
+	exTitDiv = "1|5년치_수입실적||2|5년치_수출실적||3|해외거래처별_수입실적||4|해외거래처별_수출실적||5|운임_비교||6|보험료_비교||7|외환신고대상_수출||" + //수출입 현황
+			   "8|수입물품_단가비교||9|유무상_수입건_과세가격_비교||10|동일거래,_결제통화_변경점검||" +  //단가분석
+			   "11|동일자재코드_품목분류_상이점검||12|동일자재코드_관세구분_상이점검||13|감면_적용_일관성_검토||14|FTA_직접운송원칙"; //수출입 데이터 분석
+	
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var startDt = new Date();
+	startDt.setMonth(startDt.getMonth() - 1);
+	startDt.setDate(1);
+	
+	var endDt = new Date();
+	endDt.setMonth(endDt.getMonth(), 1);
+	endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10);
+	var mtoday = endDt.toISOString().substring(0,10);
+	
+	$("#importUp_srch2").val(today);
+	$("#importUp_srch3").val(mtoday);
+	
+	var parameters = {exCol : "", exTit: "", exTitDiv: "", exType: "", srch2: "", srch3: "", srch40: ""};
+	
+	
+	parameters.exCol = exCol.replace(/ /g,"_");
+	parameters.exTit = exTit.replace(/ /g,"_");
+	parameters.exTitDiv = exTitDiv.replace(/ /g,"_");
+	parameters.exType = "01";
+	parameters.srch2 = today;
+	parameters.srch3 = mtoday;
+	parameters.srch40 = "TEST";
+	
+	
+	$.ajax({
+		 url: "/dashboard/dashDownloadExcel.do",
+		 data: parameters,
+		 type: 'POST',
+		 cache: false,
+		 timeout: 200000,
+		 xhrFields: {
+			 responseType: "blob",
+		 },
+	    success: function(blob, status, xhr) {
+	    	try {
+				// check for a filename
+				 var fileName = "";
+				 var disposition = xhr.getResponseHeader("Content-Disposition");
+
+			       if (disposition && disposition.indexOf("attachment") !== -1) {
+			      	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+			           var matches = filenameRegex.exec(disposition);
+
+			           if (matches != null && matches[1]) {
+			               fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+			           }
+			       }
+
+			       // for IE
+			       if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+			           window.navigator.msSaveOrOpenBlob(blob, fileName);
+			       } else {
+			           var URL = window.URL || window.webkitURL;
+			           var downloadUrl = URL.createObjectURL(blob);
+
+			           if (fileName) {
+			               var a = document.createElement("a");
+
+			               // for safari
+			               if (a.download === undefined) {
+			                   window.location.href = downloadUrl;
+			               } else {
+			                   a.href = downloadUrl;
+			                   a.download = fileName;
+			                   document.body.appendChild(a);
+			                   a.click();
+			               }
+			           } else {
+			               window.location.href = downloadUrl;
+			           }
+			       }
+		       fn_loading(false);
+			} catch (e) {
+				console.log(e);
+				fn_loading(false);
+			};
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+	
+}
+
+//
+document.getElementById("reportAnalysis").addEventListener("click", function(event) {
+    event.preventDefault(); // 기본 동작 방지
+    fn_loading(true);
+    // FTA기준일
+    var url = "/rpt/reportAnalysisPdf.do"; // 서버 측 매핑과 일치하는 URL로 설정
+    // 데이터 구성
+    var sData = {};
+    sData["srch8"] = $("#dashbordDate").val();
+    console.log("날짜"+$("#dashbordDate").val());
+   
+    $.ajax({
+		 url: url,
+		 data: sData,
+		 type: 'GET',
+		 dataType : 'json',
+		 success: function(response) {
+			    console.log("response", response);  
+			    exportRptPdf(response); 
+			    fn_loading(false);
+			},
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+});
+
+
+
+function exportRptPdf(data){
+
+	let canvas = "";
+	let rightCanvas = "";
+	// let pdf2canvas = "";
+	
+	if (!window.jsPDF) window.jsPDF = window.jspdf.jsPDF;
+        var doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4"
+        });
+        
+        // ✅ 한글 폰트 추가 (malgun.ttf 필요)
+        doc.addFont('/pf/fonts/NanumSquare.ttf', 'NanumSquare', 'normal');
+        doc.setFont('NanumSquare'); // 사용하려는 폰트 지정
+        
+
+        var img = new Image();
+        //img.src = '/pf/images/report_2.jpg'; //파란
+        img.src = '/pf/images/green_report2.jpg'; 
+        var logoImg = new Image();
+        logoImg.src = '/pf/images/report_4.png';
+
+        img.onload = function () {
+        	doc.addFont('/pf/fonts/NanumSquareEB.ttf', 'NanumSquareEB', 'normal');
+            console.log("Background image loaded successfully");
+            doc.addImage(img, 'JPEG', 0, 0, 210, 297);
+            doc.addImage(logoImg, 'PNG', 160, 10, 40, 15);
+
+            doc.setFontSize(22);
+            //doc.setTextColor(56, 60, 98); 파란
+            doc.setTextColor(35, 69, 56);
+            //doc.text(105, 110, String(data.rptDate1) + '년 ' + String(data.rptDate2) + '월', { align: "center" }); 파란
+            doc.text(105, 130, String(data.rptDate1) + '년 ' + String(data.rptDate2) + '월', { align: "center" });
+            doc.setFontSize(22);
+            //doc.text(105, 120, '통관리포트', { align: "center" }); 파란
+            doc.text(105, 140, '통관리포트', { align: "center" }); 
+            doc.setFontSize(30);
+            //doc.text(105, 135, String(data.cmpnyInfo), { align: "center" }); 파란
+            doc.text(105, 155, String(data.cmpnyInfo), { align: "center" }); 
+            doc.setFontSize(15);
+            doc.text(105, 270, String(data.today), { align: "center" }); 
+            doc.text(105, 280, '신한관세법인', { align: "center" }); //파란
+           
+            // 🟢 새로운 페이지 추가
+            doc.addPage();
+
+            // 🟢 "수입통관현황" 제목 추가
+            doc.setFontSize(16);
+            doc.addFont('/pf/fonts/NanumSquareB.ttf', 'NanumSquareB', 'normal');
+            doc.setFont('NanumSquareB', 'normal');
+            //doc.setTextColor(62, 113, 175); //파란색
+            doc.setTextColor(71, 140, 114); 
+            doc.text(8, 15, "수입통관현황");
+            
+            // 제목 + 설명을 넣을 영역을 네모박스로 그리기
+            const boxMargin = 5;  // 테두리와의 여백
+            const boxWidth = 200;  // 박스의 너비
+            const boxHeight = 23;  // 박스의 높이 (설명 포함)
+            
+            doc.setLineWidth(0.5);  // 테두리 두께 설정 (기본값은 0.2)
+            doc.setDrawColor(35, 69,56); 
+            doc.rect(5, 8, boxWidth, boxHeight, 'D'); 
+            
+            
+            const reportData1 = data.reportData1;  // data.reportData1이 제공된다고 가정
+
+	            // 데이터 변환: 과세가격을 포매팅된 값과 원본 값으로 구분하여 저장
+	            const datas = reportData1.map(item => {
+	              const amountKrw = parseFloat(item.amountKrw) || 0;  // 원본 값
+	              const formattedAmountKrw = Intl.NumberFormat("ko-KR").format(amountKrw);  // 포매팅된 값
+	              
+	              return [
+	                item.lisDay,        // 수리일자
+	                item.cnt,           // 건수
+	                formattedAmountKrw, // 과세가격 (포매팅된 값)
+	                item.txType1,       // 일반수입
+	                item.txType2,       // 수리물품
+	                item.txType3,       // 견품 및 광고용품
+	                item.txType4,       // 기타 수입 승인면세
+	                item.txType5,       // 재수출조건
+	                item.txPrc1,        // P/L
+	                item.txPrc2,        // 제출서류
+	                item.txPrc3,        // 검사
+	              ];
+	            });
+		        // 🟢 열별 합계 계산
+		         const columnCount = datas[0].length;  // 열 개수
+		         const totals = Array(columnCount).fill(0);  // 0으로 채운 합계 배열
+
+		         // 합계 계산 (첫 번째 열은 "합계" 문자열을 넣고, 나머지는 숫자 합산)
+		         totals[0] = "합계"; 
+		         for (let i = 1; i < columnCount; i++) {
+		        	  // 과세가격(3번째 열)을 제외한 값들만 합산
+		        	  if (i === 2) {
+		        	    totals[i] = datas.reduce((sum, row) => sum + (parseFloat(row[i].replace(/,/g, "")) || 0), 0); // 원본 값으로 합계 계산
+		        	  } else {
+		        	    totals[i] = datas.reduce((sum, row) => sum + (parseFloat(row[i]) || 0), 0);
+		        	  }
+		        	}
+
+		         // 🟢 비율 계산 (각 그룹을 100%로 설정)
+		         const percentages = Array(columnCount).fill("-");
+		         percentages[0] = "비율(%)"; // 첫 번째 열은 "비율(%)"
+
+		         // 🟢 수입 거래형태 비율 계산
+		         const tradeTotal = totals.slice(3, 8).reduce((sum, value) => sum + value, 0); // 3~7번째 열 합계
+		         for (let i = 3; i < 8; i++) {
+		             percentages[i] = tradeTotal > 0 ? ((totals[i] / tradeTotal) * 100).toFixed(1) + "%" : "-";
+		         }
+
+		         // 🟢 수입신고 처리현황 비율 계산
+		         const processTotal = totals.slice(8, 11).reduce((sum, value) => sum + value, 0); // 8~10번째 열 합계
+		         for (let i = 8; i < 11; i++) {
+		             percentages[i] = processTotal > 0 ? ((totals[i] / processTotal) * 100).toFixed(1) + "%" : "-";
+		         }
+
+		         
+		     	 // 🟢 숫자 데이터 포맷팅 (천 단위 콤마 추가)
+		         const formattedTotals = totals.map((value, index) =>
+		         typeof value === "number" ? Intl.NumberFormat("ko-KR").format(value) : value
+		      	);
+		         
+		     	// 🟢 건수, P/L, 제출서류, 검사 가져오기
+		         const countTotal = formattedTotals[1]; // 통관건수
+		         const plTotal = formattedTotals[8]; // P/L 합계
+		         const plPercentage = percentages[8]; // P/L 비율
+		         const submissionTotal = formattedTotals[9]; // 제출서류 합계
+		         const submissionPercentage = percentages[9]; // 제출서류 비율
+		         const inspectionTotal = formattedTotals[10]; // 검사 합계
+		         const inspectionPercentage = percentages[10]; // 검사 비율
+		            
+		            
+		            // 🟢 설명 추가 (왼쪽 정렬 + 줄 나누기)
+		            doc.setFontSize(9);
+		            doc.addFont('/pf/fonts/NanumSquareR.ttf', 'NanumSquareR', 'normal');
+		            doc.setFont('NanumSquareR', 'normal');
+		            doc.setTextColor(0, 0, 0);
+		            const description = [
+		            	`다음 자료는 ${data.rptDate2}월 한달 수입통관 자료이며 총 ${countTotal}건 수입신고를 진행하였습니다.`,
+		                `수입신고 처리현황은 P/L ${plTotal}건 (${plPercentage}), 제출 ${submissionTotal}건 (${submissionPercentage}), 검사 ${inspectionTotal}건 (${inspectionPercentage}) 입니다.`
+		            ];
+		          
+		            let startY = 23; // description 높이 위치
+		            description.forEach((line, index) => {
+		            	  doc.text(8, startY, line); // 왼쪽 정렬 (x: 8, y: startY)
+		            	  startY += 5; // 각 줄 간격을 5로 설정하여 다음 줄로 내려감
+		        	});
+		         
+		      // 🟢 datas에 합계와 비율 행 추가
+		         datas.push(formattedTotals);
+		         datas.push(percentages);
+		         
+            	// 테이블 헤더
+		       const header = [
+		    	   	[ 
+		    		    { content: '수리일자', rowSpan: 2, border: [true, true, true, true] },  // 수리일자 셀에 테두리 추가
+		    		    { content: '건수', rowSpan: 2, border: [true, true, true, true] },
+		    		    { content: '과세가격', rowSpan: 2, border: [true, true, true, true] },
+		    		    { content: '수입 거래형태 현황', colSpan: 5, border: [true, true, true, true] },  // 수입 거래형태 현황 셀에 테두리 추가
+		    		    { content: '수입신고 처리현황', colSpan: 3, border: [true, true, true, true] },  // 수입신고 처리현황 셀에 테두리 추가
+		    		  ],  // 첫 번째 행
+		    		  [
+		    		    { content: '일반수입', border: [true, true, true, true] },
+		    		    { content: '수리물품', border: [true, true, true, true] },
+		    		    { content: '견품 및 광고용품', border: [true, true, true, true] },
+		    		    { content: '기타 수입 승인면세', border: [true, true, true, true] },
+		    		    { content: '재수출조건', border: [true, true, true, true] },
+		    		    { content: 'P/L', border: [true, true, true, true] },
+		    		    { content: '제출서류', border: [true, true, true, true] },
+		    		    { content: '검사', border: [true, true, true, true] },
+		    		  ]
+		    	 ];
+		       
+		       
+            	// 🟢 테이블 스타일 적용
+            	doc.autoTable({
+            	  head: header,
+            	  body:datas,
+            	  startY: startY + 5, // 설명 아래에 테이블 배치
+            	  theme: 'grid',
+            	  styles: {
+            	    font: 'NanumSquareR',
+            	    fontSize: 7,
+            	    cellPadding: 2,   // 셀 패딩을 줄여서 행 높이 줄이기
+            	    textColor: [0, 0, 0],
+            	    valign: 'middle',
+            	    halign: 'center',
+            	    overflow: 'linebreak', // 텍스트 줄바꿈 적용
+            	  },
+            	  headStyles: {
+            		//fillColor: [36, 83, 118], // 헤더 배경 (파란)
+            		fillColor: [35, 69, 56], // 헤더 배경 (초록)
+            	    fontSize: 8,
+            	    textColor: [255, 255, 255],
+            	    font: 'NanumSquareEB',
+            	    fontStyle: 'bold',
+            	    cellPadding: 2, // 헤더 높이를 줄이기 위해 패딩을 적게 설정
+            	    lineWidth: 0.2, // 테두리 두께
+            	    border: [true, true, true, true],  // 헤더에 테두리 추가
+            	  },
+            	  tableWidth: 'auto', // PDF 크기에 맞게 자동 조정
+            	  margin: { left: 5, right: 5 }, // 좌우 공백 추가
+            	  columnStyles: {
+            		  	0: { halign: 'center' , cellWidth: 23 }, // 수리일자
+            	        1: { halign: 'center' , cellWidth: 18}, // 건수
+            	        2: { halign: 'center' , cellWidth: 23}, // 과세가격
+            	        3: { halign: 'center' , cellWidth: 17}, // 일반수입
+            	        4: { halign: 'center' , cellWidth: 17}, // 수리물품
+            	        5: { halign: 'center' , cellWidth: 17}, // 견품 및 광고용품
+            	        6: { halign: 'center' , cellWidth: 17}, // 기타 수입 승인면세
+            	        7: { halign: 'center' , cellWidth: 17}, // 재수출조건
+            	        8: { halign: 'center' , cellWidth: 17 }, // P/L
+            	        9: { halign: 'center' , cellWidth: 17}, // 제출서류
+            	        10: { halign: 'center' , cellWidth: 17}, // 검사
+            	  },
+        		});
+            	
+            	//플러그인 등록
+            	Chart.register(ChartDataLabels);
+            	
+            	// 거래형태 
+            	// 데이터 변환 (NaN 방지)
+            	const safeParse = (value) => {
+            	    let num = parseFloat(value ? value.replace('%', '') : 0);
+            	    return isNaN(num) ? 0 : num;
+            	};
+
+            	// 왼쪽 차트 데이터 변환
+            	const leftChartData = percentages.slice(3, 8).map(safeParse);
+            	
+            	// 왼쪽 차트 캔버스 생성
+            	canvas = document.createElement('canvas');
+            	const ctx = canvas.getContext('2d');
+            	canvas.width = 400;
+            	canvas.height = 400;
+
+            	// 왼쪽 차트 생성
+            	const chart = new Chart(ctx, {
+            	    type: 'pie',
+            	    data: {
+            	        labels: ['일반수입', '수리물품', '견품,광고용품', '기타수입', '재수출'],
+            	        datasets: [{
+            	            data: leftChartData,
+            	            backgroundColor: [  'rgb(113,162, 218)',
+				            	            	'rgb(48,123,202)', 
+				            	            	'rgb(166,196,232)',
+				            	            	'rgb(216,225,234)',
+				            	            	'rgb(40,101,168)']
+	            	        }]
+			            	/* backgroundColor: [  
+			            		'rgb(71,140,114)',
+			            		'rgb(49,97,79)', 
+			 	            	'rgb(84,166, 135)', 
+			 	            	'rgb(186,221,139)',
+			 	            	'rgb(231,244,218)']
+            	    		}]*///그린
+		            	
+            	    },
+            	    options: {
+            	        responsive: false,
+            	        maintainAspectRatio: false,  // 비율 유지 해제
+            	        layout: {
+            	            padding: {
+            	                bottom: 20 // 차트 하단 여백 (라벨 공간 확보)
+            	            }
+            	        },
+            	        plugins: {
+            	        	// 데이터 라벨 플러그인 설정 
+            	        	datalabels: {
+             	                color: 'rgb(89,89,89)',
+             	                formatter: function(value, context) {
+             	                	let label = context.chart.data.labels[context.dataIndex];
+             	                	 // 일정 값 이하인 경우 라벨을 표시하지 않도록 설정 (예: 5% 미만은 제외)
+             	                   if (value < 10) {  // 값이 5% 미만인 경우 라벨을 표시하지 않음
+             	                       return null;  // 빈 값을 반환하거나 null로 설정하여 라벨을 숨김
+             	                   }
+             	                	let percentage = value;
+             	                    return label + " : " +percentage + "%"; // 라벨과 퍼센트 표시
+             	                },
+             	                font: {
+             	                    size: 25,
+             	                },
+             	           
+             	            },
+            	            legend: {
+            	                position: 'bottom',
+            	                fullWidth: true,
+            	                labels: {
+            	                    font: {
+            	                        size: 18  // 라벨 크기 동일
+            	                        ,weight: 'bold'
+            	                    },
+            	                    boxWidth: 15,  // 아이콘 크기 동일
+            	                    padding: 15
+            	                }
+            	            },
+            	            title: {
+            	                display: true,
+            	                text: '거래형태',
+            	                font: {
+            	                    size: 25,  // 제목 크기 동일
+            	                    weight: 'bold'},
+            	                padding: {
+            	                    bottom: 10
+            	                }
+            	            }
+            	        }
+            	    }
+            	});
+            	
+            	
+            	// 오른쪽 차트 (수입신고 처리현황 비율)
+            	const rightChartData = [
+            	    parseFloat(percentages[8].replace('%', '')) || 0, 
+            	    parseFloat(percentages[9].replace('%', '')) || 0, 
+            	    parseFloat(percentages[10].replace('%', '')) || 0 
+            	];
+            	
+            	
+            	// 오른쪽 차트 캔버스 생성
+            	rightCanvas = document.createElement('canvas');
+            	const rightCtx = rightCanvas.getContext('2d');
+            	rightCanvas.width = 400;
+            	rightCanvas.height = 400;
+
+            	// 오른쪽 차트 생성
+            	const rightChart = new Chart(rightCtx, {
+            	    type: 'pie',
+            	    data: {
+            	        labels: ['P/L', '제출서류', '검사'],
+            	        datasets: [{
+            	            data: rightChartData,
+            	            backgroundColor: [  'rgb(48,123,202)', 				            	             
+				            	            	'rgb(113,162, 218)', 
+				            	            	'rgb(166,196,232)']
+            	        }]
+            	            /*backgroundColor: [  
+            	            	'rgb(49,97,79)', 
+			 	            	'rgb(84,166, 135)', 
+			 	            	'rgb(186,221,139)']
+        	        		}]*/ //그린
+            	    },
+            	    options: {
+            	        responsive: false,
+            	        //maintainAspectRatio: false,  // 비율 유지 해제
+            	        layout: {
+            	            /*padding: {
+            	            	top: 20,  // 위쪽 여백 추가
+            	                bottom: 10, // 아래쪽 여백 추가
+            	                left: 30,  // 왼쪽 여백 추가
+            	                right: 30  // 오른쪽 여백 추가
+            	            }*/
+            	        },
+            	        plugins: {
+            	        	datalabels: {
+             	                color: 'rgb(89,89,89)',
+             	                formatter: function(value, context) {
+             	                	let label = context.chart.data.labels[context.dataIndex];
+             	                   if (value < 10) {  // 값이 10% 미만인 경우 라벨을 표시하지 않음
+             	                       return null;  
+             	                   }
+             	                    return label + " : " +value + "%"; // 라벨과 퍼센트 표시
+             	                },
+             	                font: {
+             	                    size: 20,
+             	                    weight : 'bold'
+             	                },
+             	               align: 'end', // 바깥쪽으로 위치
+             	               anchor: 'end', // 원 밖으로 이동
+           	            },  
+            	        	legend: {
+            	                position: 'bottom',
+            	                fullWidth: true,
+            	                labels: {
+            	                    font: {
+            	                        size: 18  // 라벨 크기 동일
+            	                    },
+            	                    boxWidth: 15,  // 아이콘 크기 동일
+            	                    padding: 30
+            	                }
+            	            },
+            	            title: {
+            	                display: true,
+            	                text: '신고처리',
+            	                font: {
+            	                    size: 25,  // 제목 크기 동일
+            	                    weight: 'bold'
+            	                },
+            	                padding: {
+            	                    bottom: 30
+            	                }
+            	            }
+            	        }
+            	    }
+            	});
+            	
+            	// 🟢 새로운 페이지 추가
+                doc.addPage();
+                // 🟢 "수입통관 세액현황" 제목 추가
+                doc.setFontSize(16);
+                doc.addFont('/pf/fonts/NanumSquareB.ttf', 'NanumSquareB', 'normal');
+                doc.setFont('NanumSquareB', 'normal');
+                //doc.setTextColor(62, 113, 175); //파란색
+                doc.setTextColor(71, 140, 114); 
+                doc.text(8, 15, "수입통관 세액현황");
+                
+                // 제목 + 설명을 넣을 영역을 네모박스로 그리기
+                const boxMargin2 = 5;  // 테두리와의 여백
+                const boxWidth2 = 200;  // 박스의 너비
+                const boxHeight2 = 18;  // 박스의 높이 (설명 포함)
+                
+                doc.setLineWidth(0.5);  // 테두리 두께 설정 (기본값은 0.2)
+                doc.setDrawColor(35, 69,56); 
+                doc.rect(5, 8, boxWidth2, boxHeight2, 'D'); 
+	            
+                const reportData2 = data.reportData2;
+                console.log("reportData2",reportData2);
+                const datas2 = reportData2.map(item => {
+  	              const formattedCntImp = Intl.NumberFormat("ko-KR").format(item.cntImp);
+  	              const formattedTotGs = Intl.NumberFormat("ko-KR").format(item.totGs);
+  	              const formattedTotVat= Intl.NumberFormat("ko-KR").format(item.totVat);
+  	              const formattedTotTs = Intl.NumberFormat("ko-KR").format(item.totTs);  
+  	              const formattedTotGt = Intl.NumberFormat("ko-KR").format(item.totGt); 
+  	              const formattedTotHof = Intl.NumberFormat("ko-KR").format(item.totHof); 
+  	              const formattedTotKy = Intl.NumberFormat("ko-KR").format(item.totKy); 
+  	              const formattedTotNt = Intl.NumberFormat("ko-KR").format(item.totNt); 
+  	              const formattedTotDlyTax = Intl.NumberFormat("ko-KR").format(item.totDlyTax); 
+  	              const formattedTotAddTax = Intl.NumberFormat("ko-KR").format(item.totAddTax); 
+  	              const formattedTotTaxSum = Intl.NumberFormat("ko-KR").format(item.totTaxSum); 
+  	              
+  	              return [
+  	                item.lisDay,        		// 수리일자
+  	                formattedCntImp,			// 건수
+  	                formattedTotGs, 			//관세
+  	                formattedTotVat,      	 	// 부가세
+  	                formattedTotTs,       		// 특소세
+  	                formattedTotGt,       		// 교통세
+  	                formattedTotHof,       	// 주새
+  	                formattedTotKy,       		// 교육세
+  	                formattedTotNt,        	// 농특세
+  	                formattedTotDlyTax,        	// 신고지연가산세
+  	                formattedTotAddTax,        // 미신고가산세
+  	                formattedTotTaxSum,        // 총세액
+  	              ];
+  	            });
+                
+                // 🟢 열별 합계 계산
+		         const columnCount2 = datas2[0].length;  // 열 개수
+		         const totals2 = Array(columnCount2).fill(0);  // 0으로 채운 합계 배열
+
+		         // 합계 계산 (첫 번째 열은 "합계" 문자열을 넣고, 나머지는 숫자 합산)
+		         totals2[0] = "합계"; 
+		         for (let i = 1; i < columnCount2; i++) {
+		        	    // 쉼표(,)를 제거한 후 숫자로 변환하여 합산
+		        	    totals2[i] = datas2.reduce((sum, row) => sum + (parseFloat(row[i].replace(/,/g, "")) || 0), 0);
+
+		        	    // 합계를 다시 한국어 숫자 포맷(ko-KR)으로 변환
+		        	    totals2[i] = Intl.NumberFormat("ko-KR").format(totals2[i]);
+		         }
+		         
+		         
+		         // 관세 부가세 세액합계 
+		         var gsTot = totals2[2]; //관세
+		         var vatTot = totals2[3]; //부과세
+		         var taxSumTot = totals2[11]; //총세액
+		         
+  		        
+                // 🟢 설명 추가 (왼쪽 정렬 + 줄 나누기)
+	            doc.setFontSize(9);
+	            doc.addFont('/pf/fonts/NanumSquareR.ttf', 'NanumSquareR', 'normal');
+	            doc.setFont('NanumSquareR', 'normal');
+	            doc.setTextColor(0, 0, 0);
+	            const description2 = [
+	            	` ${data.rptDate2}월 통관 관세는${gsTot}원, 부가세는 ${vatTot}원 이며 총세액합계는${taxSumTot}원입니다.`
+	            ];
+	          
+	             startY = 23; // description 높이 위치
+	            description2.forEach((line, index) => {
+	            	  doc.text(8, startY, line); // 왼쪽 정렬 (x: 8, y: startY)
+	            	  startY += 5; // 각 줄 간격을 5로 설정하여 다음 줄로 내려감
+	        	});
+	        	// 테이블 헤더
+			      var header2 = [[
+			    	    '수리일자', '건수', '관세','부가세' ,'특소세', '교통세', 
+			    	    '주세', '교육세', '농특세', '신고지연가산세', '미신고가산세', '총세액'
+			    	]];
+			        
+			   //🟢 datas에 합계와 비율 행 추가
+			   datas2.push(totals2);
+			        
+			     // 🟢 테이블 스타일 적용
+	            	doc.autoTable({
+	            	  head: header2,
+	            	  body:datas2,
+	            	  startY: startY + 2, // 설명 아래에 테이블 배치
+	            	  theme: 'grid',
+	            	  styles: {
+	            	    font: 'NanumSquareR',
+	            	    fontSize: 7,
+	            	    cellPadding: 2,   // 셀 패딩을 줄여서 행 높이 줄이기
+	            	    textColor: [0, 0, 0],
+	            	    valign: 'middle',
+	            	    overflow: 'hidden', // 텍스트 줄바꿈을 방지하고 넘치지 않게 설정
+	                    wordWrap: 'normal', // 줄바꿈 방지 (한 줄로만 보이게)
+	            	  },
+	            	  headStyles: {
+	            		//fillColor: [36, 83, 118], // 헤더 배경 (파란)
+	            		fillColor: [35, 69, 56], // 헤더 배경 (초록)
+	            	    fontSize: 8,
+	            	    textColor: [255, 255, 255],
+	            	    font: 'NanumSquareEB',
+	            	    fontStyle: 'bold',
+	            	    cellPadding: 2, // 헤더 높이를 줄이기 위해 패딩을 적게 설정
+	            	    lineWidth: 0.2, // 테두리 두께
+	            	    border: [true, true, true, true],  // 헤더에 테두리 추가
+	            	    overflow: 'linebreak', // 헤더의 텍스트가 두 줄로 넘어가도록 설정
+	                    wordWrap: 'break-word', // 텍스트가 셀 너비를 넘어서면 줄바꿈 되도록 설정
+	                    halign: 'center', // 텍스트 가운데 정렬
+	            	  },
+	            	  tableWidth: 'auto', // PDF 크기에 맞게 자동 조정
+	            	  margin: { left: 5, right: 5 }, // 좌우 공백 추가
+	            	  columnStyles: {
+	            		  	0: { halign: 'center'}, // 수리일자
+	            	        1: { halign: 'center'}, // 건수
+	            	        2: { halign: 'right'}, // 관세
+	            	        3: { halign: 'right'}, // 부가세
+	            	        4: { halign: 'right'}, // 특소세
+	            	        5: { halign: 'right'}, // 교통세
+	            	        6: { halign: 'right'}, // 주세
+	            	        7: { halign: 'right'}, // 교육세
+	            	        8: { halign: 'right'}, // 농특세
+	            	        9: { halign: 'right'}, // 신고지연가산세
+	            	        10: { halign: 'right'}, // 미신고가산세
+	            	        11: { halign: 'right'}, // 총세액
+	            	  },
+	            	  didParseCell: function (data) {
+	            	        // 🟡 마지막 행 (합계 행)만 배경색 변경
+	            	        if (data.row.index === datas2.length - 1) {
+	            	            data.cell.styles.fillColor = [246, 243, 202]; // 연한 회색 배경
+	            	            data.cell.styles.font = 'NanumSquareB'; // 굵은 폰트 적용
+	            	            data.cell.styles.fontStyle = 'bold'; // 볼드 처리
+	            	        }
+	            	    }
+	        		});
+	            	
+	            	const reportData3 = data.reportData3;
+	                console.log("reportData3",reportData3);
+	                
+	                // 첫 번째와 마지막 `lisDay`에서 년도만 추출
+	                const firstYear = reportData3[0].lisDay.substring(0, 4);  // 첫 번째 요소에서 '202401' -> '2024'
+	                const lastYear = reportData3[reportData3.length - 1].lisDay.substring(0, 4);  // 마지막 요소에서 '202503' -> '2025'
+	                
+	                const firstYearData = [];
+	                const lastYearData = [];
+
+	                reportData3.forEach(item => {
+	                  const year = item.lisDay.substring(0, 4);  // '202401' -> '2024', '202502' -> '2025'
+	                  if (year === firstYear) {
+	                    // 전년도
+	                    firstYearData.push(item.cntImp);  // cntImp 값을 넣음
+	                  } else if (year === lastYear) {
+	                	// 올해
+	                    lastYearData.push(item.cntImp);  // cntImp 값을 넣음
+	                  }
+	                });
+	                
+	                // 첫 번째와 두 번째 배열에서 가장 큰 값 추출
+	                const maxFirstYearData = Math.max(...firstYearData);
+	                const maxLastYearData = Math.max(...lastYearData);
+
+	                // 두 배열에서 가장 큰 값 중 더 큰 값을 선택
+	                const maxValue = Math.max(maxFirstYearData, maxLastYearData) + 30;  // 가장 큰 값에 30을 더함
+
+	                
+	                // 차트 데이터 (전년도와 올해 데이터)
+	            	const barChartData = {
+	            	    labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+	            	    datasets: [
+	            	        {
+	            	            label: `${firstYear}년`, // 전년도
+	            	            backgroundColor: 'rgba(75, 192, 192, 0.2)', // 연도별 색상
+	            	            borderColor: 'rgba(75, 192, 192, 1)',
+	            	            borderWidth: 1,
+	            	            data: firstYearData // 전년도 데이터
+	            	        },
+	            	        {
+	            	            label: `${lastYear}년`, // 올해
+	            	            backgroundColor: 'rgba(255, 99, 132, 0.2)', // 연도별 색상
+	            	            borderColor: 'rgba(255, 99, 132, 1)',
+	            	            borderWidth: 1,
+	            	            data: lastYearData // 올해 데이터
+	            	        }
+	            	    ]
+	            	};
+            	
+	                
+	                
+	                //전년 동월 대비 건수 비교 차트 
+	            	//  캔버스 생성
+		            const pdf2canvas = document.createElement('canvas');
+	            	const pdf2ctx = pdf2canvas.getContext('2d');
+	            	pdf2canvas.width = 450;
+	            	pdf2canvas.height = 180;
+	            	// 캔버스를 화면에 보이지 않도록 숨김 처리
+	            	pdf2canvas.style.display = 'none'; // 웹 화면에서 숨김 처리
+	            	
+	            	document.body.appendChild(pdf2canvas);  // 캔버스를 DOM에 추가 (차트가 보이도록)
+	                
+	               
+            	const pdf2chart = new Chart(pdf2ctx, {
+            		  type: 'bar',
+            		  data: barChartData,
+            		  options: {
+            		    responsive: true,
+            		    scales: {
+            		    	x: {
+            	                ticks: {
+            	                    font: {
+            	                        size: 18, // x축 폰트 크기
+            	                        //weight: 'bold' // x축 폰트 두께
+            	                    }
+            	                }
+            	            },
+            	            y: {
+            	                ticks: {
+            	                    beginAtZero: true, // y축이 0부터 시작
+            	                    max: maxValue, // y축 최대값 설정
+            	                    font: {
+            	                        size: 18, // y축 폰트 크기
+            	                        //weight: 'bold' // y축 폰트 두께
+            	                    }
+            	                }
+            	            }
+            	        },
+            		    plugins: {
+            		    	legend: {
+            	                position: 'bottom',
+            	                fullWidth: true,
+            	                labels: {
+            	                    font: {
+            	                        size: 20  // 라벨 크기 동일
+            	                        ,weight: 'bold'
+            	                    },
+            	                    boxWidth: 20,  // 아이콘 크기 동일
+            	                    padding: 20
+            	                }
+            	            },
+            		      title: {
+          	                display: true,
+          	                text: '전년 동월 대비 건수 비교',
+          	                font: {
+          	                    size: 28,  // 제목 크기 동일
+          	                    weight: 'bold'},
+          	                padding: {
+          	                    bottom: 10
+          	                }
+          	              }
+            		    },
+            		  }
+            		});
+	            	
+	         // 🟢 차트 렌더링 후 2번째 페이지에 추가
+	            setTimeout(() => {
+	            	const imgData = canvas.toDataURL('image/png'); // 왼쪽 차트 캔버스를 PNG로 변환
+	                const rightImgData = rightCanvas.toDataURL('image/png'); // 오른쪽 차트 캔버스를 PNG로 변환
+	                const pdf2ImgData = pdf2canvas.toDataURL('image/png');
+	                
+	                
+	                doc.setPage(2);  
+            	    let startY2 = doc.lastAutoTable.finalY + 30; // 테이블 아래에 차트 추가
+            	    doc.addImage(imgData, 'PNG', 35, startY2, 55, 55); // 왼쪽 차트 (x, y, width, height)
+            	    doc.addImage(rightImgData, 'PNG', 125, startY2, 55, 55); // 오른쪽 차트 (x, y, width, height)
+            	    
+            	    doc.setPage(3);
+            	    let startY3 = doc.lastAutoTable.finalY + 10; // 3번째 페이지 테이블 아래에 전월 대비 차트 추가
+            	    doc.addImage(pdf2ImgData, 'PNG', 15, startY3, 180, 68); // 전월 대비 차트 (x, y, width, height)
+
+	                // 🟢 PDF 저장
+	                doc.save('report.pdf');
+
+	            }, 3000); // 3초 딜레이 (차트 렌더링 기다리기)
+	            
+ 
+        
+        }
+
+        img.onerror = function() {
+            console.error("Failed to load background image");
+        };
+
+	}
+
+
+
+

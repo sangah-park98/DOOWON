@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.16.0.final using JasperReports Library version 6.16.0-48579d909b7943b64690c65c71e07e0b80981928  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Form_EAV_sub" pageWidth="595" pageHeight="842" columnWidth="575" leftMargin="0" rightMargin="20" topMargin="0" bottomMargin="0" uuid="f5c60afd-9aaa-49fd-921a-0dc94fcc2b05">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="VCS"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="i_prm2" class="java.lang.Integer"/>
+	<parameter name="i_prm5" class="java.lang.Integer"/>
+	<parameter name="i_prm1" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT ROW_NUMBER() OVER () AS d1,
+       IFNULL(A.PCKGS,'') AS d2,
+       CONCAT(IFNULL(A.ITEM_QTY,''), '<BR>', IFNULL(A.ITEM_NM, ''), '<BR>', IFNULL(A.ITEM_TYPE,''), '<BR>', IFNULL(GET_HSCD(A.HS_CD),'')) AS d3,
+       IFNULL(B.PSR_INFO,'') AS d4,
+       CONCAT(IFNULL(B.SALES_QTY,''), ' ', IFNULL(C.BASE_UNT,'')) AS d5,
+       CONCAT(IFNULL(A.INVOICE_NO,''), '<BR> ', IFNULL(A.INVOICE_DT, '')) AS d6
+	FROM crft_co_hist_dts A 
+	LEFT JOIN jdgmnt_result B 
+	ON A.JDGMNT_SEQ = B.JDGMNT_SEQ
+	LEFT JOIN item_info C
+	ON A.CMPNY_CD = C.CMPNY_CD
+	AND A.PLNT_CD = C.PLNT_CD AND A.ITEM_CD = C.ITEM_CD 
+WHERE issu_no = $P{i_prm1}
+limit $P{i_prm5} offset $P{i_prm2}]]>
+	</queryString>
+	<field name="d1" class="java.lang.String"/>
+	<field name="d2" class="java.lang.String"/>
+	<field name="d3" class="java.lang.String"/>
+	<field name="d4" class="java.lang.String"/>
+	<field name="d5" class="java.lang.String"/>
+	<field name="d6" class="java.lang.String"/>
+	<detail>
+		<band height="50" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField>
+				<reportElement x="17" y="0" width="20" height="19" uuid="e79ef5b2-2c96-4dc1-ba45-bcbe1014500f"/>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d1}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="43" y="3" width="82" height="47" uuid="d08ce315-6818-448a-88f6-3649571bbfd3">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="130" y="3" width="170" height="47" uuid="ef391a60-6323-430d-9930-2bc589f3f7c7"/>
+				<textElement markup="html">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d3}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="310" y="3" width="72" height="36" uuid="3d91a03e-f353-494a-8663-8c3b2a413b77"/>
+				<textElement textAlignment="Left">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d4}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="388" y="3" width="65" height="47" uuid="ace53e2e-e49a-4423-a7aa-3284606fc284">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d5}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="460" y="3" width="75" height="47" uuid="88e72e54-f108-44be-8239-4bc89762bbde"/>
+				<textElement markup="html">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d6}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

@@ -1,0 +1,1422 @@
+var cmmnPopHot;
+var fnPopupCallback;
+var popupData;
+var calFormat;
+var gridCalFormat;
+var cmpnyListHot;
+
+function regCal(obj) {
+	var calendar = new CalendarPopup(obj, {
+		timepicker : false,
+		format : gridCalFormat,
+		choseOnClick : true,
+		closeButton : false,
+		choseButton : false,
+		validateOnBlur : false,
+		mask : false
+	});
+}
+
+$(document).ready(function() {
+	
+	//const cd = document.querySelector('#company-selector__dropdown');
+	//const cdi = document.querySelector('#company-selector__dropdown .icon');
+	//const cl = document.querySelector('.company-selector__list');
+	/*cd.addEventListener('click', () => {
+	  cl.classList.toggle('active');
+	  cdi.classList.toggle('active');
+	})
+	const clb = document.querySelectorAll('.company-selector__list button');
+	clb.forEach((btn) => {
+	  btn.addEventListener('click', () => {
+	    clb.forEach((btn) => {
+	      btn.classList.remove('active');
+	    })
+	    btn.classList.add('active');
+	  })
+	})
+	*/
+	
+	
+	calFormat = "yy-mm-dd"; // Vietnam
+	gridCalFormat = "YYYY-MM-DD";
+	if (colLang == "kr") {
+		calFormat = "yy-mm-dd";
+		gridCalFormat = "YYYY-MM-DD";
+	} else if (colLang == "en") {
+		calFormat = "yy-mm-dd";
+		gridCalFormat = "YYYY-MM-DD";
+	}
+	
+	//cmmnNatList = fn_dropdown(natCdList);
+	
+	$(".subOutter, .bg").hide();
+
+	/*$("#nav ul li span, .subOutter ol li a").click(function() {
+		var top = $(".menu-wrapper").height();
+		var navTop = $(".topNav").height();
+		var max_h = 0;
+		$(".subOutter").each(function() {
+			var h = parseInt($(this).css("height"));
+			if (max_h < h) {
+				max_h = h;
+			}
+		});
+		$(".subOutter").each(function() {
+			$(this).css({
+				height : max_h
+			});
+			$(this).css({
+				top : navTop + 1
+			});
+		});
+		$(".bg").css('top', '0');
+		$(".bg").css('height', max_h + top - 1);
+		$(".subOutter, .bg").toggle();
+	})*/
+
+	// $(".topNav").on("mouseleave", function() {
+	// $('.subOutter, .bg').hide();
+	// })
+
+	var menu = $("#nav ul li a")
+	menu.on(
+			'mouseenter',
+			function() {
+				//$(this).addClass('active');
+				$(this).find('img')
+					   .attr("src",$(this).find('img')
+							   			  .attr('src')
+							   			  //.replace("_off.png","_over.png")
+							   			  )
+			}).on(
+			'mouseleave',
+			function() {
+				$(this).removeClass('active');
+				$(this).find('img')
+					   .attr("src",$(this).find('img')
+							   			  .attr('src')
+							   			  //.replace("_over.png","_off.png")
+							   			  )
+			})
+
+	/*
+	 * subOutter 에서 마우스가 밖으로 벗어날 때 bg 에서 마우스가 밖으로 벗어날 때 조건은 높이
+	 * 값만 .
+	 */
+	$(".bg").on("mouseleave", function(e) {
+		var bg = $(".bg");
+		var bottom = bg.offset().top + bg.outerHeight();
+		if (e.pageY >= bottom) {
+			$('.subOutter, .bg').hide();
+		}
+	})
+
+	$(".subOutter").on("mouseleave", function(e) {
+		var bg = $(".subOutter");
+		var bottom = bg.offset().top + bg.outerHeight();
+		if (e.pageY >= bottom) {
+			$('.subOutter, .bg').hide();
+		}
+	})
+
+	var top = $(".menu-wrapper").height();
+
+	$(".main-content-wrap").css('height', top)
+
+	// 메뉴 오버
+	var menu = $("#menuover li")
+	menu.on(
+			'click',
+			function() {
+				$(this).addClass('over');
+				$(this).find('img')
+					   .attr("src",$(this).find('img')
+								   		  .attr('src')
+								   		  .replace("_off.png","_over.png"))
+			}).on(
+			'mouseleave',
+			function() {
+				$(this).removeClass('over');
+				$(this).find('img')
+					   .attr("src",$(this).find('img')
+							   			  .attr('src')
+							   			  .replace("_over.png","_off.png"))
+			})
+
+	$("#menu").on('click', function() {
+		$('.submenu-container').toggle()
+	})
+	$(".menu-wrapper").on("mouseleave", function() {
+		$('.submenu-container').css("display", "none")
+	})
+	$(".submenu-wrapper .submenu-item ul li")
+			.on(
+					"click",
+					function() {
+						if ($('.submenu-container').css(
+								"display") == "none") {
+							return;
+						} else {
+							$('.submenu-container').css(
+									"display", "none")
+						}
+					})
+
+	var submenu = $('.submenu-wrapper .submenu-item ul li')
+	submenu.on('mouseenter', function() {
+		$(this).addClass('over');
+	}).on('mouseleave', function() {
+		$(this).removeClass('over');
+	})
+
+	$(".core-menu li").click(function() {
+		// alert("dd");
+		$('.dropdown').slideUp('fast');
+		$(this).children('ul').slideDown('fast');
+	});
+	// $(".core-menu li").hover(
+	// function(){
+	//
+	// $(this).children('ul').slideDown('fast');
+	// },
+	//
+	// function () {
+	// $('ul', this).slideUp('fast');
+	// });
+
+	$(".hamburger-menu").click(function() {
+		$(".burger-1, .burger-2, .burger-3").toggleClass("open");
+		$(".core-menu").slideToggle("fast");
+	});
+
+	$(".sub a").click(function() {
+		$(".core-menu").toggle();
+		$(".burger-1, .burger-2, .burger-3").toggleClass("open");
+	})
+
+	var tabTemplate = "";
+	// 탭 선언
+	var tabs = $("#tabs").tabs();
+	
+	
+	$("a, .py-1 rounded hover").click(function(){
+		tabs.tabs("refresh");
+		
+		$(".nav-link").removeClass("active");
+		$(".nav-item").removeClass("active");
+		// 현재 눌린 a 태그 가져오기
+		var link = $(this);
+		var url = $(this).children().attr("class");
+		
+		var id = $(link).attr("id");
+		var icon = "";
+		
+		if(id.includes("export") == true){
+			icon = "";
+			icon = '<i class="fa-duotone fa-inbox-out fa-rotate-90"></i>&nbsp;';
+		} 
+		
+		if(id.includes("import") == true){
+			icon = "";
+			icon = '<i class="fa-duotone fa-inbox-in fa-rotate-270"></i>&nbsp;';
+		}
+		if(id.includes("deadLine") == true || id.includes("kpi") || id.includes("calculate") == true || id.includes("analysis") == true ){
+			icon = "";
+			icon = '<i class="fa-duotone fa-display-chart-up-circle-currency"></i>&nbsp;';
+		}
+		if(id.includes("documentView") == true){
+			icon = "";
+			icon = '<i class="fa-duotone fa-file-circle-check"></i>&nbsp;';
+		}
+		if(id.includes("main") == true || id.includes("news") == true){
+			icon = "";
+			icon = '<i class="fa-duotone fa-bullhorn"></i>&nbsp;';
+		}
+		if( id.includes("pfUser") == true || id.includes("pfCmpny") == true || id.includes("pfMenu") == true ) {
+			icon = "";
+			icon = '<i class="fa-duotone fa-gears"></i>&nbsp;';
+		}
+		
+		
+		if(id == "exportMakeIn"  ||id == "exportMakePk" ){
+			$("#footer").hide();
+		} else {
+			$("#footer").show();
+		}
+		// tabs_id 선언
+		var tabs_id = "tabs-" + $(link).attr("id");
+		// find_id 선언
+		var find_id = $("[id= " + tabs_id + "]").attr("id");
+		// tab_id 선언
+		var tab_id = "#" + tabs_id;
+		
+		// a태그에 해당하는 탭이 열려 있을 경우
+		if (find_id == tabs_id || tabs_id =="tabs-tabs-dashboard") {
+			if(find_id == "exportMakeIn"  || find_id == "exportMakePk" ){
+				$("#footer").hide();
+			} else {
+				$("#footer").show();
+			}
+			// 열려있는 탭으로 이동
+			tabs.tabs("option", "active", id2Index("#tabs", tab_id));
+			$(".nav-link").removeClass("active");
+			$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+			if(tabs_id =="tabs-tabs-dashboard"){
+				$("#tabs-dashboard").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+			} else {
+				$("#" + tabs_id).prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+			}
+			// 아닐경우
+		} else {
+
+			$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+			// 탭 라벨 선언
+			var label = $(link).text();
+			// id 값을 tabs-? 로 선언
+			var fId = $(link).attr("id");
+			var id = "tabs-" + fId;
+			// rel : link의 속성 중 rel을 찾는다 (ajax로 탭에 보여줄 내용을 가져올 html의
+			// 주소가 들어간다)
+			var rel = $(link).attr("rel");
+			// li replace
+			// var li = $( tabTemplate.replace( /#\{href\}/g, "#" +
+			// id ).replace( /#\{label\}/g, label ) );
+			var li = "";
+
+			var target = $("#" + fId)[0];
+			li = "<li class='nav-item z-1 shrink-0 bg-primary-50 relative'><a class='nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active' id='"
+					+ id
+					+ "' data-toggle='tab' href='"
+					+ url
+					+ "' onclick='fn_clickTab(this)' role='tab' aria-controls='' aria-selected='false'><span>"
+					+ icon + '   ' + $(this).text()
+					+ "</span><img src='/pf/images/cancle.png' class='ui-icon-close'></a></li>";
+
+			// tab내용 선언
+			var tabContentHtml = "";
+			// ajax 실행
+			$.ajax({
+				type : "POST",
+				// controller로 갈 url
+				url : rel,
+				// tabContentHtml이 전역변수이기 떄문에 false값을 준다
+				async : false,
+				// 받아올 데이터타입은 html
+				dataType : "html",
+				success : function(data) {
+					// tabContentHtml에 넘어온 data값을 준다 결국 jsp 파일을
+					// html형식으로 tabContentHtml이 들어가는 것
+					tabContentHtml = data;
+				}
+		
+			});
+
+			// 탭의 ui-tabs-nav 찾아서 li를 append 시킨다
+			/* tabs.find(".ui-tabs-nav").append(li); */
+			tabs.find("#myTab").append(li);
+
+			// 탭 새로고침
+			tabs.tabs("refresh");
+			// 생성 된 탭으로 바로 가게 한다.
+			tabs.tabs("option", "active", $("#tab_header").index());
+			
+		}
+	   
+	})
+	
+
+	// documents의 a태그들 중 원하는 a태그 클릭 했을때 실행
+	$(".subOutter ol li a, .sub a").click(function() {
+				$(".submenu-container").removeClass("active");
+				// 현재 눌린 a 태그 가져오기
+				var link = $(this);
+				// tabs_id 선언
+				var tabs_id = "tabs-" + $(link).attr("id");
+				// find_id 선언
+				var find_id = $("[id= " + tabs_id + "]").attr("id");
+				// tab_id 선언
+				var tab_id = "#" + tabs_id;
+				// a태그에 해당하는 탭이 열려 있을 경우
+				if (find_id == tabs_id) {
+					// 열려있는 탭으로 이동
+					tabs.tabs("option", "active", id2Index("#tabs", tab_id));
+
+					$("#myTab").find("a").prop("class","nav-link ui-tabs-anchor");
+					$("#" + tabs_id).prop("class","nav-link active ui-tabs-anchor");
+					// 아닐경우
+				} else {
+					// 탭을 추가
+					addTab(link);
+				}
+			});
+
+	// 선택한 documents a 태그의 해당하는 tab index 찾기
+	function id2Index(tabsId, srcId) {
+		// index 값 -1로 설정
+		var index = -1;
+		// i 값 선언, tbH : 해당하는 탭의 a 태그 찾기
+		var i = 0, tbH = $(tabsId).find("li a");
+		// tbH 길이 선언
+		var lntb = tbH.length;
+		// lntb가 0보다 클경우
+		if (lntb > 0) {
+			for (i = 0; i < lntb; i++) {
+				var o = tbH[i];
+				if (o.id.search(srcId.replace("#", "").replace("tabs-", "")) > 0) {
+					index = i;
+				}
+			}
+		}
+		// index값 리턴
+		return index;
+	}
+
+	// 해당 탭 지우기
+	tabs.on("click","img.ui-icon-close",function() {
+		var panelId = $(this).closest("li").remove().attr("aria-controls");
+		// 해당하는 탭 제거
+		$("#" + panelId).remove();
+		// 탭 refresh
+		var tabs = $("#tabs").tabs();
+		tabs.tabs("refresh");
+
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		var length = $("#myTab").find("li a").length;
+		if (length < 2) {
+			$("#tabs-dashboard").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+			tabs.tabs("option", "active", 0);
+		} else {
+			tabs.tabs("option", "active",length - 1);
+			var lastObj = $("#myTab").find("li a")[length - 1];
+			lastObj.className = "nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor";
+		}
+	});
+
+	// 탭 추가
+	function addTab(link) {
+		/*
+		 * var length = $("#myTab").find("li a").length;
+		 * if(length > 20){ alert("작업창은 최대 20개까지 생성할 수 있습니다.");
+		 * return; }
+		 */
+
+		$("#myTab").find("a").prop("class","nav-link ui-tabs-anchor");
+
+		// 탭 라벨 선언
+		var label = $(link).text();
+		// id 값을 tabs-? 로 선언
+		var fId = $(link).attr("id");
+		var id = "tabs-" + fId;
+		// rel : link의 속성 중 rel을 찾는다 (ajax로 탭에 보여줄 내용을 가져올 html의
+		// 주소가 들어간다)
+		var rel = $(link).attr("rel");
+		// li replace
+		// var li = $( tabTemplate.replace( /#\{href\}/g, "#" +
+		// id ).replace( /#\{label\}/g, label ) );
+		var li = "";
+
+		var target = $("#" + fId)[0];
+		li = "<li class='nav-item '><a class='nav-link active' id='"
+				+ id
+				+ "' data-toggle='tab' href='"
+				+ target.className
+				+ "' onclick='fn_clickTab(this)' role='tab' aria-controls='' aria-selected='false'><span>"
+				+ target.text
+				+ "</span><img src='/pf/images/cancle.png' class='ui-icon-close'></a></li>";
+
+		// tab내용 선언
+		var tabContentHtml = "";
+		// ajax 실행
+		$.ajax({
+			type : "POST",
+			// controller로 갈 url
+			url : rel,
+			// tabContentHtml이 전역변수이기 떄문에 false값을 준다
+			async : false,
+			// 받아올 데이터타입은 html
+			dataType : "html",
+			success : function(data) {
+				// tabContentHtml에 넘어온 data값을 준다 결국 jsp 파일을
+				// html형식으로 tabContentHtml이 들어가는 것
+				tabContentHtml = data;
+			}
+		});
+
+		// 탭의 ui-tabs-nav 찾아서 li를 append 시킨다
+		/* tabs.find(".ui-tabs-nav").append(li); */
+		tabs.find(".nav-tabs").append(li);
+
+		// 탭 새로고침
+		tabs.tabs("refresh");
+		// 생성 된 탭으로 바로 가게 한다.
+		tabs.tabs("option", "active", $("#tab_header").index());
+	}
+
+	// 공통팝업
+	var cmmnPopElement = document.querySelector('#cmmnCdPopup');
+	var cmmnPopElementContainer = cmmnPopElement.parentNode;
+	var cmmnPopSettings = {
+		data : [],
+		columns : [ {
+			data : 'cd',
+			type : 'text',
+			className : "htCenter",
+			width : 20
+		}, {
+			data : 'cdNm',
+			type : 'text',
+			width : 80
+		} ],
+		stretchH : 'all',
+		width : '96%',
+		autoWrapRow : true,
+		height : 300,
+		manualRowResize : true,
+		manualColumnResize : true,
+		rowHeights : 25,
+		rowHeaders : true,
+		columnHeaderHeight : 25,
+		colHeaders : [ '코드', '코드명' ],
+		manualRowMove : true,
+		manualColumnMove : false,
+		contextMenu : false,
+		licenseKey: 'non-commercial-and-evaluation',
+		//dropdownMenu : [ 'filter_by_condition',
+		//		'filter_operators', 'filter_by_condition2',
+		//		'filter_by_value', 'filter_action_bar' ],
+		filters : true,
+		readOnly : true,
+		allowRemoveRow : false,
+		//columnSorting : {
+		//	indicator : true
+		//},
+		autoColumnSize : {
+			samplingRatio : 23
+		},
+		mergeCells : false,
+		afterOnCellMouseDown : function(event, coords, td) {
+			/*
+			var now = new Date().getTime();
+			if (!(td.lastClick && now - td.lastClick < 200)
+					|| coords.row < 0 || coords.col < 0) {
+				td.lastClick = now;
+				return;
+			}
+			*/
+
+			fn_selectCmmnPop(coords.row);
+		}
+	};
+
+	cmmnPopHot = new Handsontable(cmmnPopElement,cmmnPopSettings);
+
+	// 회사목록 변경
+	$("select[name=selectCmpny]").change(function() {
+		fn_changeCmpnyInfo($(this).val());
+	});
+
+	  var cmpnyListPopupElement = document.querySelector('#cmpnyPopupTable');
+	  var cmpnyListPopupElementContainer = cmpnyListPopupElement.parentNode;
+	  cmpnyListPopupSettings = fn_handsonGridcmpnyListPopupOption();
+	  cmpnyListHot = new Handsontable(cmpnyListPopupElement, cmpnyListPopupSettings);
+	
+	
+});
+
+
+function fn_openInovice(){
+	$("#footer").hide();
+	var tabs = $("#tabs").tabs();
+	tabs.tabs("refresh");
+	
+	$(".nav-link").removeClass("active");
+	// 현재 눌린 a 태그 가져오기
+	var link = $(this);
+	var url = "/export/exportMakeIn.do"
+	
+	var id = "exportMakeIn";
+	var icon = ' <i class="fa-regular fa-feather"></i>&nbsp;';
+	
+	// tabs_id 선언
+	var tabs_id = "tabs-exportMakeIn" 
+	// find_id 선언
+	var find_id = $("[id= " + tabs_id + "]").attr("id");
+	// tab_id 선언
+	var tab_id = "#" + tabs_id;
+	// a태그에 해당하는 탭이 열려 있을 경우
+	if (find_id == tabs_id || tabs_id =="tabs-tabs-dashboard") {
+		// 열려있는 탭으로 이동
+		$(".nav-link").removeClass("active");
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		$("#tabs-exportMakeIn").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+		tabs.tabs("option", "active", id2Index2("#tabs", tab_id));
+	// 아닐경우
+	} else {
+
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		// 탭 라벨 선언
+		var label = "INVOICE 생성";
+		// id 값을 tabs-? 로 선언
+		var fId = "exportMakeIn";
+		var id = "tabs-" + fId;
+		// rel : link의 속성 중 rel을 찾는다 (ajax로 탭에 보여줄 내용을 가져올 html의
+		// 주소가 들어간다)
+		var rel = $(link).attr("rel");
+		// li replace
+		// var li = $( tabTemplate.replace( /#\{href\}/g, "#" +
+		// id ).replace( /#\{label\}/g, label ) );
+		var li = "";
+
+		var target = $("#" + fId)[0];
+		li = "<li class='nav-item z-1 shrink-0 bg-primary-50 relative'><a class='nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active' id='"
+				+ id
+				+ "' data-toggle='tab' href='"
+				+ url
+				+ "' onclick='fn_clickTab(this)' role='tab' aria-controls='' aria-selected='false'><span>"
+				+ icon+ '   ' + 'INVOICE 생성'
+				+ "</span><img src='/pf/images/cancle.png' class='ui-icon-close'></a></li>";
+
+		// tab내용 선언
+		var tabContentHtml = "";
+		// ajax 실행
+		$.ajax({
+			type : "POST",
+			// controller로 갈 url
+			url : rel,
+			// tabContentHtml이 전역변수이기 떄문에 false값을 준다
+			async : false,
+			// 받아올 데이터타입은 html
+			dataType : "html",
+			success : function(data) {
+				// tabContentHtml에 넘어온 data값을 준다 결국 jsp 파일을
+				// html형식으로 tabContentHtml이 들어가는 것
+				tabContentHtml = data;
+			}
+	
+		});
+		
+		// 탭의 ui-tabs-nav 찾아서 li를 append 시킨다
+		/* tabs.find(".ui-tabs-nav").append(li); */
+		$("#myTab").append(li);
+
+		// 탭 새로고침
+		$("#tabs").tabs("refresh");
+		// 생성 된 탭으로 바로 가게 한다.
+		$("#tabs").tabs("option", "active", $("#tab_header").index());
+		
+	}
+	
+};
+
+function fn_openInovice2(){
+	$("#footer").hide();
+	var tabs = $("#tabs").tabs();
+	tabs.tabs("refresh");
+	
+	$(".nav-link").removeClass("active");
+	// 현재 눌린 a 태그 가져오기
+	var link = $(this);
+	var url = "/export/exportMakeIn2.do"
+		
+		var id = "exportMakeIn2";
+	var icon = ' <i class="fa-regular fa-feather"></i>&nbsp;';
+	
+	// tabs_id 선언
+	var tabs_id = "tabs-exportMakeIn2" 
+		// find_id 선언
+		var find_id = $("[id= " + tabs_id + "]").attr("id");
+	// tab_id 선언
+	var tab_id = "#" + tabs_id;
+	// a태그에 해당하는 탭이 열려 있을 경우
+	if (find_id == tabs_id || tabs_id =="tabs-tabs-dashboard") {
+		// 열려있는 탭으로 이동
+		$(".nav-link").removeClass("active");
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		$("#tabs-exportMakeIn").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+		tabs.tabs("option", "active", id2Index2("#tabs", tab_id));
+		// 아닐경우
+	} else {
+		
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		// 탭 라벨 선언
+		var label = "INVOICE 생성 2";
+		// id 값을 tabs-? 로 선언
+		var fId = "exportMakeIn2";
+		var id = "tabs-" + fId;
+		// rel : link의 속성 중 rel을 찾는다 (ajax로 탭에 보여줄 내용을 가져올 html의
+		// 주소가 들어간다)
+		var rel = $(link).attr("rel");
+		// li replace
+		// var li = $( tabTemplate.replace( /#\{href\}/g, "#" +
+		// id ).replace( /#\{label\}/g, label ) );
+		var li = "";
+		
+		var target = $("#" + fId)[0];
+		li = "<li class='nav-item z-1 shrink-0 bg-primary-50 relative'><a class='nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active' id='"
+			+ id
+			+ "' data-toggle='tab' href='"
+			+ url
+			+ "' onclick='fn_clickTab(this)' role='tab' aria-controls='' aria-selected='false'><span>"
+			+ icon+ '   ' + 'INVOICE 생성'
+			+ "</span><img src='/pf/images/cancle.png' class='ui-icon-close'></a></li>";
+		
+		// tab내용 선언
+		var tabContentHtml = "";
+		// ajax 실행
+		$.ajax({
+			type : "POST",
+			// controller로 갈 url
+			url : rel,
+			// tabContentHtml이 전역변수이기 떄문에 false값을 준다
+			async : false,
+			// 받아올 데이터타입은 html
+			dataType : "html",
+			success : function(data) {
+				// tabContentHtml에 넘어온 data값을 준다 결국 jsp 파일을
+				// html형식으로 tabContentHtml이 들어가는 것
+				tabContentHtml = data;
+			}
+		
+		});
+		
+		// 탭의 ui-tabs-nav 찾아서 li를 append 시킨다
+		/* tabs.find(".ui-tabs-nav").append(li); */
+		$("#myTab").append(li);
+		
+		// 탭 새로고침
+		$("#tabs").tabs("refresh");
+		// 생성 된 탭으로 바로 가게 한다.
+		$("#tabs").tabs("option", "active", $("#tab_header").index());
+		
+	}
+	
+};
+
+
+function fn_openInoviceTemp(invoiceNo){
+	
+	var tabs = $("#tabs").tabs();
+	tabs.tabs("refresh");
+	
+	$(".nav-link").removeClass("active");
+	// 현재 눌린 a 태그 가져오기
+	var link = $(this);
+	var url = "/export/exportMakeIn.do"
+		
+		var id = "exportMakeIn";
+	var icon = ' <i class="fa-regular fa-feather"></i>&nbsp;';
+	
+	// tabs_id 선언
+	var tabs_id = "tabs-exportMakeIn" 
+		// find_id 선언
+		var find_id = $("[id= " + tabs_id + "]").attr("id");
+	// tab_id 선언
+	var tab_id = "#" + tabs_id;
+	// a태그에 해당하는 탭이 열려 있을 경우
+	if (find_id == tabs_id || tabs_id =="tabs-tabs-dashboard") {
+		// 열려있는 탭으로 이동
+		$(".nav-link").removeClass("active");
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		$("#tabs-exportMakeIn").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+		tabs.tabs("option", "active", id2Index2("#tabs", tab_id));
+		// 아닐경우
+	} else {
+		
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		// 탭 라벨 선언
+		var label = "INVOICE 생성";
+		// id 값을 tabs-? 로 선언
+		var fId = "exportMakeIn";
+		var id = "tabs-" + fId;
+		// rel : link의 속성 중 rel을 찾는다 (ajax로 탭에 보여줄 내용을 가져올 html의
+		// 주소가 들어간다)
+		var rel = $(link).attr("rel");
+		// li replace
+		// var li = $( tabTemplate.replace( /#\{href\}/g, "#" +
+		// id ).replace( /#\{label\}/g, label ) );
+		var li = "";
+		
+		var target = $("#" + fId)[0];
+		li = "<li class='nav-item z-1 shrink-0 bg-primary-50 relative'><a class='nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active' id='"
+			+ id
+			+ "' data-toggle='tab' href='"
+			+ url
+			+ "' onclick='fn_clickTab(this)' role='tab'" 
+			+ " data-parameter1='" + invoiceNo+ "'" 
+			+ "aria-controls='' aria-selected='false'><span>"
+			+ icon+ '   ' + 'INVOICE 생성'
+			+ "</span><img src='/pf/images/cancle.png' class='ui-icon-close'></a></li>";
+		
+		// tab내용 선언
+		var tabContentHtml = "";
+		// ajax 실행
+		$.ajax({
+			type : "POST",
+			// controller로 갈 url
+			url : rel,
+			// tabContentHtml이 전역변수이기 떄문에 false값을 준다
+			async : false,
+			// 받아올 데이터타입은 html
+			dataType : "html",
+			success : function(data) {
+				// tabContentHtml에 넘어온 data값을 준다 결국 jsp 파일을
+				// html형식으로 tabContentHtml이 들어가는 것
+				tabContentHtml = data;
+			}
+		
+		});
+		
+		// 탭의 ui-tabs-nav 찾아서 li를 append 시킨다
+		/* tabs.find(".ui-tabs-nav").append(li); */
+		$("#myTab").append(li);
+		
+		// 탭 새로고침
+		$("#tabs").tabs("refresh");
+		// 생성 된 탭으로 바로 가게 한다.
+		$("#tabs").tabs("option", "active", $("#tab_header").index());
+		
+	}
+	
+};
+
+function fn_openPacking(shipper, address, invoiceNo,  invoiceDate, consignee, loadingPort, flight, final, inDepDate, rowData, consigneeAddress, comments){
+	
+	var jsonData = JSON.stringify(rowData);
+	$(".nav-link").removeClass("active");
+	
+	var tabs = $("#tabs").tabs();
+	// 현재 눌린 a 태그 가져오기
+	var link = $(this);
+	var url = "/export/exportMakePk.do"
+		
+		var id = "exportMakePk";
+	var icon = '<i class="fa-duotone fa-box-open-full"></i>&nbsp;';
+	
+	// tabs_id 선언
+	var tabs_id = "tabs-exportMakePk" 
+		// find_id 선언
+		var find_id = $("[id= " + tabs_id + "]").attr("id");
+	// tab_id 선언
+	var tab_id = "#" + tabs_id;
+	// a태그에 해당하는 탭이 열려 있을 경우
+	if (find_id == tabs_id || tabs_id =="tabs-tabs-dashboard") {
+		// 열려있는 탭으로 이동
+		$("#myTab").tabs("option", "active", id2Index2("#tabs", tab_id));
+		
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+		$("#" + tabs_id).prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+		// 아닐경우
+	} else {
+		
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		// 탭 라벨 선언
+		var label = "P/L 생성";
+		// id 값을 tabs-? 로 선언
+		var fId = "exportMakePk";
+		var id = "tabs-" + fId;
+		// rel : link의 속성 중 rel을 찾는다 (ajax로 탭에 보여줄 내용을 가져올 html의
+		// 주소가 들어간다)
+		var rel = $(link).attr("rel");
+		// li replace
+		// var li = $( tabTemplate.replace( /#\{href\}/g, "#" +
+		// id ).replace( /#\{label\}/g, label ) );
+		var li = "";
+		
+		var target = $("#" + fId)[0];
+		li = "<li class='nav-item z-1 shrink-0 bg-primary-50 relative'><a class='nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active' id='"
+			+ id
+			+ "' data-toggle='tab' href='"
+			+ url
+			+ "' onclick='fn_clickTab(this)' role='tab'" 
+			+ " data-parameter1='" + shipper+ "'" 
+			+ " data-parameter2='" + invoiceNo+ "'" 
+			+ " data-parameter3='" + invoiceDate+ "'" 
+			+ " data-parameter4='" + consignee+ "'" 
+			+ " data-parameter5='" + loadingPort+ "'" 
+			+ " data-parameter6='" + flight+ "'" 
+			+ " data-parameter7='" + final+ "'" 
+			+ " data-parameter8='" + inDepDate+ "'" 
+			+ " data-parameter9='" + jsonData+ "'" 
+			+ " data-parameter10='" + address+ "'" 
+			+ " data-parameter11='" + consigneeAddress+ "'" 
+			+ " data-parameter12='" + comments+ "'" 
+			+ "aria-controls='' aria-selected='false'><span>"
+			+ icon+ '   ' + 'P/L 생성'
+			+ "</span><img src='/pf/images/cancle.png' class='ui-icon-close'></a></li>";
+		//loadingPort, flight, final, inDepDate
+		// tab내용 선언
+		var tabContentHtml = "";
+		// ajax 실행
+		$.ajax({
+			type : "POST",
+			// controller로 갈 url
+			url : rel,
+			// tabContentHtml이 전역변수이기 떄문에 false값을 준다
+			async : false,
+			// 받아올 데이터타입은 html
+			dataType : "html",
+			success : function(data) {
+				// tabContentHtml에 넘어온 data값을 준다 결국 jsp 파일을
+				// html형식으로 tabContentHtml이 들어가는 것
+				tabContentHtml = data;
+			}
+		
+		});
+		
+		// 탭의 ui-tabs-nav 찾아서 li를 append 시킨다
+		/* tabs.find(".ui-tabs-nav").append(li); */
+		$("#myTab").append(li);
+		
+		// 탭 새로고침
+		tabs.tabs("refresh");
+		// 생성 된 탭으로 바로 가게 한다.
+		tabs.tabs("option", "active", $("#tab_header").index());
+		
+		
+	}
+	
+};
+
+
+function go_notice(){
+	
+	
+$(".nav-link").removeClass("active");
+	
+	var tabs = $("#tabs").tabs();
+	tabs.tabs("refresh");
+	// 현재 눌린 a 태그 가져오기
+	var link = $(this);
+	var url = "/cmmn/mainNotice.do"
+		
+		var id = "mainNotice";
+	var icon = '<i class="fa-duotone fa-bullhorn"></i>&nbsp;';
+	
+	// tabs_id 선언
+	var tabs_id = "tabs-mainNotice" 
+		// find_id 선언
+		var find_id = $("[id= " + tabs_id + "]").attr("id");
+	// tab_id 선언
+	var tab_id = "#" + tabs_id;
+	// a태그에 해당하는 탭이 열려 있을 경우
+	if (find_id == tabs_id || tabs_id =="tabs-tabs-dashboard") {
+		// 열려있는 탭으로 이동
+		$(".nav-link").removeClass("active");
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		$("#tabs-mainNotice").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+		tabs.tabs("option", "active", id2Index2("#tabs", tab_id));
+		
+	/*	$(".nav-link").removeClass("active");
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		if(tabs_id =="tabs-tabs-dashboard"){
+			$("#tabs-dashboard").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+		*/
+		//$("#myTab").tabs("option", "active", id2Index2("#tabs", tab_id));
+		// 아닐경우
+	} else {
+		
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		// 탭 라벨 선언
+		var label = "공지사항";
+		// id 값을 tabs-? 로 선언
+		var fId = "mainNotice";
+		var id = "tabs-" + fId;
+		// rel : link의 속성 중 rel을 찾는다 (ajax로 탭에 보여줄 내용을 가져올 html의
+		// 주소가 들어간다)
+		var rel = $(link).attr("rel");
+		// li replace
+		// var li = $( tabTemplate.replace( /#\{href\}/g, "#" +
+		// id ).replace( /#\{label\}/g, label ) );
+		var li = "";
+		
+		var target = $("#" + fId)[0];
+		li = "<li class='nav-item z-1 shrink-0 bg-primary-50 relative'><a class='nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active' id='"
+			+ id
+			+ "' data-toggle='tab' href='"
+			+ url
+			+ "' onclick='fn_clickTab(this)' role='tab'" 
+			+ "aria-controls='' aria-selected='false'><span>"
+			+ icon+ '   ' + '공지사항'
+			+ "</span><img src='/pf/images/cancle.png' class='ui-icon-close'></a></li>";
+		//loadingPort, flight, final, inDepDate
+		// tab내용 선언
+		var tabContentHtml = "";
+		// ajax 실행
+		$.ajax({
+			type : "POST",
+			// controller로 갈 url
+			url : rel,
+			// tabContentHtml이 전역변수이기 떄문에 false값을 준다
+			async : false,
+			// 받아올 데이터타입은 html
+			dataType : "html",
+			success : function(data) {
+				// tabContentHtml에 넘어온 data값을 준다 결국 jsp 파일을
+				// html형식으로 tabContentHtml이 들어가는 것
+				tabContentHtml = data;
+			}
+		
+		});
+		
+		// 탭의 ui-tabs-nav 찾아서 li를 append 시킨다
+		/* tabs.find(".ui-tabs-nav").append(li); */
+		$("#myTab").append(li);
+		
+		// 탭 새로고침
+		tabs.tabs("refresh");
+		// 생성 된 탭으로 바로 가게 한다.
+		tabs.tabs("option", "active", $("#tab_header").index());
+		
+		
+	}
+}
+
+function go_news(){
+	
+	
+	$(".nav-link").removeClass("active");
+	
+	var tabs = $("#tabs").tabs();
+	// 현재 눌린 a 태그 가져오기
+	var link = $(this);
+	var url = "/cmmn/news.do"
+		
+		var id = "news";
+	var icon = '<i class="fa-duotone fa-bullhorn"></i>&nbsp;';
+	
+	// tabs_id 선언
+	var tabs_id = "tabs-news" 
+		// find_id 선언
+		var find_id = $("[id= " + tabs_id + "]").attr("id");
+	// tab_id 선언
+	var tab_id = "#" + tabs_id;
+	// a태그에 해당하는 탭이 열려 있을 경우
+	if (find_id == tabs_id || tabs_id =="tabs-tabs-dashboard") {
+		// 열려있는 탭으로 이동
+		$(".nav-link").removeClass("active");
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		$("#tabs-news").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+		tabs.tabs("option", "active", id2Index2("#tabs", tab_id));
+			// 아닐경우
+	} else {
+		
+		$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+		// 탭 라벨 선언
+		var label = "관세뉴스";
+		// id 값을 tabs-? 로 선언
+		var fId = "news";
+		var id = "tabs-" + fId;
+		// rel : link의 속성 중 rel을 찾는다 (ajax로 탭에 보여줄 내용을 가져올 html의
+		// 주소가 들어간다)
+		var rel = $(link).attr("rel");
+		// li replace
+		// var li = $( tabTemplate.replace( /#\{href\}/g, "#" +
+		// id ).replace( /#\{label\}/g, label ) );
+		var li = "";
+		
+		var target = $("#" + fId)[0];
+		li = "<li class='nav-item z-1 shrink-0 bg-primary-50 relative'><a class='nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active' id='"
+			+ id
+			+ "' data-toggle='tab' href='"
+			+ url
+			+ "' onclick='fn_clickTab(this)' role='tab'" 
+			+ "aria-controls='' aria-selected='false'><span>"
+			+ icon+ '   ' + '관세뉴스'
+			+ "</span><img src='/pf/images/cancle.png' class='ui-icon-close'></a></li>";
+		//loadingPort, flight, final, inDepDate
+		// tab내용 선언
+		var tabContentHtml = "";
+		// ajax 실행
+		$.ajax({
+			type : "POST",
+			// controller로 갈 url
+			url : rel,
+			// tabContentHtml이 전역변수이기 떄문에 false값을 준다
+			async : false,
+			// 받아올 데이터타입은 html
+			dataType : "html",
+			success : function(data) {
+				// tabContentHtml에 넘어온 data값을 준다 결국 jsp 파일을
+				// html형식으로 tabContentHtml이 들어가는 것
+				tabContentHtml = data;
+			}
+		
+		});
+		
+		// 탭의 ui-tabs-nav 찾아서 li를 append 시킨다
+		/* tabs.find(".ui-tabs-nav").append(li); */
+		$("#myTab").append(li);
+		
+		// 탭 새로고침
+		tabs.tabs("refresh");
+		// 생성 된 탭으로 바로 가게 한다.
+		tabs.tabs("option", "active", $("#tab_header").index());
+		
+		
+	}
+}
+
+// 선택한 documents a 태그의 해당하는 tab index 찾기
+function id2Index2(tabsId, srcId) {
+	// index 값 -1로 설정
+	var index = -1;
+	// i 값 선언, tbH : 해당하는 탭의 a 태그 찾기
+	var i = 0, tbH = $(tabsId).find("li a");
+	// tbH 길이 선언
+	var lntb = tbH.length;
+	// lntb가 0보다 클경우
+	if (lntb > 0) {
+		for (i = 0; i < lntb; i++) {
+			var o = tbH[i];
+			if (o.id.search(srcId.replace("#", "").replace("tabs-", "")) > 0) {
+				index = i;
+			}
+		}
+	}
+	// index값 리턴
+	return index;
+};
+
+// 탭클릭
+function fn_clickTab(obj) {
+	var thisId = $(obj).attr('id');
+	console.log(thisId);
+	if(thisId == 'tabs-exportMakeIn' || thisId == 'tabs-exportMakePk'){
+		$("#footer").hide();
+	} else {
+		$("#footer").show();
+	}
+	$(".nav-link").removeClass("active");
+	$(obj).addClass("active");
+	obj.setAttribute("href", "javascript:void(0)");
+	
+};
+
+// 공통팝업 호출
+function fn_showCmmnPopup(data, callback) {
+	$("#cmmnPop_srch1").val("");
+	$("#cmmnPop_srch2").val("");
+
+	popupData = data;
+	fnPopupCallback = callback;
+
+	// 메시지정보 조회
+	fn_searchCmmnPopItem();
+};
+
+// 항목정보 조회(팝업)
+function fn_searchCmmnPopItem() {
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/selectPopInfo.do",
+		dataType : "json",
+		success : function(data) {
+
+			if (popupData.type == "cmmnCd") {
+				$("#txtCmmnPop1").text(data.cmmnCd); // 공통코드
+			} else {
+				$("#txtCmmnPop1").text(data.tableData); // 테이블 데이터
+			}
+
+			$("#txtCmmnPop2").text(data.search); // 검색
+			$("#txtCmmnPop3").text(data.cd); // 코드
+			$("#cmmnPop_srch1")[0].placeholder = data.cdMsg; // 코드를 입력해주세요
+			$("#txtCmmnPop4").text(data.cdNm); // 코드명
+			$("#cmmnPop_srch2")[0].placeholder = data.cdNmMsg; // 코드명을 입력해주세요
+			$("#txtCmmnPop5").text(data.clear); // 초기화
+			$("#txtCmmnPop6").text(data.search); // 검색
+			$("#txtCmmnPop7").text(data.cdInfo); // 코드정보
+			$("#txtCmmnPop8").text(data.result + " : "); // 검색결과
+			// $("#txtCmmnPop9").text(data.choice); //선택
+
+			cmmnPopHot.updateSettings({
+				colHeaders : [ data.cd, data.cdNm ]
+			});
+
+			$("#cmmnPopup").modal("show");
+			setTimeout(function() {
+				cmmnPopHot.render()
+			}, 200);
+
+			fn_searchCmmnPop();
+
+		},
+		error : function(e, textStatus, errorThrown) {
+			console.log(errorThrown);
+		}
+	});
+};
+
+// 코드목록 조회(팝업)
+function fn_searchCmmnPop() {
+	var sData = {};
+
+	if (popupData.type == "cmmnCd") {
+		sData["searchType"] = popupData.type;
+		sData["srch3"] = popupData.grpCd;
+		sData["srch20"] = $("#cmmnPop_srch1").val();
+		sData["srch21"] = $("#cmmnPop_srch2").val();
+	} else {
+		sData["searchType"] = popupData.type;
+		sData["strSelect"] = popupData.search;
+		sData["strFrom"] = popupData.from;
+		sData["strWhere"] = popupData.where;
+		sData["strOrderBy"] = popupData.orderby;
+		sData["if1"] = popupData.if1;
+		sData["if2"] = popupData.if2;
+		sData["srch20"] = $("#cmmnPop_srch1").val();
+		sData["srch21"] = $("#cmmnPop_srch2").val();
+	}
+
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/selectCmmnPopList.do",
+		data : sData,
+		dataType : "json",
+		success : function(data) {
+			cmmnPopHot.loadData([]);
+			cmmnPopHot.loadData(data.resultList);
+			$("#cmmnPopCnt").text(data.totCnt).number(true); // 검색결과 총 갯수
+		},
+		error : function(e, textStatus, errorThrown) {
+			console.log(errorThrown);
+		}
+	});
+};
+
+// 선택(팝업)
+function fn_selectCmmnPop(row) {
+	popupData["cd"] = cmmnPopHot.getDataAtCell(row, 0);
+	popupData["cdNm"] = cmmnPopHot.getDataAtCell(row, 1);
+	fnPopupCallback(popupData);
+	$("#cmmnPopup").modal("hide");
+
+};
+
+// 회사변경
+function fn_changeCmpnyInfo(cd) {
+	$("#usrCmpnyCd").val(cd);
+	document.mainForm.submit();
+};
+
+// 로그아웃
+function fn_logout() {
+	if (!confirm("로그아웃 하시겠습니까?")) {
+		return;
+	}
+
+	document.logoutForm.submit();
+};
+
+//드롭다운 공통
+function fn_dropdown(list){
+	list = list.replace('[', '').replace(']', '');
+	listDropdown = list.split(', ');
+	return listDropdown;
+}
+
+
+function tabRemove(e){
+	console.log($(e).parents("a").attr("class", "tab-button").text());
+	console.log($(e).parent("a"));
+	console.log($(e).closest("a"));
+	var tabId = $(e).parents("a").attr("id");
+	$(".tab-button #" + tabId).remove();
+	
+}
+
+function fn_searchCmpny(){
+	$("#searchCmpnyPopUp").modal("show");
+    fn_searchCmpnyPopup();
+};
+
+
+function cmpnySearchPopupClose(){
+	$("#searchCmpnyPopUp").modal("hide");
+}
+
+
+function enterKeyPopUp() {
+	if (window.event.keyCode == 13) {
+		fn_searchCmpnyPopup();
+    }
+}
+
+function fn_searchSelectCmpny() {
+	fn_searchCmpnyPopup();
+}
+
+function fn_searchCmpnyPopup(){
+	var sData = {};
+	// console.log("sData: " + sData);
+	sData["srch1"] = $('#cmpnySrch1').val();
+	
+	fn_loading(true);
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/selectSearchCmpnyList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	cmpnyListHot.loadData([]);
+        	cmpnyListHot.loadData(data.resultList);
+			setTimeout(function() {cmpnyListHot.render()}, 200);
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("에러 발생");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+
+function fn_multipleCmpnyChk() {
+	var selected = cmpnyListHot.getSourceData();
+	var checkedRow = [];
+	var cnt = 0;
+	for (var i = 0; i < selected.length; i++) {
+		if(selected[i].checkbox === "yes"){
+			checkedRow.push(selected[i]);
+			cnt++;
+		}
+	}
+	if(cnt == 0){
+		alert("선택된 항목이 없습니다.");
+		return;
+	}
+	
+	fn_selectCmpnyPop(checkedRow);
+}
+
+
+function fn_selectCmpnyPop(checkedRows) {
+    $("input[name='taxNo']").remove();
+    $("input[name='cmpnyNm']").remove();
+
+    for (var i = 0; i < checkedRows.length; i++) {
+        $('<input>').attr({
+            type: 'hidden',
+            name: 'taxNo',
+            value: checkedRows[i].taxNo
+        }).appendTo('form[name="mainForm"]');
+
+        $('<input>').attr({
+            type: 'hidden',
+            name: 'cmpnyNm',
+            value: checkedRows[i].cmpnyNm
+        }).appendTo('form[name="mainForm"]');
+    }
+
+    const el = document.getElementById("cmpnyButton");
+    el.innerText = checkedRows[0].cmpnyNm;
+    
+    $("#searchCmpnyPopUp").modal("hide");
+
+    document.mainForm.submit();
+}
+
+function fn_handsonGridcmpnyListPopupOption() {
+    cmpnyListPopupSettings = {
+        columns: [
+            { data: 'checkbox', type: 'checkbox', className: "htCenter", width: 25, checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly: false},
+            { data: 'taxNo', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'cmpnyNm', type: 'text', className: "htCenter", readOnly: true },
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["", "사업자 번호", "회사명"], 
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [] },
+        afterChange: function(changes, source) {
+            if (source === 'loadData') return;
+
+            const data = this.getData();
+            checkedRows = [];
+
+            data.forEach(row => {
+                if (row[0] === 'yes') {
+                    checkedRows.push(row);
+                }
+            });
+        },
+        afterGetColHeader: function(col, TH){
+        	if(col == 0){
+          	TH.innerHTML = "<input type='checkbox'  class='checker' id='id_selectCmpnyAll' onclick='fn_selectCmpnyAll();'>";
+          }
+        }
+        /*afterOnCellMouseDown : function(event, coords, td) {
+        	console.log("coords: " + JSON.stringify(coords));
+        	console.log("event: " + JSON.stringify(event));
+        	console.log("td: " + JSON.stringify(td));
+			var now = new Date().getTime();
+			if (!(td.lastClick && now - td.lastClick < 200)
+					|| coords.row < 0 || coords.col < 0) {
+				td.lastClick = now;
+				return;
+			}
+
+			fn_selectCmpnyPop(coords);
+		}*/
+    };
+
+    return cmpnyListPopupSettings;
+}
+
+function fn_selectCmpnyAll(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_selectCmpnyAll").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+
+	var data = cmpnyListHot.getSourceData();
+
+	for(var i=0; i< data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	cmpnyListHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_selectCmpnyAll").prop("checked", true);
+	} else {
+		$("#id_selectCmpnyAll").prop("checked", false);
+	}
+}
+
+$(document).keydown(function(e)
+{
+	if(e.keyCode == 9)
+	{
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}
+});
+

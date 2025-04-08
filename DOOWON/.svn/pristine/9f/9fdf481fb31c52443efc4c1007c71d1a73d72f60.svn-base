@@ -1,0 +1,1835 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.rpt.service.impl.AnalysisMapper">
+
+	<select id="selectAnalysis1List" parameterType="searchVO" resultType="egovMap">
+		SELECT A.markCont AS markCont, <!-- 거래구분 -->
+			   FORMAT(IFNULL(B.cnt1, 0), 0) AS cnt1, <!-- 건수 -4년 -->
+			   FORMAT(IFNULL(B.sum1, 0), 0) AS sum1, <!-- 합계 -4년 -->
+			   FORMAT(IFNULL(B.cnt2, 0), 0) AS cnt2, <!-- 건수 -3년 -->
+			   FORMAT(IFNULL(B.sum2, 0), 0) AS sum2, <!-- 합계 -3년 -->
+			   FORMAT(IFNULL(B.cnt3, 0), 0) AS cnt3, <!-- 건수 -2년 -->
+			   FORMAT(IFNULL(B.sum3, 0), 0) AS sum3, <!-- 합계 -2년 -->
+			   FORMAT(IFNULL(B.cnt4, 0), 0) AS cnt4, <!-- 건수 -1년 -->
+			   FORMAT(IFNULL(B.sum4, 0), 0) AS sum4, <!-- 합계 -1년 -->
+			   FORMAT(IFNULL(B.cnt5, 0), 0) AS cnt5, <!-- 건수 당해 -->
+			   FORMAT(IFNULL(B.sum5, 0), 0) AS sum5, <!-- 한계 당해 -->
+			   FORMAT(IFNULL(B.cnt6, 0), 0) AS cnt6, <!-- 건수 전체 -->
+			   FORMAT(IFNULL(B.sum6, 0), 0) AS sum6 <!-- 합계 전체 -->
+		FROM 
+			(SELECT '일반수입(11)' AS markCont, '11' AS mark
+			 	UNION
+			 SELECT '기타 수입승인 면제물품(94)' AS markCont, '94' AS mark
+			 	UNION
+			 SELECT '무상 견품 및 광고용품(87)' AS markCont, '87' AS mark
+			 	UNION
+			 SELECT '검사·수리 후 재수입(83)' AS markCont, '83' AS mark
+			 	UNION
+			 SELECT '대체물품 수입(93)' AS markCont, '93' AS mark
+			 	UNION
+			 SELECT '기타 (보세공장, 기타 재수입 등)' AS markCont, '9999' AS mark) A
+		LEFT OUTER JOIN (SELECT C.excDiviMark AS excDiviMark,
+						        SUM((CASE WHEN C.Lis_day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 4 THEN 1  ELSE 0 END)) AS cnt1,      
+						        SUM((CASE WHEN C.Lis_day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 4 THEN Tot_Tax_Krw  ELSE 0 END)) AS sum1,
+						        SUM((CASE WHEN C.Lis_day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 3 THEN 1  ELSE 0 END)) AS cnt2,            
+							    SUM((CASE WHEN C.Lis_day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 3 THEN Tot_Tax_Krw  ELSE 0 END)) AS sum2,
+						        SUM((CASE WHEN C.Lis_day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 2 THEN 1  ELSE 0 END)) AS cnt3,            
+							    SUM((CASE WHEN C.Lis_day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 2 THEN Tot_Tax_Krw  ELSE 0 END)) AS sum3,
+						        SUM((CASE WHEN C.Lis_day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 1 THEN 1  ELSE 0 END)) AS cnt4,            
+							    SUM((CASE WHEN C.Lis_day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 1 THEN Tot_Tax_Krw  ELSE 0 END)) AS sum4,
+						        SUM((CASE WHEN C.Lis_day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) THEN 1  ELSE 0 END)) AS cnt5,            
+							    SUM((CASE WHEN C.Lis_day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) THEN Tot_Tax_Krw  ELSE 0 END)) AS sum5,
+							    COUNT(C.Lis_day) AS cnt6,            
+							    SUM(C.Tot_Tax_Krw) AS sum6
+						 FROM (SELECT (CASE WHEN Exc_Divi_Mark NOT IN('11', '94', '87', '83', '93') THEN '9999' ELSE Exc_Divi_Mark END) AS excDiviMark,
+						 			  SUBSTRING(Lis_day, 1, 4) AS Lis_day,
+						 			  Tot_Tax_Krw,
+						 			  Nab_SdNo
+						 	   FROM CUSDEC929A1
+						 	   WHERE Rpt_Seq = '00') C
+						 WHERE 1=1
+						 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+						 	AND C.Nab_SdNo = #{corpNo}
+						 </if>
+						 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+							AND C.Lis_day BETWEEN CONCAT(SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 4, '0101')
+							AND REPLACE(#{srch3}, '-','')
+						 </if>
+						 GROUP BY C.excDiviMark
+						) B
+		ON A.mark = B.excDiviMark
+	</select>
+	
+	<select id="selectAnalysis1Chart" parameterType="searchVO" resultType="egovMap">
+	WITH RECURSIVE YearMonth AS (
+	    SELECT DATE_FORMAT(DATE_SUB(REPLACE(#{srch3}, '-',''), INTERVAL 1 MONTH), '%Y-%m-01') AS ym
+	    UNION ALL
+	    SELECT DATE_FORMAT(DATE_SUB(ym, INTERVAL 1 MONTH), '%Y-%m-01')
+	    FROM YearMonth
+	    WHERE ym &gt; DATE_FORMAT(DATE_SUB(REPLACE(#{srch3}, '-',''), INTERVAL 5 YEAR), '%Y-%m-01')
+	)
+	SELECT
+	DATE_FORMAT(a.ym, '%Y%m') AS date,
+	b.mark,
+	b.markCont,
+	ifnull(SUM,0) AS SUM,
+	ifnull(cnt,0) AS CNT
+	FROM YearMonth a
+	CROSS JOIN
+	(
+		SELECT
+			'일반수입(11)' AS markCont,
+			'11' AS mark
+		UNION
+		SELECT
+			'기타 수입승인 면제물품(94)' AS markCont,
+			'94' AS mark
+		UNION
+		SELECT
+			'무상 견품 및 광고용품(87)' AS markCont,
+			'87' AS mark
+		UNION
+		SELECT
+			'검사·수리 후 재수입(83)' AS markCont,
+			'83' AS mark
+		UNION
+		SELECT
+			'대체물품 수입(93)' AS markCont,
+			'93' AS mark
+		UNION
+		SELECT
+			'기타 (보세공장, 기타 재수입 등)' AS markCont,
+			'9999' AS mark
+	) B
+	LEFT OUTER JOIN
+	(
+		SELECT
+		LEFT(lis_day, 6) ym, 
+		CASE WHEN Exc_Divi_Mark NOT IN ('11', '94', '87', '83', '93') THEN '9999' ELSE Exc_Divi_Mark END AS Exc_Divi_Mark,
+		SUM(Tot_Tax_Krw) AS SUM,
+		COUNT(Exc_Divi_Mark) AS cnt
+		FROM
+		cusdec929a1 a
+		WHERE 1=1
+		AND a.Rpt_Seq = '00'
+		<if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			AND a.nab_Sdno = #{corpNo}
+		</if>
+		GROUP BY LEFT(lis_day, 6), CASE WHEN Exc_Divi_Mark NOT IN ('11', '94', '87', '83', '93') THEN '9999' ELSE Exc_Divi_Mark END
+	) C
+	ON CONVERT(DATE_FORMAT(a.ym, '%Y%m'), VARCHAR(6)) = CONVERT(c.ym, VARCHAR(6)) AND b.mark = c.Exc_Divi_Mark
+	ORDER BY 1, 2
+	</select>
+	
+	<select id="selectAnalysis2List" parameterType="searchVO" resultType="egovMap">
+		SELECT A.markCont AS markCont, <!-- 거래구분 -->
+			   FORMAT(IFNULL(B.cnt1, 0), 0) AS cnt1, <!-- 건수 -4년 -->  
+			   FORMAT(IFNULL(B.sum1, 0), 0) AS sum1, <!-- 합계 -4년 -->  
+			   FORMAT(IFNULL(B.cnt2, 0), 0) AS cnt2, <!-- 건수 -3년 -->  
+			   FORMAT(IFNULL(B.sum2, 0), 0) AS sum2, <!-- 합계 -3년 -->  
+			   FORMAT(IFNULL(B.cnt3, 0), 0) AS cnt3, <!-- 건수 -2년 -->  
+			   FORMAT(IFNULL(B.sum3, 0), 0) AS sum3, <!-- 합계 -2년 -->  
+			   FORMAT(IFNULL(B.cnt4, 0), 0) AS cnt4, <!-- 건수 -1년 -->  
+			   FORMAT(IFNULL(B.sum4, 0), 0) AS sum4, <!-- 합계 -1년 -->  
+			   FORMAT(IFNULL(B.cnt5, 0), 0) AS cnt5, <!-- 건수 당해 -->   
+			   FORMAT(IFNULL(B.sum5, 0), 0) AS sum5, <!-- 한계 당해 -->   
+			   FORMAT(IFNULL(B.cnt6, 0), 0) AS cnt6, <!-- 건수 전체 -->   
+			   FORMAT(IFNULL(B.sum6, 0), 0) AS sum6 <!-- 합계 전체 -->
+		FROM 
+			(SELECT '일반수출(11)' AS markCont, '11' AS mark
+			 	UNION
+			 SELECT '위탁가공을 위한 수출(29)' AS markCont, '29' AS mark
+			 	UNION
+			 SELECT '수리 후 재수입 수출(83)' AS markCont, '83' AS mark
+			 	UNION
+			 SELECT '기타 수출승인 면제물품(94)' AS markCont, '94' AS mark
+			 	UNION
+			 SELECT '기타 (보세공장, 기타 재수출 등)' AS markCont, '9999' AS mark) A
+		LEFT OUTER JOIN (SELECT C.excDivi AS excDivi,
+						        SUM((CASE WHEN C.Exp_Lis_Day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 4 THEN 1  ELSE 0 END)) AS cnt1,      
+						        SUM((CASE WHEN C.Exp_Lis_Day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 4 THEN C.Tot_Rpt_Krw  ELSE 0 END)) AS sum1,
+						        SUM((CASE WHEN C.Exp_Lis_Day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 3 THEN 1  ELSE 0 END)) AS cnt2,            
+							    SUM((CASE WHEN C.Exp_Lis_Day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 3 THEN C.Tot_Rpt_Krw  ELSE 0 END)) AS sum2,
+						        SUM((CASE WHEN C.Exp_Lis_Day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 2 THEN 1  ELSE 0 END)) AS cnt3,            
+							    SUM((CASE WHEN C.Exp_Lis_Day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 2 THEN C.Tot_Rpt_Krw  ELSE 0 END)) AS sum3,
+						        SUM((CASE WHEN C.Exp_Lis_Day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 1 THEN 1  ELSE 0 END)) AS cnt4,            
+							    SUM((CASE WHEN C.Exp_Lis_Day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 1 THEN C.Tot_Rpt_Krw  ELSE 0 END)) AS sum4,
+						        SUM((CASE WHEN C.Exp_Lis_Day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) THEN 1  ELSE 0 END)) AS cnt5,            
+							    SUM((CASE WHEN C.Exp_Lis_Day = SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) THEN C.Tot_Rpt_Krw  ELSE 0 END)) AS sum5,
+							    COUNT(C.Exp_Lis_Day) AS cnt6,            
+							    SUM(C.Tot_Rpt_Krw) AS sum6
+						 FROM (SELECT (CASE WHEN Exc_Divi NOT IN('11','29','83','94') THEN '9999' ELSE Exc_Divi END) AS excDivi,
+						 			  SUBSTRING(Exp_Lis_Day,1,4) AS Exp_Lis_Day,
+						 			  Tot_Rpt_Krw,
+						 			  Exp_Sdno
+						       FROM CUSDEC830A1
+						       WHERE Rpt_Seq = '00') C
+						 WHERE 1=1
+						 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+						 	AND C.Exp_Sdno = #{corpNo}
+						 </if>
+						 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+							AND C.Exp_Lis_Day BETWEEN CONCAT(SUBSTRING(REPLACE(#{srch3}, '-',''), 1, 4) - 4, '0101')
+							AND REPLACE(#{srch3}, '-','')
+						 </if>
+						 GROUP BY C.excDivi				 
+						) B
+		ON A.mark = B.excDivi
+	</select>
+
+	<select id="selectAnalysis2Chart" parameterType="searchVO" resultType="egovMap">
+	WITH RECURSIVE YearMonth AS (
+	    SELECT DATE_FORMAT(DATE_SUB(REPLACE(#{srch3}, '-',''), INTERVAL 1 MONTH), '%Y-%m-01') AS ym
+	    UNION ALL
+	    SELECT DATE_FORMAT(DATE_SUB(ym, INTERVAL 1 MONTH), '%Y-%m-01')
+	    FROM YearMonth
+	    WHERE ym &gt; DATE_FORMAT(DATE_SUB(REPLACE(#{srch3}, '-',''), INTERVAL 5 YEAR), '%Y-%m-01')
+	)
+	SELECT
+	DATE_FORMAT(a.ym, '%Y%m') AS DATE,
+	b.mark,
+	b.markCont,
+	ifnull(SUM,0) AS SUM,
+	ifnull(cnt,0) AS CNT
+	FROM YearMonth a
+	CROSS JOIN
+	(
+		SELECT
+			'일반수출(11)' AS markCont,
+			'11' AS mark
+		UNION
+		SELECT
+			'위탁가공을 위한 수출(29)' AS markCont,
+			'29' AS mark
+		UNION
+		SELECT
+			'수리 후 재수입 수출(83)' AS markCont,
+			'83' AS mark
+		UNION
+		SELECT
+			'기타 수출승인 면제물품(94)' AS markCont,
+			'94' AS mark
+		UNION
+		SELECT
+			'기타 (보세공장, 기타 재수출 등)' AS markCont,
+			'9999' AS mark
+	) B
+	LEFT OUTER JOIN
+	(
+		SELECT
+		LEFT(exp_lis_day, 6) ym, 
+		CASE WHEN Exc_Divi NOT IN('11', '29', '83', '94') THEN '9999' ELSE Exc_Divi END AS Exc_Divi,
+		SUM(Tot_Rpt_Krw) AS SUM,
+		COUNT(Exc_Divi) AS cnt
+		FROM
+		CUSDEC830A1 a
+		WHERE 1=1
+		AND a.Rpt_Seq = '00'
+		<if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			AND a.Exp_Sdno = #{corpNo}
+		</if>		
+		GROUP BY LEFT(exp_lis_day, 6), CASE WHEN Exc_Divi NOT IN('11', '29', '83', '94') THEN '9999' ELSE Exc_Divi END
+	) C
+	ON CONVERT(DATE_FORMAT(a.ym, '%Y%m'), VARCHAR(6)) = CONVERT(c.ym, VARCHAR(6)) AND b.mark = c.Exc_Divi
+	ORDER BY 1, 2
+	</select>
+		
+	<select id="selectAnalysis3List" parameterType="searchVO" resultType="egovMap">
+		SELECT A.supFirm, <!-- 해외거래처 -->
+			   A.cnt1, <!-- 일반수입 건 -->
+			   A.sum1, <!-- 일반수입 합계 -->
+			   A.cnt2, <!-- 기타수인 건 -->
+			   A.sum2, <!-- 기타수입 합계 -->
+			   A.cnt3, <!-- 전체 건수 -->
+			   A.sum3 <!-- 전체 합계 -->
+		FROM
+			(SELECT Sup_Firm AS supFirm, <!-- 해외거래처 -->
+				 	FORMAT(SUM((CASE WHEN Exc_Divi_Mark = '11' THEN 1 ELSE 0 END)), 0) AS cnt1, <!-- 일반수입 건 -->
+			 	 	FORMAT(SUM((CASE WHEN Exc_Divi_Mark = '11' THEN Tot_Tax_Krw ELSE 0 END)), 0) AS sum1, <!-- 일반수입 합계 -->
+				 	FORMAT(SUM((CASE WHEN Exc_Divi_Mark &lt;&gt; '11' THEN 1 ELSE 0 END)), 0) AS cnt2, <!-- 기타수인 건 -->
+				 	FORMAT(SUM((CASE WHEN Exc_Divi_Mark &lt;&gt; '11' THEN Tot_Tax_Krw ELSE 0 END)), 0) AS sum2, <!-- 기타수입 합계 -->
+				 	FORMAT(COUNT(Exc_Divi_Mark), 0) AS cnt3, <!-- 전체 건수 -->
+				 	FORMAT(SUM(Tot_Tax_Krw), 0) AS sum3 <!-- 전체 합계 -->
+			 FROM CUSDEC929A1
+			 WHERE Rpt_Seq = '00'
+			 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+				 AND Nab_SdNo = #{corpNo}
+			 </if>
+			 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			 	 AND Lis_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			 </if>
+			 GROUP BY Sup_Firm) A
+		ORDER BY LENGTH(A.sum3) DESC, A.sum3 DESC
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+	
+	<select id="selectAnalysis3ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(B.Sup_Firm)
+		FROM
+			(SELECT A.Sup_Firm
+			 FROM CUSDEC929A1 A
+			 WHERE Rpt_Seq = '00'
+			 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	AND A.Nab_SdNo = #{corpNo}
+			 </if>
+			 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			 	AND A.Lis_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			 </if>
+			 GROUP BY A.Sup_Firm
+			) B
+	</select>
+	
+	<select id="selectAnalysis4List" parameterType="searchVO" resultType="egovMap">
+		SELECT A.buyFirm, <!-- 해외거래처 -->
+			   A.cnt1, <!-- 일반수출 건 -->
+			   A.sum1, <!-- 일반수출 합계 -->
+			   A.cnt2, <!--  기타수출 건 -->
+			   A.sum2, <!-- 기타수출 합계 -->
+			   A.cnt3, <!-- 전체 건수 -->
+			   A.sum3 <!-- 전체 합계 -->
+		FROM
+			(SELECT Buy_Firm AS buyFirm, <!-- 해외거래처 -->
+			 		FORMAT(SUM((CASE WHEN Exc_Divi = '11' THEN 1 ELSE 0 END)), 0) AS cnt1, <!-- 일반수출 건 -->
+		 	 		FORMAT(SUM((CASE WHEN Exc_Divi = '11' THEN Tot_Rpt_Krw ELSE 0 END)), 0) AS sum1, <!-- 일반수출 합계 -->
+			 		FORMAT(SUM((CASE WHEN Exc_Divi &lt;&gt; '11' THEN 1 ELSE 0 END)), 0) AS cnt2, <!--  기타수출 건 -->
+			 		FORMAT(SUM((CASE WHEN Exc_Divi &lt;&gt; '11' THEN Tot_Rpt_Krw ELSE 0 END)), 0) AS sum2, <!-- 기타수출 합계 -->
+			 		FORMAT(COUNT(Exc_Divi), 0) AS cnt3, <!-- 전체 건수 -->
+			 		FORMAT(SUM(Tot_Rpt_Krw), 0) AS sum3 <!-- 전체 합계 -->
+			 FROM CUSDEC830A1
+			 WHERE Rpt_Seq = '00'
+			 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+				 AND Exp_Sdno = #{corpNo}
+			 </if>
+			 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+				AND Exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			 </if>
+			 GROUP BY Buy_Firm) A
+		ORDER BY LENGTH(A.sum3) DESC, A.sum3 DESC
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+	
+	<select id="selectAnalysis4ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(B.Buy_Firm)
+		FROM
+			(SELECT A.Buy_Firm
+			 FROM CUSDEC830A1 A
+			 WHERE A.Rpt_Seq = '00'
+			 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	AND A.Exp_Sdno = #{corpNo}
+			 </if>
+			 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			 	AND A.Exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			 </if>
+			 GROUP BY A.Buy_Firm
+			) B
+	</select>
+	
+	<select id="selectAnalysis5List" parameterType="searchVO" resultType="egovMap">
+		SELECT A.fodMark, <!-- 적출국 -->
+		       A.title, <!-- 해외거래처 -->
+		       A.traMet, <!-- 운송형태 -->
+		       CONCAT(B.Cont, '(', A.traMet, ')') AS traMetCont, <!-- 운송형태 내용 -->
+		       A.conCod, <!-- 인도조건 -->
+		       FORMAT(A.cnt, 0) AS cnt, <!-- 신고건수 -->
+		       FORMAT(A.freKrw, 0) AS freKrw, <!-- 운입 -->
+		       FORMAT(A.totWt, 0) AS totWt, <!-- 중량 -->
+		       FORMAT(A.totTaxKrw, 0) AS totTaxKrw, <!-- 과세가격 -->
+		       FORMAT(ROUND(A.cal1, 2), 2) AS cal1, <!-- 운임 / 줄량 -->
+		       CONCAT(ROUND(A.cal2, 2), '%') AS cal2 <!-- 운임 / 과세가격  비율-->
+		FROM
+			(SELECT Fod_Mark AS fodMark,
+				    Sup_Firm AS title,
+		    		Tra_Met AS traMet,
+				    Con_Cod AS conCod,
+				    COUNT(Rpt_No) AS cnt,
+				    SUM(Fre_Krw) AS freKrw,
+				    SUM(Tot_Wt) AS totWt,
+				    SUM(Tot_Tax_Krw) AS totTaxKrw,
+				    (SUM(Fre_Krw) / SUM(Tot_Wt)) AS cal1,
+				    (SUM(Fre_Krw) / SUM(Tot_Tax_Krw)) * 100 AS cal2
+		     FROM CUSDEC929A1
+		     WHERE Rpt_Seq = '00'
+		     AND SUBSTRING(Con_Cod, 1,1) NOT IN('C', 'D')
+		     <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			  	AND Nab_SdNo = #{corpNo}
+			 </if>
+			 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			  	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			 </if>
+		     GROUP BY Fod_Mark, Sup_Firm, Tra_Met, Con_Cod
+		    ) A
+		LEFT OUTER JOIN (SELECT * FROM CDSTD WHERE divi LIKE '운송수단') B
+			ON A.traMet = B.Code
+		ORDER BY A.cnt DESC
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+	
+	<select id="selectAnalysis5ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		FROM
+			(SELECT Fod_Mark AS fodMark,
+				    Sup_Firm AS title,
+		    		Tra_Met AS traMet,
+				    Con_Cod AS conCod,
+				    COUNT(Rpt_No) AS cnt,
+				    SUM(Fre_Krw) AS freKrw,
+				    SUM(Tot_Wt) AS totWt,
+				    SUM(Tot_Tax_Krw) AS totTaxKrw,
+				    (SUM(Fre_Krw) / SUM(Tot_Wt)) AS cal1,
+				    (SUM(Fre_Krw) / SUM(Tot_Tax_Krw)) * 100 AS cal2
+		    FROM CUSDEC929A1
+		    WHERE Rpt_Seq = '00'
+		    AND SUBSTRING(Con_Cod, 1,1) NOT IN('C', 'D')
+		    <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	AND Nab_SdNo = #{corpNo}
+			</if>
+			<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			</if>
+		    GROUP BY Fod_Mark, Sup_Firm, Tra_Met, Con_Cod
+		    ) A
+	</select>
+	
+	<select id="selectAnalysis5SubList" parameterType="searchVO" resultType="egovMap">
+		SELECT CONCAT(SUBSTRING(A.title, 1, 5), '-' , SUBSTRING(A.title, 6, 2), '-' , SUBSTRING(A.title, 8)) AS title, <!-- 신고번호 -->
+		       CONCAT(B.Cont, '(', A.traMet, ')') AS traMetCont, <!-- 운송형태 내용 -->
+		       A.conCod, <!-- 인도조건 -->
+		       '' AS cnt,
+		       FORMAT(A.freKrw, 0) AS freKrw, <!-- 운임 -->
+		       FORMAT(A.totWt, 0) AS totWt, <!-- 중량 -->
+		       FORMAT(A.totTaxKrw, 0) AS totTaxKrw, <!-- 과세가격 -->
+		       FORMAT(ROUND(A.cal1, 2), 2) AS cal1, <!-- 움임 / 줄량 -->
+		       CONCAT(ROUND(A.cal2, 2), '%') AS cal2 <!-- 운임 / 과세가격 비율 -->
+		FROM
+			(SELECT Fod_Mark AS fodMark,
+				    Rpt_No AS title,
+		    		Tra_Met AS traMet,
+				    Con_Cod AS conCod,
+				    Fre_Krw AS freKrw,
+				    Tot_Wt AS totWt,
+				    Tot_Tax_Krw AS totTaxKrw,
+				    (Fre_Krw / Tot_Wt) AS cal1,
+				    (Fre_Krw / Tot_Tax_Krw) * 100 AS cal2
+		    FROM CUSDEC929A1
+		    WHERE Rpt_Seq = '00'
+		    AND SUBSTRING(Con_Cod, 1,1) NOT IN('C', 'D')
+		    <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	AND Nab_SdNo = #{corpNo}
+			</if>
+			<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			 	AND Lis_Day BETWEEN REPLACE(#{srch1}, '-','') AND REPLACE(#{srch2}, '-','')
+			</if>
+		    AND Fod_Mark = #{srch3}
+		    AND Sup_Firm = #{srch4}
+		    AND Tra_Met = #{srch5}
+		    AND Con_Cod = #{srch6}
+		    ) A
+		LEFT OUTER JOIN (SELECT * FROM cdstd WHERE divi LIKE '운송수단') B
+		ON A.traMet = B.Code
+	</select>
+	
+	<select id="selectAnalysis6List" parameterType="searchVO" resultType="egovMap">
+		SELECT A.fodMark, <!-- 적출국 -->
+		       A.title, <!-- 해외거래처 -->
+		       A.traMet, <!-- 운송형태 -->
+		       CONCAT(B.Cont, '(', A.traMet, ')') AS traMetCont, <!-- 운송형태 내용 -->
+		       A.conCod, <!-- 인도조건 -->
+		       FORMAT(A.cnt, 0) AS cnt, <!-- 갯수 -->
+		       FORMAT(A.insuKrw, 0) AS insuKrw, <!-- 보험료 -->
+		       FORMAT(A.totWt, 0) AS  totWt, <!-- 총중량 -->
+		       FORMAT(A.totTaxKrw, 0) AS  totTaxKrw, <!-- 과세가격 -->
+		       FORMAT(ROUND(A.cal1, 2), 2) AS cal1, <!-- 보험료 / 줄량 -->
+		       CONCAT(ROUND(A.cal2, 2), '%') AS cal2 <!-- 보험료/ 과세가격 비율 -->
+		FROM
+			(SELECT Fod_Mark AS fodMark,
+				    Sup_Firm AS title,
+		    		Tra_Met AS traMet,
+				    Con_Cod AS conCod,
+				    COUNT(Rpt_No) AS cnt,
+				    SUM(Insu_Krw) AS insuKrw,
+				    SUM(Tot_Wt) AS totWt,
+				    SUM(Tot_Tax_Krw) AS totTaxKrw,
+				    (SUM(Insu_Krw) / SUM(Tot_Wt)) AS cal1,
+				    (SUM(Insu_Krw) / SUM(Tot_Tax_Krw)) * 100 AS cal2
+		    FROM CUSDEC929A1
+		    WHERE Rpt_Seq = '00'
+		    AND SUBSTRING(Con_Cod, 1,1) NOT IN('D')
+		    AND Con_Cod NOT IN ('CIF', 'CIP')
+		    <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	AND Nab_SdNo = #{corpNo}
+			</if>
+			<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			</if>
+		    GROUP BY Fod_Mark, Sup_Firm, Tra_Met, Con_Cod
+		    ) A
+		LEFT OUTER JOIN (SELECT * FROM CDSTD WHERE divi LIKE '운송수단') B
+			ON A.traMet = B.Code
+		ORDER BY A.cnt DESC
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+
+	<select id="selectAnalysis6ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		FROM
+			(SELECT Fod_Mark AS fodMark,
+				    Sup_Firm AS title,
+		    		Tra_Met AS traMet,
+				    Con_Cod AS conCod,
+				    COUNT(Rpt_No) AS cnt,
+				    SUM(Insu_Krw) AS insuKrw,
+				    SUM(Tot_Wt) AS totWt,
+				    SUM(Tot_Tax_Krw) AS totTaxKrw,
+				    (SUM(Insu_Krw) / SUM(Tot_Wt)) AS cal1,
+				    (SUM(Insu_Krw) / SUM(Tot_Tax_Krw)) * 100 AS cal2
+		    FROM CUSDEC929A1
+		    WHERE Rpt_Seq = '00'
+		    AND SUBSTRING(Con_Cod, 1,1) NOT IN('D')
+		    AND Con_Cod NOT IN ('CIF', 'CIP')
+		    <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	AND Nab_SdNo = #{corpNo}
+			</if>
+			<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			</if>
+		    GROUP BY Fod_Mark, Sup_Firm, Tra_Met, Con_Cod
+		    ) A
+	</select>
+
+	<select id="selectAnalysis6SubList" parameterType="searchVO" resultType="egovMap">
+		SELECT CONCAT(SUBSTRING(A.title, 1, 5), '-' , SUBSTRING(A.title, 6, 2), '-' , SUBSTRING(A.title, 8)) AS title, <!-- 신고번호 -->
+		       CONCAT(B.Cont, '(', A.traMet, ')') AS traMetCont, <!-- 운송형태 내용 -->
+		       A.conCod, <!-- 인도조건 -->
+		       '' AS cnt,
+		       FORMAT(A.insuKrw, 0) AS insuKrw, <!-- 보험료 -->
+		       FORMAT(A.totWt, 0) AS  totWt, <!-- 총중량 -->
+		       FORMAT(A.totTaxKrw, 0) AS  totTaxKrw, <!-- 과세가격 -->
+		       FORMAT(ROUND(A.cal1, 2), 2) AS cal1, <!-- 보험료 / 줄량 -->
+		       CONCAT(ROUND(A.cal2, 2), '%') AS cal2 <!-- 보험료/ 과세가격 비율 -->
+		FROM
+			(SELECT Fod_Mark AS fodMark,
+				    Rpt_No AS title,
+		    		Tra_Met AS traMet,
+				    Con_Cod AS conCod,
+				    Insu_Krw AS insuKrw,
+				    Tot_Wt AS totWt,
+				    Tot_Tax_Krw AS totTaxKrw,
+				    (Insu_Krw / Tot_Wt) AS cal1,
+				    (Insu_Krw / Tot_Tax_Krw) * 100 AS cal2
+		    FROM CUSDEC929A1
+		    WHERE Rpt_Seq = '00'
+		    AND SUBSTRING(Con_Cod, 1,1) NOT IN('D')
+		    AND Con_Cod NOT IN ('CIF', 'CIP')
+		    <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	AND Nab_SdNo = #{corpNo}
+			</if>
+			<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			 	AND Lis_Day BETWEEN REPLACE(#{srch1}, '-','') AND REPLACE(#{srch2}, '-','')
+			</if>
+		    AND Fod_Mark = #{srch3}
+		    AND Sup_Firm = #{srch4}
+		    AND Tra_Met = #{srch5}
+		    AND Con_Cod = #{srch6}
+		    ) A
+		LEFT OUTER JOIN (SELECT * FROM cdstd WHERE divi LIKE '운송수단') B
+		ON A.traMet = B.Code
+	</select>
+	
+	<select id="selectAnalysis7List" parameterType="searchVO" resultType="egovMap">
+		SELECT SUBSTRING_INDEX(A.USER_MEMO, '\n', 1) AS plant,
+			   CONCAT(SUBSTRING(A.Rpt_No, 1, 5), '-' , SUBSTRING(A.Rpt_No, 6, 2), '-' , SUBSTRING(A.Rpt_No, 8)) AS rptNo,
+			   B.invoice AS invoice,
+			   A.Exp_Lis_Day AS expLisDay,
+			   FORMAT(A.Tot_Rpt_Krw, 0) AS totRptKrw,
+			   A.Exc_Divi AS excDivi,
+			   C.CMMN_NM AS excDiviCont
+		FROM CUSDEC830A1 A
+		INNER JOIN (SELECT SNA1, Rpt_No, BRANCH, CUS_PRG, GROUP_CONCAT(mg_code SEPARATOR ', ') AS invoice
+					FROM CUSDEC830B1
+					GROUP BY SNA1, Rpt_No, BRANCH, CUS_PRG, mg_code) B			            
+			ON A.SN = B.SNA1 
+			AND A.Rpt_No = B.Rpt_No
+			AND A.BRANCH = B.BRANCH
+			AND A.CUS_PRG = B.CUS_PRG
+		INNER JOIN (SELECT CMMN_CD, CMMN_NM FROM CMMN_CD WHERE GRP_CD = 'FOREIGNEX') C
+			ON A.Exc_Divi = C.CMMN_CD
+		WHERE A.Rpt_Seq = '00'
+		<if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+		 	AND A.Exp_Sdno = #{corpNo}
+		</if>
+		<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			AND A.Exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		</if>
+		AND A.Exc_Divi IN('33', '39', '100')
+		ORDER BY A.Exp_Lis_Day DESC
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}		
+	</select>
+	
+	<select id="selectAnalysis7ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		FROM CUSDEC830A1 A
+		INNER JOIN (SELECT SNA1, Rpt_No, BRANCH, CUS_PRG, GROUP_CONCAT(mg_code SEPARATOR ', ') AS invoice
+					FROM CUSDEC830B1
+					GROUP BY SNA1, Rpt_No, BRANCH, CUS_PRG, mg_code) B			            
+			ON A.SN = B.SNA1 
+			AND A.Rpt_No = B.Rpt_No
+			AND A.BRANCH = B.BRANCH
+			AND A.CUS_PRG = B.CUS_PRG
+		INNER JOIN (SELECT CMMN_CD, CMMN_NM FROM CMMN_CD WHERE GRP_CD = 'FOREIGNEX') C
+			ON A.Exc_Divi = C.CMMN_CD
+		WHERE A.Rpt_Seq = '00'
+		<if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			AND A.Exp_Sdno = #{corpNo}
+		</if>
+		<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			AND A.Exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		</if>
+		AND A.Exc_Divi IN('33', '39', '100')	
+	</select>
+
+	<select id="selectCost1List" parameterType="searchVO" resultType="egovMap">
+		SELECT E.plant, <!-- 구분 -->
+			   E.po, <!-- PO -->
+			   E.blNo, <!-- BL -->
+			   CONCAT(SUBSTRING(E.rptNo, 1, 5), '-' , SUBSTRING(E.rptNo, 6, 2), '-' , SUBSTRING(E.rptNo, 8)) AS rptNo, <!-- 신고번호-->
+			   E.ranNo, <!-- 란 -->
+			   E.sil, <!-- 규격 -->
+			   (CASE WHEN E.lisDay = NULL OR E.lisDay = ''
+		       		 THEN '' ELSE DATE_FORMAT(STR_TO_DATE(E.lisDay, '%Y%m%d'),'%Y-%m-%d')
+		       		 END) AS lisDay, <!-- 수리일자 -->
+			   E.rgCode, <!-- 자재코드 -->
+			   FORMAT(E.upi, 0) AS upi, <!-- 신고단가 -->
+			   E.ut, <!-- 신고단위 -->
+			   E.conKi, <!-- 결제방법 -->
+			   E.supFirm, <!-- 해외거래처 -->
+			   E.conCur, <!-- 결제통화 -->
+			   FORMAT(ROUND(E.upiWon, 2), 2) AS upiWon, <!-- 원화단가 -->
+			   FORMAT(ROUND(E.max, 2), 2) AS max, <!-- 최고단가 -->
+			   FORMAT(ROUND(E.min, 2), 2) AS min, <!-- 최저단가 -->
+			   FORMAT(ROUND(E.avg, 2), 2) AS avg, <!-- 평균단가 -->
+			   FORMAT(ROUND(E.maxDiff, 2), 2) AS maxDiff, <!-- 단가차이(최고) -->
+			   FORMAT(ROUND(E.minDiff, 2), 2) AS minDiff, <!-- 단가차이(최저) -->
+			   FORMAT(ROUND(E.avgDiff, 2), 2) AS avgDiff, <!-- 단가차이 (평균)-->
+			   CONCAT(ROUND(E.maxPer, 2), '%') AS maxPer, <!-- 단가차이 비율(최고) -->
+			   CONCAT(ROUND(E.minPer, 2), '%') AS minPer, <!-- 단가차이 비율(최저) -->
+			   CONCAT(ROUND(E.avgPer, 2), '%') AS avgPer, <!-- 단가차이 비율(평균) -->
+			   ROUND(E.maxPer2, 2) AS maxPer2, <!-- 단가차이 비율(최고) 죄저 값 -->
+			   ROUND(E.minPer2, 2) AS minPer2, <!-- 단가차이 비율(최저) 최고 값-->
+			   ROUND(E.avgPer2, 2) AS avgPer2 <!--  -->
+		FROM
+			(SELECT D.SN AS sn,
+					D.plant AS plant,
+			        D.po AS po,
+			        D.BlNo AS blNo,
+			        D.Rpt_No AS rptNo,
+			        D.Ran_No AS ranNo,
+			        D.Sil AS sil,
+			        D.Lis_Day AS lisDay,
+			        D.Rg_Code AS rgCode,
+			        D.Upi AS upi,
+			        D.Ut AS ut,
+			        D.Con_ki AS conKi,
+			        D.Sup_Firm AS supFirm,
+			        D.Con_Cur AS conCur,
+			        D.Con_Rate AS conRate,
+			        D.upiWon AS upiWon,
+   		        	D.max AS max,
+   		        	D.min AS min,
+   		        	D.avg AS avg,
+   		        	(D.upiWon - D.max) AS maxDiff,
+   		        	(D.upiWon - D.min) AS minDiff,
+   		        	(D.upiWon - D.avg) AS avgDiff,
+			        (D.upiWon / D.max) * 100 AS maxPer,
+			        (D.upiWon / D.min) * 100 AS minPer,
+	              	(D.upiWon / D.avg) * 100 AS avgPer,
+	              	MIN((D.upiWon / D.max) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS maxPer2,
+        	        MAX((D.upiWon / D.min) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS minPer2,
+	              	AVG((D.upiWon / D.avg) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS avgPer2
+			FROM
+				(SELECT A.SN,
+						A.plant,
+				        A.po,
+				        A.BlNo,
+				        A.Rpt_No,
+				        B.Ran_No,
+				        C.Sil,
+				        A.Lis_Day,
+				        C.Rg_Code,
+				        C.Upi,
+				        C.Ut,
+				        A.Con_Ki,
+				        A.Sup_Firm,
+				        A.Con_Cur,
+				        A.Con_Rate,
+				        (A.Con_Rate * C.Upi) upiWon,
+				        MAX(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS max,
+ 				        MIN(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS min,
+   				     	AVG(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS avg
+				  FROM
+				 	(SELECT SN,
+				 			Rpt_No,
+				 			BRANCH,
+				 			Nab_SdNo,
+				 			CUS_PRG,
+				 			SUBSTRING_INDEX(USER_MEMO, '\n', 1) AS plant,
+				 			CASE 
+				 				WHEN STR_CNT(USER_MEMO, '\n') >= 1 
+				 				THEN SUBSTRING_INDEX(SUBSTRING_INDEX(USER_MEMO, '\n', 2), '\n', -1)
+				 				ELSE '' 
+				 				END AS po,
+				 			BlNo,
+				 			Sup_Firm,
+				 			Cus,
+				 			Lis_Day,
+				 			Con_Ki,
+				 			Con_Cur,
+				 			Con_Rate
+				 	 FROM CUSDEC929A1
+				 	 WHERE Rpt_Seq = '00'
+				 	 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+					 	AND Nab_SdNo = #{corpNo}
+					 </if>
+					 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+					 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+					 </if>
+				 	) A
+				 	INNER JOIN CUSDEC929B1 B
+				 		ON A.SN = B.SNA1 
+				 		AND A.Rpt_No = B.Rpt_No
+				 		AND A.BRANCH = B.BRANCH
+				 		AND A.CUS_PRG = B.CUS_PRG
+				 	INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+										Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+				 		ON A.SN = C.SNA1
+				 		AND B.SN = C.SNB1
+				 		AND A.Rpt_No = C.Rpt_No
+				 		AND A.BRANCH = C.BRANCH
+				 		AND A.CUS_PRG = C.CUS_PRG
+					WHERE 1 = 1
+					<if test="srch5 != null and srch5 != ''">
+				 		AND Rg_Code = #{srch5}
+			 		</if>
+				) D
+			) E
+		WHERE (E.maxPer2 &lt;= (100 - #{srch4}) OR E.minPer2 &gt;= (100 + #{srch4}))
+		ORDER BY E.rgCode DESC, E.lisDay DESC, E.ranNo ASC, E.sil ASC
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+	<select id="selectCost1ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		FROM
+			(SELECT D.SN AS sn,
+			        D.BlNo AS blNo,
+			        D.Rpt_No AS rptNo,
+			        D.Ran_No AS ranNo,
+			        D.Sil AS sil,
+			        D.Lis_Day AS lisDay,
+			        D.Rg_Code AS rgCode,
+			        D.Upi AS upi,
+			        D.Ut AS ut,
+			        D.Con_ki AS conKi,
+			        D.Sup_Firm AS supFirm,
+			        D.Con_Cur AS conCur,
+			        D.Con_Rate AS conRate,
+			        D.upiWon AS upiWon,
+   		        	(D.upiWon - D.avg) AS diff,
+   		        	D.max AS max,
+   		        	D.min AS min,
+   		        	D.avg AS avg,
+			        (D.upiWon / D.max) * 100 AS maxPer,
+			        (D.upiWon / D.min) * 100 AS minPer,
+	              	(D.upiWon / D.avg) * 100 AS avgPer,
+	              	MIN((D.upiWon / D.max) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS maxPer2,
+        	        MAX((D.upiWon / D.min) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS minPer2,
+	              	AVG((D.upiWon / D.avg) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS avgPer2
+			FROM 
+				(SELECT A.SN,
+				        A.BlNo,
+				        A.Rpt_No,
+				        B.Ran_No,
+				        C.Sil,
+				        A.Lis_Day,
+				        C.Rg_Code,
+				        C.Upi,
+				        C.Ut,
+				        A.Con_Ki,
+				        A.Sup_Firm,
+				        A.Con_Cur,
+				        A.Con_Rate,
+				        (A.Con_Rate * C.Upi) upiWon,
+				        MAX(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS max,
+ 				        MIN(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS min,
+   				     	AVG(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS avg
+				  FROM
+				 	(SELECT SN,
+				 			Rpt_No,
+				 			BRANCH,
+				 			Nab_SdNo,
+				 			CUS_PRG,
+				 			BlNo,
+				 			Sup_Firm,
+				 			Cus,
+				 			Lis_Day,
+				 			Con_Ki,
+				 			Con_Cur,
+				 			Con_Rate
+				 	 FROM CUSDEC929A1
+				 	 WHERE Rpt_Seq = '00'
+				 	 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+					 	AND Nab_SdNo = #{corpNo}
+					 </if>
+					 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+					 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+					 </if>
+				 	) A
+				 	INNER JOIN CUSDEC929B1 B
+				 		ON A.SN = B.SNA1 
+				 		AND A.Rpt_No = B.Rpt_No
+				 		AND A.BRANCH = B.BRANCH
+				 		AND A.CUS_PRG = B.CUS_PRG
+				 	INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+										Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+				 		ON A.SN = C.SNA1
+				 		AND B.SN = C.SNB1
+				 		AND A.Rpt_No = C.Rpt_No
+				 		AND A.BRANCH = C.BRANCH
+				 		AND A.CUS_PRG = C.CUS_PRG
+					WHERE 1 = 1				 		
+					<if test="srch5 != null and srch5 != ''">
+				 		AND Rg_Code = #{srch5}
+			 		</if>				 		
+				) D
+			) E
+		WHERE (E.maxPer2 &lt;= (100 - #{srch4}) OR E.minPer2 &gt;= (100 + #{srch4}))
+	</select>
+	
+	<select id="selectCost1Chart" parameterType="searchVO" resultType="egovMap">
+		SELECT F.Lis_day AS lisDay,
+			   F.Rg_Code AS rgCode,
+			   F.rptNo,
+			   FORMAT(F.upiWon, 2) AS upiWon,
+			   F.RANK,
+			   F.max
+		FROM
+			(SELECT E.Lis_day,
+			        E.Rg_Code,
+			        E.rptNo,
+			        E.upiWon,
+			        E.cnt,
+			        DENSE_RANK() OVER(ORDER BY E.cnt DESC, E.RG_CODE) AS RANK,
+			        MAX(E.upiWon) OVER(PARTITION BY E.Rg_Code, E.Lis_day ORDER BY E.Rg_Code, E.Lis_day) AS max
+			  FROM
+			  	  (SELECT B.Lis_day,
+					      D.Rg_Code,
+					      CONCAT(SUBSTRING(B.Rpt_No, 1, 5), '-' , SUBSTRING(B.Rpt_No, 6, 2), '-' , SUBSTRING(B.Rpt_No, 8)) AS rptNo,
+			              (D.upi * B.Con_Rate) AS upiWon,
+			              COUNT(D.Rg_Code) OVER (PARTITION BY D.Rg_Code ORDER BY D.Rg_Code DESC) AS cnt
+				 	FROM
+				 		(SELECT Lis_day, Con_Rate, SN, Rpt_No, BRANCH, CUS_PRG
+						 FROM CUSDEC929A1
+						 WHERE Rpt_Seq = '00'	 
+						 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+					 	 	AND Nab_SdNo = #{corpNo}
+						 </if>
+					 	<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+					 		AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+					 	</if>
+				  		) B
+			  		INNER JOIN (SELECT SNA1, Rpt_No, BRANCH, CUS_PRG, SN FROM cusdec929b1) C
+			  			ON B.SN = C.SNA1 
+						AND B.Rpt_No = C.Rpt_No
+						AND B.BRANCH = C.BRANCH
+						AND B.CUS_PRG = C.CUS_PRG
+			  		INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+									   Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) D
+						ON B.SN = D.SNA1
+						AND C.SN = D.SNB1
+						AND B.Rpt_No = D.Rpt_No
+						AND B.BRANCH = D.BRANCH
+						AND B.CUS_PRG = D.CUS_PRG
+					WHERE 1 = 1				 		
+					<if test="srch5 != null and srch5 != ''">
+				 		AND Rg_Code = #{srch5}
+			 		</if>						
+				) E
+			) F
+		WHERE F.RANK &lt; 8
+		ORDER BY F.RANK, F.Rg_Code, F.Lis_Day
+	</select>
+	
+	<select id="selectCost2List" parameterType="searchVO" resultType="egovMap">
+		<!-- 1018672913((주)베리안메디컬시스템즈코리), 2022-12-01, 2023-01-31, 50, 0 -->
+		SELECT E.plant, <!-- 구분 -->
+			   E.po, <!-- PO -->
+			   E.blNo, <!-- BL -->
+			   CONCAT(SUBSTRING(E.rptNo, 1, 5), '-' , SUBSTRING(E.rptNo, 6, 2), '-' , SUBSTRING(E.rptNo, 8)) AS rptNo, <!-- 신고번호-->
+			   E.ranNo, <!-- 란 -->
+			   E.sil, <!-- 규격 -->
+			   (CASE WHEN E.lisDay = NULL OR E.lisDay = ''
+		       		 THEN '' ELSE DATE_FORMAT(STR_TO_DATE(E.lisDay, '%Y%m%d'),'%Y-%m-%d')
+		       		 END) AS lisDay, <!-- 수리일자 -->
+			   E.rgCode, <!-- 자재코드 -->
+			   FORMAT(E.upi, 0) AS upi, <!-- 신고단가 -->
+			   E.ut, <!-- 신고단위 -->
+			   E.conKi, <!-- 결제방법 -->
+			   E.gnCnt, <!-- 무상건 갯수 -->
+			   E.supFirm, <!-- 해외거래처 -->
+			   E.conCur, <!-- 결제통화 -->
+			   FORMAT(ROUND(E.upiWon, 2), 2) AS upiWon, <!-- 원화단가 -->
+			   FORMAT(ROUND(E.max, 2), 2) AS max, <!-- 최고단가 -->
+			   FORMAT(ROUND(E.min, 2), 2) AS min, <!-- 최저단가 -->
+			   FORMAT(ROUND(E.avg, 2), 2) AS avg, <!-- 평균단가 -->
+			   FORMAT(ROUND(E.maxDiff, 2), 2) AS maxDiff, <!-- 단가차이(최고) -->
+			   FORMAT(ROUND(E.minDiff, 2), 2) AS minDiff, <!-- 단가차이(최저) -->
+			   FORMAT(ROUND(E.avgDiff, 2), 2) AS avgDiff, <!-- 단가차이 (평균)-->
+			   CONCAT(ROUND(E.maxPer, 2), '%') AS maxPer, <!-- 단가차이 비율(최고) -->
+			   CONCAT(ROUND(E.minPer, 2), '%') AS minPer, <!-- 단가차이 비율(최저) -->
+			   CONCAT(ROUND(E.avgPer, 2), '%') AS avgPer, <!-- 단가차이 비율(평균) -->
+			   ROUND(E.maxPer2, 2) AS maxPer2, <!-- 단가차이 비율(최고) 죄저 값 -->
+			   ROUND(E.minPer2, 2) AS minPer2, <!-- 단가차이 비율(최저) 최고 값-->
+			   ROUND(E.avgPer2, 2) AS avgPer2 <!--  -->
+		FROM
+			(SELECT D.SN AS sn,
+					D.plant AS plant,
+			        D.po AS po,
+			        D.BlNo AS blNo,
+			        D.Rpt_No AS rptNo,
+			        D.Ran_No AS ranNo,
+			        D.Sil AS sil,
+			        D.Lis_Day AS lisDay,
+			        D.Rg_Code AS rgCode,
+			        D.Upi AS upi,
+			        D.Ut AS ut,
+			        D.Con_ki AS conKi,
+			        D.Sup_Firm AS supFirm,
+			        D.Con_Cur AS conCur,
+			        D.Con_Rate AS conRate,
+			        D.upiWon AS upiWon,
+   		        	D.max AS max,
+   		        	D.min AS min,
+   		        	D.avg AS avg,
+					(D.upiWon - D.max) AS maxDiff,
+   		        	(D.upiWon - D.min) AS minDiff,
+   		        	(D.upiWon - D.avg) AS avgDiff,
+			        (D.upiWon / D.max) * 100 AS maxPer,
+			        (D.upiWon / D.min) * 100 AS minPer,
+	              	(D.upiWon / D.avg) * 100 AS avgPer,
+	              	MIN((D.upiWon / D.max) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS maxPer2,
+        	        MAX((D.upiWon / D.min) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS minPer2,
+	              	AVG((D.upiWon / D.avg) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS avgPer2,
+	              	COUNT(CASE WHEN D.Con_Ki = 'GN' THEN D.Con_Ki END) OVER(PARTITION BY D.Rg_Code) AS gnCnt,
+	              	COUNT(CASE WHEN D.Con_Ki &lt;&gt; 'GN' THEN D.Con_Ki END) OVER(PARTITION BY D.Rg_Code) AS etcCnt
+			FROM 
+				(SELECT A.SN,
+						A.plant,
+				        A.po,
+				        A.BlNo,
+				        A.Rpt_No,
+				        B.Ran_No,
+				        C.Sil,
+				        A.Lis_Day,
+				        C.Rg_Code,
+				        C.Upi,
+				        C.Ut,
+				        A.Con_Ki,
+				        A.Sup_Firm,
+				        A.Con_Cur,
+				        A.Con_Rate,
+				        (A.Con_Rate * C.Upi) upiWon,
+				        MAX(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS max,
+ 				        MIN(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS min,
+   				     	AVG(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS avg
+				  FROM
+				 	(SELECT SN,
+				 			Rpt_No,
+				 			BRANCH,
+				 			Nab_SdNo,
+				 			CUS_PRG,
+				 			SUBSTRING_INDEX(USER_MEMO, '\n', 1) AS plant,
+				 			CASE 
+				 				WHEN STR_CNT(USER_MEMO, '\n') >= 1 
+				 				THEN SUBSTRING_INDEX(SUBSTRING_INDEX(USER_MEMO, '\n', 2), '\n', -1)
+				 				ELSE '' 
+				 				END AS po,
+				 			BlNo,
+				 			Sup_Firm,
+				 			Cus,
+				 			Lis_Day,
+				 			Con_Ki,
+				 			Con_Cur,
+				 			Con_Rate
+				 	 FROM CUSDEC929A1
+				 	 WHERE Rpt_Seq = '00'
+				 	 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+					 	AND Nab_SdNo = #{corpNo}
+					 </if>
+					 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+					 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+					 </if>
+				 	) A
+				 	INNER JOIN CUSDEC929B1 B
+				 		ON A.SN = B.SNA1 
+				 		AND A.Rpt_No = B.Rpt_No
+				 		AND A.BRANCH = B.BRANCH
+				 		AND A.CUS_PRG = B.CUS_PRG
+				 	INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+										Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+				 		ON A.SN = C.SNA1
+				 		AND B.SN = C.SNB1
+				 		AND A.Rpt_No = C.Rpt_No
+				 		AND A.BRANCH = C.BRANCH
+				 		AND A.CUS_PRG = C.CUS_PRG
+					WHERE 1 = 1				 		
+					<if test="srch5 != null and srch5 != ''">
+				 		AND Rg_Code = #{srch5}
+			 		</if>				 		
+				) D
+			) E
+		WHERE E.gnCnt &gt;= 1
+		AND E.etcCnt  &gt;= 1
+		ORDER BY E.rgCode DESC, E.lisDay DESC, E.ranNo ASC, E.sil ASC
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+	
+	<select id="selectCost2ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		FROM
+			(SELECT D.SN AS sn,
+			        D.BlNo AS blNo,
+			        D.Rpt_No AS rptNo,
+			        D.Ran_No AS ranNo,
+			        D.Sil AS sil,
+			        D.Lis_Day AS lisDay,
+			        D.Rg_Code AS rgCode,
+			        D.Upi AS upi,
+			        D.Ut AS ut,
+			        D.Con_ki AS conKi,
+			        D.Sup_Firm AS supFirm,
+			        D.Con_Cur AS conCur,
+			        D.Con_Rate AS conRate,
+			        D.upiWon AS upiWon,
+   		        	(D.upiWon - D.avg) AS diff,
+   		        	D.max AS max,
+   		        	D.min AS min,
+   		        	D.avg AS avg,
+			        (D.upiWon / D.max) * 100 AS maxPer,
+			        (D.upiWon / D.min) * 100 AS minPer,
+	              	(D.upiWon / D.avg) * 100 AS avgPer,
+	              	MIN((D.upiWon / D.max) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS maxPer2,
+        	        MAX((D.upiWon / D.min) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS minPer2,
+	              	AVG((D.upiWon / D.avg) * 100) OVER(PARTITION BY D.Rg_Code, SUBSTRING(D.Lis_day, 1,4) ORDER BY D.Rg_Code) AS avgPer2,
+	              	COUNT(CASE WHEN D.Con_Ki = 'GN' THEN D.Con_Ki END) OVER(PARTITION BY D.Rg_Code) AS gnCnt,
+	              	COUNT(CASE WHEN D.Con_Ki &lt;&gt; 'GN' THEN D.Con_Ki END) OVER(PARTITION BY D.Rg_Code) AS etcCnt
+			FROM 
+				(SELECT A.SN,
+				        A.BlNo,
+				        A.Rpt_No,
+				        B.Ran_No,
+				        C.Sil,
+				        A.Lis_Day,
+				        C.Rg_Code,
+				        C.Upi,
+				        C.Ut,
+				        A.Con_Ki,
+				        A.Sup_Firm,
+				        A.Con_Cur,
+				        A.Con_Rate,
+				        (A.Con_Rate * C.Upi) upiWon,
+				        MAX(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS max,
+ 				        MIN(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS min,
+   				     	AVG(C.upi * A.Con_Rate) OVER(PARTITION BY C.Rg_Code, SUBSTRING(A.Lis_day, 1,4) ORDER BY C.Rg_Code) AS avg
+				  FROM
+				 	(SELECT SN,
+				 			Rpt_No,
+				 			BRANCH,
+				 			Nab_SdNo,
+				 			CUS_PRG,
+				 			BlNo,
+				 			Sup_Firm,
+				 			Cus,
+				 			Lis_Day,
+				 			Con_Ki,
+				 			Con_Cur,
+				 			Con_Rate
+				 	 FROM CUSDEC929A1
+				 	 WHERE Rpt_Seq = '00'
+				 	 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+					 	AND Nab_SdNo = #{corpNo}
+					 </if>
+					 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+					 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+					 </if>
+				 	) A
+				 	INNER JOIN CUSDEC929B1 B
+				 		ON A.SN = B.SNA1 
+				 		AND A.Rpt_No = B.Rpt_No
+				 		AND A.BRANCH = B.BRANCH
+				 		AND A.CUS_PRG = B.CUS_PRG
+				 	INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+										Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+				 		ON A.SN = C.SNA1
+				 		AND B.SN = C.SNB1
+				 		AND A.Rpt_No = C.Rpt_No
+				 		AND A.BRANCH = C.BRANCH
+				 		AND A.CUS_PRG = C.CUS_PRG
+					WHERE 1 = 1				 		
+					<if test="srch5 != null and srch5 != ''">
+				 		AND Rg_Code = #{srch5}
+			 		</if>				 		
+				) D
+			) E
+		WHERE E.gnCnt &gt;= 1
+		AND E.etcCnt  &gt;= 1
+	</select>
+	
+	<select id="selectCost2Chart" parameterType="searchVO" resultType="egovMap">
+		SELECT  D.Rg_Code AS rgCode,
+		  		IFNULL(ROUND(D.gnSum / D.gnCnt, 2), 0) AS gnAvg,
+		  		IFNULL(ROUND(D.etcSum / D.etcCnt, 2), 0) AS etcAvg
+		FROM
+			(SELECT A.Lis_Day,
+					C.Rg_Code,
+					A.Con_Ki,
+					(A.Con_Rate * C.Upi) upiWon,
+   				    IFNULL(SUM(CASE WHEN A.Con_Ki = 'GN' THEN (A.Con_Rate * C.Upi) ELSE 0 END) OVER(PARTITION BY C.Rg_Code), 0) AS gnSum,
+   				    COUNT(CASE WHEN A.Con_Ki = 'GN' THEN A.Con_Ki END) OVER(PARTITION BY C.Rg_Code) AS gnCnt,
+   				    IFNULL(SUM(CASE WHEN A.Con_Ki &lt;&gt; 'GN' THEN (A.Con_Rate * C.Upi) ELSE 0 END) OVER(PARTITION BY C.Rg_Code), 0) AS etcSum,
+   				    COUNT(CASE WHEN A.Con_Ki &lt;&gt; 'GN' THEN A.Con_Ki END) OVER(PARTITION BY C.Rg_Code) AS etcCnt   				     
+			 FROM
+			 	(SELECT SN,
+				 		Rpt_No,
+				 		BRANCH,
+				 		Nab_SdNo,
+				 		CUS_PRG,	
+				 		BlNo,
+				 		Sup_Firm,
+				 		Cus,
+				 		Lis_Day,
+				 		Con_Ki,
+				 		Con_Rate
+				  FROM CUSDEC929A1
+				  WHERE Rpt_Seq = '00'
+				  <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+				  	AND Nab_SdNo = #{corpNo}
+				  </if>
+				  <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+				  	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+				  </if>	 
+				 ) A
+			 INNER JOIN CUSDEC929B1 B
+				ON A.SN = B.SNA1 
+				AND A.Rpt_No = B.Rpt_No
+				AND A.BRANCH = B.BRANCH
+				AND A.CUS_PRG = B.CUS_PRG
+			 INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+								Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+				ON A.SN = C.SNA1
+				AND B.SN = C.SNB1
+				AND A.Rpt_No = C.Rpt_No
+				AND A.BRANCH = C.BRANCH
+				AND A.CUS_PRG = C.CUS_PRG
+			WHERE 1 = 1				 		
+			<if test="srch5 != null and srch5 != ''">
+		 		AND Rg_Code = #{srch5}
+	 		</if>				
+			) D
+		WHERE	D.gnCnt &gt;= 1	AND D.etcCnt &gt;= 1
+		GROUP BY D.Rg_Code
+		ORDER BY (D.gnSum / D.gnCnt) DESC	
+	</select>
+	
+	<select id="selectCost3List" parameterType="searchVO" resultType="egovMap">
+		SELECT G.plant AS plant, <!-- 공장코드 -->
+			   G.rg_code AS rgCode, <!-- 자재코드 -->
+			   G.Sup_Firm AS supFirm, <!-- 해외거래처 -->
+			   G.Con_Cur AS conCur, <!-- 결제통화 -->
+			   COUNT(G.rg_code) AS rptCnt, <!-- 신고건수 -->
+			   FORMAT(ROUND(SUM(G.upiWon), 2), 2) rptSum, <!-- 신고금액(원화) -->
+			   MAX(firmCnt) AS firCnt,
+			   MAX(curCnt) AS curCnt
+		FROM 
+			(SELECT A.plant,
+					A.po,
+				    C.Rg_Code,
+				    A.Sup_Firm,
+				    A.Con_Cur,
+				    (A.Con_Rate * C.Upi) upiWon,
+				    RANK() OVER(PARTITION BY C.Rg_Code, A.Sup_Firm ORDER BY C.Rg_Code, A.Sup_Firm) AS firmCnt,
+	 			    RANK() OVER(PARTITION BY C.Rg_Code, A.Con_Cur ORDER BY C.Rg_Code, A.Con_Cur) AS curCnt
+			  FROM
+				(SELECT SN,
+						Rpt_No,
+						BRANCH,
+						Nab_SdNo,
+						CUS_PRG,
+						SUBSTRING_INDEX(USER_MEMO, '\n', 1) AS plant,
+						CASE 
+							WHEN STR_CNT(USER_MEMO, '\n') >= 1 
+							THEN SUBSTRING_INDEX(SUBSTRING_INDEX(USER_MEMO, '\n', 2), '\n', -1)
+							ELSE '' 
+							END AS po,
+						BlNo,
+						Sup_Firm,
+						Cus,
+						Lis_Day,
+						Con_Ki,
+						Con_Cur,
+						Con_Rate
+			 	FROM CUSDEC929A1
+				WHERE Rpt_Seq = '00'
+				<if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+					AND Nab_SdNo = #{corpNo}
+				</if>
+				<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+					AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+				</if>
+				) A
+			INNER JOIN CUSDEC929B1 B
+				ON A.SN = B.SNA1 
+				AND A.Rpt_No = B.Rpt_No
+				AND A.BRANCH = B.BRANCH
+				AND A.CUS_PRG = B.CUS_PRG
+			INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+								Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+				ON A.SN = C.SNA1
+				AND B.SN = C.SNB1
+				AND A.Rpt_No = C.Rpt_No
+				AND A.BRANCH = C.BRANCH
+				AND A.CUS_PRG = C.CUS_PRG
+			WHERE 1 = 1				 		
+			<if test="srch5 != null and srch5 != ''">
+		 		AND Rg_Code = #{srch5}
+	 		</if>				
+		)G
+		WHERE 1=1 
+		AND G.firmCnt > 1 OR G.curCnt > 1
+		GROUP BY G.rg_code, G.Sup_Firm, G.Con_Cur
+		ORDER BY G.rg_code, G.Sup_Firm, G.Con_Cur
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+	
+	<select id="selectCost3ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		FROM
+			(SELECT G.rg_code AS rgCode,
+				    G.Sup_Firm AS supFirm,
+				    G.Con_Cur AS conCur,
+				    COUNT(G.rg_code) AS rptCnt,
+				    ROUND(SUM(G.upiWon), 2) rptSum,
+				    MAX(firmCnt) AS firCnt,
+				    MAX(curCnt) AS curCnt
+			 FROM (
+			 	SELECT C.Rg_Code,
+				 	   A.Sup_Firm,
+				 	   A.Con_Cur,
+				 	   (A.Con_Rate * C.Upi) upiWon,
+				 	   RANK() OVER(PARTITION BY C.Rg_Code, A.Sup_Firm ORDER BY C.Rg_Code, A.Sup_Firm) AS firmCnt,
+		 		 	   RANK() OVER(PARTITION BY C.Rg_Code, A.Con_Cur ORDER BY C.Rg_Code, A.Con_Cur) AS curCnt
+			 	FROM
+			 		(SELECT SN,
+			 				Rpt_No,
+			 				BRANCH,
+			 				Nab_SdNo,
+			 				CUS_PRG,
+			 				BlNo,
+			 				Sup_Firm,
+			 				Cus,
+			 				Lis_Day,
+			 				Con_Ki,
+			 				Con_Cur,
+			 				Con_Rate
+			 	 	FROM CUSDEC929A1
+			 		WHERE Rpt_Seq = '00'
+			 		<if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 			AND Nab_SdNo = #{corpNo}
+			 		</if>
+			 		<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+			 			AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			 		</if>
+			 		) A
+			 	INNER JOIN CUSDEC929B1 B
+			 		ON A.SN = B.SNA1 
+			 		AND A.Rpt_No = B.Rpt_No
+			 		AND A.BRANCH = B.BRANCH
+			 		AND A.CUS_PRG = B.CUS_PRG
+			 	INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+									Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+			 		ON A.SN = C.SNA1
+			 		AND B.SN = C.SNB1
+			 		AND A.Rpt_No = C.Rpt_No
+			 		AND A.BRANCH = C.BRANCH
+			 		AND A.CUS_PRG = C.CUS_PRG
+				WHERE 1 = 1				 		
+				<if test="srch5 != null and srch5 != ''">
+			 		AND Rg_Code = #{srch5}
+		 		</if>			 		
+			 )G
+			 WHERE 1=1 
+			 AND G.firmCnt > 1 OR G.curCnt > 1
+			 GROUP BY G.rg_code, G.Sup_Firm, G.Con_Cur
+			) CNT
+	</select>	
+	
+	<select id="selectEtc1List" parameterType="searchVO" resultType="egovMap">
+		SELECT E.rgCode, <!-- 자재코드 -->  
+			   E.hs, <!-- 세번부호 -->                                                      
+			   E.stdGName1, <!-- 거래품명 -->                                                           
+			   E.rptNo, <!-- 수입신고번호 -->
+			   E.ranNo, <!-- 란번호 -->                                                     
+			   E.sil, <!-- 규격 -->
+			   E.gsDivi, <!-- 관세구분 -->
+			   E.gsRate, <!-- 관세율 -->
+			   E.oriStMark1, <!-- 원산지 -->                                                        
+			   E.fodMark, <!-- 적출국 -->                                                   
+			   E.upi, <!-- 수입신고금액 -->   
+			   E.qty, <!-- 수량 -->                                                             
+			   E.conRate, <!-- 결제환율 -->
+			   E.conAmt, <!-- 결제금액 -->
+			   E.conCur, <!-- 결제통화 -->
+			   E.upiWon, <!-- 원화금액 -->
+			   E.gs <!-- 관세금액 -->
+			   
+		FROM 
+			(SELECT D.Rg_Code AS rgCode, <!-- 자재코드 -->  
+				    D.Hs AS hs, <!-- 세번부호 -->                                                      
+				    D.Std_GName1 AS stdGName1, <!-- 거래품명 -->                                                           
+				    CONCAT(SUBSTRING(D.Rpt_No, 1, 5), '-' , SUBSTRING(D.Rpt_No, 6, 2), '-' , SUBSTRING(D.Rpt_No, 8)) AS rptNo, <!-- 수입신고번호 -->
+				    D.Ran_No AS ranNo, <!-- 란번호 -->                                                     
+				    D.Sil AS sil, <!-- 규격 -->
+				    D.Gs_Divi AS gsDivi, <!-- 관세구분 -->
+				    CONCAT(ROUND(D.Gs_Rate, 2), '%') AS gsRate, <!-- 관세율 -->
+				    D.Ori_St_Mark1 AS oriStMark1, <!-- 원산지 -->                                                        
+				    D.Fod_Mark AS fodMark, <!-- 적출국 -->                                                   
+				    FORMAT(D.Upi, 2) AS upi, <!-- 수입신고금액 -->
+				    FORMAT(D.Qty, 0) AS qty, <!-- 수량 -->
+				    FORMAT(ROUND(D.Con_Rate, 2), 2) AS conRate, <!-- 결제환율 -->
+				    FORMAT(D.Con_Amt, 2) AS conAmt, <!-- 결제금액 -->
+				    D.Con_Cur AS conCur, <!-- 결제통화 -->
+				    FORMAT(ROUND(D.upiWon, 2), 2) AS upiWon, <!-- 원화금액 -->
+				    FORMAT(ROUND(D.upiWon * (D.Gs_Rate / 100), 2), 2) AS gs, <!-- 관세금액 -->
+				    MAX(D.hsCnt) OVER(PARTITION BY D.Rg_Code) AS hsCnt
+			 FROM 
+			 	(SELECT C.Rg_Code,
+						B.Hs,
+						B.Std_GName1,
+						A.Rpt_No,
+						B.Ran_No,
+						C.Sil,
+						B.Gs_Divi,
+						B.Gs_Rate,
+						B.Ori_St_Mark1,
+						A.Fod_Mark,
+						C.Upi,
+						C.Qty,
+						A.Con_Rate,
+						A.Con_Amt,
+						A.Con_Cur,
+						(A.Con_Rate * C.Upi * C.Qty) upiWon,
+						DENSE_RANK() OVER(PARTITION BY C.Rg_Code ORDER BY B.Hs) AS hsCnt
+			 	FROM
+			 		(SELECT SN,
+				 	 		Rpt_No,
+				 	 		BRANCH,
+				 	 		Nab_SdNo,
+				 	 		CUS_PRG,
+				 	 		BlNo,
+				 	 		Sup_Firm,
+				 	 		Cus,
+				 	 		Lis_Day,
+				 	 		Con_Ki,
+				 	 		Con_Cur,
+				 	 		Con_Rate,
+				 	 		Con_Amt,
+				 	 		Fod_Mark
+			 	  	FROM CUSDEC929A1
+			 	  	WHERE Rpt_Seq = '00'
+				  	<if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	 		AND Nab_SdNo = #{corpNo}
+			 	  	</if>
+			 	  	<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+				 	 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+				 	  </if>
+				 	 ) A
+			 	INNER JOIN CUSDEC929B1 B
+			 		ON A.SN = B.SNA1 
+			 		AND A.Rpt_No = B.Rpt_No
+			 		AND A.BRANCH = B.BRANCH
+			 		AND A.CUS_PRG = B.CUS_PRG
+			 	INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+									 Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+			 		ON A.SN = C.SNA1
+			 		AND B.SN = C.SNB1
+			 		AND A.Rpt_No = C.Rpt_No
+			 		AND A.BRANCH = C.BRANCH
+			 		AND A.CUS_PRG = C.CUS_PRG
+				)D
+			) E
+		WHERE E.hsCnt > 1
+		ORDER BY E.RgCode, E.Hs, E.RptNo, E.RanNo, E.Sil
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+	
+	<select id="selectEtc1ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		FROM 
+			(SELECT D.Rg_Code AS rgCode, <!-- 자재코드 -->  
+			   D.Hs AS hs, <!-- 세번부호 -->                                                      
+			   D.Std_GName1 AS stdGName1, <!-- 거래품명 -->                                                           
+			   CONCAT(SUBSTRING(D.Rpt_No, 1, 5), '-' , SUBSTRING(D.Rpt_No, 6, 2), '-' , SUBSTRING(D.Rpt_No, 8)) AS rptNo, <!-- 수입신고번호 -->
+			   D.Ran_No AS ranNo, <!-- 란번호 -->                                                     
+			   D.Sil AS sil, <!-- 규격 -->
+			   D.Gs_Divi AS gsDivi, <!-- 관세구분 -->
+			   CONCAT(ROUND(D.Gs_Rate, 2), '%') AS gsRate, <!-- 관세율 -->
+			   D.Ori_St_Mark1 AS oriStMark1, <!-- 원산지 -->                                                        
+			   D.Fod_Mark AS fodMark, <!-- 적출국 -->                                                   
+			   FORMAT(D.Upi, 2) AS upi, <!-- 수입신고금액 -->                                                                     
+			   ROUND(D.Con_Rate, 2) AS conRate, <!-- 결제환율 -->
+			   FORMAT(ROUND(D.upiWon, 2), 2) AS upiWon, <!-- 원화금액 -->
+			   FORMAT(ROUND(D.upiWon * (D.Gs_Rate / 100), 2), 2) AS gs, <!-- 관세금액 -->
+			   MAX(D.hsCnt) OVER(PARTITION BY D.Rg_Code) AS hsCnt
+			 FROM 
+			 	(SELECT C.Rg_Code,
+						B.Hs,
+						B.Std_GName1,
+						A.Rpt_No,
+						B.Ran_No,
+						C.Sil,
+						B.Gs_Divi,
+						B.Gs_Rate,
+						B.Ori_St_Mark1,
+						A.Fod_Mark,
+						C.Upi,
+						A.Con_Rate,
+						(A.Con_Rate * C.Upi * C.Qty) upiWon,
+						DENSE_RANK() OVER(PARTITION BY C.Rg_Code ORDER BY B.Hs) AS hsCnt
+			 	FROM
+			 		(SELECT SN,
+				 	 		Rpt_No,
+				 	 		BRANCH,
+				 	 		Nab_SdNo,
+				 	 		CUS_PRG,
+				 	 		BlNo,
+				 	 		Sup_Firm,
+				 	 		Cus,
+				 	 		Lis_Day,
+				 	 		Con_Ki,
+				 	 		Con_Cur,
+				 	 		Con_Rate,
+				 	 		Fod_Mark
+			 	  	FROM CUSDEC929A1
+			 	  	WHERE Rpt_Seq = '00'
+				  	<if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	 		AND Nab_SdNo = #{corpNo}
+			 	  	</if>
+			 	  	<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+				 	 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+				 	  </if>
+				 	 ) A
+			 	INNER JOIN CUSDEC929B1 B
+			 		ON A.SN = B.SNA1 
+			 		AND A.Rpt_No = B.Rpt_No
+			 		AND A.BRANCH = B.BRANCH
+			 		AND A.CUS_PRG = B.CUS_PRG
+			 	INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+									 Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+			 		ON A.SN = C.SNA1
+			 		AND B.SN = C.SNB1
+			 		AND A.Rpt_No = C.Rpt_No
+			 		AND A.BRANCH = C.BRANCH
+			 		AND A.CUS_PRG = C.CUS_PRG
+				)D
+			) E
+		WHERE E.hsCnt > 1
+		ORDER BY E.RgCode, E.Hs, E.RptNo, E.RanNo, E.Sil
+	</select>
+	
+	<select id="selectEtc2List" parameterType="searchVO" resultType="egovMap">
+		SELECT E.rgCode, <!-- 자재코드 -->
+			   E.hs, <!-- 세번부호 -->                                                      
+			   E.stdGName1, <!-- 거래품명 -->                                                           
+			   E.rptNo, <!-- 수입신고번호 -->
+			   E.ranNo, <!-- 란번호 -->                                                     
+			   E.sil, <!-- 규격 -->
+			   E.gsDivi, <!-- 관세구분 -->
+			   E.gsRate, <!-- 관세율 -->
+			   E.oriStMark1, <!-- 원산지 -->                                                        
+			   E.fodMark, <!-- 적출국 -->                                                   
+			   E.upi, <!-- 수입신고금액 -->
+			   E.qty, <!-- 수량 -->                                                                     
+			   E.conRate, <!-- 결제환율 -->
+			   E.conAmt, <!-- 결제금액 -->
+			   E.conCur, <!-- 결제통화 -->
+			   E.upiWon, <!-- 원화금액 -->
+			   E.gs <!-- 관세금액 -->
+		FROM
+			(SELECT D.Rg_Code AS rgCode, <!-- 자재코드 -->
+				    D.Hs AS hs, <!-- 세번부호 -->                                                      
+				    D.Std_GName1 AS stdGName1, <!-- 거래품명 -->                                                           
+				    CONCAT(SUBSTRING(D.Rpt_No, 1, 5), '-' , SUBSTRING(D.Rpt_No, 6, 2), '-' , SUBSTRING(D.Rpt_No, 8)) AS rptNo, <!-- 수입신고번호 -->
+				    D.Ran_No AS ranNo, <!-- 란번호 -->                                                     
+				    D.Sil AS sil, <!-- 규격 -->
+				    D.Gs_Divi AS gsDivi, <!-- 관세구분 -->
+				    CONCAT(ROUND(D.Gs_Rate, 2), '%') AS gsRate, <!-- 관세율 -->
+				    D.Ori_St_Mark1 AS oriStMark1, <!-- 원산지 -->                                                        
+				    D.Fod_Mark AS fodMark, <!-- 적출국 -->                                                   
+				    FORMAT(D.Upi, 2) AS upi, <!-- 수입신고금액 -->
+				    FORMAT(D.Qty, 0) AS qty, <!-- 수량 -->                                                               
+				    FORMAT(ROUND(D.Con_Rate, 2), 2) AS conRate, <!-- 결제환율 -->
+				    FORMAT(D.Con_Amt, 2) AS conAmt, <!-- 결제금액 -->
+				    D.Con_Cur AS conCur, <!-- 결제통화-->
+				    FORMAT(ROUND(D.upiWon, 2), 2) AS upiWon, <!-- 원화금액 -->
+				    FORMAT(ROUND(D.upiWon * (D.Gs_Rate / 100), 2), 2) AS gs, <!-- 관세금액 -->
+				    MAX(D.diviCnt) OVER(PARTITION BY D.Rg_Code) AS diviCnt
+			 FROM
+			 	(SELECT C.Rg_Code,
+						B.Hs,
+						B.Std_GName1,
+						A.Rpt_No,
+						B.Ran_No,
+						C.Sil,
+						B.Gs_Divi,
+						B.Gs_Rate,
+						B.Ori_St_Mark1,
+						A.Fod_Mark,
+						C.Upi,
+						C.Qty,
+						A.Con_Rate,
+						A.Con_Amt,
+						A.Con_Cur,
+						(A.Con_Rate * C.Upi * C.Qty) upiWon,
+						DENSE_RANK() OVER(PARTITION BY C.Rg_Code ORDER BY B.Gs_Divi) AS diviCnt
+				  FROM
+				  	(SELECT SN,
+				 	 		Rpt_No,
+				 	 		BRANCH,
+				 	 		Nab_SdNo,
+				 	 		CUS_PRG,
+				 	 		BlNo,
+				 	 		Sup_Firm,
+				 	 		Cus,
+				 	 		Lis_Day,
+				 	 		Con_Ki,
+				 	 		Con_Cur,
+				 	 		Con_Rate,
+				 	 		Con_amt,
+				 	 		Fod_Mark
+				 	  FROM CUSDEC929A1
+				 	  WHERE Rpt_Seq = '00'
+					  <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+				 	 	AND Nab_SdNo = #{corpNo}
+				 	  </if>
+				 	  <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+				 	 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+				 	  </if>
+				 	 ) A
+				  INNER JOIN CUSDEC929B1 B
+				  	ON A.SN = B.SNA1 
+				  	AND A.Rpt_No = B.Rpt_No
+				  	AND A.BRANCH = B.BRANCH
+				  	AND A.CUS_PRG = B.CUS_PRG
+				  INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+				 					 Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+				  	ON A.SN = C.SNA1
+				  	AND B.SN = C.SNB1
+				  	AND A.Rpt_No = C.Rpt_No
+				  	AND A.BRANCH = C.BRANCH
+				  	AND A.CUS_PRG = C.CUS_PRG
+				)D
+			)E
+		WHERE E.diviCnt > 1
+		ORDER BY E.RgCode, E.Hs, E.gsDivi, E.RptNo, E.RanNo, E.Sil
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}	
+	</select>
+	
+	<select id="selectEtc2ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		FROM
+			(SELECT D.Rg_Code AS rgCode, <!-- 자재코드 -->
+				    D.Hs AS hs, <!-- 세번부호 -->                                                      
+				    D.Std_GName1 AS stdGName1, <!-- 거래품명 -->                                                           
+				    CONCAT(SUBSTRING(D.Rpt_No, 1, 5), '-' , SUBSTRING(D.Rpt_No, 6, 2), '-' , SUBSTRING(D.Rpt_No, 8)) AS rptNo, <!-- 수입신고번호 -->
+				    D.Ran_No AS ranNo, <!-- 란번호 -->                                                     
+				    D.Sil AS sil, <!-- 규격 -->
+				    D.Gs_Divi AS gsDivi, <!-- 관세구분 -->
+				    CONCAT(ROUND(D.Gs_Rate, 2), '%') AS gsRate, <!-- 관세율 -->
+				    D.Ori_St_Mark1 AS oriStMark1, <!-- 원산지 -->                                                        
+				    D.Fod_Mark AS fodMark, <!-- 적출국 -->                                                   
+				    FORMAT(D.Upi, 2) AS upi, <!-- 수입신고금액 -->                                                                     
+				    ROUND(D.Con_Rate, 2) AS conRate, <!-- 결제환율 -->
+				    FORMAT(ROUND(D.upiWon, 2), 2) AS upiWon, <!-- 원화금액 -->
+				    FORMAT(ROUND(D.upiWon * (D.Gs_Rate / 100), 2), 2) AS gs, <!-- 관세금액 -->
+				    MAX(D.diviCnt) OVER(PARTITION BY D.Rg_Code) AS diviCnt
+			 FROM
+			 	(SELECT C.Rg_Code,
+						B.Hs,
+						B.Std_GName1,
+						A.Rpt_No,
+						B.Ran_No,
+						C.Sil,
+						B.Gs_Divi,
+						B.Gs_Rate,
+						B.Ori_St_Mark1,
+						A.Fod_Mark,
+						C.Upi,
+						A.Con_Rate,
+						(A.Con_Rate * C.Upi * C.Qty) upiWon,
+						DENSE_RANK() OVER(PARTITION BY C.Rg_Code ORDER BY B.Gs_Divi) AS diviCnt
+				  FROM
+				  	(SELECT SN,
+				 	 		Rpt_No,
+				 	 		BRANCH,
+				 	 		Nab_SdNo,
+				 	 		CUS_PRG,
+				 	 		BlNo,
+				 	 		Sup_Firm,
+				 	 		Cus,
+				 	 		Lis_Day,
+				 	 		Con_Ki,
+				 	 		Con_Cur,
+				 	 		Con_Rate,
+				 	 		Fod_Mark
+				 	  FROM CUSDEC929A1
+				 	  WHERE Rpt_Seq = '00'
+					  <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+				 	 	AND Nab_SdNo = #{corpNo}
+				 	  </if>
+				 	  <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+				 	 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+				 	  </if>
+				 	 ) A
+				  INNER JOIN CUSDEC929B1 B
+				  	ON A.SN = B.SNA1 
+				  	AND A.Rpt_No = B.Rpt_No
+				  	AND A.BRANCH = B.BRANCH
+				  	AND A.CUS_PRG = B.CUS_PRG
+				  INNER JOIN (SELECT (CASE WHEN Rg_Code = '' THEN imp_gname1 ELSE  Rg_Code END) AS Rg_Code,
+				 					 Rpt_No, BRANCH, CUS_PRG, Sil, Upi, Ut, SNB1, SNA1, Qty FROM CUSDEC929C1) C
+				  	ON A.SN = C.SNA1
+				  	AND B.SN = C.SNB1
+				  	AND A.Rpt_No = C.Rpt_No
+				  	AND A.BRANCH = C.BRANCH
+				  	AND A.CUS_PRG = C.CUS_PRG
+				)D
+			)E
+		WHERE E.diviCnt > 1
+	</select>
+	
+	<select id="selectEtc3List" parameterType="searchVO" resultType="egovMap">
+		SELECT C.supFirm, <!-- 해외거래처 상호 -->
+			   C.rptNo, <!-- 관세감면적용 수입신고번호 -->
+			   C.ranNo, <!-- 관세감면적용 란번호 -->
+			   C.stdName, <!-- 관세감면적용  품목명 -->
+			   C.rmvRptNo, <!-- 관세감면미적용 수입신고번호  -->
+			   C.rmvRanNo, <!-- 관세감면미적용 란번호 -->
+			   C.rmvStdName, <!-- 관세감면미적용 품목명 -->
+			   C.gsDivi, <!-- 관세구분 -->
+			   C.gsRate, <!-- 관세율 -->
+			   C.gs, <!-- 관세 -->
+			   C.vatDivi, <!-- 부가세구분 -->
+			   C.vatRate, <!-- 부가세율 -->
+			   C.vat, <!-- 부가세 -->
+			   C.gsRmvMark, <!-- 관세감면 구분 -->
+			   C.gsRmvRate, <!-- 관세감면 율 -->
+			   C.rmv, <!-- 관세감면 금액 -->
+			   C.vatRmvMark, <!-- 부가세감면 구분 -->
+			   C.vatRmvRate, <!-- 부가세감면율 -->
+			   C.vatRmv <!-- 부가세감면 금액 -->
+		FROM
+			(SELECT A.Sup_Firm AS supFirm, <!-- 해외거래처 상호 -->
+				    (CASE WHEN B.Gs_Rmv_Mark &lt;&gt; '' 
+				    		 THEN CONCAT(SUBSTRING(A.Rpt_No, 1, 5), '-' , SUBSTRING(A.Rpt_No, 6, 2), '-' , SUBSTRING(A.Rpt_No, 8)) 
+				    		 ELSE '-' END) AS rptNo, <!-- 관세감면적용 수입신고번호 -->
+				    (CASE WHEN B.Gs_Rmv_Mark &lt;&gt; '' THEN B.Ran_No ELSE '-' END) AS ranNo, <!-- 관세감면적용 란번호 -->
+	  			    (CASE WHEN B.Gs_Rmv_Mark &lt;&gt; '' THEN B.Std_GName1 ELSE '-' END) AS stdName, <!-- 관세감면적용  품목명 -->
+				    (CASE WHEN B.Gs_Rmv_Mark = '' 
+				          THEN CONCAT(SUBSTRING(A.Rpt_No, 1, 5), '-' , SUBSTRING(A.Rpt_No, 6, 2), '-' , SUBSTRING(A.Rpt_No, 8))
+				          ELSE '-' END) AS rmvRptNo, <!-- 관세감면미적용 수입신고번호  -->
+				    (CASE WHEN B.Gs_Rmv_Mark = '' THEN B.Ran_No ELSE '-' END) AS rmvRanNo, <!-- 관세감면미적용 란번호 -->
+	   			    (CASE WHEN B.Gs_Rmv_Mark = '' THEN B.Std_GName1 ELSE '-' END) rmvStdName, <!-- 관세감면미적용 품목명 -->
+				    B.Gs_Divi AS gsDivi, <!-- 관세구분 -->
+				    CONCAT(B.Gs_Rate, '%') AS gsRate, <!-- 관세율 -->
+				    FORMAT(B.Gs, 0) AS gs, <!-- 관세 -->
+				    B.Vat_Divi AS vatDivi, <!-- 부가세구분 -->
+				    CONCAT(B.Vat_Rate, '%') AS vatRate, <!-- 부가세율 -->
+				    FORMAT(B.Vat, 0) AS vat, <!-- 부가세 -->
+				    B.Gs_Rmv_Mark AS gsRmvMark, <!-- 관세감면 구분 -->
+				    CONCAT(B.Gs_Rmv_Rate, '%') AS gsRmvRate, <!-- 관세감면 율 -->
+				    FORMAT(B.Gs_Rmv, 0) AS rmv, <!-- 관세감면 금액 -->
+				    B.Vat_Rmv_Mark AS vatRmvMark, <!-- 부가세감면 구분 -->
+				    CONCAT(B.Vat_Rmv_Rate, '%') AS vatRmvRate, <!-- 부가세감면율 -->
+				    FORMAT(B.Vat_Rmv, 0) AS vatRmv, <!-- 부가세감면 금액 -->
+				    SUM(CASE WHEN B.Gs_Rmv_Mark &lt;&gt; '' THEN 1 ELSE 0 END)  OVER(PARTITION BY A.Sup_Firm ORDER BY A.Sup_Firm) cnt1
+			FROM
+				(SELECT SN,
+						Rpt_No,
+						BRANCH,
+						Nab_SdNo,
+						CUS_PRG,
+						BlNo,
+						Sup_Firm,
+						Cus,
+						Lis_Day,
+						Con_Ki,
+						Con_Cur,
+						Con_Rate,
+						Fod_Mark
+				 FROM CUSDEC929A1
+				 WHERE Rpt_Seq = '00'
+				 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+				 	AND Nab_SdNo = #{corpNo}
+				 </if>
+				 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+				 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+				 </if>
+			 	) A
+			INNER JOIN CUSDEC929B1 B
+				ON A.SN = B.SNA1 
+				AND A.Rpt_No = B.Rpt_No
+				AND A.BRANCH = B.BRANCH
+				AND A.CUS_PRG = B.CUS_PRG
+			) C
+		WHERE C.cnt1 > 1
+		ORDER BY C.supFirm, C.rptNo DESC, C.rptNo, C.stdName, C.rmvRptNo DESC, C.rmvRanNo, C.rmvStdName
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}	
+	</select>
+	
+	<select id="selectEtc3ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		FROM
+			(SELECT A.Sup_Firm AS supFirm, <!-- 해외거래처 상호 -->
+				    (CASE WHEN B.Gs_Rmv_Mark &lt;&gt; '' 
+				    		 THEN CONCAT(SUBSTRING(A.Rpt_No, 1, 5), '-' , SUBSTRING(A.Rpt_No, 6, 2), '-' , SUBSTRING(A.Rpt_No, 8)) 
+				    		 ELSE '-' END) AS rptNo, <!-- 관세감면적용 수입신고번호 -->
+				    (CASE WHEN B.Gs_Rmv_Mark &lt;&gt; '' THEN B.Ran_No ELSE '-' END) AS ranNo, <!-- 관세감면적용 란번호 -->
+	  			    (CASE WHEN B.Gs_Rmv_Mark &lt;&gt; '' THEN B.Std_GName1 ELSE '-' END) AS stdName, <!-- 관세감면적용  품목명 -->
+				    (CASE WHEN B.Gs_Rmv_Mark = '' 
+				          THEN CONCAT(SUBSTRING(A.Rpt_No, 1, 5), '-' , SUBSTRING(A.Rpt_No, 6, 2), '-' , SUBSTRING(A.Rpt_No, 8))
+				          ELSE '-' END) AS rmvRptNo, <!-- 관세감면미적용 수입신고번호  -->
+				    (CASE WHEN B.Gs_Rmv_Mark = '' THEN B.Ran_No ELSE '-' END) AS rmvRanNo, <!-- 관세감면미적용 란번호 -->
+	   			    (CASE WHEN B.Gs_Rmv_Mark = '' THEN B.Std_GName1 ELSE '-' END) rmvStdName, <!-- 관세감면미적용 품목명 -->
+				    B.Gs_Divi AS gsDivi, <!-- 관세구분 -->
+				    CONCAT(B.Gs_Rate, '%') AS gsRate, <!-- 관세율 -->
+				    FORMAT(B.Gs, 0) AS gs, <!-- 관세 -->
+				    B.Vat_Divi AS vatDivi, <!-- 부가세구분 -->
+				    CONCAT(B.Vat_Rate, '%') AS vatRate, <!-- 부가세율 -->
+				    FORMAT(B.Vat, 0) AS vat, <!-- 부가세 -->
+				    B.Gs_Rmv_Mark AS gsRmvMark, <!-- 관세감면 구분 -->
+				    CONCAT(B.Gs_Rmv_Rate, '%') AS gsRmvRate, <!-- 관세감면 율 -->
+				    FORMAT(B.Gs_Rmv, 0) AS rmv, <!-- 관세감면 금액 -->
+				    B.Vat_Rmv_Mark AS vatRmvMark, <!-- 부가세감면 구분 -->
+				    CONCAT(B.Vat_Rmv_Rate, '%') AS vatRmvRate, <!-- 부가세감면율 -->
+				    FORMAT(B.Vat_Rmv, 0) AS vatRmv, <!-- 부가세감면 금액 -->
+				    SUM(CASE WHEN B.Gs_Rmv_Mark &lt;&gt; '' THEN 1 ELSE 0 END)  OVER(PARTITION BY A.Sup_Firm ORDER BY A.Sup_Firm) cnt1
+			FROM
+				(SELECT SN,
+						Rpt_No,
+						BRANCH,
+						Nab_SdNo,
+						CUS_PRG,
+						BlNo,
+						Sup_Firm,
+						Cus,
+						Lis_Day,
+						Con_Ki,
+						Con_Cur,
+						Con_Rate,
+						Fod_Mark
+				 FROM CUSDEC929A1
+				 WHERE Rpt_Seq = '00'
+				 <if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+				 	AND Nab_SdNo = #{corpNo}
+				 </if>
+				 <if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+				 	AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+				 </if>
+			 	) A
+			INNER JOIN CUSDEC929B1 B
+				ON A.SN = B.SNA1 
+				AND A.Rpt_No = B.Rpt_No
+				AND A.BRANCH = B.BRANCH
+				AND A.CUS_PRG = B.CUS_PRG
+			) C
+		WHERE C.cnt1 > 1
+	</select>
+	
+	<select id="selectEtc4List" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			CASE WHEN Rg_Code = '' THEN imp_gname1
+			ELSE Rg_Code END AS Rg_Code, <!-- 자재코드 -->
+			CONCAT(SUBSTRING(A.Rpt_No, 1, 5), '-' , SUBSTRING(A.Rpt_No, 6, 2), '-' , SUBSTRING(A.Rpt_No, 8)) AS rptNo, <!-- 수입신고번호 --> 
+			B.Ran_No AS ranNo, <!-- 란 -->
+			C.Sil AS sil, <!-- 규격 -->
+			B.Hs AS hs, <!-- HS CODE -->
+			B.Tax_Ki_Divi AS taxKiDivi, <!-- 세종 -->
+			CONCAT(B.Gs_Rate, '%') AS gxRate, <!-- 세율 -->
+			B.Ori_St_Mark1 AS oriStMark1, <!-- 원산지 -->
+			A.Fod_Mark AS fodMark, <!-- 적출국 -->
+			(CASE WHEN A.Lis_Day = NULL OR A.Lis_Day = ''
+			THEN '' ELSE DATE_FORMAT(STR_TO_DATE(A.Lis_Day, '%Y%m%d'),'%Y-%m-%d')
+			END) AS lisDay <!-- 수입신고수리일 -->
+		FROM
+			cusdec929a1 A
+			INNER JOIN CUSDEC929B1 B ON A.SN = B.SNA1
+			AND A.Rpt_No = B.Rpt_No
+			AND A.BRANCH = B.BRANCH
+			AND A.CUS_PRG = B.CUS_PRG
+			INNER JOIN cusdec929c1 C
+			ON A.SN = C.SNA1
+			AND B.SN = C.SNB1
+			AND A.Rpt_No = C.Rpt_No
+			AND A.BRANCH = C.BRANCH
+			AND A.CUS_PRG = C.CUS_PRG
+			AND C.SN > 0
+			INNER JOIN cmmn_cd D
+			ON A.Fod_Mark = D.CMMN_CD AND D.grp_cd = 'FTANATION'
+			INNER JOIN cmmn_cd E
+			ON B.Ori_St_Mark1 = E.CMMN_CD AND E.grp_cd = 'FTANATION'
+		WHERE
+			1 = 1
+			AND A.Rpt_Seq = '00'
+			<if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	AND A.Nab_SdNo = #{corpNo}
+			</if>
+			<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+				AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			</if>
+			AND B.Gs_Divi LIKE 'F%'			
+			AND NOT (D.REMARK = 'EU' AND E.REMARK = 'EU')
+			AND B.Ori_St_Mark1 &lt;&gt; A.Fod_Mark
+		ORDER BY C.Rg_Code, A.Rpt_No, B.Ran_No, C.Sil
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+	
+	<select id="selectEtc4ListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		FROM
+			cusdec929a1 A
+			INNER JOIN CUSDEC929B1 B ON A.SN = B.SNA1
+			AND A.Rpt_No = B.Rpt_No
+			AND A.BRANCH = B.BRANCH
+			AND A.CUS_PRG = B.CUS_PRG
+			INNER JOIN cusdec929c1 C
+			ON A.SN = C.SNA1
+			AND B.SN = C.SNB1
+			AND A.Rpt_No = C.Rpt_No
+			AND A.BRANCH = C.BRANCH
+			AND A.CUS_PRG = C.CUS_PRG
+			AND C.SN > 0
+			LEFT OUTER JOIN cmmn_cd D
+			ON A.Fod_Mark = D.CMMN_CD AND D.grp_cd = 'FTANATION'
+			LEFT OUTER JOIN cmmn_cd E
+			ON B.Ori_St_Mark1 = E.CMMN_CD AND E.grp_cd = 'FTANATION'
+		WHERE
+			1 = 1
+			AND A.Rpt_Seq = '00'
+			<if test="corpNo != null and corpNo != ''"><!-- 사업자번호 -->
+			 	AND A.Nab_SdNo = #{corpNo}
+			</if>
+			<if test="srch2 != null and srch2 != '' and srch3 != null and srch3 != ''">
+				AND Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			</if>
+			AND B.Gs_Divi LIKE 'F%'			
+			AND NOT (D.REMARK = 'EU' AND E.REMARK = 'EU')
+			AND B.Ori_St_Mark1 &lt;&gt; A.Fod_Mark
+	</select>
+</mapper>

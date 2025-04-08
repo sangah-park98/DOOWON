@@ -1,0 +1,354 @@
+package egovframework.pf.exp.service;
+
+public class SaveExpInvoiceVO {
+	
+	private String corpNo;
+	private String cmpnyCd;
+	private String importer;
+	private String ciNo;	    
+	private String consignee;		
+	private String invoiceDate;		
+	private String exporter;		
+	private String otherReferences;	    
+	private String lcNo;
+	private String lcDate;
+    private String origin;		
+    private String transport;		
+    private String incoterms;		
+    private String loadingPort;			
+    private String location;			
+	private String vessel;			
+    private String termsOfTrade;			
+    private String voyageNo;			
+    private String conditions;			
+    private String discharge;		
+    private String delivery;	
+    private String transhipment;			
+    private String freightMethod;		
+    private String finalDestination;		
+    private String departureDate;	
+    private String grossWeight;	
+    private String netWeight;	
+    private String currency;	
+    private String totalAmount;	
+    private String freigh;	
+    private String insurance;	
+    private String packageCode;	
+    private String packageName;	
+    private String totalPackages;	
+    private String comments;	
+    
+    // -----------------------
+    
+    private String mainIndex;
+    private String lineNo;
+    private String itemCode;			
+	private String hsCode;			
+	private String specification;			
+    private String packingNo;			
+    private String quantity;				
+    private String unitOfQty;					
+    private String unitPrice;		
+    private String amountOfPrice;			
+    
+    private String regDt;
+    private String regId;
+    private String edtDt;
+    private String edtId;
+    
+    
+	public String getCmpnyCd() {
+		return cmpnyCd;
+	}
+	public void setCmpnyCd(String cmpnyCd) {
+		this.cmpnyCd = cmpnyCd;
+	}
+	public String getLineNo() {
+		return lineNo;
+	}
+	public void setLineNo(String lineNo) {
+		this.lineNo = lineNo;
+	}
+	public String getCorpNo() {
+		return corpNo;
+	}
+	public void setCorpNo(String corpNo) {
+		this.corpNo = corpNo;
+	}
+	public String getImporter() {
+		return importer;
+	}
+	public void setImporter(String importer) {
+		this.importer = importer;
+	}
+	public String getCiNo() {
+		return ciNo;
+	}
+	public void setCiNo(String ciNo) {
+		this.ciNo = ciNo;
+	}
+	public String getConsignee() {
+		return consignee;
+	}
+	public void setConsignee(String consignee) {
+		this.consignee = consignee;
+	}
+	public String getInvoiceDate() {
+		return invoiceDate;
+	}
+	public void setInvoiceDate(String invoiceDate) {
+		this.invoiceDate = invoiceDate;
+	}
+	public String getExporter() {
+		return exporter;
+	}
+	public void setExporter(String exporter) {
+		this.exporter = exporter;
+	}
+	public String getOtherReferences() {
+		return otherReferences;
+	}
+	public void setOtherReferences(String otherReferences) {
+		this.otherReferences = otherReferences;
+	}
+	public String getLcNo() {
+		return lcNo;
+	}
+	public void setLcNo(String lcNo) {
+		this.lcNo = lcNo;
+	}
+	public String getLcDate() {
+		return lcDate;
+	}
+	public void setLcDate(String lcDate) {
+		this.lcDate = lcDate;
+	}
+	public String getOrigin() {
+		return origin;
+	}
+	public void setOrigin(String origin) {
+		this.origin = origin;
+	}
+	public String getTransport() {
+		return transport;
+	}
+	public void setTransport(String transport) {
+		this.transport = transport;
+	}
+	public String getIncoterms() {
+		return incoterms;
+	}
+	public void setIncoterms(String incoterms) {
+		this.incoterms = incoterms;
+	}
+	public String getLoadingPort() {
+		return loadingPort;
+	}
+	public void setLoadingPort(String loadingPort) {
+		this.loadingPort = loadingPort;
+	}
+	public String getLocation() {
+		return location;
+	}
+	public void setLocation(String location) {
+		this.location = location;
+	}
+	public String getVessel() {
+		return vessel;
+	}
+	public void setVessel(String vessel) {
+		this.vessel = vessel;
+	}
+	public String getTermsOfTrade() {
+		return termsOfTrade;
+	}
+	public void setTermsOfTrade(String termsOfTrade) {
+		this.termsOfTrade = termsOfTrade;
+	}
+	public String getVoyageNo() {
+		return voyageNo;
+	}
+	public void setVoyageNo(String voyageNo) {
+		this.voyageNo = voyageNo;
+	}
+	public String getConditions() {
+		return conditions;
+	}
+	public void setConditions(String conditions) {
+		this.conditions = conditions;
+	}
+	public String getDischarge() {
+		return discharge;
+	}
+	public void setDischarge(String discharge) {
+		this.discharge = discharge;
+	}
+	public String getDelivery() {
+		return delivery;
+	}
+	public void setDelivery(String delivery) {
+		this.delivery = delivery;
+	}
+	public String getTranshipment() {
+		return transhipment;
+	}
+	public void setTranshipment(String transhipment) {
+		this.transhipment = transhipment;
+	}
+	public String getFreightMethod() {
+		return freightMethod;
+	}
+	public void setFreightMethod(String freightMethod) {
+		this.freightMethod = freightMethod;
+	}
+	public String getFinalDestination() {
+		return finalDestination;
+	}
+	public void setFinalDestination(String finalDestination) {
+		this.finalDestination = finalDestination;
+	}
+	public String getDepartureDate() {
+		return departureDate;
+	}
+	public void setDepartureDate(String departureDate) {
+		this.departureDate = departureDate;
+	}
+	public String getMainIndex() {
+		return mainIndex;
+	}
+	public void setMainIndex(String mainIndex) {
+		this.mainIndex = mainIndex;
+	}
+	public String getItemCode() {
+		return itemCode;
+	}
+	public void setItemCode(String itemCode) {
+		this.itemCode = itemCode;
+	}
+	public String getHsCode() {
+		return hsCode;
+	}
+	public void setHsCode(String hsCode) {
+		this.hsCode = hsCode;
+	}
+	public String getSpecification() {
+		return specification;
+	}
+	public void setSpecification(String specification) {
+		this.specification = specification;
+	}
+	public String getPackingNo() {
+		return packingNo;
+	}
+	public void setPackingNo(String packingNo) {
+		this.packingNo = packingNo;
+	}
+	public String getQuantity() {
+		return quantity;
+	}
+	public void setQuantity(String quantity) {
+		this.quantity = quantity;
+	}
+	public String getUnitOfQty() {
+		return unitOfQty;
+	}
+	public void setUnitOfQty(String unitOfQty) {
+		this.unitOfQty = unitOfQty;
+	}
+	public String getUnitPrice() {
+		return unitPrice;
+	}
+	public void setUnitPrice(String unitPrice) {
+		this.unitPrice = unitPrice;
+	}
+	public String getAmountOfPrice() {
+		return amountOfPrice;
+	}
+	public void setAmountOfPrice(String amountOfPrice) {
+		this.amountOfPrice = amountOfPrice;
+	}
+	public String getGrossWeight() {
+		return grossWeight;
+	}
+	public void setGrossWeight(String grossWeight) {
+		this.grossWeight = grossWeight;
+	}
+	public String getNetWeight() {
+		return netWeight;
+	}
+	public void setNetWeight(String netWeight) {
+		this.netWeight = netWeight;
+	}
+	public String getCurrency() {
+		return currency;
+	}
+	public void setCurrency(String currency) {
+		this.currency = currency;
+	}
+	public String getTotalAmount() {
+		return totalAmount;
+	}
+	public void setTotalAmount(String totalAmount) {
+		this.totalAmount = totalAmount;
+	}
+	public String getFreigh() {
+		return freigh;
+	}
+	public void setFreigh(String freigh) {
+		this.freigh = freigh;
+	}
+	public String getInsurance() {
+		return insurance;
+	}
+	public void setInsurance(String insurance) {
+		this.insurance = insurance;
+	}
+	public String getPackageCode() {
+		return packageCode;
+	}
+	public void setPackageCode(String packageCode) {
+		this.packageCode = packageCode;
+	}
+	public String getPackageName() {
+		return packageName;
+	}
+	public void setPackageName(String packageName) {
+		this.packageName = packageName;
+	}
+	public String getTotalPackages() {
+		return totalPackages;
+	}
+	public void setTotalPackages(String totalPackages) {
+		this.totalPackages = totalPackages;
+	}
+	public String getComments() {
+		return comments;
+	}
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+	public String getRegDt() {
+		return regDt;
+	}
+	public void setRegDt(String regDt) {
+		this.regDt = regDt;
+	}
+	public String getRegId() {
+		return regId;
+	}
+	public void setRegId(String regId) {
+		this.regId = regId;
+	}
+	public String getEdtDt() {
+		return edtDt;
+	}
+	public void setEdtDt(String edtDt) {
+		this.edtDt = edtDt;
+	}
+	public String getEdtId() {
+		return edtId;
+	}
+	public void setEdtId(String edtId) {
+		this.edtId = edtId;
+	}
+}

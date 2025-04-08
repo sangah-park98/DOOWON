@@ -1,0 +1,511 @@
+package egovframework.pf.member.utill;
+
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.*;
+import javax.mail.internet.*;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.itextpdf.text.log.SysoCounter;
+
+import egovframework.pf.member.sevice.MemberService;
+
+import java.io.File;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+@Component
+public class EmailUtill {
+
+	private static final Log LOGGER = LogFactory.getLog(EmailUtill.class);
+
+	private static MemberService memberservice;
+
+	@Autowired
+	public void setCodeService(MemberService memberservice) {
+		EmailUtill.memberservice = memberservice;
+	}
+
+	/**
+	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	 * @Class     : shinhan.cmmn.util.EmailUtill.java
+	 * @Method    : sendEmail
+	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	 * @Desc      : 메일
+	 * @Company   : kord
+	 * @Author    : 권예지
+	 * @Date      : 2024-01-22
+	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	 * @param name     - 회원명
+	 * @param id       - 회원아이디
+	 * @param email    - 수신아이디
+	 * @param Type     - 이메일 타입 [JOIN : 가입, CERTNUMBER : 이메일인증]
+	 * @param text     - 그외 텍스트
+	 * @return String
+	 * @throws Exception
+	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	 */
+	public static String sendEmail(String name, String id, String email, String Type, String text, String Lang) throws Exception {
+		// 이메일 발송 정보 설정
+		
+		String host = "smtp.worksmobile.com";             // 이메일 발송에 사용할 SMTP 서버 호스트
+		int port = 587;                             // 이메일 발송에 사용할 SMTP 서버 포트
+		String username = "ioom@kordsystems.com";     // 이메일 발송 계정 아이디
+		String password = "rdl8SWfngllP";         // 이메일 발송 계정 비밀번호
+
+		Map<String, Object> contentMap = setEmailContent(name, id, email, Type, text, Lang);
+
+		// 이메일 발송에 필요한 설정 정보
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", host);
+        props.put("mail.smtp.port", port);
+        props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+
+		// 이메일 세션 생성
+		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+			protected PasswordAuthentication getPasswordAuthentication() {
+			return new PasswordAuthentication(username, password);
+			}
+		});
+
+		try {
+			// 이메일 메시지 생성
+			Message message = new MimeMessage(session);
+
+			message.setSentDate(new Date());                                                    //보내는 날짜
+			message.setFrom(new InternetAddress(username));                                        //발송자
+			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(contentMap.get("recipient").toString()));    //수신자
+
+			message.setSubject(contentMap.get("subject").toString());                                                        //메일제목
+			message.setContent(contentMap.get("content").toString(), "text/html; charset=utf-8");                            //메일내용
+			System.out.println("1111");
+			
+			// 이메일 발송
+			Transport.send(message);
+			return "success";
+
+		} catch (MessagingException e) {
+			System.out.println(e);
+			return "false";
+		}
+	}
+	
+	public static String sendEmailWithFile(String name, String id, String email, String Type, String text, String Lang, String fileName) throws Exception {
+		System.out.println("123123");
+		System.out.println("fileName : " + fileName);
+		
+		// 이메일 발송 정보 설정
+		
+		String host = "smtp.worksmobile.com";             // 이메일 발송에 사용할 SMTP 서버 호스트
+		int port = 587;                             // 이메일 발송에 사용할 SMTP 서버 포트
+		String username = "ioom@kordsystems.com";     // 이메일 발송 계정 아이디
+		String password = "rdl8SWfngllP";         // 이메일 발송 계정 비밀번호
+		
+		
+		/*File file = new File("/home/files/" + fileName);
+		
+		System.out.println("file : " + file);
+		System.out.println("file : " + file.getName());
+		DataSource source = new FileDataSource(file);
+	    BodyPart attachmentBodyPart = new MimeBodyPart();
+	    attachmentBodyPart.setDataHandler(new DataHandler(source));
+	    attachmentBodyPart.setFileName(file.getName());
+	    attachmentBodyPart.setHeader("Content-Type", "application/zip"); // MIME 타입 추가
+*/
+		 
+		 
+		
+		Map<String, Object> contentMap = setEmailContent(name, id, email, Type, text, Lang);
+		
+		
+		// 이메일 발송에 필요한 설정 정보
+		Properties props = new Properties();
+		props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.starttls.enable", "true");
+		props.put("mail.smtp.host", host);
+		props.put("mail.smtp.port", port);
+		props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+		
+		// 이메일 세션 생성
+		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(username, password);
+			}
+		});
+		
+		try {
+			// 이메일 메시지 생성
+			Message message = new MimeMessage(session);
+			
+			message.setSentDate(new Date());                                                    //보내는 날짜
+			message.setFrom(new InternetAddress(username));                                        //발송자
+			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(contentMap.get("recipient").toString()));    //수신자
+			
+		    
+			
+			message.setSubject(contentMap.get("subject").toString());                                                        //메일제목
+			//message.setContent(contentMap.get("content").toString(), "text/html; charset=utf-8");     
+			//메일내용
+			System.out.println("1111");
+			
+		/*	Multipart multipart = new MimeMultipart();
+	        multipart.addBodyPart(attachmentBodyPart);
+	        message.setContent(multipart);*/
+			 // 본문과 첨부 파일을 함께 설정하기 위해 Multipart 객체 생성
+		    Multipart multipart = new MimeMultipart();
+		    
+		    // 본문 내용을 설정한 BodyPart 생성
+		    MimeBodyPart textBodyPart = new MimeBodyPart();
+		    textBodyPart.setContent(contentMap.get("content").toString(), "text/html; charset=utf-8"); // 메일 내용 설정
+		    multipart.addBodyPart(textBodyPart); // 본문을 Multipart에 추가
+		    //multipart.addBodyPart(attachmentBodyPart); // 첨부 파일을 Multipart에 추가
+		    
+		    
+		    if (fileName != null && !fileName.isEmpty()) {
+	            File file = new File("/home/files/" + fileName);
+	           System.out.println("2323");
+	            if (file.exists()) {
+	                DataSource source = new FileDataSource(file);
+	                BodyPart attachmentBodyPart = new MimeBodyPart();
+	                attachmentBodyPart.setDataHandler(new DataHandler(source));
+	                attachmentBodyPart.setFileName(file.getName());
+	                attachmentBodyPart.setHeader("Content-Type", "application/zip");
+	                multipart.addBodyPart(attachmentBodyPart); // 첨부 파일 추가
+	                System.out.println("44444");
+	            } else {
+	                System.out.println("File not found: " + file.getAbsolutePath());
+	            }
+	        }
+		    
+		    // Multipart를 메시지의 콘텐츠로 설정
+		    message.setContent(multipart);
+			System.out.println("5555");
+			
+			// 이메일 발송
+			Transport.send(message);
+			return "success";
+			
+		} catch (MessagingException e) {
+			System.out.println(e);
+			return "false";
+		}
+	}
+
+	public static Map<String, Object> setEmailContent(String name, String id, String email, String type, String text, String Lang) throws Exception{
+		//리턴데이터
+		Map<String, Object> returnData = new HashMap<String, Object>();
+		returnData.put("recipient",email);
+		if(type.equals("JOIN1")) {
+			//관리자 이메일 수정
+			returnData.put("recipient", "ioom@kordsystems.com");
+		}
+		returnData.put("subject", "");
+		returnData.put("content","");
+
+		//파라미터
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("LANG", Lang);
+		// param.put("CODE_GROUP_ID", "mailContentCode");
+		// 제목 DB
+		if(type.equals("JOIN1") || type.equals("JOIN2")) {
+			param.put("MSG_ID", "mailTitle");
+		} else if(type.equals("SEARCHID")){
+			param.put("MSG_ID", "mailSearchIDTItle");
+		} else if(type.equals("SEARCHPWD")){
+			param.put("MSG_ID", "mailSearchPwTitle");
+		} else if(type.equals("APPROVAL")) {
+			param.put("MSG_ID", "mailApprovalTitle");
+		} else if(type.equals("IMPORT")) {
+			param.put("MSG_ID", "mailImportTitle");
+		} else if(type.equals("EXPORT")) {
+			param.put("MSG_ID", "mailExportTitle");
+		}else if(type.equals("CERTNUMBERMYPAGE")) {
+			param.put("MSG_ID", "mailMypageTitle");
+		}else if(type.equals("FTACO")) {
+			param.put("MSG_ID", "mailFtaCoTitle");
+		}
+		else {
+			param.put("MSG_ID", "mailTitle");
+		}
+		
+		Map<String, Object>emailTitleMap = null;
+		//제목
+		if(type.equals("FTACO")) {
+			String[] splitValues = name.split("/");
+			String ioomCmpnyName = splitValues[3]; // ioom 입력값
+			String invoiceNo = splitValues[1]; // Invoice 번호
+			
+		    String finalName;
+			 finalName ="FTA 원산지증명서 요청__"+ioomCmpnyName+"/"+invoiceNo; 
+			 
+		    // emailTitleMap을 Map 형태로 생성
+		    emailTitleMap = new HashMap<>();
+		    emailTitleMap.put("CODE_NAME", finalName);
+		}else if(type.equals("FTACOCMPNY")){
+			String[] splitValues = name.split("/");
+			String ioomCmpnyName = splitValues[3]; // ioom 입력값
+			String invoiceNo = splitValues[1]; // Invoice 번호
+			
+		    String finalName;
+			 finalName ="FTA 원산지증명서 요청 완료__"+ioomCmpnyName+"/"+invoiceNo; 
+			 
+		    // emailTitleMap을 Map 형태로 생성
+		    emailTitleMap = new HashMap<>();
+		    emailTitleMap.put("CODE_NAME", finalName);
+		}else {
+		
+			 emailTitleMap = memberservice.getMailCode(param);
+		}
+		
+		
+		LocalDate currentDate = LocalDate.now();
+		LocalDate previousMonth = currentDate.minusMonths(1);
+		int previousMonthNumber = previousMonth.getMonthValue();
+		System.out.println("type>"+type);
+		String emailTitie = type.equals("REPORT") ? previousMonth.getMonthValue()+" "+ emailTitleMap.get("CODE_NAME").toString() : emailTitleMap.get("CODE_NAME").toString();
+		returnData.put("subject", emailTitie);
+		//내용
+		Map<String, Object> emailContent = new HashMap<String, Object>();
+		if (type.equals("REPORT")) {
+			param.put("CODE_COMMON_ID", type+"_CONTENT_1");
+			emailContent = memberservice.getMailCode(param);
+			String Content = emailContent.get("CODE_NAME").toString() + previousMonth.getMonthValue() +" ";
+			System.out.println("44444");
+			param.put("CODE_COMMON_ID", type+"_CONTENT_2");
+			emailContent = memberservice.getMailCode(param);
+			Content += emailContent.get("CODE_NAME").toString();
+
+			emailContent.put("CODE_NAME", Content);
+			
+		}else if (type.equals("JOIN1")) {
+			param.put("MSG_ID", "mailjoin");
+			emailContent = memberservice.getMailCode(param);
+			System.out.println("회원가입 승인 이메일");
+		}else if(type.equals("JOIN2")) {
+			param.put("MSG_ID", "mailManager");
+			emailContent = memberservice.getMailCode(param);
+			System.out.println("관리자 승인 이메일");
+			String Content = (String) emailContent.get("CODE_NAME");
+			Content += "<li> 회원 정보 :" + id + "[" + name + "]</li>";
+			Content += "</ul>";
+			Content += "</div>";
+			emailContent.put("CODE_NAME", Content);
+		}else if(type.equals("SEARCHID")){
+			param.put("MSG_ID", "mailSearchID");
+			emailContent = memberservice.getMailCode(param);
+		}else if(type.equals("SEARCHPWD")){
+			param.put("MSG_ID", "mailSearchPW");
+			emailContent = memberservice.getMailCode(param);
+		}else if(type.equals("CERTNUMBER")) {
+			param.put("MSG_ID","mailcontent");
+			emailContent = memberservice.getMailCode(param);
+			System.out.println("회원가입 인증번호 발송");
+		}else if(type.equals("CERTNUMBERMYPAGE")) {
+			System.out.println("마이페이지 인증번호 발송");
+			param.put("MSG_ID","mailMypage");
+			emailContent = memberservice.getMailCode(param);
+		}else if(type.equals("APPROVAL")) {
+			param.put("MSG_ID","mailApproval");
+			emailContent = memberservice.getMailCode(param);
+			System.out.println("승인메일");
+		}else if(type.equals("IMPORT")) {
+			param.put("MSG_ID","mailImport");
+			emailContent = memberservice.getMailCode(param);
+			System.out.println("수입의뢰");
+			LocalDateTime currentDateTime = LocalDateTime.now();
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			String formattedDateTime = currentDateTime.format(formatter);
+			String Content = (String) emailContent.get("CODE_NAME");
+			Content += "<li>고객사 :" + id + "</li>";
+			Content += "<li>B/L 번호 : " + name + "</li>";
+			Content += "<li>의뢰 일시 : " + formattedDateTime + "</li>";
+			Content += "</ul>";
+			Content += "</div>";
+			
+			emailContent.put("CODE_NAME", Content);
+		}else if(type.equals("EXPORT")) {
+			param.put("MSG_ID","mailExport");
+			emailContent = memberservice.getMailCode(param);
+			System.out.println("수출의뢰");
+			LocalDateTime currentDateTime = LocalDateTime.now();
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			String formattedDateTime = currentDateTime.format(formatter);
+			
+			String Content = (String) emailContent.get("CODE_NAME");
+			Content += "<li>고객사 :" + id + "</li>";
+			Content += "<li>I/V 번호 : " + name + "</li>";
+			Content += "<li>의뢰 일시 : " + formattedDateTime + "</li>";
+			Content += "</ul>";
+			Content += "</div>";
+			
+			emailContent.put("CODE_NAME", Content);
+		}else if(type.equals("FTACO")) {
+			param.put("MSG_ID","mailFtaCo");
+			emailContent = memberservice.getMailCode(param);
+			System.out.println("담당자_FTA 원산지증명서 의뢰");
+			LocalDateTime currentDateTime = LocalDateTime.now();
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			String[] splitValues = name.split("/");
+
+			// 각각의 값으로 사용
+			String reportNo = splitValues[0]; // 신고 번호
+			String invoiceNo = splitValues[1]; // Invoice 번호
+			String CoCmpnyNm = splitValues[2]; // 입력값
+			String ioomCmpnyName = splitValues[3]; // ioom 입력값
+			String cmpnyName = splitValues[4]; // 요청자 이름
+			String cmpnyNum = splitValues[5]; // 요청자 번호
+			String cmpnyEmail = splitValues[6]; // 요청자 이메일
+			
+			 String finalName;
+			    if (CoCmpnyNm.equals(ioomCmpnyName)) {
+			        finalName = ioomCmpnyName; // 같으면 ioomCmpnyName만 사용
+			    } else {
+			        finalName = ioomCmpnyName + " (" + CoCmpnyNm + ")"; // 다르면 ioomCmpnyName(CoCmpnyNm) 형태로 사용
+			    }
+			
+			String formattedDateTime = currentDateTime.format(formatter);
+			String Content = (String) emailContent.get("CODE_NAME");
+			Content += "<li>고객사 : " + finalName + "</li>";
+			Content += "<li>Invoice 번호 : " + invoiceNo + "</li>";
+			Content += "<li>수출신고번호 : " + reportNo + "</li>";
+			Content += "<li>의뢰 일시 : " + formattedDateTime + "</li>";
+			Content += "<li>요청자 이름 : " + cmpnyName + "</li>";
+			Content += "<li>요청자 이메일 : " + cmpnyEmail + "</li>";
+			Content += "<li>요청자 번호 : " + cmpnyNum + "</li>";
+			Content += "</ul>";
+			Content += "</div>";
+			
+			emailContent.put("CODE_NAME", Content);
+		}else if(type.equals("FTACOCMPNY")) {
+			param.put("MSG_ID","mailFtaCoCmpny");
+			emailContent = memberservice.getMailCode(param);
+			System.out.println("화주_FTA 원산지증명서 의뢰");
+			LocalDateTime currentDateTime = LocalDateTime.now();
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			String[] splitValues = name.split("/");
+
+			// 각각의 값으로 사용
+			String reportNo = splitValues[0]; // 신고 번호
+			String invoiceNo = splitValues[1]; // Invoice 번호
+			String CoCmpnyNm = splitValues[2]; // 입력값
+			String ioomCmpnyName = splitValues[3]; // ioom 입력값
+			
+			 String finalName;
+			    if (CoCmpnyNm.equals(ioomCmpnyName)) {
+			        finalName = ioomCmpnyName; // 같으면 ioomCmpnyName만 사용
+			    } else {
+			        finalName = ioomCmpnyName + " (" + CoCmpnyNm + ")"; // 다르면 ioomCmpnyName(CoCmpnyNm) 형태로 사용
+			    }
+			
+			
+			String formattedDateTime = currentDateTime.format(formatter);
+			String Content = (String) emailContent.get("CODE_NAME");
+			Content += "<li>고객사 : " + finalName + "</li>";
+			Content += "<li>Invoice 번호 : " + invoiceNo + "</li>";
+			Content += "<li>수출신고번호 : " + reportNo + "</li>";
+			Content += "<li>의뢰 일시 : " + formattedDateTime + "</li>";
+			Content += "</ul>";
+			Content += "</div>";
+			
+			emailContent.put("CODE_NAME", Content);
+		}
+
+		//footer
+		param.put("MSG_ID", "mailfooter");
+		Map<String, Object> footer = memberservice.getMailCode(param);
+
+		String note = text;
+		if (type.equals("JOIN1")) {
+			note = id + "["+name+"]";
+			returnData.put("content", setHtml(emailContent.get("CODE_NAME").toString(), note, footer.get("CODE_NAME").toString()));
+		}else if(type.equals("JOIN2")){
+			note = "승인버튼";
+			returnData.put("content", setHtml2(name,email,id,emailContent.get("CODE_NAME").toString(), note, footer.get("CODE_NAME").toString()));
+		}else if (type.equals("APPROVAL")) {
+			// 사이트 오픈하면 해당으로 사이트로 바꾸기 
+			note = "<a href='https://ioom.kordsystems.com/'>IOOM</a>";
+			returnData.put("content", setHtml(emailContent.get("CODE_NAME").toString(), note, footer.get("CODE_NAME").toString()));
+		} else if (type.equals("SEARCHID")) {
+			note = id;
+			returnData.put("content", setHtml(emailContent.get("CODE_NAME").toString(), note, footer.get("CODE_NAME").toString()));
+		}else if (type.equals("FTACO")) {
+			returnData.put("content", setHtml(emailContent.get("CODE_NAME").toString(), "", ""));
+		}else {
+			returnData.put("content", setHtml(emailContent.get("CODE_NAME").toString(), note, footer.get("CODE_NAME").toString()));
+		}
+		
+		
+		return returnData;
+	}
+
+	/**
+	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	 * @Class     : shinhan.cmmn.util.EmailUtill.java
+	 * @Method    : setHtml
+	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	 * @Desc      : 이메일 내용 SET
+	 * @Company   : kord
+	 * @Author    : 권예지
+	 * @Date      : 2024-01-22
+	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	 * @param emailContent
+	 * @param note
+	 * @return String
+	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	 */
+	public static String setHtml(String emailContent, String note, String footContent) throws Exception{
+		String content = " <div style=\"background: #e7e7e7; margin: 0 auto;width: 100%; padding: 3rem 4rem;box-sizing: border-box;\">" +
+						"<div style=\"background: white; padding: 3rem 4rem; border-radius: 8px;box-sizing: border-box;\">" +
+							"<h1><a href=\"#\" style=\"width:10rem; display: block;box-sizing: border-box;\"><img src=\"data:image/svg+xml,%3c?xml%20version=%271.0%27%20encoding=%27UTF-8%27?%3e%3csvg%20id=%27Layer_1%27%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20587.75%20180%27%3e%3cpath%20d=%27M28.99,36.85H0V0h41.27v26.38c0,7.05-4.03,10.47-12.28,10.47ZM.4,180V52.95h40.67v112.95c0,8.25-7.45,14.09-16.11,14.09H.4Z%27%20style=%27fill:%23006e51;%20stroke-width:0px;%27/%3e%3cpath%20d=%27M426.67,180V5.64h45.3l35.23,100.27,35.03-100.27h45.5v160.27c0,8.25-7.45,14.09-16.11,14.09h-24.76v-82.15c0-.6,0-2.21.2-4.63.2-2.62.2-4.23.2-5.03l-.81,4.23c-.2,2.21-.6,3.83-.81,4.43l-19.53,56.78c-2.21,6.64-7.25,10.47-14.3,10.47h-19.53l-22.95-68.46c-.6-1.81-1.21-7.85-2.01-9.66.2,1.21.2,3.22.2,5.84v74.09c0,8.25-7.45,14.09-16.11,14.09h-24.76Z%27%20style=%27fill:%23006e51;%20stroke-width:0px;%27/%3e%3cpath%20d=%27M318.23,180c-31.16,0-58.88-30.95-69.64-44.69-2.94-3.75-3.21-8.95-.71-13l11.83-19.15c.76-1.23,2.5-1.33,3.4-.19,7.32,9.3,35.19,42.95,55.13,42.95,29.11,0,52.79-23.68,52.79-52.79s-23.68-52.79-52.79-52.79c-10.54,0-26.53,10.63-43.88,29.17-15.17,16.21-26.15,32.81-26.26,32.98,0,0-19.46,25.96-29.92,37.18-24.95,26.77-48.21,40.34-69.12,40.34-47.9,0-86.88-38.97-86.88-86.88S101.15,6.25,149.05,6.25c34.14,0,59.41,25.94,72.99,42.63,3.57,4.39,3.64,10.65.14,15.09l-14.41,18.29c-.69.87-2,.89-2.71.03-6.58-8.02-35.61-41.96-56-41.96-29.11,0-52.79,23.68-52.79,52.79s23.68,52.79,52.79,52.79c10.54,0,26.53-10.63,43.88-29.17,15.17-16.21,26.15-32.81,26.26-32.98l5.76-7.68c5.16-7.13,13.69-18.28,24.16-29.5,24.95-26.77,48.21-40.34,69.12-40.34,47.9,0,86.88,38.97,86.88,86.88s-38.97,86.88-86.88,86.88Z%27%20style=%27fill:%23006e51;%20stroke-width:0px;%27/%3e%3c/svg%3e\" style=\"width:100%;\" /></a></h1>\n" 
+							+ emailContent;
+			if (StringUtils.isNotEmpty(note)) {
+				content +=		"<span style=\"display: inline-block; padding: 1.5rem 2.5rem; background-color: #006E51; color: white; border-radius: 6px; font-weight: bold; font-size: 1.45rem;\">" 
+									+note +
+								"</span>" 
+								+"</div>"+"</div>";
+			}
+				content +=	"<p style=\"padding: 0.95rem; box-sizing: border-box;\">" +
+								footContent +
+							"</td>" +
+						"</tr>" +
+						"</table>";
+		return content;
+	}
+	
+	public static String setHtml2(String name,String email, String id, String emailContent, String note, String footContent) throws Exception{
+	    String content = " <div style=\"background: #e7e7e7; margin: 0 auto;width: 100%; padding: 3rem 4rem;box-sizing: border-box;\">" +
+	            "<div style=\"background: white; padding: 3rem 4rem; border-radius: 8px;box-sizing: border-box;\">" +
+	            "<h1><a href=\"#\" style=\"width:10rem; display: block;box-sizing: border-box;\"><img src=\"data:image/svg+xml,%3c?xml%20version=%271.0%27%20encoding=%27UTF-8%27?%3e%3csvg%20id=%27Layer_1%27%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20587.75%20180%27%3e%3cpath%20d=%27M28.99,36.85H0V0h41.27v26.38c0,7.05-4.03,10.47-12.28,10.47ZM.4,180V52.95h40.67v112.95c0,8.25-7.45,14.09-16.11,14.09H.4Z%27%20style=%27fill:%23006e51;%20stroke-width:0px;%27/%3e%3cpath%20d=%27M426.67,180V5.64h45.3l35.23,100.27,35.03-100.27h45.5v160.27c0,8.25-7.45,14.09-16.11,14.09h-24.76v-82.15c0-.6,0-2.21.2-4.63.2-2.62.2-4.23.2-5.03l-.81,4.23c-.2,2.21-.6,3.83-.81,4.43l-19.53,56.78c-2.21,6.64-7.25,10.47-14.3,10.47h-19.53l-22.95-68.46c-.6-1.81-1.21-7.85-2.01-9.66.2,1.21.2,3.22.2,5.84v74.09c0,8.25-7.45,14.09-16.11,14.09h-24.76Z%27%20style=%27fill:%23006e51;%20stroke-width:0px;%27/%3e%3cpath%20d=%27M318.23,180c-31.16,0-58.88-30.95-69.64-44.69-2.94-3.75-3.21-8.95-.71-13l11.83-19.15c.76-1.23,2.5-1.33,3.4-.19,7.32,9.3,35.19,42.95,55.13,42.95,29.11,0,52.79-23.68,52.79-52.79s-23.68-52.79-52.79-52.79c-10.54,0-26.53,10.63-43.88,29.17-15.17,16.21-26.15,32.81-26.26,32.98,0,0-19.46,25.96-29.92,37.18-24.95,26.77-48.21,40.34-69.12,40.34-47.9,0-86.88-38.97-86.88-86.88S101.15,6.25,149.05,6.25c34.14,0,59.41,25.94,72.99,42.63,3.57,4.39,3.64,10.65.14,15.09l-14.41,18.29c-.69.87-2,.89-2.71.03-6.58-8.02-35.61-41.96-56-41.96-29.11,0-52.79,23.68-52.79,52.79s23.68,52.79,52.79,52.79c10.54,0,26.53-10.63,43.88-29.17,15.17-16.21,26.15-32.81,26.26-32.98l5.76-7.68c5.16-7.13,13.69-18.28,24.16-29.5,24.95-26.77,48.21-40.34,69.12-40.34,47.9,0,86.88,38.97,86.88,86.88s-38.97,86.88-86.88,86.88Z%27%20style=%27fill:%23006e51;%20stroke-width:0px;%27/%3e%3c/svg%3e\" style=\"width:100%;\" /></a></h1>\n" 
+	            + emailContent;
+	    if (StringUtils.isNotEmpty(note)) {
+	    	/*content += "<div style=\"text-align: center;\"><a href='http://localhost:8080/member/managerapprove.do?name="+ name +"&id=" + id + "&email=" + email + "' style=\"display: inline-block; padding: 1.5rem 2.5rem; background-color: #006E51; color: white; border-radius: 6px; font-weight: bold; font-size: 1.45rem; text-decoration: none;\">"*/ 
+			content += "<div style=\"text-align: center;\"><a href='https://ioom.kordsystems.com/member/managerapprove.do?name="+ name +"&id=" + id + "&email=" + email + "' style=\"display: inline-block; padding: 1.5rem 2.5rem; background-color: #006E51; color: white; border-radius: 6px; font-weight: bold; font-size: 1.45rem; text-decoration: none;\">" 
+                    + note + 
+                    "</a></div>" 
+                    + "</div>" + "</div>";
+	    }
+	    content += "<p style=\"padding: 0.95rem; box-sizing: border-box;\">" +
+	            footContent +
+	            "</td>" +
+	            "</tr>" +
+	            "</table>";
+	    return content;
+	}
+
+}
+
+

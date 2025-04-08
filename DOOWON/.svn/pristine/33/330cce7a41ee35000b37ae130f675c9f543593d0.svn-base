@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.shipping.service.impl.ApiShippingMapper">
+
+	<update id="stateChange" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET 
+		order_state = #{orderState}
+		WHERE order_id = #{orderID}
+	</update>
+		
+</mapper>

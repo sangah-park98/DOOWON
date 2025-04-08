@@ -1,0 +1,373 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>수출신고현황</title>
+  <script src="/pf/js/function.js"></script>
+  <script src="/pf/js/export/exportView.js" charset="UTF-8"></script>
+  <script src="/pf/js/export/exportViewCalendar.js" charset="UTF-8"></script>
+</head>
+<body class="flex flex-col max-h-fit">
+<main class="p-2 grow flex flex-col gap-2">
+  <form class="w-full shrink-0 grid grid-rows-3 grid-cols-[auto_repeat(5,1fr)_auto_repeat(5,1fr)]
+    row-start-1 col-start-1 col-span-2 bg-white dark:bg-slate-800 shadow-sm rounded-lg
+    border border-slate-200 dark:border-slate-700 px-4 py-3 gap-1 z-1 text-base *:text-base
+    items-center">
+    <div class="row-start-1 col-span-6 col-end-13 flex flex-row gap-2 items-end justify-end">
+      <button
+      	type="button"
+      	id="btnSearch"
+      	onclick="fn_searchExportView()"
+        class="text-white bg-primary-700 hover:bg-secondary-800 border border-primary-700
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none
+        duration-300 row-start-1">
+        <i class="fa-regular fa-search mr-1"></i>
+        	검색
+      </button>
+      <button
+      	type="button"
+      	onclick="fn_clearExportView()"
+        class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300">
+        <i class="fa-regular fa-times mr-1"></i>
+        	초기화
+      </button>
+    </div>
+    <!-- 검색구분 -->
+    <label class="col-start-1 row-start-1 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+      	검색구분
+    </label>
+    <div class="flex flex-row flex-wrap gap-4 col-start-2 col-span-5 row-start-1 items-center *:flex *:flex-row *:items-center *:gap-2 font-medium text-gray-900">
+      <label for="default-radio-1">
+        <input
+          type="radio"
+          id="default-radio-1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          value="01"
+          name="exportView_srch1"
+          checked="checked">
+        <span>전체</span>
+      </label>
+      <label for="default-radio-2">
+        <input
+          id="default-radio-2"
+          type="radio"
+          value="02"
+          name="exportView_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>수리</span>
+      </label>
+      <label for="default-radio-6">
+        <input
+          id="default-radio-6"
+          type="radio"
+          value="03"
+          name="exportView_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>미결</span>
+      </label>
+      <label for="default-radio-6">
+        <input
+          id="default-radio-6"
+          type="radio"
+          value="04"
+          name="exportView_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>승인</span>
+      </label>
+    </div>
+    <!-- 검색기간 -->
+    <label class="col-start-1 row-start-2 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+      	검색기간
+    </label>
+    <select id="exportViewDateType" class="row-start-2 col-start-2 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+      <option value="01" selected>신고일자</option>
+      <option value="02">수리일자</option>
+    </select>
+    <!-- Calendar -->
+    <div
+      date-rangepicker32
+      class="col-start-3 row-start-2 col-span-4 flex flex-wrap md:flex-nowrap items-center gap-1
+    ">
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input id="exportView_srch2" name="exportView1_date" type="text"
+        	   placeholder="yyyy-mm-dd"
+			   onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" onkeyUp="fn_dateInputForm($(this))"
+               class="text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 ">
+      </div>
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input id="exportView_srch3" name="exportView2_date" type="text"
+               class="text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 "
+               placeholder="yyyy-mm-dd"
+			   onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" 
+			   onkeyUp="fn_dateInputForm($(this))"
+			   autocomplete="off" readonly>
+      </div>
+    </div>
+    <!-- Range Button -->
+    <div id="exportView_div1" class="col-start-7 row-start-2 col-span-4 flex items-center gap-1">
+      <button
+          type="button"
+          id="today-button"
+          onclick="fn_expViewchgDate1()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+       	 당일
+      </button>
+      <button
+          type="button"
+          id="week-button"
+          onclick="fn_expViewchgDate2()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+                 이번주
+      </button>
+      <button
+          type="button"
+          id="last-month-button"
+          onclick="fn_expViewchgDate3()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+                당월
+      </button>
+      <button
+          type="button"
+          id="this-month-button"
+          onclick="fn_expViewchgDate4()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+                전월
+      </button>
+    </div>
+    <!-- 신고번호 -->
+    <label for="n0" class="row-start-3 col-start-1 flex items-center font-medium text-gray-900 pr-2">
+      	신고번호
+    </label>
+    <input type="text" id="exportView_srch4" onkeyup="enterkey()" 
+      class="row-start-3 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg
+      focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="수출신고번호를 입력해주세요.">
+    <!-- Invoice번호 -->
+    <label for="n2" class="row-start-3 col-start-7 flex items-center font-medium text-gray-900 px-2">Invoice번호</label>
+    <input type="text" id="exportView_srch5"
+           class="row-start-3 col-start-8 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+           placeholder="Invoice번호를 입력해주세요.">
+    <!-- 공장코드 -->
+    <label for="n1" class="col-start-1 row-start-4 flex items-center font-medium text-gray-900 pr-2">공장코드 </label>
+    <input type="text" id="exportView_srch6"
+           class="row-start-4 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+      	   onkeyup="enterkey()" placeholder="공장코드를 입력해주세요.">
+    <!-- SO번호 -->
+    <label for="n3" class="row-start-4 col-start-7 flex items-center font-medium text-gray-900 px-2">
+      SO번호
+    </label>
+    <input type="text" id="exportView_srch7"
+           class="row-start-4 col-span-5 col-start-8 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+      	   onkeyup="enterkey()" placeholder="SO번호를 입력해주세요.">
+  </form>
+
+  <div class="flex items-center justify-between w-full shrink-0">
+    <div class="flex items-center gap-4">
+      <h2 class="shrink-0 flex items-center gap-1"><i class="fa-duotone fa-chart-network text-primary-900">
+      	</i>수출신고 현황
+      </h2>
+       <p class="card-title inline" style="line-height: 39px">결과
+			: <span id="exportViewCnt">0</span>
+	   </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <c:if test="${!grpCd.equals('Client Basic') && !grpCd.equals('Client Advanced')}">
+    	<button
+	      	type="button"
+	      	onclick="fn_exportViewExcelDownload()"
+	        class="text-white bg-primary-700 hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-2.5 py-1.5 focus:outline-noneduration-300 row-start-1 text-base">
+         <i class="fa-regular fa-download"></i>
+        	Excel 다운로드
+      	</button>
+    </c:if>  
+     <select id="exportViewPageCnt" name="exportViewPageCnt"
+      	class="w-36 h-9 text-gray bg-primary-100 hover:bg-primary-200 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded text-base px-2.5 py-1.5 text-center inline-flex items-center border-primary-500 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+        <option value="50" selected>ROWS [50]</option>
+        <option value="100">ROWS [100]</option>
+        <option value="200">ROWS [200]</option>
+        <option value="500">ROWS [500]</option>
+      </select>
+    </div>
+  </div>
+  <!-- /MainTable -->
+  <div id="exportViewTable" class="grow bg-white shadow-sm rounded-lg border border-slate-200 z-0"></div>
+  <!-- Lan Table -->
+  <div class="grow grid grid-cols-2 min-h-[7rem] grid-rows-[1fr] gap-0">
+   <div class="bg-white shadow-sm rounded-lg border border-slate-200"
+      id="exportViewLanTable">
+    </div>
+  <!-- Spec Table -->
+    <div class="bg-white shadow-sm rounded-lg border border-slate-200" id="exportViewSpecTable">
+    </div>
+  </div>
+
+  <!-- rptNo file popup -->
+<div id="expViewFileListPopUp" class="modal fade fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center duration-300" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" style="display: none; ">
+	<div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+		<div class="modal-dialog modal-xl" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width:800px;" >
+			<div class="modal-content bg-white shadow-lg relative rounded min-w-80 overflow-hidden">
+				<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center justify-between">
+					<h1 class="modal-title">
+						<span>파일 목록</span>
+					</h1>
+					<button type="button" onclick="expViewFileListClose()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+				</div>
+				<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center justify-between">
+				<button type="button" onclick="fn_expViewFileDown()" class="px-3 py-2 rounded-lg text-white hover:opacity-50 border-2 border-transparent duration-150 bg-primary-700 ">
+			        <i class="fa-regular fa-download"></i>&nbsp;다운로드</button>
+				</div>
+				 <div class="modal-body">
+					 <div id="expViewListPopupTable" class="grow bg-white shadow-sm h-full max-h-[100rem] rounded-lg border border-slate-200 z-0"></div>
+					  <form name="expViewZipDownForm" method="post" action="/base/downloadFile.do">
+						<input type="hidden" name="expViewZipDown" id="expViewZipDown" />
+					  </form>
+				</div> 
+			</div>
+		</div>
+	</div>
+</main>
+<form id="exportViewForm" action="" method="post"></form>
+<footer class="w-full mx-auto flex justify-between justify-self-end items-center shrink-0 bg-primary-900 text-gray-200 px-6 py-2 gap-4">
+    <span>KORD Systems Inc.</span>
+    <span class="mr-auto">Copyright KORD Systems Inc. All rights reserved.</span>
+    <a href="mailto:kord@kordsystems.com">
+      <i class="fa-regular fa-envelopes"></i>
+      ioom@kordsystems.com
+    </a>
+    <p>
+      <i class="fa-regular fa-phone-volume"></i>
+      +82-2-2038-8299
+    </p>
+    <a href="#" class="hover:underline">시스템소개</a>
+    <a href="#" class="hover:underline">사용자매뉴얼</a>
+    <!-- Start -->
+    <div class="relative inline-flex" x-data="{ open: false, selected: 0 }">
+      <button
+          class="btn justify-between min-w-40 bg-white/30 dark:bg-slate-800 border-slate-200 hover:border-slate-300 text-white hover:text-slate-200 py-1"
+          aria-label="Select date range"
+          aria-haspopup="true"
+          @click.prevent="open = !open"
+          :aria-expanded="open">
+       <span class="flex items-center">
+           <span x-text="$refs.options.children[selected].children[1].innerHTML"></span>
+       </span>
+        <svg class="shrink-0 ml-1 fill-current text-slate-400" width="11" height="7" viewBox="0 0 11 7">
+          <path d="M5.4 6.8L0 1.4 1.4 0l4 4 4-4 1.4 1.4z"/>
+        </svg>
+      </button>
+      <div
+          class="z-10 absolute bottom-full left-0 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-1.5 rounded shadow-lg overflow-hidden mt-1"
+          @click.outside="open = false"
+          @keydown.escape.window="open = false"
+          x-show="open"
+          x-transition:enter="transition ease-out duration-100 transform"
+          x-transition:enter-start="opacity-0 -translate-y-2"
+          x-transition:enter-end="opacity-100 translate-y-0"
+          x-transition:leave="transition ease-out duration-100"
+          x-transition:leave-start="opacity-100"
+          x-transition:leave-end="opacity-0"
+          x-cloak>
+        <div class="font-medium text-sm text-slate-600 dark:text-slate-300" x-ref="options">
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 0 && 'text-primary-900'"
+              @click="selected = 0;open = false"
+              @focus="open = true"
+              @focusout="open = false">
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 0 && 'invisible'" width="12" height="9" viewBox="0 0 12 9">
+              <path d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>참고사이트</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 1 && 'text-primary-900'"
+              @click="selected = 1;open = false"
+              @focus="open = true"
+              @focusout="open = false">
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 1 && 'invisible'" width="12" height="9" viewBox="0 0 12 9">
+              <path d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>유니패스</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 2 && 'text-primary-900'"
+              @click="selected = 2;open = false"
+              @focus="open = true"
+              @focusout="open = false">
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 2 && 'invisible'" width="12" height="9" viewBox="0 0 12 9">
+              <path d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>관세법령정보포털</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 3 && 'text-primary-900'"
+              @click="selected = 3;open = false"
+              @focus="open = true"
+              @focusout="open = false">
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 3 && 'invisible'" width="12" height="9" viewBox="0 0 12 9">
+              <path d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>FTA 포털</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 4 && 'text-primary-900'"
+              @click="selected = 4;open = false"
+              @focus="open = true"
+              @focusout="open = false">
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 4 && 'invisible'" width="12" height="9" viewBox="0 0 12 9">
+              <path d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>트레이드테비</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- End -->
+	<script>
+    $(".portal-renderer").slideUp(0)
+    $("#portal-rendering-button").on("click", function () {
+      $(".portal-renderer").slideToggle(200)
+      $(this).children(".fa-chevron-down").toggleClass("rotate-180")
+    });
+  </script>
+</footer>
+</body>
+</html>

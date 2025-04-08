@@ -1,0 +1,35 @@
+package egovframework.pf.shipping.service.impl;
+
+import java.util.List;
+import javax.annotation.Resource;
+import org.springframework.stereotype.Service;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.shipping.service.ShippingAddressVO;
+import egovframework.pf.shipping.service.ShippingService;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+
+
+@Service("shippingService")
+public class ShippingServiceImpl extends EgovAbstractServiceImpl implements ShippingService {
+
+	@Resource(name="shippingMapper")
+	private ShippingMapper shippingMapper;
+
+	@Override
+	public List<?> selectShippingViewList(SearchVO vo) throws Exception {
+		return shippingMapper.selectShippingViewList(vo);
+	}
+	@Override
+	public List<?> selectShippingDstnList(ShippingAddressVO svo) throws Exception {
+		return shippingMapper.selectShippingDstnList(svo);
+	}
+	@Override
+	public void insertAddr(ShippingAddressVO svo) throws Exception {
+		shippingMapper.insertAddr(svo);
+	}
+	@Override
+	public void deleteAddr(ShippingAddressVO svo) throws Exception {
+		shippingMapper.deleteAddr(svo);
+	}
+
+}

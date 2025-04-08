@@ -1,0 +1,54 @@
+package egovframework.pf.rpt.service.impl;
+
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.rpt.service.AnalysisService;
+import egovframework.pf.rpt.service.reportAnalysisService;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+
+/**
+ * @Class Name : reportAnalysisServiceImp.java
+ * @Description : reportAnalysisServiceImp Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2025.03.24          	권예지         			최초 생성
+ *
+ * @author 권예지
+ * @since 2025.03.24
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KordSystems All right reserved.
+ */
+
+@Service("reportAnalysisService")
+public class reportAnalysisServiceImp extends EgovAbstractServiceImpl implements reportAnalysisService {
+	 
+	 @Resource(name="reportAnalysisMapper")
+	private reportAnalysisMapper reportAnalysisMapper;
+	
+	 // 수입통관현황
+	@Override
+	public List<?> selectImportStatus(SearchVO vo) throws Exception {
+		return reportAnalysisMapper.selectImportStatus(vo);
+	}
+	//수입통관 세액현황
+	@Override
+	public List<?> selectTaxStatus(SearchVO vo) throws Exception {
+		return reportAnalysisMapper.selectTaxStatus(vo);
+	}
+	// 전년 동월 대비 건수 비교 
+	@Override
+	public List<?> selectTaxCount(SearchVO vo) throws Exception {
+		return reportAnalysisMapper.selectTaxCount(vo);
+	}
+
+}

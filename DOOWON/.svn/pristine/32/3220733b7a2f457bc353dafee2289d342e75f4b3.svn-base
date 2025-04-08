@@ -1,0 +1,821 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.trade.service.impl.TradeMapper">
+	
+	<select id="selectTradeViewList" parameterType="searchVO" resultType="egovMap">
+	SELECT
+	COUNT(*) OVER() as CNT,
+	rpt_no,
+	exp_firm,
+	exp_lis_day,
+	exc_divi,
+	itemName,
+	itemCode,
+	qty,
+	qty_ut,
+	mg_code,
+	buy_firm,
+	trade_qty,
+	trade_remark,
+	reg_dt,
+	reg_id
+	FROM (
+		SELECT 
+		CONCAT(SUBSTRING(A.rpt_no, 1, 5), '-', SUBSTRING(A.rpt_no, 6, 2), '-', SUBSTRING(A.rpt_no, 8, 7)) AS rpt_no,
+		A.exp_firm,
+		CASE WHEN A.EXP_lis_day != '' THEN DATE_FORMAT(A.EXP_lis_day, '%Y-%m-%d') ELSE '' END AS EXP_lis_day,
+		CONCAT(A.exc_divi, '-', A.exc_diviNm ) AS exc_divi,
+		C.Gnm2 as itemName,
+		C.Gnm1 as itemCode,
+		C.Qty,
+		C.Qty_ut,
+		B.Mg_Code,
+		A.Buy_Firm,
+		A.Buy_Mark,
+		D.TRADE_QTY,
+		D.TRADE_REMARK,
+		DATE_FORMAT(D.REG_DT, '%Y-%m-%d') as REG_DT,
+		D.REG_ID
+		FROM cusdec830a1 A
+		LEFT JOIN cusdec830b1 B
+		ON A.SN = B.SNA1
+		AND A.Rpt_No = B.Rpt_No
+		LEFT JOIN cusdec830c1 C
+		ON A.SN = C.SNA1
+		AND A.Rpt_No = C.Rpt_No
+		AND B.SN = C.SNB1 
+		AND B.Ran_No = C.Ran_No
+		LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '수출'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) D_MAX
+	    ON B.Mg_Code = D_MAX.TRADE_NO
+	    AND C.gnm1 = D_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info D
+	    ON D.SEQ = D_MAX.MAX_SEQ
+		WHERE A.rece IN ('수리', '승인')
+		AND A.Exc_Divi IN ('29', '11')
+		<if test="list != null and list.size() > 0">
+            AND A.exp_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+		<if test="srch4 != null and srch4 != ''">
+		AND C.Gnm1 LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND B.mg_code LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		 AND a.exp_lis_Day Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+	) A
+	WHERE 1=1
+	ORDER BY exp_lis_day desc
+	LIMIT #{recordCountPerPage} OFFSET #{startPage};	
+		
+	 </select>
+	 
+	 
+	 <select id="selectTradeViewList2" parameterType="searchVO" resultType="egovMap">
+		
+		SELECT
+		COUNT(*) OVER() as CNT,
+		A.DeclarationID,
+		A.CompanyCode,
+		A.CompanyName,
+		A.DeclarationNo as rptNo,
+		DATE_FORMAT(A.DeclarationDate, '%Y/%m/%d') as rptDay,
+		A.DeclarationKindCode as tradeType,
+		B.ItemName as itemName,
+		B.MaterialCode as itemCode,
+		B.Quantity1 as qty,
+		B.QuantityUnitCode1 as unit,
+		A.InvoiceNo as invoiceNo,
+		DATE_FORMAT(A.InvoiceDate, '%Y/%m/%d') as invoiceDate,
+		A.CustomerCode,
+		A.CustomerName as buyFirm,
+		A.ContractNo,
+		C.TRADE_QTY,
+		C.TRADE_REMARK,
+		DATE_FORMAT(C.REG_DT, '%Y-%m-%d') as REG_DT,
+		C.REG_ID
+		FROM dbdeclaration A
+		LEFT JOIN dbgooditem B
+		ON A.DeclarationID = B.DeclarationID
+		LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '수입'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) C_MAX
+	    ON A.invoiceNo = C_MAX.TRADE_NO
+	    AND right(B.ItemName,10) = C_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info C
+	    ON C.SEQ = C_MAX.MAX_SEQ
+		WHERE A.declarationType = 'N'
+		AND A.CompanyCode = '2300794371'
+		AND A.CustomerName IN ('SEHYUN TECH CO.,LTD.', 'Y2 SOLUTION CO.,LTD')
+		AND A.DeclarationKindCode IN ('B11', 'E11', 'E15')
+		AND a.DeclarationDate Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		<if test="srch4 != null and srch4 != ''">
+		AND right(B.ItemName,10) LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND A.InvoiceNo LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		ORDER BY A.DeclarationDate desc
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+
+	 </select>
+	 
+	 
+	 <select id="selectTradeViewList3" parameterType="searchVO" resultType="egovMap">
+	  	SELECT 
+			  COUNT(*) OVER() as CNT
+			, A.CMPNY_CD
+			, A.PLNT_CD
+			, A.ITEM_TYPE						
+			, A.ENTRY_DT					
+			, A.ENTRY_NO as rptNo
+			, A.WARE_INFO
+			, A.ITEM_NOTE
+			, A.ITEM_CD as itemCode
+			, A.CUS_ITEM_CD
+			, A.UNIT
+			, A.IMP_DT				
+			, A.QTY			
+			, A.TRD_CD
+			, A.CD_ETC			
+			, A.CD_NO			
+			, A.REMARK
+			, A.DEL_YN
+			, B.TRADE_QTY
+			, B.TRADE_REMARK
+			, DATE_FORMAT(B.REG_DT, '%Y-%m-%d') as REG_DT
+			, B.REG_ID
+		  FROM LIQ_ENTRY_INFO A
+		  LEFT JOIN (
+	    	SELECT 
+		        TRADE_NO,
+		        TRADE_ITEM_CD,
+		        MAX(SEQ) AS MAX_SEQ
+		    FROM trade_info
+		    WHERE TRADE_TYPE = '입고'
+		    GROUP BY TRADE_NO, TRADE_ITEM_CD
+			) B_MAX
+			ON A.cd_no = B_MAX.TRADE_NO
+			AND A.ITEM_CD = B_MAX.TRADE_ITEM_CD 
+			LEFT JOIN trade_info B
+			ON B.SEQ = B_MAX.MAX_SEQ
+		 WHERE 1=1
+		 AND A.ENTRY_DT Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		 <if test="srch4 != null and srch4 != ''">
+		 AND A.ITEM_CD LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		 </if>
+		 <if test="srch5 != null and srch5 != ''">
+		 AND A.CD_NO LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		 </if>
+	 </select>
+	 
+	
+	 <select id="selectTradeGapList1" parameterType="searchVO" resultType="egovMap">
+	 	SELECT 
+	 	COUNT(*) OVER() as CNT
+	 	, A.itemCode
+		, A.Buy_Firm
+		, 'Y2GG-20220824' as ContractNo
+		, A.Mg_Code
+		, ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) AS expQty
+	    , ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) AS gap1
+		, ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) AS impQty
+		, ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) AS gap2
+		, ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) AS entryQty
+		FROM (
+		SELECT 
+		C.gnm1 as itemCode,
+		A.Buy_Firm,
+		B.Mg_Code,
+		SUM(C.Qty) AS qty
+		FROM cusdec830a1 A
+		LEFT JOIN cusdec830b1 B
+		ON A.SN = B.SNA1
+		AND A.Rpt_No = B.Rpt_No
+		LEFT JOIN cusdec830c1 C
+		ON A.SN = C.SNA1
+		AND A.Rpt_No = C.Rpt_No
+		AND B.SN = C.SNB1 
+		AND B.Ran_No = C.Ran_No
+		WHERE A.rece IN ('수리', '승인')
+		AND A.Exc_Divi IN ('29', '11')
+		AND A.exp_sdno IN ('2208121836', '1248709424')
+		AND A.Buy_Mark = 'VNSEHYUN0005F'
+		<if test="srch4 != null and srch4 != ''">
+		AND C.gnm1 LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND B.Mg_Code LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		AND A.exp_lis_Day Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		GROUP BY B.Mg_Code, C.gnm1
+		
+		) A left JOIN 
+		(
+		SELECT 
+		right(B.ItemName,10) as itemCode,
+		SUM(B.Quantity1) as qty,
+		A.InvoiceNo as invoiceNo
+		FROM dbdeclaration A
+		LEFT JOIN dbgooditem B
+		ON A.DeclarationID = B.DeclarationID
+		WHERE A.declarationType = 'N'
+		AND A.CompanyCode = '2300794371'
+		AND A.CustomerName IN ('SEHYUN TECH CO.,LTD.', 'Y2 SOLUTION CO.,LTD')
+		AND A.DeclarationKindCode IN ('B11', 'E11', 'E15')
+		AND A.declarationDate Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		<if test="srch4 != null and srch4 != ''">
+		AND right(B.ItemName,10) LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND A.InvoiceNo LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		GROUP BY A.InvoiceNo, right(B.ItemName,10)
+		) B
+		ON A.itemCode = B.itemCode AND REPLACE(A.Mg_Code,' ','') = REPLACE(B.invoiceNo,' ','')
+		LEFT JOIN (	
+		SELECT 
+		item_cd AS itemCode, 
+		SUM(qty) AS qty, 
+		cd_no AS invoiceNo
+		FROM liq_entry_info A
+		WHERE A.entry_dt Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		<if test="srch4 != null and srch4 != ''">
+		AND item_cd LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND cd_no LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		GROUP BY cd_no, item_cd
+		) C
+		ON B.itemCode = C.itemCode AND REPLACE(B.invoiceNo,' ','') = REPLACE(C.invoiceNo,' ','')
+		LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '수출'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DA_MAX
+	    ON A.Mg_Code = DA_MAX.TRADE_NO
+	    AND A.itemCode = DA_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DA
+	    ON DA.SEQ = DA_MAX.MAX_SEQ
+		LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '수입'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DB_MAX
+	    ON A.Mg_Code = DB_MAX.TRADE_NO
+	    AND A.itemCode = DB_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DB
+	    ON DB.SEQ = DB_MAX.MAX_SEQ
+	    LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '입고'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DC_MAX
+	    ON A.Mg_Code = DC_MAX.TRADE_NO
+	    AND A.itemCode = DC_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DC
+	    ON DC.SEQ = DC_MAX.MAX_SEQ
+		WHERE 1=1
+		<choose>
+		<when test="srch6 == '02'">
+		AND (ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) != 0 
+		OR ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) != 0)
+		</when>
+		<when test="srch6 == '03'">
+		AND (ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) = 0 
+		AND ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) = 0)
+		</when>
+		</choose>
+		ORDER BY A.MG_CODE, A.itemCode
+	 </select>
+	 
+	 <select id="selectTradeGapList2" parameterType="searchVO" resultType="egovMap">
+	 	SELECT 
+	 	COUNT(*) OVER() as CNT
+	 	, A.itemCode
+		, A.Buy_Firm
+		, 'Y2GG-20220824' as ContractNo
+		, A.Mg_Code
+		, ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) AS expQty
+	    , ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) AS gap1
+		, ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) AS impQty
+		, ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) AS gap2
+		, ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) AS entryQty
+		FROM (
+		SELECT 
+		C.gnm1 as itemCode,
+		A.Buy_Firm,
+		B.Mg_Code,
+		SUM(C.Qty) AS qty
+		FROM cusdec830a1 A
+		LEFT JOIN cusdec830b1 B
+		ON A.SN = B.SNA1
+		AND A.Rpt_No = B.Rpt_No
+		LEFT JOIN cusdec830c1 C
+		ON A.SN = C.SNA1
+		AND A.Rpt_No = C.Rpt_No
+		AND B.SN = C.SNB1 
+		AND B.Ran_No = C.Ran_No
+		WHERE A.rece IN ('수리', '승인')
+		AND A.Exc_Divi ='11'
+		AND A.exp_sdno = '1248709424'
+		AND A.Buy_Mark = 'VNSEHYUN0005F'
+		<if test="srch4 != null and srch4 != ''">
+		AND C.gnm1 LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND B.Mg_Code LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		AND A.exp_lis_Day Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		GROUP BY B.Mg_Code, C.gnm1
+		) A left JOIN 
+		(
+		SELECT 
+		right(B.ItemName,10) as itemCode,
+		SUM(B.Quantity1) as qty,
+		A.InvoiceNo as invoiceNo
+		FROM dbdeclaration A
+		LEFT JOIN dbgooditem B
+		ON A.DeclarationID = B.DeclarationID
+		WHERE A.declarationType = 'N'
+		AND A.CompanyCode = '2300794371'
+		AND A.DeclarationKindCode IN ('B11', 'E15')
+		AND A.CustomerName = 'SEHYUN TECH CO.,LTD.'
+		AND A.declarationDate Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		<if test="srch4 != null and srch4 != ''">
+		AND right(B.ItemName,10) LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND A.InvoiceNo LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		GROUP BY A.InvoiceNo, right(B.ItemName,10) 
+		) B
+		ON A.itemCode = B.itemCode AND REPLACE(A.Mg_Code,' ','') = REPLACE(B.invoiceNo,' ','')
+		LEFT JOIN (	
+		SELECT 
+		item_cd AS itemCode, 
+		SUM(qty) AS qty, 
+		cd_no AS invoiceNo
+		FROM liq_entry_info A
+		WHERE A.entry_dt Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		<if test="srch4 != null and srch4 != ''">
+		AND item_cd LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND cd_no LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		GROUP BY  cd_no, item_cd
+		) C
+		ON B.itemCode = C.itemCode AND REPLACE(B.invoiceNo,' ','') = REPLACE(C.invoiceNo,' ','')
+		LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '수출'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DA_MAX
+	    ON A.Mg_Code = DA_MAX.TRADE_NO
+	    AND A.itemCode = DA_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DA
+	    ON DA.SEQ = DA_MAX.MAX_SEQ
+		LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '수입'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DB_MAX
+	    ON A.Mg_Code = DB_MAX.TRADE_NO
+	    AND A.itemCode = DB_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DB
+	    ON DB.SEQ = DB_MAX.MAX_SEQ
+	    LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '입고'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DC_MAX
+	    ON A.Mg_Code = DC_MAX.TRADE_NO
+	    AND A.itemCode = DC_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DC
+	    ON DC.SEQ = DC_MAX.MAX_SEQ
+		WHERE 1=1
+		<choose>
+		<when test="srch6 == '02'">
+		AND (ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) != 0 
+		OR ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) != 0)
+		</when>
+		<when test="srch6 == '03'">
+		AND (ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) = 0 
+		AND ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) = 0)
+		</when>
+		</choose>
+		ORDER BY A.MG_CODE, A.itemCode
+	 </select>
+	 
+	 
+	 <select id="selectTradeGapList3" parameterType="searchVO" resultType="egovMap">
+	 	SELECT 
+	 	COUNT(*) OVER() as CNT
+	 	, A.itemCode
+		, A.Buy_Firm
+		, 'Y2GG-20220824' as ContractNo
+		, A.invoice_no as Mg_Code
+		, ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) AS expQty
+	    , ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) AS gap1
+		, ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) AS impQty
+		, ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) AS gap2
+		, ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) AS entryQty
+		FROM (
+		SELECT  
+		A.item_cd AS itemCode,
+		'SEHYUN TECH VN CO LTD' AS buy_firm,
+		A.invoice_no,
+		A.invoice_Date,
+		SUM(A.qty) as qty
+		FROM trade_invoice A
+		WHERE 1=1
+		<if test="srch4 != null and srch4 != ''">
+		AND A.item_cd LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND A.invoice_no LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		AND A.invoice_Date Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		GROUP BY A.invoice_no, A.item_cd 
+		
+		) A left JOIN 
+		(
+		SELECT 
+		right(B.ItemName,10) as itemCode,
+		SUM(B.Quantity1) as qty,
+		A.InvoiceNo as invoiceNo
+		FROM dbdeclaration A
+		LEFT JOIN dbgooditem B
+		ON A.DeclarationID = B.DeclarationID
+		WHERE A.declarationType = 'N'
+		AND A.CompanyCode = '2300794371'
+		AND A.DeclarationKindCode IN ('E11', 'E15')
+		AND A.CustomerName = 'SEHYUN TECH CO.,LTD.'
+		AND A.declarationDate Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		<if test="srch4 != null and srch4 != ''">
+		AND right(B.ItemName,10) LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND A.InvoiceNo LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		GROUP BY right(B.ItemName,10), A.InvoiceNo
+		) B
+		ON A.itemCode = B.itemCode AND REPLACE(A.invoice_no,' ','') = REPLACE(B.invoiceNo,' ','')
+		LEFT JOIN (	
+		SELECT 
+		item_cd AS itemCode, 
+		SUM(qty) AS qty, 
+		cd_no AS invoiceNo
+		FROM liq_entry_info A
+		WHERE A.entry_dt Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		<if test="srch4 != null and srch4 != ''">
+		AND item_cd LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND cd_no LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		GROUP BY item_cd, cd_no
+		) C
+		ON B.itemCode = C.itemCode AND REPLACE(B.invoiceNo,' ','') = REPLACE(C.invoiceNo,' ','')
+		LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '수출'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DA_MAX
+	    ON A.invoice_no = DA_MAX.TRADE_NO
+	    AND A.itemCode = DA_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DA
+	    ON DA.SEQ = DA_MAX.MAX_SEQ
+		LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '수입'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DB_MAX
+	    ON A.invoice_no = DB_MAX.TRADE_NO
+	    AND A.itemCode = DB_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DB
+	    ON DB.SEQ = DB_MAX.MAX_SEQ
+	    LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '입고'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DC_MAX
+	    ON A.invoice_no = DC_MAX.TRADE_NO
+	    AND A.itemCode = DC_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DC
+	    ON DC.SEQ = DC_MAX.MAX_SEQ
+		WHERE 1=1
+		<choose>
+		<when test="srch6 == '02'">
+		AND (ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) != 0 
+		OR ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) != 0)
+		</when>
+		<when test="srch6 == '03'">
+		AND (ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) = 0 
+		AND ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) = 0)
+		</when>
+		</choose>
+		ORDER BY A.invoice_no, A.itemCode
+	 </select>
+	 
+	 
+	 <select id="selectTradeGapList4" parameterType="searchVO" resultType="egovMap">
+	 	SELECT 
+	 	COUNT(*) OVER() as CNT
+	 	, A.itemCode
+		, A.Buy_Firm
+		, 'Y2GG-20220824' as ContractNo
+		, A.invoice_no as Mg_Code
+		, ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) AS expQty
+	    , ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) AS gap1
+		, ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) AS impQty
+		, ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) AS gap2
+		, ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) AS entryQty
+		FROM (
+		SELECT  
+		A.item_cd AS itemCode,
+		'SEHYUN TECH VN CO LTD' AS buy_firm,
+		A.invoice_no,
+		SUM(A.qty) as qty
+		FROM trade_invoice A
+		WHERE 1=1
+		<if test="srch4 != null and srch4 != ''">
+		AND A.item_cd LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND A.invoice_no LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		AND A.invoice_Date Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		GROUP BY A.invoice_no, A.item_cd 
+		
+		UNION
+		
+		SELECT 
+		C.gnm1 as itemCode,
+		A.Buy_Firm,
+		B.Mg_Code,
+		SUM(C.Qty) AS qty
+		FROM cusdec830a1 A
+		LEFT JOIN cusdec830b1 B
+		ON A.SN = B.SNA1
+		AND A.Rpt_No = B.Rpt_No
+		LEFT JOIN cusdec830c1 C
+		ON A.SN = C.SNA1
+		AND A.Rpt_No = C.Rpt_No
+		AND B.SN = C.SNB1 
+		AND B.Ran_No = C.Ran_No
+		WHERE A.rece IN ('수리', '승인')
+		AND A.Exc_Divi ='11'
+		AND A.exp_sdno = '1248709424'
+		AND A.Buy_Mark = 'VNSEHYUN0005F'
+		<if test="srch4 != null and srch4 != ''">
+		AND C.gnm1 LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND B.Mg_Code LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		AND A.exp_lis_Day Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		GROUP BY B.Mg_Code, C.gnm1
+		
+		) A left JOIN 
+		(
+		SELECT 
+		right(B.ItemName,10) as itemCode,
+		SUM(B.Quantity1) as qty,
+		A.InvoiceNo as invoiceNo
+		FROM dbdeclaration A
+		LEFT JOIN dbgooditem B
+		ON A.DeclarationID = B.DeclarationID
+		WHERE A.declarationType = 'N'
+		AND A.CompanyCode = '2300794371'
+		AND A.DeclarationKindCode IN ('B11', 'E11', 'E15')
+		AND A.CustomerName = 'SEHYUN TECH CO.,LTD.'
+		AND A.declarationDate Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		<if test="srch4 != null and srch4 != ''">
+		AND right(B.ItemName,10) LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND A.InvoiceNo LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		GROUP BY right(B.ItemName,10), A.InvoiceNo
+		) B
+		ON A.itemCode = B.itemCode AND REPLACE(A.invoice_no,' ','') = REPLACE(B.invoiceNo,' ','')
+		LEFT JOIN (	
+		SELECT 
+		item_cd AS itemCode, 
+		SUM(qty) AS qty, 
+		cd_no AS invoiceNo 
+		FROM liq_entry_info A
+		WHERE A.entry_dt Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		<if test="srch4 != null and srch4 != ''">
+		AND item_cd LIKE CONCAT('%',UPPER(#{srch4}),'%')
+		</if>
+		<if test="srch5 != null and srch5 != ''">
+		AND cd_no LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		</if>
+		GROUP BY item_cd, cd_no
+		) C
+		ON B.itemCode = C.itemCode AND REPLACE(B.invoiceNo,' ','') = REPLACE(C.invoiceNo,' ','')
+		LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '수출'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DA_MAX
+	    ON A.invoice_no = DA_MAX.TRADE_NO
+	    AND A.itemCode = DA_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DA
+	    ON DA.SEQ = DA_MAX.MAX_SEQ
+		LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '수입'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DB_MAX
+	    ON A.invoice_no = DB_MAX.TRADE_NO
+	    AND A.itemCode = DB_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DB
+	    ON DB.SEQ = DB_MAX.MAX_SEQ
+	    LEFT JOIN (
+    	SELECT 
+	        TRADE_NO,
+	        TRADE_ITEM_CD,
+	        MAX(SEQ) AS MAX_SEQ
+	    FROM trade_info
+	    WHERE TRADE_TYPE = '입고'
+	    GROUP BY TRADE_NO, TRADE_ITEM_CD
+		) DC_MAX
+	    ON A.invoice_no = DC_MAX.TRADE_NO
+	    AND A.itemCode = DC_MAX.TRADE_ITEM_CD
+		LEFT JOIN trade_info DC
+	    ON DC.SEQ = DC_MAX.MAX_SEQ
+		WHERE 1=1
+		<choose>
+		<when test="srch6 == '02'">
+		AND (ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) != 0 
+		OR ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) != 0)
+		</when>
+		<when test="srch6 == '03'">
+		AND (ifnull(CAST(DA.trade_Qty AS DECIMAL(10, 2)), A.qty) - ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) = 0 
+		AND ifnull(ifnull(CAST(DB.trade_Qty AS DECIMAL(10, 2)), B.qty),0) - ifnull(ifnull(CAST(DC.trade_Qty AS DECIMAL(10, 2)), C.qty),0) = 0)
+		</when>
+		</choose>
+		ORDER BY A.invoice_no, A.itemCode
+	 </select>
+	 
+	 
+	 
+	 <select id="selectTradeGapLanList" parameterType="searchVO" resultType="egovMap">
+ 		SELECT 
+		COUNT(*) OVER() AS CNT,
+		TRADE_TYPE,
+		DATE_FORMAT(REG_DT, '%Y-%m-%d') as REG_DT,
+		TRADE_NO,
+		TRADE_ITEM_CD,
+		TRADE_ITEM_NOTE,
+		TRADE_QTY,
+		TRADE_REMARK,
+		REG_ID
+		FROM trade_info
+		WHERE TRADE_NO = #{srch1}
+		AND TRADE_ITEM_CD = #{srch2}
+		ORDER BY trade_type, seq desc
+	 </select>
+	 
+	 
+	 <select id="selectTradeUploadList" parameterType="searchVO" resultType="egovMap">
+	 SELECT
+	 COUNT(*) OVER() as CNT,
+	 INVOICE_NO,
+	 DATE_FORMAT(INVOICE_DATE, '%Y-%m-%d') AS INVOICE_DATE,
+	 ITEM_CD,
+	 CATAGORY,
+	 ITEM_NAME,
+	 FORMAT(QTY,0) AS QTY,
+	 DEL_YN
+	 FROM TRADE_INVOICE
+	 WHERE 1=1
+	 
+	 </select>
+	 
+	 <insert id="saveTradeUpload" parameterType = "egovframework.pf.trade.service.TradeVO">
+	 INSERT INTO trade_invoice (
+	 CMPNY_CD, 
+	 INVOICE_NO, 
+	 INVOICE_DATE, 
+	 ITEM_CD, 
+	 CATAGORY, 
+	 ITEM_NAME, 
+	 QTY, 
+	 DEL_YN, 
+	 REG_DT, 
+	 REG_ID
+	 ) VALUES (
+	 #{cmpnyCd}, 
+	 #{invoiceNo}, 
+	 REPLACE(#{invoiceDate},'-',''), 
+	 #{itemCd}, 
+	 #{catagory}, 
+	 #{itemName}, 
+	 REPLACE(#{qty},',',''), 
+	 'N', 
+	 NOW(), 
+	 #{regId}
+	 ) ON DUPLICATE KEY UPDATE 
+	 	CATAGORY = #{catagory},
+	 	ITEM_NAME = #{itemName},
+	 	QTY = REPLACE(#{qty},',',''),
+	 	DEL_YN = IFNULL(#{delYn}, 'N'),
+	 	EDT_DT = NOW(),
+	 	EDT_ID = #{edtId}
+	 </insert>
+	 
+	  <insert id="saveTradeGapLan" parameterType="egovframework.pf.trade.service.TradeGapVO">
+		INSERT INTO TRADE_INFO
+		(
+		TRADE_TYPE,
+		CMPNY_CD,
+		TRADE_NO,
+		TRADE_ITEM_CD,
+		TRADE_QTY,
+		TRADE_REMARK,
+		TRADE_ITEM_NOTE,
+		DEL_YN,
+		REG_DT,
+		REG_ID
+		) VALUES (
+		#{tradeType},
+		#{cmpnyCd},
+		#{tradeNo},
+		#{tradeItemCd},
+		#{tradeQty},
+		#{tradeRemark},
+		#{tradeItemNote},
+		'N',
+		DATE_FORMAT(NOW(), '%Y%m%d'),
+		#{regId}
+		);
+	</insert>
+	 
+</mapper>
+

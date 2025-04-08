@@ -1,0 +1,123 @@
+package egovframework.pf.shipping.web;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.exp.service.SaveExpInvoiceVO;
+import egovframework.pf.shipping.service.ShippingAddressVO;
+import egovframework.pf.shipping.service.ShippingOrderVO;
+import egovframework.pf.shipping.service.ShippingService;
+
+@Controller
+public class ShippingController {
+
+	@Resource(name = "shippingService")
+	private ShippingService shippingService;
+	
+	@RequestMapping(value = "/shipping/shippingView.do")
+	public String shippingView(HttpServletRequest request, Model model) throws Exception {
+		return "shipping/shippingView";
+	}
+	
+	@RequestMapping(value = "/shipping/selectShippingViewList.do", method = RequestMethod.POST)
+	public ModelAndView selectShippingViewList(@RequestBody SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setList(userVO.getCorpNos());
+		}
+		List<?> resultList = shippingService.selectShippingViewList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/shipping/selectShippingDstnList.do")
+	public ModelAndView selectShippingDstnList(@ModelAttribute("ShippingAddressVO") ShippingAddressVO svo, HttpServletRequest request, 
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		svo.setCorpNo(userVO.getCorpNo());
+		List<?> resultList = shippingService.selectShippingDstnList(svo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/shipping/insertAddr.do", method = RequestMethod.POST)
+	public ModelAndView insertAddr(
+	        @ModelAttribute ShippingAddressVO svo, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+
+	    svo.setCorpNo(userVO.getCorpNo());
+	    svo.setId(userVO.getId());
+
+	    shippingService.insertAddr(svo);
+	    ModelAndView mav = new ModelAndView("jsonView", model);
+	    return mav;
+	}
+
+	@RequestMapping(value = "/shipping/deleteAddr.do", method = RequestMethod.POST)
+	@ResponseBody
+	public void deleteAddr(@RequestBody List<ShippingAddressVO> svoList, HttpServletRequest request, ModelMap model) throws Exception {
+	    for (ShippingAddressVO svo : svoList) {
+	        shippingService.deleteAddr(svo);
+	    }
+	}
+
+	@RequestMapping(value = "/shipping/insertShippingTempList.do")
+	@ResponseBody
+	public String insertShippingTempList(@RequestBody List<ShippingOrderVO> voList, HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		SearchVO vo = new SearchVO();
+		vo.setSrch1(voList.get(0).getBlNo());
+		shippingService.insertShippingTempList(voList,userVO);
+		return "success";
+	}
+	
+	@RequestMapping(value = "/shipping/selectShippingTempList.do")
+	public ModelAndView selectShippingTempList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, 
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+		List<?> resultList = shippingService.selectShippingTempList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/shipping/selectShippingOrderSeqList.do")
+	public ModelAndView selectShippingOrderSeqList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, 
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+		List<?> resultList = shippingService.selectShippingOrderSeqList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+}

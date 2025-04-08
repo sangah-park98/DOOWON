@@ -1,0 +1,61 @@
+package egovframework.pf.exp.web;
+
+public class ZipFileDownload {
+	
+	private String invoiceNo;
+	private String blno;
+	private String docuType;
+	private String docuOrgFile;
+	private String docuFile;
+	private String docuRptNo;
+	private String rptNo;
+	
+	public String getRptNo() {
+		return rptNo;
+	}
+	public void setRptNo(String rptNo) {
+		this.rptNo = rptNo;
+	}
+	public ZipFileDownload() {}
+
+    public ZipFileDownload(String docuRptNo) {
+        this.docuRptNo = docuRptNo;
+    }
+	public String getDocuRptNo() {
+		return docuRptNo;
+	}
+	public void setDocuRptNo(String docuRptNo) {
+		this.docuRptNo = docuRptNo;
+	}
+	public String getBlno() {
+		return blno;
+	}
+	public void setBlno(String blno) {
+		this.blno = blno;
+	}
+	public String getInvoiceNo() {
+		return invoiceNo;
+	}
+	public void setInvoiceNo(String invoiceNo) {
+		this.invoiceNo = invoiceNo;
+	}
+	public String getDocuType() {
+		return docuType;
+	}
+	public void setDocuType(String docuType) {
+		this.docuType = docuType;
+	}
+	public String getDocuOrgFile() {
+		return docuOrgFile;
+	}
+	public void setDocuOrgFile(String docuOrgFile) {
+		this.docuOrgFile = docuOrgFile;
+	}
+	public String getDocuFile() {
+		return docuFile;
+	}
+	public void setDocuFile(String docuFile) {
+		this.docuFile = docuFile;
+	}
+	 
+}

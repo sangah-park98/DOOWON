@@ -1,0 +1,577 @@
+package egovframework.ms.item.web;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URLDecoder;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itextpdf.text.log.SysoCounter;
+
+import egovframework.ms.item.service.ItemService;
+import egovframework.pf.cmmn.service.CmmnService;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.item.service.SaveSpecVO;
+import egovframework.pf.item.service.SaveMemoVO;
+import egovframework.pf.item.service.pfItemService;
+import egovframework.pf.util.ExcelUtil;
+import egovframework.pf.util.ItemView_ExcelUtil;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+
+/**
+ * @Class Name : itemController.java
+ * @Description : 아이템 컨트롤러
+ * @Modification Information
+ * @
+ * @  수정일          			 수정자              			 수정내용
+ * @ ---------        ----------     -------------------------------
+ * @ 2024.02.13			권예지              				 최초생성
+ *
+ * @author 권예지
+ * @since 2024.02.13
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KORD All right reserved.
+ */
+
+@Controller
+public class itemController {
+
+	@Resource(name = "CmmnService")
+	private CmmnService CmmnService;
+	
+	@Resource(name = "itemService")
+	private ItemService itemService;
+	
+	@Resource(name = "pfItemService")
+	private pfItemService pfitemService;
+
+	
+
+		//아이템 화면 호출
+		@RequestMapping(value = "/item/itemInfo.do")
+		public String importView(HttpServletRequest request, Model model) throws Exception {
+			HttpSession httpSession = request.getSession(true);
+			UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			model.addAttribute("writable","Y".equals(userVO.getAdminYn())?"Y":CmmnService.selectWriteCheck(request.getServletPath(), userVO));
+			SearchVO vo = new SearchVO();
+			String lang = userVO.getLang();
+			vo.setLang(lang);
+			vo.setCmpnyCd(userVO.getCmpnyCd());
+			vo.setCorpNo(userVO.getCorpNo());
+			model.addAttribute("lang", lang);
+			model.addAttribute("userCmpnyCd", userVO.getCmpnyCd());
+			model.addAttribute("grpCd", userVO.getGrpCd());
+				
+			return "item/itemView";
+		}
+		 
+		@RequestMapping(value="/item/selectItemViewList.do")
+		public ModelAndView selectItemViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		    HttpSession httpSession = request.getSession(true);
+		    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		    vo.setList(userVO.getCmpnyCds());
+			vo.setList(userVO.getCorpNos());
+		    System.out.println("검색구분 :"+vo.getExType());
+		    List<?> resultList = null;
+		    int totCnt = 0;
+		     System.out.println("중복허용"+vo.getSrch13());
+		   
+		     
+		     if(vo.getExType().equals("01")) {
+		    	   if(vo.getSrch13()!= null) {// 중복허용할때
+		    		   System.out.println("전체,중복O");
+		    		  resultList = pfitemService.selectDuplicationItemViewList(vo);
+						//totCnt = pfitemService.selectDuplicationItemViewListCnt(vo);
+		    	   }else { // 중복 허용 X
+		    		   System.out.println("전체,중복X");
+		    		    resultList = pfitemService.selectItemViewList(vo);
+						//totCnt = pfitemService.selectItemViewListCnt(vo);
+		    	   }
+		     } else if(vo.getExType().equals("02")) {
+	    	   if(vo.getSrch13()!= null) { //중복허용할때
+	    		   System.out.println("수입,중복O"); 
+	    		   resultList = pfitemService.selectDuplicationItemViewimportList(vo);
+	    		  // totCnt = pfitemService.selectDuplicationItemViewimportListCnt(vo);
+	    	   }else { //중복허용x
+	    		   System.out.println("수입,중복X");
+	    		   resultList = pfitemService.selectItemViewimportList(vo);
+	    		   //totCnt = pfitemService.selectItemViewimportListCnt(vo);
+	    	   }
+		     }else if(vo.getExType().equals("03")) {
+		    	   if(vo.getSrch13()!= null) { //중복허용
+		    		   System.out.println("수출,중복O"); 
+					   resultList = pfitemService.selectDuplicationItemViewExportList(vo);
+					  // totCnt = pfitemService.selectDuplicationItemViewExportListCnt(vo); 
+		    	   }else {//중복허용x
+		    		   System.out.println("수출,중복X");   
+					   resultList = pfitemService.selectItemViewExportList(vo);
+					   //totCnt = pfitemService.selectItemViewExportListCnt(vo); 
+		    	   }
+					
+		       }
+		    
+		     
+		     //페이징 처리 
+		   /* if (vo.getPageIndex() != 0) {
+		        int start = (vo.getPageIndex()*vo.getRecordCountPerPage())+1;
+		        int end = (start + vo.getRecordCountPerPage())-1; 
+		        vo.setStartPageMs(start);
+		        vo.setRecordCountPerPage(end);
+			       if(vo.getExType().equals("01")) {
+			    	   
+			    	   if(vo.getSrch13()!= null) {// 중복허용할때
+			    		   System.out.println("전체,중복O");
+			    		   resultList = itemService.selectDuplicationItemViewList(vo);
+							totCnt = itemService.selectDuplicationItemViewListCnt(vo);
+			    	   }else { // 중복 허용 X
+			    		   System.out.println("전체,중복X");
+			    		    resultList = itemService.selectItemViewList(vo);
+							totCnt = itemService.selectItemViewListCnt(vo);
+			    	   }
+						
+			       }else if(vo.getExType().equals("02")) {
+			    	   
+			    	   if(vo.getSrch13()!= null) { //중복허용할때
+			    		   System.out.println("수입,중복O"); 
+			    		   resultList = itemService.selectDuplicationItemViewimportList(vo);
+			    		   totCnt = itemService.selectDuplicationItemViewimportListCnt(vo);
+			    	   }else { //중복허용x
+			    		   System.out.println("수입,중복X");
+			    		   resultList = itemService.selectItemViewimportList(vo);
+			    		   totCnt = itemService.selectItemViewimportListCnt(vo);
+			    	   }
+						
+			       }else if(vo.getExType().equals("03")) {
+			    	   if(vo.getSrch13()!= null) { //중복허용
+			    		   System.out.println("수출,중복O"); 
+						   resultList = itemService.selectDuplicationItemViewExportList(vo);
+						   totCnt = itemService.selectDuplicationItemViewExportListCnt(vo); 
+			    	   }else {//중복허용x
+			    		   System.out.println("수출,중복O");   
+						   resultList = itemService.selectItemViewExportList(vo);
+						   totCnt = itemService.selectItemViewExportListCnt(vo); 
+			    	   }
+						
+			       }
+		    } else {
+		        // 처음로딩될때
+		    	 if(vo.getExType().equals("01")) {
+		    		 if(vo.getSrch13()!= null)  {// 중복허용할때
+			    		   System.out.println("전체1,중복O");
+			    		   resultList = itemService.selectDuplicationItemViewList(vo);
+							totCnt = itemService.selectDuplicationItemViewListCnt(vo);
+			    	   }else { // 중복 허용 X
+			    		   System.out.println("전체1,중복X");
+			    		    resultList = itemService.selectItemViewList(vo);
+							totCnt = itemService.selectItemViewListCnt(vo);
+			    	   }
+			       }else if(vo.getExType().equals("02")) {
+			    	   if(vo.getSrch13()!= null)  { //중복허용할때
+			    		   System.out.println("수입,중복O"); 
+			    		   resultList = itemService.selectDuplicationItemViewimportList(vo);
+			    		   totCnt = itemService.selectDuplicationItemViewimportListCnt(vo);
+			    	   }else { //중복허용x
+			    		   System.out.println("수입,중복X");
+			    		   resultList = itemService.selectItemViewimportList(vo);
+			    		   totCnt = itemService.selectItemViewimportListCnt(vo);
+			    	   }
+			       }else if(vo.getExType().equals("03")) {
+			    	   if(vo.getSrch13()!= null) { //중복허용
+			    		   System.out.println("수출,중복O"); 
+						   resultList = itemService.selectDuplicationItemViewExportList(vo);
+						   totCnt = itemService.selectDuplicationItemViewExportListCnt(vo); 
+			    	   }else {//중복허용x
+			    		   System.out.println("수출,중복O");   
+						   resultList = itemService.selectItemViewExportList(vo);
+						   totCnt = itemService.selectItemViewExportListCnt(vo); 
+			    	   }
+			       }
+		    }*/
+		    ModelAndView mav = new ModelAndView("jsonView");
+		    mav.addObject("resultList", resultList);
+		   // mav.addObject("totCnt", totCnt);
+
+		    return mav;
+
+		}
+		
+		@RequestMapping(value="/item/selectitemViewLanList.do")
+		public ModelAndView selectItemViewLanList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+			 	HttpSession httpSession = request.getSession(true);
+			    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			    vo.setLang(userVO.getLang());
+			    vo.setCmpnyCd(userVO.getCmpnyCd());
+			    vo.setCorpNo(userVO.getCorpNo());
+			    System.out.println("검색구분 :"+vo.getExType());
+			    List<?> resultList = null;
+			    int totCnt = 0;
+			    System.out.println("아이템 :"+ vo.getSrch2());
+			  
+			    if(vo.getExType().equals("01")) {
+					System.out.println("전체");
+					resultList = pfitemService.selectItemViewLanList(vo);
+					//totCnt = pfitemService.selectItemViewLanListCnt(vo);
+					System.out.println("totCnt"+totCnt);
+		       }else if(vo.getExType().equals("02")) {
+					System.out.println("수입"); 
+					resultList = pfitemService.selectItemViewLanImportList(vo);
+					//totCnt = pfitemService.selectItemViewLanImportListCnt(vo);
+					System.out.println("totCnt"+totCnt);
+		       }else if(vo.getExType().equals("03")) {
+					System.out.println("수출");  
+					resultList = pfitemService.selectItemViewLanExportList(vo);
+					//totCnt = pfitemService.selectItemViewLanExportListCnt(vo);
+					System.out.println("totCnt"+totCnt);
+		       }
+			    
+			    
+			    //페이징 처리 
+			    /*if (vo.getPageIndex() != 0) {
+			    	System.out.println("Second2");
+			        int start = (vo.getPageIndex()*vo.getRecordCountPerPage())+1;
+			        int end = (start + vo.getRecordCountPerPage())-1; 
+
+			        vo.setStartPageMs(start);
+			        vo.setRecordCountPerPage(end);
+
+			        System.out.println("strt2 : " + vo.getStartPageMs()); 
+			        System.out.println("end2 : " + vo.getRecordCountPerPage());
+			        System.out.println("INDEX2 : " + vo.getPageIndex());
+
+			        if(vo.getExType().equals("01")) {
+							System.out.println("전체");
+							resultList = itemService.selectItemViewLanList(vo);
+				       }else if(vo.getExType().equals("02")) {
+							System.out.println("수입"); 
+							resultList = itemService.selectItemViewLanImportList(vo);
+				       }else if(vo.getExType().equals("03")) {
+							System.out.println("수출");  
+							resultList = itemService.selectItemViewLanExportList(vo);
+				       }
+			       
+			    } else {
+			        // 처음로딩될때
+			    	if(vo.getExType().equals("01")) {
+							System.out.println("전체1");  
+							resultList = itemService.selectItemViewLanList(vo);
+				       }else if(vo.getExType().equals("02")) {
+							System.out.println("수입1");  
+							resultList = itemService.selectItemViewLanImportList(vo);
+				       }else if(vo.getExType().equals("03")) {
+							System.out.println("수출1");  
+							resultList = itemService.selectItemViewLanExportList(vo);
+				       }
+			    }*/
+			    ModelAndView mav = new ModelAndView("jsonView");
+			    mav.addObject("resultList", resultList);
+			    //mav.addObject("totCnt", totCnt);
+
+			    return mav;
+			}
+		//검색할때 사용 
+		@RequestMapping(value="/item/selectitemViewLanList2.do")
+		public ModelAndView selectitemViewLanList2(@ModelAttribute("searchVO")SearchVO vo,HttpServletRequest request,ModelMap model)throws Exception{
+			HttpSession httpSession = request.getSession(true);
+		    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		    vo.setLang(userVO.getLang());
+		    vo.setCmpnyCd(userVO.getCmpnyCd());
+		    vo.setCorpNo(userVO.getCorpNo());
+		    List<?> resultList = null;
+		    int totCnt = 0;
+		    if(vo.getExType().equals("01")) {
+				System.out.println("전체1");  
+				resultList = pfitemService.selectitemViewLanList2(vo);
+				//totCnt = pfitemService.selectItemViewLanListCnt(vo);
+				System.out.println("totCnt2"+totCnt);
+	       }else if(vo.getExType().equals("02")) {
+				System.out.println("수입1");  
+				resultList = pfitemService.selectitemViewLanImportList2(vo);
+				//totCnt = pfitemService.selectItemViewLanImportListCnt(vo);
+				System.out.println("totCnt2"+totCnt);
+	       }else if(vo.getExType().equals("03")) {
+				System.out.println("수출1");  
+				resultList = pfitemService.selectitemViewLanExportList2(vo);
+				//totCnt = pfitemService.selectItemViewLanExportListCnt(vo);
+				System.out.println("totCnt2"+totCnt);
+	       }
+		    
+		    model.addAttribute("resultList",resultList);
+		    //model.addAttribute("totCnt",totCnt);
+		    ModelAndView mav = new ModelAndView("jsonView",model);
+		    return mav;
+		}
+		
+		@RequestMapping(value="/item/selectItemViewSpecList.do")
+		public ModelAndView selectItemViewSpecList(@ModelAttribute("searchVO")SearchVO vo,HttpServletRequest request,ModelMap model)throws Exception{
+			HttpSession httpSession = request.getSession(true);
+		    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		    vo.setLang(userVO.getLang());
+		    vo.setCmpnyCd(userVO.getCmpnyCd());
+		    vo.setCorpNo(userVO.getCorpNo());
+		    System.out.println("ExType = " + vo.getExType());
+		    List<?> resultList = null;
+		    List<?> resultList2 = null; 
+		    // 편집일 경우 mariaDB에서 내가 쓴 요건정보만 사용
+		    if(vo.getExType().equals("edit")) {
+		    	System.out.println("1"); 
+		    	resultList2 = pfitemService.selectEditItemViewSpecList(vo,userVO);
+		    }else {
+		    	System.out.println("2");
+		    	resultList = pfitemService.selectItemViewSpecList(vo);
+		    	resultList2 = pfitemService.selectItemViewSpecList2(vo);
+		    }
+		    model.addAttribute("resultList",resultList);
+		    model.addAttribute("resultList2",resultList2);
+		    ModelAndView mav = new ModelAndView("jsonView",model);
+		    return mav;
+		}
+		
+		@RequestMapping(value="/item/selectItemViewMemoList.do")
+		public ModelAndView selectItemViewMemoList(@ModelAttribute("searchVO")SearchVO vo,HttpServletRequest request,ModelMap model)throws Exception{
+			HttpSession httpSession = request.getSession(true);
+			UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			vo.setLang(userVO.getLang());
+			vo.setCmpnyCd(userVO.getCmpnyCd());
+			vo.setCorpNo(userVO.getCorpNo());
+			 List<?> resultList = null;
+			// 편집일때는 내가 쓴 메모만 보이게 작업 
+			if(vo.getSrch4().equals("edit")) {
+			resultList = pfitemService.selecteditItemViewMemoList(vo,userVO);	
+			}else {
+			resultList = pfitemService.selectItemViewMemoList(vo);	
+			}
+			System.out.println("resultList"+resultList);
+			model.addAttribute("resultList",resultList);
+			ModelAndView mav = new ModelAndView("jsonView",model);
+			return mav;
+		}
+		// 요건정보저장
+		@RequestMapping(value="/item/saveItemViewSpec.do")
+		@ResponseBody
+		public String saveItemViewSpec(@RequestBody List<SaveSpecVO> voList,HttpServletRequest request)throws Exception{
+			
+			HttpSession httpSession = request.getSession(true);
+			UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			System.out.println("voList"+voList);
+			SaveSpecVO saveVo = voList.get(0);
+			//읽기,편집,등록
+			String tableType = saveVo.getTableType();
+			pfitemService.saveItemViewSpec(voList,userVO);
+			
+			return "success";
+			
+		}
+		
+		// 메모정보저장
+		@RequestMapping(value="/item/saveItemViewMemo.do")
+		@ResponseBody
+		public String saveItemViewMemo(@RequestBody List<SaveMemoVO> voList,HttpServletRequest request)throws Exception{
+			
+			HttpSession httpSession = request.getSession(true);
+			UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			System.out.println("voList"+voList);
+			SaveMemoVO saveVo = voList.get(0);
+			
+			System.out.println("saveVo.getTableType()"+saveVo.getTableType());
+			
+			pfitemService.saveItemViewMemo(voList, userVO);
+			
+			return "success";
+			
+		}
+		// 엑셀
+		@RequestMapping(value="/item/downloadExcel.do")
+		public ModelAndView downloadExcel(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, HttpServletResponse response) throws Exception {
+			
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());      
+		vo.setCorpNo(userVO.getCorpNo());
+		vo.setRecordCountPerPage(99999999);
+		vo.setStartPage(0);
+		ModelAndView mv = new ModelAndView("jsonView");
+		String resultCode="200";
+		XSSFSheet sheet;
+
+		try {
+			ModelAndView dataMv = new ModelAndView();
+			List<Object> resultList1 = new ArrayList<>();
+	        List<Object> resultList2 = new ArrayList<>();
+	        List<Object> resultList3 = new ArrayList<>();
+	        List<Object> resultList4 = new ArrayList<>();
+	    
+			XSSFWorkbook workBook = new XSSFWorkbook();
+			String[] colUnion = {};
+			String[] haedUnion =  {};
+			List<String> divUnion = new ArrayList<>();
+			int unionIdx = 0;
+			System.out.println("vo.getExTitDiv()"+vo.getExTitDiv());
+			
+			colUnion = vo.getExCol().split("\\|\\|\\|");
+			haedUnion = vo.getExTit().split("\\|\\|\\|\\|");
+			//divUnion = vo.getExTitDiv().split("\\|\\|", -1);
+			// JSON 형식의 문자열을 리스트로 변환
+	        ObjectMapper mapper = new ObjectMapper();
+	        divUnion = mapper.readValue(URLDecoder.decode(vo.getExTitDiv(), "UTF-8"), new TypeReference<List<String>>(){});
+	        
+	        
+			 System.out.println("colUnion: " + Arrays.toString(colUnion));
+		     System.out.println("headUnion: " + Arrays.toString(haedUnion));
+		     System.out.println("divUnion: " + divUnion);
+		     
+		     System.out.println("colUnion0: " + colUnion[0]);
+		     System.out.println("colUnion1: " + colUnion[1]);
+		     
+				
+		
+		        
+			     for (String div : divUnion) {
+			    	
+			            for (String divName : divUnion) {
+			                System.out.println("div: " + div);
+			                System.out.println("divName: " + div);
+			
+			                vo.setSrch4(divName);
+			                if ("undefined".equals(vo.getSrch13())) {
+			                    vo.setSrch13(null);
+			                }
+			                // 아이템 정보
+			                dataMv = this.selectItemViewList(vo, request, new ModelMap());
+			                List<Object> tempResultList1 = (List<Object>) dataMv.getModel().get("resultList");
+			                resultList1.addAll(tempResultList1);
+			            }
+			            
+			            for (String div1 : divUnion) {
+			            	// 통관정보
+			            	vo.setSrch2(div1);
+			                dataMv = this.selectitemViewLanList2(vo, request, new ModelMap());
+				            List<Object> tempResultList2 = (List<Object>) dataMv.getModel().get("resultList");
+				            resultList2.addAll(tempResultList2);
+				           // 요건정보
+				            dataMv = this.selectItemViewSpecExcelList(vo, request, new ModelMap());
+				            List<Object> tempResultList3 = (List<Object>) dataMv.getModel().get("resultList");
+				            resultList3.addAll(tempResultList3);
+				            
+				         // 요건정보
+				            dataMv = this.selectItemViewMemoExcelList(vo, request, new ModelMap());
+				            List<Object> tempResultList4 = (List<Object>) dataMv.getModel().get("resultList");
+				            resultList4.addAll(tempResultList4);
+			            }
+			               
+			            
+			
+					SearchVO sheetSearchVo = new SearchVO();
+					sheetSearchVo.setLang(userVO.getLang());      
+					sheetSearchVo.setCorpNo(userVO.getCorpNo());
+					sheetSearchVo.setRecordCountPerPage(99999999);
+					sheetSearchVo.setStartPage(0);
+					
+					System.out.println("setSrch13"+vo.getSrch13());
+						// item 정보 
+						
+						System.out.println("resultList아이템정보"+resultList1);
+						ArrayList<String> conts = new ArrayList<String>();
+						conts.add("1");
+						sheet = ItemView_ExcelUtil.createSheetWithTitleRow(workBook, "item정보", colUnion[0].split("\\|\\|").length);
+						sheet = ItemView_ExcelUtil.createSummaryCont(sheet, conts);
+						sheetSearchVo.setExCol(colUnion[0]);
+						sheetSearchVo.setExTit(haedUnion[0]);
+						sheet = ItemView_ExcelUtil.createMainTable(sheet, resultList1, sheetSearchVo);
+						// 통관 정보 
+						System.out.println("resultList통관"+resultList2);
+						conts = new ArrayList<String>();
+						conts.add("1");
+						sheet = ItemView_ExcelUtil.createSheetWithTitleRow(workBook, "통관정보", colUnion[1].split("\\|\\|").length);
+						sheet = ItemView_ExcelUtil.createSummaryCont(sheet, conts);
+						sheetSearchVo.setExCol(colUnion[1]);
+						sheetSearchVo.setExTit(haedUnion[1]);
+						sheet = ItemView_ExcelUtil.createMainTable(sheet, resultList2, sheetSearchVo);
+						
+						// 요건 정보 
+						System.out.println("resultList요건"+resultList3);
+						conts = new ArrayList<String>();
+						conts.add("1");
+						sheet = ItemView_ExcelUtil.createSheetWithTitleRow(workBook, "요건정보", colUnion[2].split("\\|\\|").length);
+						sheet = ItemView_ExcelUtil.createSummaryCont(sheet, conts);
+						sheetSearchVo.setExCol(colUnion[2]);
+						sheetSearchVo.setExTit(haedUnion[2]);
+						sheet = ItemView_ExcelUtil.createMainTable(sheet, resultList3, sheetSearchVo);
+						
+						// 메모
+						System.out.println("resultList메모"+resultList4);
+						conts = new ArrayList<String>();
+						conts.add("1");
+						sheet = ItemView_ExcelUtil.createSheetWithTitleRow(workBook, "메모", colUnion[3].split("\\|\\|").length);
+						sheet = ItemView_ExcelUtil.createSummaryCont(sheet, conts);
+						sheetSearchVo.setExCol(colUnion[3]);
+						sheetSearchVo.setExTit(haedUnion[3]);
+						sheet = ItemView_ExcelUtil.createMainTable(sheet, resultList4, sheetSearchVo);
+					
+						ItemView_ExcelUtil.generateExcelFile(workBook, userVO.getCmpnyCd().concat("_item정보"), response);
+						
+						
+			     }
+		     
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+			
+			return null;
+		}
+
+		private ModelAndView selectItemViewMemoExcelList(@ModelAttribute("searchVO")SearchVO vo,HttpServletRequest request,ModelMap model)throws Exception {
+			HttpSession httpSession = request.getSession(true);
+		    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		    vo.setLang(userVO.getLang());
+		    vo.setCmpnyCd(userVO.getCmpnyCd());
+		    vo.setCorpNo(userVO.getCorpNo());
+		    List<?> resultList = null;
+		    resultList = pfitemService.selectItemViewMemoExcelList(vo);
+		    model.addAttribute("resultList",resultList);
+		    ModelAndView mav = new ModelAndView("jsonView",model);
+		    return mav;
+		}
+
+		private ModelAndView selectItemViewSpecExcelList(@ModelAttribute("searchVO")SearchVO vo,HttpServletRequest request,ModelMap model)throws Exception {
+				HttpSession httpSession = request.getSession(true);
+			    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			    vo.setLang(userVO.getLang());
+			    vo.setCmpnyCd(userVO.getCmpnyCd());
+			    vo.setCorpNo(userVO.getCorpNo());
+			    List<?> resultList = null;
+			    resultList = pfitemService.selectItemViewSpecExcelList(vo);
+			    model.addAttribute("resultList",resultList);
+			    ModelAndView mav = new ModelAndView("jsonView",model);
+			    return mav;
+			}
+
+		}
+
+		

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.cmmn.service.impl.ConectInfoMapper">
+
+	<!-- 접속목록 조회 -->
+	<select id="selectConectList" parameterType="searchVO" resultType="egovMap">
+		SELECT(SELECT usr_nm FROM user_info WHERE usr_id = a.USR_ID) AS USR_NM
+			 , a.USR_ID AS USR_ID
+		     , (a.CON_CMPNY_CD) AS CMPNY_NM
+		     ,GET_DATE(a.REG_DT,#{lang},'/') AS CONECT_DT
+		     , a.REG_IP
+		  FROM CONECT_INFO a
+		 WHERE a.DEL_YN = 'N'
+           <if test="srch2 != null and srch2 != ''">
+              AND EXISTS (
+              			   SELECT *
+              			    FROM USER_INFO
+              			   WHERE USR_ID = a.USR_ID
+              			     AND USR_NM LIKE CONCAT('%',#{srch2},'%')
+              			  )
+           </if>
+           <if test="srch3 != null and srch3 != ''">
+              AND EXISTS (
+              			  SELECT *
+              			    FROM CMPNY_INFO
+              			    WHERE CMPNY_NM = a.CON_CMPNY_CD
+              			    AND  CMPNY_NM LIKE CONCAT('%',#{srch3},'%')
+              			  )
+           </if>
+           <if test="srch4 != null and srch4 != ''">
+		      AND a.REG_DT &gt;= CONCAT(REPLACE(#{srch4},'-',''))
+		   </if>
+		   <if test="srch5 != null and srch5 != ''">
+		      AND a.REG_DT &lt;= CONCAT(REPLACE(#{srch5},'-',''))
+		   </if>
+        <choose>
+        	<when test="alignItem == 'REG_DT'">
+        		ORDER BY a.REG_DT
+        	</when>
+        	<when test="alignItem == 'REG_DT_DESC'">
+        		ORDER BY a.REG_DT DESC
+        	</when>
+        	<otherwise>
+        		ORDER BY a.REG_DT DESC
+        	</otherwise>
+        </choose>
+          LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+
+	<!-- 접속목록 갯수 조회 -->
+	<select id="selectConectListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM CONECT_INFO a
+		 WHERE a.DEL_YN = 'N'
+           <if test="srch2 != null and srch2 != ''">
+              AND EXISTS (
+              			  SELECT *
+              			    FROM USER_INFO
+              			   WHERE USR_ID = a.USR_ID
+              			     AND USR_NM LIKE CONCAT('%',#{srch2},'%')
+              			  )
+           </if>
+           <if test="srch3 != null and srch3 != ''">
+              AND EXISTS (
+              			  SELECT *
+              			    FROM CMPNY_INFO
+              			   WHERE CMPNY_NM = a.CON_CMPNY_CD
+              			     AND CMPNY_NM LIKE CONCAT('%',#{srch3},'%')
+              			  )
+           </if>
+           <if test="srch4 != null and srch4 != ''">
+		     AND a.REG_DT &gt;= CONCAT(REPLACE(#{srch4},'-',''))
+		   </if>
+		   <if test="srch5 != null and srch5 != ''">
+		      AND a.REG_DT &lt;= CONCAT(REPLACE(#{srch5},'-',''))
+		   </if>
+	</select>
+
+	<!-- 접속 정보 저장 -->
+	<insert id="insertConectInfo" parameterType="egovframework.pf.cmmn.service.SaveConectInfoVO">
+		INSERT
+		  INTO CONECT_INFO (
+						    USR_ID
+                          , CON_CMPNY_CD
+                          , DEL_YN
+                          , REG_DT
+                          , REG_ID
+                          , REG_IP
+        	      ) VALUES (
+						    #{usrId}
+						  , #{conCmpnyCd}
+						  , 'N'
+						  , DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')  
+						  , #{regId}
+						  , #{regIp}
+                  )
+	</insert>
+
+</mapper>

@@ -1,0 +1,133 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="java.util.Date" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%
+    Date today = new Date();
+    SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
+%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+ <title>관세 뉴스</title>
+ <script src="/pf/js/function.js"></script>
+ <script src="/pf/js/cmmn/news.js?v=<%=fmt.format(today)%>" charset="UTF-8"></script>
+ <script src="https://gcore.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+ <style>
+ 	td {white-space: nowrap;overflow:hidden;text-overflow: ellipsis;max-width: 800px;height : 60px;}
+	table {border-spacing: 0 100px; width:90%;}
+	footer {position: fixed;bottom: 0;width: 90%;}
+	#newsFileInput {
+	    appearance: none;
+	    -webkit-appearance: none;
+	    -moz-appearance: none;
+	    background-color: transparent;
+	    border: none;
+	    padding: 0;
+	    margin: 0;
+	    cursor: pointer;
+	    outline: none;
+	    color:black;
+	}
+ </style>
+ <script>
+ var totCnt = ${totCnt};
+ </script>
+ </head>
+<body class="text-left" id="news">
+ <main class="w-full h-full flex flex-col items-center justify-start relative overflow-hidden p-2 z-0">
+    <h2 class="w-full p-2 shrink-0 font-semibold text-slate-800 dark:text-slate-100 truncate flex items-center justify-start gap-2 text-xl">
+    </h2>
+    <table class="bg-white dark:bg-slate-800 shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
+    	 <colgroup>
+            <col style="width: 10%;">
+            <col style="width: 50%;">
+            <col style="width: 20%;">
+            <col style="width: 20%;">
+        </colgroup>
+        <thead>
+       	   <tr>
+       		  <th style="text-align : center;">번호</th>
+       		  <th style="text-align : center;">제목</th>
+       		  <th style="text-align : center;">출처</th>
+       		  <th style="text-align : center;">일자</th>
+       	   </tr>
+        </thead>
+        <tbody id="newsList">
+          <c:forEach var="news" items="${resultList}">
+		    <tr>
+	          <td><c:out value="${news.newsSeq}" /></td>
+	          <td><c:out value="${news.titleKr}"/></td>
+	          <td><c:out value="${news.source}" /></td>
+	          <c:set var="formattedDate" value="${news.newsDt}" />
+	          <fmt:parseDate var="parsedDate" value="${formattedDate}" pattern="yyyyMMdd" />
+	          <fmt:formatDate value="${parsedDate}" pattern="yyyy-MM-dd" var="formattedDate" />
+	          <td><c:out value="${formattedDate}" /></td>
+		    </tr>
+		  </c:forEach>
+        </tbody>
+    </table>
+    
+<!-- Page Nation -->
+<div class="shrink-0 w-full flex items-center justify-center">
+    <div class="flex gap-2 pagenation-component pagenation-component-news py-2 text-lg">
+        <button class="newsFirstButton-link hover:text-primary-400 duration-200" type="button" onclick="fn_newsSearch()">
+            &lt;&lt;
+        </button>&nbsp;
+        <button class="newsBackButton-link hover:text-primary-400 duration-200" type="button" onclick="newsBackBtn()">
+            &lt;
+        </button>&nbsp;
+		<div id="paginationButtons"></div>
+        <button class="newsNextButton-link hover:text-primary-400 duration-200" type="button" onclick="newsNextBtn()">
+            &gt;
+        </button>&nbsp;
+        <button class="newsEndButton-link hover:text-primary-400 duration-200" type="button" onclick="newsEndPage(${totCnt})">
+            &gt;&gt;
+        </button>
+    </div>
+</div>
+ </main>
+<!-- Page Nation -->
+<!-- Modal -->
+<div id="newsTitlePopUp" class="modal fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center flex" style="display: none;">
+  <div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+ 
+  <div class="news-modal modal-content bg-white shadow-xl relative rounded min-w-[42rem] overflow-hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+    <div class="pl-7 pr-5 py-4 text-white bg-primary-900 flex items-center justify-between">
+      <h2 class="font-bold text-xl"></h2>
+      <button type="button" onclick="newsPopUpClose()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+    </div>
+    <div class="pl-7 pr-5 py-6">
+      <h3 class="text-2xl text-primary-700 font-semibold"></h3> <!-- title -->
+      <span class="text-sm text-gray-500"></span> <!-- date -->
+      <input type="text" id="newsSeq" style="display:none;" >
+    </div>
+       <div id="newsContent" class="newsContent mt-4 pt-4 border-t text-lg" style="width:1000px; height:500px; overflow:auto; margin:10px;" readonly></div>  <!-- content -->
+	   <div id="newsFileName" class="text-base text-gray-500"></div>
+	  <div class="mx-5 py-4 border-t-2 flex justify-end gap-2">
+	    <div class="flex gap-2">
+	      <c:if test='${grpCd eq "KORD Mst"}'>
+	      <button type="button" id="newsDelete" onclick="newsDelete()"
+	        	  class="block py-2 px-3 font-semibold text-center text-white border-red-500 bg-red-500 rounded-lg focus:ring-4 focus:ring-secondary-300 dark:bg-secondary-600">
+	                      삭제
+	      </button>
+	      </c:if>
+	      <button type="button" onclick="newsPopUpClose()" class="modal-close px-3 py-2 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700 shrink-0">
+	         <i class="fa-solid fa-check"></i> 
+	                  확인
+	      </button>
+	    </div>
+	</div>
+  </div>
+	<form name="newsFileDownForm" method="post"
+		  action="/cmmn/newsFileDown.do">
+		<input type="hidden" name="newsFileDown" id="newsFileDown"/>
+    </form>
+</div>
+<!-- Modal -->
+</body>
+</html>

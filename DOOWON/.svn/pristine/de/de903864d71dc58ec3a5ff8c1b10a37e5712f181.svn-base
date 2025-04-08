@@ -1,0 +1,116 @@
+package egovframework.pf.imp.service.impl;
+import java.util.List;
+import javax.annotation.Resource;
+import org.springframework.stereotype.Service;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.exp.service.SaveExpFileVO;
+import egovframework.pf.imp.service.ImportService;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+
+@Service("importService")
+public class ImportServiceImpl extends EgovAbstractServiceImpl implements ImportService {
+
+	@Resource(name="importMapper")
+	private ImportMapper importMapper;
+
+	@Override
+	public List<?> selectImportBlList(SearchVO vo) throws Exception {
+		return importMapper.selectImportBlList(vo);
+	}
+
+	@Override
+	public void insertImportFilesInfo(SaveExpFileVO vo) throws Exception {
+		importMapper.insertImportFilesInfo(vo);
+	}
+
+	@Override
+	public List<?> selectBlFilesList(SearchVO vo) throws Exception {
+		return importMapper.selectBlFilesList(vo);
+	}
+
+	@Override
+	public List<?> selectImportViewList(SearchVO vo) throws Exception {
+		return importMapper.selectImportViewList(vo);
+	}
+
+	@Override
+	public List<?> selectImportViewLanList(SearchVO vo) throws Exception {
+		return importMapper.selectImportViewLanList(vo);
+	}
+
+	@Override
+	public List<?> selectImportViewSpecList(SearchVO vo) throws Exception {
+		return importMapper.selectImportViewSpecList(vo);
+	}
+
+	@Override
+	public List<?> selectImportUpdateList(SearchVO vo) throws Exception {
+		return importMapper.selectImportUpdateList(vo);
+	}
+
+	@Override
+	public void saveImpMemo(SearchVO vo) throws Exception {
+		importMapper.saveImpMemo(vo);
+	}
+
+	@Override
+	public List<?> selectImpViewFilesList(SearchVO vo) throws Exception {
+		return importMapper.selectImpViewFilesList(vo);
+	}
+
+	@Override
+	public void deleteImpBlFile(SearchVO vo) throws Exception {
+		importMapper.deleteImpBlFile(vo);
+	}
+
+	@Override
+	public void impRequestBl(SearchVO vo) throws Exception {
+		importMapper.impRequestBl(vo);
+	}
+
+	@Override
+	public List<?> selectImportViewLanListExcel(SearchVO vo) throws Exception {
+		return importMapper.selectImportViewLanListExcel(vo);
+	}
+
+	@Override
+	public List<?> selectImportViewSpecListExcel(SearchVO vo) throws Exception {
+		return importMapper.selectImportViewSpecListExcel(vo);
+	}
+
+	@Override
+	public String impSendEmail(SearchVO vo) throws Exception {
+		return importMapper.impSendEmail(vo);
+	}
+
+	@Override
+	public List<?> selectImpTodayViewList(SearchVO vo) throws Exception {
+		return importMapper.selectImpTodayViewList(vo);
+	}
+
+	@Override
+	public List<?> selectCargMtNo(SearchVO vo) throws Exception {
+		return importMapper.selectCargMtNo(vo);
+	}
+
+	@Override
+	public List<?> selectImpDetailView(SearchVO vo) throws Exception {
+		return importMapper.selectImpDetailView(vo);
+	}
+
+	@Override
+	public String selectOrderId(SearchVO vo) throws Exception {
+		return importMapper.selectOrderId(vo);
+	}
+
+	@Override
+	public List<?> selectImpShipViewList(SearchVO vo) throws Exception {
+		return importMapper.selectImpShipViewList(vo);
+	}
+
+	@Override
+	public List<?> selectImpTodayInclOthViewList(SearchVO vo) throws Exception {
+		return importMapper.selectImpTodayInclOthViewList(vo);
+	}
+
+}

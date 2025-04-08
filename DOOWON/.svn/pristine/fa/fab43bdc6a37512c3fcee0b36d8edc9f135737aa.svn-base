@@ -1,0 +1,69 @@
+package egovframework.pf.trade.web;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+import egovframework.pf.cmmn.service.CmmnService;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.trade.service.TradeService;
+
+/**
+ * @Class Name : TradeController.java
+ * @Description : 수량관리 컨트롤러
+ * @Modification Information
+ * @
+ * @  수정일          수정자               수정내용
+ * @ ---------        ----------     -------------------------------
+ * @ 2024.09.23	서인석             최초생성
+ *
+ * @author 서인석
+ * @since 2024.09.23
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by MOPAS All right reserved.
+ */
+
+@Controller
+public class TradeController {
+
+	@Resource(name = "CmmnService")
+	private CmmnService CmmnService;
+	
+	@Resource(name = "TradeService")
+	private TradeService tradeService;
+
+	@RequestMapping(value = "/trade/tradeInfo.do")
+	public String news(HttpServletRequest request, ModelMap model) throws Exception {
+
+	    return "trade/tradeInfo";
+	}
+	
+	@RequestMapping(value = "/trade/selectTradeViewList.do", method = RequestMethod.POST)
+	public ModelAndView selectTradeViewList(@RequestBody SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setList(userVO.getCorpNos());
+		}
+		List<?> resultList = tradeService.selectTradeViewList(vo);
+	    ModelAndView mav = new ModelAndView("jsonView");
+	    mav.addObject("resultList", resultList);
+	    return mav;
+	}
+
+	
+}
+

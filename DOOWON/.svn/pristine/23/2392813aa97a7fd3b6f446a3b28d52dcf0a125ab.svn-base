@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.16.0.final using JasperReports Library version 6.16.0-48579d909b7943b64690c65c71e07e0b80981928  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="FORM_VK_2_L" pageWidth="595" pageHeight="842" columnWidth="575" leftMargin="0" rightMargin="20" topMargin="0" bottomMargin="0" uuid="3f5dcfc7-8a9c-4c63-bf57-1438e75939a0">
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="VCS"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="i_prm2" class="java.lang.Integer"/>
+	<parameter name="i_prm3" class="java.lang.Integer"/>
+	<parameter name="i_prm1" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT ROW_NUMBER() OVER (ORDER BY cast(IFNULL(A.CO_CNT,1) AS INT) , cast(E.SALES_ORDR AS INT), cast(E.STNDRD_NO AS INT)) AS d1,
+       IFNULL(A.PCKGS,'') AS d2,
+       CONCAT(IFNULL(A.ITEM_NM, ''),'\n', IFNULL(A.ITEM_TYPE,''),'\n','HS Code : ', IFNULL(GET_HSCD(F.PARTN_HS_CD),GET_HSCD(A.HS_CD))) AS d3,
+       case when LOCATE('RVC',B.PSR_INFO) > 0 then CONCAT('RVC ',IFNULL(D.actual_ratio,''))
+       ELSE IFNULL(B.PSR_INFO,'') END AS d4,
+      CASE 
+		WHEN LOCATE('RVC',B.PSR_INFO) > 0 THEN CONCAT(IFNULL(A.GROSS_WEIGHT,''),'\n', IFNULL(FORMAT(E.SALES_PRICE,0),''),' ', IFNULL(E.CRRNCY_UNT,''),'\n', IFNULL(B.SALES_QTY,''), ' ', IFNULL(C.BASE_UNT,''))
+		ELSE CONCAT(IFNULL(A.GROSS_WEIGHT,''),'\n',IFNULL(B.SALES_QTY,''), ' ', IFNULL(C.BASE_UNT,''))
+	   END AS d5,
+       CONCAT(IFNULL(A.INVOICE_NO,''),'\n', IFNULL(A.INVOICE_DT, '')) AS d6
+	FROM crft_co_hist_dts A 
+	LEFT JOIN jdgmnt_result B 
+	ON A.JDGMNT_SEQ = B.JDGMNT_SEQ
+	LEFT JOIN item_info C
+	ON A.CMPNY_CD = C.CMPNY_CD
+	AND A.PLNT_CD = C.PLNT_CD AND A.ITEM_CD = C.ITEM_CD 
+	LEFT JOIN (
+		SELECT *,
+		SUBSTR(vat_dts, INSTR(vat_dts, '=')+3, INSTR(vat_dts, 'Buffer')-INSTR(vat_dts, '=')-7) AS actual_ratio
+		FROM jdgmnt_psr_info ) D
+		ON A.JDGMNT_SEQ = D.JDGMNT_SEQ AND A.PSR_SEQ = D.PSR_SEQ
+	LEFT JOIN sales_list E
+	ON (A.cmpny_cd = E.cmpny_cd AND A.plnt_cd = E.PLNT_CD  AND A.ITEM_CD = E.item_cd 
+	AND B.SALES_NO = E.SALES_NO AND B.SALES_ORDR = E.SALES_ORDR)
+	LEFT JOIN partn_item_info F
+	ON (E.cmpny_cd = F.cmpny_cd AND E.PLNT_CD = F.PLNT_CD AND E.BUYR_ID = F.PARTN_CD AND E.ITEM_CD = F.item_CD AND F.DEL_YN='N')
+	WHERE issu_no = $P{i_prm1}
+	limit $P{i_prm3} offset $P{i_prm2}]]>
+	</queryString>
+	<field name="d1" class="java.lang.String"/>
+	<field name="d2" class="java.lang.String"/>
+	<field name="d3" class="java.lang.String"/>
+	<field name="d4" class="java.lang.String"/>
+	<field name="d5" class="java.lang.String"/>
+	<field name="d6" class="java.lang.String"/>
+	<detail>
+		<band height="30" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField>
+				<reportElement x="10" y="0" width="32" height="14" uuid="e38ace6a-7416-4f9c-9d70-7a00c5f7602c"/>
+				<textElement>
+					<font fontName="Noto Sans" size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d1}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="48" y="0" width="51" height="30" uuid="14e45e39-a58c-47ac-9b3b-a68ac3137672"/>
+				<textElement>
+					<font fontName="Noto Sans" size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="106" y="0" width="204" height="30" uuid="852d1eff-fa8a-4fcd-a139-f748e098f85d"/>
+				<textElement>
+					<font fontName="Noto Sans" size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d3}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="329" y="0" width="64" height="30" uuid="38af1bbf-1e87-4036-9f27-a3a15c3afef7"/>
+				<textElement>
+					<font fontName="Noto Sans" size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d4}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="400" y="0" width="72" height="30" uuid="604a46d5-23d4-4de6-b22e-4e9adff4ae52">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Noto Sans" size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d5}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="481" y="0" width="54" height="30" uuid="43f77f53-1f21-49d1-845d-a7ff24985125"/>
+				<textElement>
+					<font fontName="Noto Sans" size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d6}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

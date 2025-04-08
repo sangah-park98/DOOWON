@@ -1,0 +1,165 @@
+package egovframework.pf.item.service.impl;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.item.service.ItemCheckedVO;
+import egovframework.pf.item.service.pfItemService;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+
+@Service("pfItemService")
+public class pfItemServiceImpl extends EgovAbstractServiceImpl implements pfItemService {
+
+	@Resource(name="pfItemMapper")
+	private pfItemMapper pfItemMapper;
+
+	@Override
+	public List<?> selectItemViewList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemViewList(vo);
+	}
+	@Override
+	public int selectItemViewListCnt(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemViewListCnt(vo);
+	}
+	@Override
+	public List<?> selectItemViewImpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemViewImpList(vo);
+	}
+	@Override
+	public int selectItemViewimportListCnt(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemViewimportListCnt(vo);
+	}
+	@Override
+	public List<?> selectItemViewExpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemViewExpList(vo);
+	}
+	@Override
+	public int selectItemViewExportListCnt(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemViewExportListCnt(vo);
+	}
+	@Override
+	public List<?> selectDuplicationItemViewList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectDuplicationItemViewList(vo);
+	}
+	@Override
+	public int selectDuplicationItemViewListCnt(SearchVO vo) throws Exception {
+		return pfItemMapper.selectDuplicationItemViewListCnt(vo);
+	}
+	@Override
+	public List<?> selectDuplicationItemViewImpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectDuplicationItemViewImpList(vo);
+	}
+	@Override
+	public int selectDuplicationItemViewImpListCnt(SearchVO vo) throws Exception {
+		return pfItemMapper.selectDuplicationItemViewImpListCnt(vo);
+	}
+	@Override
+	public List<?> selectDuplicationItemViewExpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectDuplicationItemViewExpList(vo);
+	}
+	@Override
+	public int selectDuplicationItemViewExpListCnt(SearchVO vo) throws Exception {
+		return pfItemMapper.selectDuplicationItemViewExpListCnt(vo);
+	}
+	@Override
+	public List<?> selectItemCodeChkList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemCodeChkList(vo);
+	}
+	@Override
+	public void insertItemChkedList(ItemCheckedVO ivo) throws Exception {
+		pfItemMapper.insertItemChkedList(ivo);
+	}
+	@Override
+	public List<?> selectItemCodeMemoList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemCodeMemoList(vo);
+	}
+	@Override
+	public void updateItemMemoList(ItemCheckedVO ivo) throws Exception {
+		pfItemMapper.updateItemMemoList(ivo);
+	}
+	@Override
+	public void deleteItemMemoList(ItemCheckedVO ivo) throws Exception {
+		pfItemMapper.deleteItemMemoList(ivo);
+	}
+	@Override
+	public List<?> selectItemChkDetailList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemChkDetailList(vo);
+	}
+	@Override
+	public List<?> selectItemHsCodeDiffList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemHsCodeDiffList(vo);
+	}
+	@Override
+	public List<?> selectItemHsCodeDiffSubList(SearchVO subVo) throws Exception {
+		return pfItemMapper.selectItemHsCodeDiffSubList(subVo);
+	}
+	@Override
+	public List<?> selectItemHsCodeDiffImpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemHsCodeDiffImpList(vo);
+	}
+	@Override
+	public List<?> selectItemHsCodeDiffImpSubList(SearchVO subVo) throws Exception {
+		return pfItemMapper.selectItemHsCodeDiffImpSubList(subVo);
+	}
+	@Override
+	public List<?> selectItemHsCodeDiffExpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemHsCodeDiffExpList(vo);
+	}
+	@Override
+	public List<?> selectItemHsCodeDiffExpSubList(SearchVO subVo) throws Exception {
+		return pfItemMapper.selectItemHsCodeDiffExpSubList(subVo);
+	}
+	@Override
+	public List<?> selectItemPriceList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemPriceList(vo);
+	}
+	@Override
+	public List<?> selectItemPriceImpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemPriceImpList(vo);
+	}
+	@Override
+	public List<?> selectItemOutOfRateList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemOutOfRateList(vo);
+	}
+	@Override
+	public List<?> selectItemOutOfRateImpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemOutOfRateImpList(vo);
+	}
+	@Override
+	public List<?> selectItemOutOfRateExpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemOutOfRateExpList(vo);
+	}
+	@Override
+	public List<?> selectItemPriceChart(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemPriceChart(vo);
+	}
+	@Override
+	public List<?> selectItemRptNoList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemRptNoList(vo);
+	}
+	@Override
+	public List<?> selectItemRptNoImpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemRptNoImpList(vo);
+	}
+	@Override
+	public List<?> selectItemRptNoExpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemRptNoExpList(vo);
+	}
+	@Override
+	public List<?> selectItemLawCdList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemLawCdList(vo);
+	}
+	@Override
+	public void deleteItemChkDetailList(ItemCheckedVO ivo) throws Exception {
+		pfItemMapper.deleteItemChkDetailList(ivo);
+	}
+	@Override
+	public List<?> selectItemPriceExpList(SearchVO vo) throws Exception {
+		return pfItemMapper.selectItemPriceExpList(vo);
+	}
+}

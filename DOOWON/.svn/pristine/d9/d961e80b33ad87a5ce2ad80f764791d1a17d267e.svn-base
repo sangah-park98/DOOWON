@@ -1,0 +1,18 @@
+package egovframework.pf.api.service;
+
+import egovframework.pf.shipping.service.ShippingOrderVO;
+
+public interface ApiShippingService {
+
+	String stateChange(ShippingOrderVO svo) throws Exception;
+
+	String arrangeAlloc(ShippingOrderVO svo) throws Exception;
+
+	String allocCancel(ShippingOrderVO svo) throws Exception;
+	
+	String orderCancel(ShippingOrderVO svo) throws Exception;
+
+	String orderAdd(ShippingOrderVO svo) throws Exception;
+
+
+}

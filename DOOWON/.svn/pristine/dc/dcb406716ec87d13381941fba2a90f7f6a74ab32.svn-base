@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.notice.service.impl.pfNoticeMapper">
+	
+	<select id="selectMainNoticeViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    notice_seq,
+		    title_kr,
+		    notice_dt,
+		    user_name,
+		    notice_type,
+		    reg_id
+		FROM notice_info
+		WHERE notice_type = 'N' OR notice_type = 'Y'
+		ORDER BY CASE WHEN notice_type = 'Y' THEN 0 ELSE 1 END ASC, notice_seq DESC
+		LIMIT 10 OFFSET #{recordCountPerPage}
+	</select>
+	
+	<select id="selectMainNoticeViewCnt" parameterType="searchVO" resultType="int">
+		SELECT CEIL(COUNT(*) / 10) AS total_pages 
+		FROM notice_info;
+	</select>
+		
+	<select id="selectModalViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			notice_seq,
+		    title_Kr,
+		    user_Name,
+		    notice_Dt,
+		    cn_kr,
+		    edt_dt,
+		    file_Org_Nm,
+		    notice_type,
+		    reg_id
+		FROM notice_info
+		WHERE notice_seq = #{srch3} AND (notice_type = 'N' OR notice_type = 'Y')
+		ORDER BY CASE WHEN notice_type = 'Y' THEN 0 ELSE 1 END ASC, notice_seq DESC;
+	</select>
+	
+	<insert id="insertNoticeInputList" parameterType="egovframework.pf.notice.service.saveNoticeVO">
+		INSERT INTO notice_info
+		(	TITLE_KR
+		  ,	CN_KR
+		  ,	FILE_NM
+		  ,	FILE_ORG_NM
+		  , NOTICE_TYPE
+		  , NOTICE_DT
+		  , USER_NAME
+		  , DEL_YN
+		  , REG_DT
+		  , REG_ID
+		  , EDT_DT
+		) VALUES (
+		    #{titleKr}
+		  ,	#{cnKr}
+		  ,	#{fileOrgNm}
+		  ,	#{fileOrgNm}
+		  , #{noticeType}
+		  , #{noticeDt}
+		  , #{userName}
+		  , ''
+		  , #{regDt}
+		  , #{regId}
+		  , ''
+		);
+	</insert>
+	
+	<delete id="deleteNoticeViewList" parameterType="searchVO">
+		DELETE FROM notice_info WHERE notice_seq = #{srch3};
+	</delete>
+	
+	<update id="updateNoticeViewList" parameterType="searchVO">
+		UPDATE notice_info 
+		SET 
+		TITLE_KR = #{srch5},
+		CN_KR = #{srch4},
+		FILE_ORG_NM = '',
+		FILE_NM = '',
+		EDT_DT = #{srch6},
+		EDT_ID = #{id}
+		WHERE notice_seq = #{srch3};
+	</update>
+	
+</mapper>
+

@@ -1,0 +1,302 @@
+package egovframework.pf.rpt.service.web;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.itextpdf.text.log.SysoCounter;
+import com.microsoft.schemas.office.x2006.digsig.STSignatureComments;
+
+import egovframework.ms.item.service.ItemService;
+import egovframework.pf.cmmn.service.CmmnService;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.item.service.SaveSpecVO;
+import egovframework.pf.item.service.SaveMemoVO;
+import egovframework.pf.item.service.pfItemService;
+import egovframework.pf.rpt.service.deadLineService;
+import egovframework.pf.util.ExcelUtil;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+/**
+ * @Class Name : deadLineController.java
+ * @Description : 기한관리 컨트롤러
+ * @Modification Information
+ * @
+ * @  수정일          			 수정자              			 수정내용
+ * @ ---------        ----------     -------------------------------
+ * @ 2024.03.25			권예지              				 최초생성
+ *
+ * @author 권예지
+ * @since 2024.03.25
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by MOPAS All right reserved.
+ */
+
+@Controller
+public class deadLineController {
+	private static final Logger log = LoggerFactory.getLogger(deadLineController.class);
+
+	@Resource(name = "CmmnService")
+	private CmmnService CmmnService;
+	
+	@Resource(name = "deadLineService")
+	private deadLineService deadLineService;
+	
+
+	//기한관리 화면 호출
+	@RequestMapping(value = "/rpt/deadLine.do")
+	public String importView(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		model.addAttribute("writable","Y".equals(userVO.getAdminYn())?"Y":CmmnService.selectWriteCheck(request.getServletPath(), userVO));
+		SearchVO vo = new SearchVO();
+		String lang = userVO.getLang();
+		vo.setLang(lang);
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		model.addAttribute("lang", lang);
+		model.addAttribute("userCmpnyCd", userVO.getCmpnyCd());
+		model.addAttribute("grpCd", userVO.getGrpCd());
+		
+		return "rpt/deadLine";
+	}
+	
+	@RequestMapping(value="/rpt/selectdeadLine.do")
+	public ModelAndView selectdeadLineList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    vo.setList(userVO.getCorpNos());
+	    List<?> resultList = null;
+
+	    // 수입/수출 리스트 및 개수 조회
+	    if (vo.getSrch1().equals("01")) { // 수입
+	        resultList = deadLineService.selectImportdeadLineList(vo);
+	    } else { // 수출
+	        System.out.println("수출");
+	        resultList = deadLineService.selectExportdeadLineList(vo);
+	    }
+
+	    // Unipass API를 이용한 반입일자 및 수입신고기한 가져오기
+	    if (vo.getSrch13() != null) {
+	        for (Object obj : resultList) {
+	            EgovMap map = (EgovMap) obj;
+	            JsonNode callApi = callApi((String) map.get("cargMtNo"));
+
+	            if (callApi == null || !callApi.has("cargCsclPrgsInfoDtlQryVo") || !callApi.get("cargCsclPrgsInfoDtlQryVo").isArray()) {
+	                continue;
+	            } else {
+	                JsonNode cargCsclPrgsInfoDtlQryVoArr = callApi.get("cargCsclPrgsInfoDtlQryVo");
+	                String banIpDay = ""; // 반입일자
+
+	                if (cargCsclPrgsInfoDtlQryVoArr.isArray()) {
+	                    for (JsonNode cargCsclPrgsInfoDtlQryVo : cargCsclPrgsInfoDtlQryVoArr) {
+	                        String cargTrcnRelaBsopTpcd = cargCsclPrgsInfoDtlQryVo.get("cargTrcnRelaBsopTpcd").asText();
+
+	                        if ("반입신고".equals(cargTrcnRelaBsopTpcd)) { // 반입일자
+	                            banIpDay = cargCsclPrgsInfoDtlQryVo.get("prcsDttm").asText().replaceAll("[^0-9]", "");
+	                            break;
+	                        }
+	                    }
+	                }
+
+	                map.put("banIpDay", dateFormat(banIpDay));
+
+	                // 수입신고기한
+	                String date4 = addDays(banIpDay, 30);
+	                map.put("date4", date4);
+	            }
+	        }
+	    }
+
+	    ModelAndView mav = new ModelAndView("jsonView");
+	    mav.addObject("resultList", resultList);
+
+	    return mav;
+	}
+
+	
+	private JsonNode callApi(String cargMtNo) {
+		if(cargMtNo == null || "".equals(cargMtNo)) {
+			return null;
+		}
+		
+		try {
+			// 헤더설정
+			HttpHeaders headers = new HttpHeaders();
+			headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE + ";charset=UTF-8");
+			
+			URI uri = UriComponentsBuilder.fromHttpUrl("https://unipass.customs.go.kr:38010/ext/rest/cargCsclPrgsInfoQry/retrieveCargCsclPrgsInfo")
+					.queryParam("crkyCn", "p240e234w064g101l050r050p0")
+					.queryParam("cargMtNo", cargMtNo)
+					.build()
+					.encode("UTF-8")
+					.toUri();	
+			
+			HttpComponentsClientHttpRequestFactory httpRequestFactory = new HttpComponentsClientHttpRequestFactory();
+	        httpRequestFactory.setConnectTimeout(5000);
+	        httpRequestFactory.setReadTimeout(5000);
+	        
+	        HttpClient httpClient = HttpClientBuilder.create()
+	                .setMaxConnTotal(200)
+	                .setMaxConnPerRoute(20)
+	                .build();
+	        
+	        //Rest template setting
+	        RestTemplate restTpl = new RestTemplate(httpRequestFactory);
+	        HttpEntity entity = new HttpEntity<>(headers); // http entity에 header 담아줌
+			
+	        restTpl.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+	        
+	        log.info("call api :: {}", uri.toString()) ;
+	        ResponseEntity<String>  responseEntity = restTpl.exchange(uri.toString(), HttpMethod.GET, entity, String.class);
+	        
+	        if(responseEntity.getStatusCodeValue() == 200) {
+	        	XmlMapper xmlMapper = new XmlMapper();
+	        	String str = responseEntity.getBody().toString();
+	        	JsonNode node = xmlMapper.readValue(str, new TypeReference<JsonNode>() { });
+	        	return node;
+	        } else {
+	        	log.debug("StatusCodeValue :: {}", responseEntity.getBody().toString());
+	        	return null;
+	        }
+		} catch (Exception e) {
+			log.debug(e.getMessage());
+			return null;
+		}
+	}
+	
+	private String dateFormat(String dStr) {
+		if(StringUtils.isEmpty(dStr)) {
+			return "-";
+		}
+		
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+		
+		try {
+			Date date = formatter.parse(dStr);
+			formatter.applyPattern("yyyy-MM-dd");
+			return formatter.format(date);
+		} catch (Exception e) {
+			return "ERROR";
+		}
+	}
+	
+	private String addDays(String dStr, int days) {
+	    if(StringUtils.isEmpty(dStr)) {
+	        return "-";
+	    }
+	    
+	    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+	    Calendar cal = Calendar.getInstance();
+	    
+	    try {
+	        Date date = formatter.parse(dStr);
+	        cal.setTime(date);
+	        cal.add(Calendar.DAY_OF_MONTH, days);
+	        
+	        formatter.applyPattern("yyyy-MM-dd");
+	        return formatter.format(cal.getTime());
+	    } catch (Exception e) {
+	        return "ERROR";
+	    }
+	}
+
+
+	@RequestMapping(value="/deadLine/downloadExcel.do")
+	public ModelAndView dowloadExcel(@ModelAttribute("searchVO")SearchVO vo, HttpServletRequest request,HttpServletResponse response)throws Exception{
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());      
+		vo.setCorpNo(userVO.getCorpNo());
+		vo.setRecordCountPerPage(99999999);
+		vo.setStartPage(0);
+		
+		ModelAndView mav = new ModelAndView("jsonView");
+		ModelAndView mv = new ModelAndView("jsonView");
+		ModelAndView dataMv = new ModelAndView();
+		String resultCode="200";
+		
+		try {
+			//수입
+			if("01".equals(vo.getExType())) {
+				vo.setSrch1("01");
+				dataMv = this.selectdeadLineList(vo, request, new ModelMap());
+				List<?> resultList = (List<?>) dataMv.getModel().get("resultList"); 
+				System.out.println("resultList111"+resultList);
+				XSSFWorkbook workBook = new XSSFWorkbook();
+				XSSFSheet sheet = ExcelUtil.createSheetWithTitleRow(workBook, "수입기한관리", vo.getExCol().split("\\|\\|").length);
+				ArrayList<String> conts = new ArrayList<String>();
+				conts.add("1");
+				sheet = ExcelUtil.createSummaryCont(sheet, conts);
+				sheet = ExcelUtil.createMainTable(sheet, resultList, vo);
+				
+				ExcelUtil.generateExcelFile(workBook, userVO.getCmpnyCd().concat("_수입기한관리"), response);
+			// 수출
+			}else if("02".equals(vo.getExType())) {
+				vo.setSrch1("02");
+				dataMv = this.selectdeadLineList(vo, request, new ModelMap());
+				List<?> resultList = (List<?>) dataMv.getModel().get("resultList"); 
+				System.out.println("resultList2222"+resultList);
+				XSSFWorkbook workBook = new XSSFWorkbook();
+				
+				XSSFSheet sheet = ExcelUtil.createSheetWithTitleRow(workBook, "수출기한관리", vo.getExCol().split("\\|\\|").length);
+				ArrayList<String> conts = new ArrayList<String>();
+				conts.add("1");
+				sheet = ExcelUtil.createSummaryCont(sheet, conts);
+				sheet = ExcelUtil.createMainTable(sheet, resultList, vo);
+				ExcelUtil.generateExcelFile(workBook, userVO.getCmpnyCd().concat("_수출기한관리"), response);
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		mv.addObject("resultCode", resultCode);
+		return mv;
+		}
+	 
+		}

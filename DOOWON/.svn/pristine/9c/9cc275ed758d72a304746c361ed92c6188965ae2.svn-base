@@ -1,0 +1,2379 @@
+var shippingOrderHot;
+var shippingOrderSettings;
+var shippingOrderPopupSettings;
+var shippingOrderIndex = 9999;
+var shippingOrderScrollTp = true;
+var loadDstnListHot;
+var loadDstnPopupSettings;
+var ctNoListHot;
+var ctNoPopupSettings;
+var hotInstance;
+var fileNames = [];
+var filesList = [];
+var tempSavedRows = {};
+
+$( document ).ready(function() {
+	 //달력 사용시 반드시 넣어주세요.
+    $('.band-calendar').each(function(){ regCal(this) ;})
+	  //캘린더 포맷
+    $('.datepicker').datepicker("option","dateFormat",calFormat);
+
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	  
+	  $("#shippingOrder_srch2").val(mtoday);
+	  $("#shippingOrder_srch3").val(today);
+	  
+	  var shippingOrderElement = document.querySelector('#shippingOrderTable');
+	  var shippingOrderElementContainer = shippingOrderElement.parentNode;
+	  shippingOrderHot = new Handsontable(shippingOrderElement, shippingOrderSettings);
+	  
+	  var loadDstnPopupElement = document.querySelector('#loadAddrListPopupTable');
+	  var loadDstnPopupElementContainer = loadDstnPopupElement.parentNode;
+	  loadDstnPopupSettings = fn_handsonGridLoadDstnListPopupOption();
+	  loadDstnListHot = new Handsontable(loadDstnPopupElement, loadDstnPopupSettings);
+
+	  var ctNoPopupElement = document.querySelector('#contNoListPopupTable');
+	  var ctNoPopupElementContainer = ctNoPopupElement.parentNode;
+	  ctNoPopupSettings = fn_handsonGridCtNoListPopupOption();
+	  ctNoListHot = new Handsontable(ctNoPopupElement, ctNoPopupSettings);
+	  
+	  fn_changeImportView('read');
+	  
+	  //scroll 이벤트
+	  fn_shipOrderasEventReg();
+	  //shippingOrderUseEventReg();
+	  $("#shipOrderTextView").text("전체");
+      $("#shipOrderTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+	  
+
+	  $(document).on("click", '.itemCdClass', function(){
+		  alert($(this).index());
+	  });
+});
+/** 이벤트 Start **/
+
+
+$(document).mousedown(function(e){	
+	if(e.target.name == "shippingOrder1_date" || e.target.name == "shippingOrder2_date" || e.target.name == "toDt" || e.target.name == "fromDt" ){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}	
+	}
+});
+
+
+$("input:radio[name=shippingOrder_srch20]").change(function(){
+	$("input[name=shippingOrderType][value=read]").prop("checked", true);
+	fn_changeImportView("read");
+})
+
+// 테이블 타입 변경
+$("input[name=shippingOrderType]").change(function(){
+	  fn_changeImportView($(this).val());
+});
+
+
+function fn_shipOrderchgDate1() {
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var day = date.getDay();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10);
+	  
+	  $("#shippingOrder_srch2").val(today);
+	  $("#shippingOrder_srch3").val(today);
+	  //$("#shippingOrder_srch3").val(today);
+}
+
+function fn_shipOrderchgDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10);
+	
+	$("#shippingOrder_srch2").val(mtoday);
+	$("#shippingOrder_srch3").val(today);
+}
+
+function fn_shipOrderchgDate3() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10);
+	
+	$("#shippingOrder_srch2").val(mtoday);
+	$("#shippingOrder_srch3").val(today);
+}
+function fn_shipOrderchgDate4() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	  var startDt = new Date();
+	  startDt.setDate(1);
+	  startDt.setMonth(startDt.getMonth() - 1);
+
+	  var endDt = new Date();
+	  endDt.setMonth(endDt.getMonth(), 1);
+	  endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10);
+	var mtoday = endDt.toISOString().substring(0,10);
+	
+	$("#shippingOrder_srch2").val(today);
+	$("#shippingOrder_srch3").val(mtoday);
+}
+
+//정렬항목
+/*$("select[name=alignImportView]").change(function(){
+	  fn_searchImportView();
+});
+*/
+//row 수
+$("select[name=shippingOrderPageCnt]").change(function(){
+	  fn_searchImportView();
+});
+
+
+function fn_shipOrderasEventReg(){
+	
+ $("#shippingOrderTable .wtHolder").scroll(function(){
+	  //fn_shipOrderFileList(row, col)
+  	  var scrollTop = $("#shippingOrderTable .wtHolder").scrollTop();
+  	  var countPerPage = $("#shippingOrderPageCnt option:selected").val();
+  	  var rowHeight = shippingOrderHot.getRowHeight();
+  	  var addCnt = 790;
+  	  if(countPerPage == "50"){
+  		  addCnt = 790;
+  	  }else if(countPerPage == "100"){
+  		  addCnt = 2040;
+  	  }else if(countPerPage == "200"){
+  		  addCnt = 3290;
+  	  }else if(countPerPage == "500"){
+  		  addCnt = 4540;
+  	  }
+
+  	  if(shippingOrderScrollTp && shippingOrderIndex != 9999 && scrollTop >= (countPerPage * shippingOrderIndex * rowHeight) + addCnt){
+  		  fn_shippingOrderScroll();
+  	  }
+  });
+}
+/** 이벤트 End **/
+//스크롤
+function fn_shippingOrderScroll(){
+	if( $("input[name=shippingOrderType]:checked").val() == "enrol")
+		return;
+	fn_loading(true);
+	shippingOrderScrollTp = false;
+	shippingOrderIndex++;
+	var data = fn_setImportViewForm();
+	
+	$.ajax({
+		type : "POST",
+		url : "/shipping/selectShippingOrder.do",
+		data : JSON.stringify(data),
+		contentType: "application/json; charset=utf-8", 
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	var getData = shippingOrderHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	shippingOrderHot.loadData(meargeJson);
+        	shippingOrderScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	//alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+//검색
+function fn_searchImportView(){
+	
+	var selectedValue = $("input[name=shippingOrder_srch1]:checked").val();
+    
+    if(selectedValue === "01") {
+        $("#shipOrderTextView").text("전체");
+        $("#shipOrderTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "02") {
+        $("#shipOrderTextView").text("수리");
+        $("#shipOrderTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "03") {
+        $("#shipOrderTextView").text("대기");
+        $("#shipOrderTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "04") {
+        $("#shipOrderTextView").text("결재");
+        $("#shipOrderTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "05") {
+        $("#shipOrderTextView").text("미결");
+        $("#shipOrderTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "06") {
+        $("#shipOrderTextView").text("신고 전");
+        $("#shipOrderTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else {
+        $("#shipOrderTextView").text("신고 후");
+        $("#shipOrderTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    }
+    
+	shippingOrderIndex = 0;
+	var data = fn_setImportViewForm();
+	var valid = fn_validateSearchDate(data["srch2"], data["srch3"]);
+
+	if(valid === "false"){
+		data["srch2"] = null;
+		data["srch3"] = null;
+		$("#shippingOrder_srch2").val("");
+		$("#shippingOrder_srch3").val("");
+		return;
+	} else {
+		data["srch2"] = $("#shippingOrder_srch2").val();
+		data["srch3"] = $("#shippingOrder_srch3").val();
+	}
+	
+	if(data["srch2"] == null || data["srch2"] == "" || data["srch3"] == "" || data["srch3"] == null){
+		alert("날짜를 입력해 주세요.");
+		return;
+	}
+	fn_loading(true);
+	
+	$.ajax({
+		type : "POST",
+		url : "/shipping/selectShippingOrder.do",
+		data : JSON.stringify(data),
+		contentType: "application/json; charset=utf-8",
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        		shippingOrderHot.loadData([]);
+            	shippingOrderHot.loadData(data.resultList);
+            	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+            	$("#shippingOrderCnt").text(totCnt); //검색결과 총 갯수
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchImportView();
+    }
+}
+
+
+//검색조건 생성
+function fn_setImportViewForm(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=shippingOrder_srch1]:checked").val();
+	sData["srch2"] = $("#shippingOrder_srch2").val();
+	sData["srch3"] = $("#shippingOrder_srch3").val();
+	sData["srch4"] = $("#shippingOrder_srch4").val();
+	sData["srch5"] = $("#shippingOrder_srch5").val();
+	var list2 = sData["srch5"].split(/[, ]+/).map(function(item) {
+        return item.trim();
+    }).filter(function(item) {
+        return item.length > 0;
+    });
+	sData["list2"] = list2;
+
+	sData["srch8"] = $("#shippingOrderDateType option:selected").val();
+	
+	sData["recordCountPerPage"] = $("#shippingOrderPageCnt option:selected").val();
+	sData["pageIndex"] = shippingOrderIndex;
+	
+	return sData;
+};
+
+//검색조건 초기화
+function fn_clearImportView(){
+	
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	
+	$("input:radio[name=shippingOrder_srch1][value=01]").prop('checked', true);
+	$("#shippingOrder_srch2").val(mtoday);
+	$("#shippingOrder_srch3").val(today);
+	$("#shippingOrder_srch4").val("");
+	$("#shippingOrder_srch5").val("");
+	$("#shippingOrderDateType").val("01");
+	
+};
+
+//테이블 컬럼
+function fn_shipOrderTableCol(){
+	var tableType = $("input:radio[name=shippingOrderType]:checked").val();
+	// 사용여부
+	var shippingOrder_srch20 = $("input:radio[name=shippingOrder_srch20]:checked").val(); 
+
+	var chipRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		  td.classList.add('chip-cell');
+		  td.classList.add('text-center');
+		  switch (value) {
+		    case "예":
+		    case "접수":
+		    case "Y":
+		      td.innerHTML = `<span class="chip chip-blue">${value}</span>`
+		      break
+		    case "수리":
+		      td.innerHTML = `<span class="chip chip-green">${value}</span>`
+		      break
+		    case "N":
+		    case "서류 미비":
+		      td.innerHTML = `<span class="chip chip-red">${value}</span>`
+		      break
+		    case "자수":
+		      td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+		      break
+		    case "":
+	    	  td.innerHTML = `<span>${value}</span>`
+    		  break
+		    default:
+		      td.innerHTML = `<span class="chip chip-primary">${value}</span>`
+		      break
+		  }
+	};
+	
+	var transRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		td.classList.add('chip-cell');
+		td.classList.add('text-center');
+		
+		var receColumnIndex = 1;
+		var statue;
+	    var receValue = instance.getDataAtCell(row, receColumnIndex);
+	    var contCnt = instance.getDataAtCell(row, 15);
+	    var tempCnt = instance.getDataAtCell(row, 16);
+	    var shipCnt = instance.getDataAtCell(row, 17);
+	    var arriveCnt = instance.getDataAtCell(row, 18);
+	    if (contCnt === 0 && tempCnt === 0 && shipCnt === 0 && arriveCnt === 0) {
+	    	statue = "의뢰";
+	    } else if (shipCnt === 0 && arriveCnt === 0 && tempCnt !== 0) {
+	    	statue = "임시저장"; 
+	    } else if (contCnt === 0 && shipCnt !== 0) {
+	    	statue = "완료"; 
+	    } else if (contCnt !== 0) {
+	        if (contCnt === shipCnt ) {
+	        	statue = "완료"; 
+	        } else if(contCnt > shipCnt && shipCnt != 0){
+	        	statue = "완료";
+	        } else if (contCnt > shipCnt){
+	        	statue = "의뢰";
+	        } else{
+	        	statue = "기타";
+	        }
+	    }
+	    var $transRequestButton;
+	    
+	    if (receValue === "자수" || receValue === "수리" || receValue === "승인" || receValue === "대기" || receValue === "접수" || receValue === "결재") {
+	    	
+	        var $transRequestButton;
+	        
+	        if(statue !== "완료"){
+	        	$transRequestButton = $('<button type="button" onclick="fn_shipReqBtn(' + row + ',' + col + ')" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-primary-700 ml-1 hover:bg-primary-500">' + statue + '</button>');
+	        	$(td).empty().append($transRequestButton);
+	        	$transRequestButton.css({
+	        		'font-family': '맑은 고딕',
+	        		'font-size': '13px'
+	        	});
+	        } else if(statue === "완료" && contCnt !== 0 && contCnt !== arriveCnt){
+	        	$transRequestButton = $('<button type="button" onclick="fn_shipReqBtn(' + row + ',' + col + ')" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-primary-700 ml-1 hover:bg-primary-500">' + statue + '</button>');
+	        	$(td).empty().append($transRequestButton);
+	        	$transRequestButton.css({
+	        		'font-family': '맑은 고딕',
+	        		'font-size': '13px'
+	        	});
+	        } else if(statue === "완료" && contCnt === 0 && contCnt === arriveCnt){
+	        	$transRequestButton = $('<button type="button" onclick="fn_shipReqBtn(' + row + ',' + col + ')" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-primary-700 ml-1 hover:bg-primary-500">' + statue + '</button>');
+	        	$(td).empty().append($transRequestButton);
+	        	$transRequestButton.css({
+	        		'font-family': '맑은 고딕',
+	        		'font-size': '13px'
+	        	});
+	        }else {
+	        	$(td).empty().text('완료');
+	        }
+	        	
+	    } else {
+	        $(td).empty().text('-');
+	    }
+	};
+	
+	
+	this.shipOrderCol = [
+		{data : 'shipReq', className : "htCenter", width: 80, wordWrap: false, className : "htCenter", readOnly:true, renderer : transRenderer},
+		{data : 'rece', className : "htCenter", width: 50,wordWrap: false, className : "htCenter", readOnly:true, renderer : chipRenderer},
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'blno', className : "htCenter", width: 130,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'nabFirm', className : "htCenter",width: 180, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'supFirm', className : "htCenter", width: 200,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'incDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'lisDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'addr', className : "htCenter", width: 300, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'totWt', className : "htCenter",width: 120, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'totPackCnt', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'nabSdno', className : "htCenter", className : "htCenter", readOnly:true},
+		{data : 'managerNm', className : "htCenter", className : "htCenter", readOnly:true},
+		{data : 'billEmail', className : "htCenter", className : "htCenter", readOnly:true},
+		{data : 'contCnt', className : "htCenter", className : "htCenter", readOnly:true},
+		{data : 'tempCnt', className : "htCenter", className : "htCenter", readOnly:true},
+		{data : 'shipCnt', className : "htCenter", className : "htCenter", readOnly:true},
+		{data : 'arriveCnt', className : "htCenter", className : "htCenter", readOnly:true},
+		{data : 'orderSeq', className : "htCenter", className : "htCenter", readOnly:true},
+	] ;
+
+	//판정 사용 내역 컬럼
+		  Handsontable.renderers.registerRenderer('chip', chipRenderer);
+}
+//테이블 헤더
+function fn_shipOrderTableHeader(){
+	var tableType = $("input:radio[name=shippingOrderType]:checked").val();
+	// 사용여부
+	//var shippingOrder_srch20 = $("input:radio[name=shippingOrder_srch20]:checked").val(); 
+	
+	this.shipOrderHeader = [
+		"운송", "상태", "신고번호", "B/L번호", "납세의무자", "무역거래처",  "반입일자", "신고일자", "수리일자", 
+		"주소", "총중량", "총포장개수", "납세자번호", "" ,"","컨테이너수", "임시저장수", "오더수","", ""
+	 ] ;
+}
+
+
+//테이블 히든컬럼
+function fn_shipOrderTableHidden(){
+	this.shipOrderHidden = [12, 13, 14, 15, 16, 17, 18 ,19];
+}
+
+//table
+function fn_handsonGridViewOption(col, header, hidden){
+	var tableType = $("input:radio[name=shippingOrderType]:checked").val();
+
+	shippingOrderSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 500,
+	  rowHeights : 27,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualRowMove : true,
+	  manualColumnResize : true,
+	  manualColumnMove : false,
+	  licenseKey: 'non-commercial-and-evaluation', // for non-commercial use only
+	  //dropdownMenu : true,
+
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+	  autoColumnSize : {samplingRatio : 30},
+      mergeCells : false,
+      wordWrap : true,
+	};
+
+	return shippingOrderSettings;
+}
+
+//테이블 타입 변경
+function fn_changeImportView(type){
+
+	var searchTp = $("input:radio[name=shippingOrder_srch1]:checked").val();
+
+	shippingOrderHot.updateSettings({readOnly:true, contextMenu : false});
+	$("#btnImportViewSave").hide();
+	$("#impExcel").show();
+	$("#docBtn").children().show();
+	fn_changeImportViewType(searchTp);
+};
+
+//검색구분 변경
+function fn_changeImportViewType(type){
+	let shipOrderCol = new fn_shipOrderTableCol();
+	let shipOrderHeader = new fn_shipOrderTableHeader();
+	let shipOrderHidden = new fn_shipOrderTableHidden();
+	
+	
+	var col, header, hidden;
+
+	col = shipOrderCol.shipOrderCol;
+	header = shipOrderHeader.shipOrderHeader;
+	hidden = shipOrderHidden.shipOrderHidden;
+	
+	
+	shippingOrderHot.updateSettings(fn_handsonGridViewOption(col, header, hidden));
+	
+	fn_searchImportView();
+};
+
+
+$("#shippingOrderTable .wtHolder").scroll(function(){
+    var scrollTop = $("#shipOrderListPopupTable .wtHolder").scrollTop();
+    var countPerPage = 50;
+    var rowHeight = overHot.getRowHeight();
+    var addCnt = 790;
+});
+
+
+function getCurrentTime() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+
+function fn_shipReqBtn(row, col) {
+	document.getElementById('addShipInfo2').style.display = 'block';
+	rowCount = 0;
+	const rows = document.querySelectorAll('#newRowId');
+
+    rows.forEach(row => {
+        row.remove();
+    });
+	
+	var rowData = shippingOrderHot.getSourceDataAtRow(row);
+	var totWt = rowData.totWt;
+	var blNo = rowData.blno;
+	var rptNo = rowData.rptNo.replace(/-/g, '');
+	var nabFirm = rowData.nabFirm;
+	var nabSdno = rowData.nabSdno;
+	var addr = rowData.addr
+	var manager = rowData.managerNm;
+	var billEmail = rowData.billEmail;
+	var orderSeq = rowData.orderSeq;
+	const ctDivHtml = document.getElementById('ctDiv');
+	ctDivHtml.innerHTML = "";
+	ctDivHtml.innerHTML = `<input id="ctNo0" type="text" class="border border-gray-300 rounded-lg text-base p-1 pr-8" style="width: 210px; text-align: center;">
+						   <input id="orderId0" type="hidden">
+						   <i id="ctListIcon" class="fas fa-search search-icon absolute right-2 cursor-pointer" style="cursor: pointer; margin-left: 10px;" onclick="ctNoList('${rptNo}')"></i>`;
+	const loadBtnDivHtml = document.getElementById('loadBtnDiv');
+	loadBtnDivHtml.innerHTML = "";
+	loadBtnDivHtml.innerHTML = `<button
+						            type="button"
+						            onclick="fn_loadAddrList(${rowCount})"
+						            class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+						            focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm">
+						            <i class="fa-solid fa-chevron-right"></i>
+						           	 불러오기
+						        </button>`;
+	
+	$("#cmpnyNm").val(nabFirm);
+	$("#corpNo").val(nabSdno);
+	$("#fromAddr").val(addr);
+	$("#goodsWeights").val(totWt);
+	
+	$("#shipReqViewListPopUp").modal("show");
+	var blNoTitle = "B/L 번호: " + blNo;
+	
+    var shipReqModalTitle = document.querySelector('.modal-content .shipReqModal-title span');
+    shipReqModalTitle.textContent = blNoTitle;
+    
+    var date = new Date();
+	var today = new Date().toISOString().substring(0,10);
+	  
+	$("#fromDt").val(today);
+	$("#toDt").val(today);
+	$("#fromTime").val(getCurrentTime())
+	$("#toTime0").val(getCurrentTime())
+	$("#fromSpecifics0").val("");
+	$("#ctNo0").val("");
+ 	$("#orderId0").val("");
+	$("#goodsWeightss").val("");
+	$("#mixYn").val("Y");
+	$("#fromReq").val("");
+	$("#toStaff0").val("");
+	$("#toPhnNo0").val("");
+	$("#toAddr0").val("");
+	$("#shipperManager0").val("");
+	$("#shipperMail0").val("");
+	$("#managerNm").val(manager);
+	$("#billEmail").val(billEmail);
+	$('#taxInvoice').prop('checked', false);
+	$("#fromTimeNow").prop("checked", true);
+	makeHyphen();
+	
+	fn_loadAddrDefault();
+
+	var shipReqModalTime = document.querySelector('.modal-content .shipReqModal-time span');
+	shipReqModalTime.textContent = today + " " + getCurrentTime();
+	
+	var sData = {};
+	sData["srch1"] = rptNo;
+	sData["srch2"] = blNo;
+		$.ajax({
+			type : "POST",
+			url : "/shipping/selectShippingReqList.do",
+			data : sData,
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			dataType: "json",
+			success: function(data) { // 잔여 운송 O
+				console.log(data.resultList1);
+			    if (data.resultList1.length != 0) {
+			        document.getElementById('addShipInfo2').style.display = 'none';
+			        document.getElementById('ctListIcon').style.display = 'none';
+
+			        $("#fromDt").val(data.resultList1[0].fromDt.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3'));
+			        $("#fromTime").val(data.resultList1[0].fromTime);
+			        if (data.resultList1[0].fromTime === '즉시') {
+			            $("#fromTimeNow").prop("checked", true);
+			        }
+			        $("#fromAddr").val(data.resultList1[0].fromAddr);
+			        $("#toDt").val(data.resultList1[0].toDt.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3'));
+			        $("#goodsWeights").val(data.resultList1[0].goodsWeights);
+			        $("#mixYn").val(data.resultList1[0].mixYn);
+			        $("#fromReq").val(data.resultList1[0].fromReq);
+			        //$("#toStaff").val(data.resultList1[0].toStaff); 
+			        //$("#toPhnNo").val(data.resultList1[0].toPhnNo.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3'));
+			        //$("#toAddr").val(data.resultList1[0].toAddr);
+			        $("#cmpnyNm").val(data.resultList1[0].cmpnyNm);
+			        $("#corpNo").val(data.resultList1[0].corpNo);
+			        $("#managerNm").val(data.resultList1[0].managerNm);
+			        $("#billEmail").val(data.resultList1[0].billEmail);
+			        if (data.resultList1[0].transDetails === 'Y') {
+			            $("#transDetails").prop("checked", true);
+			        }
+			        
+			        for (var i = 0; i < data.resultList1.length; i++) {
+			            if (i >= 1) {
+			                addShipInfo2();
+			            }
+			            $("#fromSpecifics" + i).val(data.resultList1[i].fromSpecifics);
+			            $("#toStaff" + i).val(data.resultList1[i].toStaff);
+			            $("#toPhnNo" + i).val(data.resultList1[i].toPhnNo.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3'));
+			            $("#toAddr" + i).val(data.resultList1[i].toAddr);
+			            $("#shipperManager" + i).val(data.resultList1[i].shipperManager);
+			            $("#shipperMail" + i).val(data.resultList1[i].shipperMail);
+			            $("#ctNo" + i).val(data.resultList1[i].ctNo).attr("readonly", true);
+			            $("#orderId" + i).val(data.resultList1[i].orderId);
+			            $("#toTime" + i).val(data.resultList1[i].toTime);
+			        }
+
+			        const buttonDiv = document.getElementById('buttonDiv');
+			        buttonDiv.innerHTML = `
+			        <div id="fileList" class="border border-primary-500  
+					     		font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm" style="width:415px; height:52px; overflow: auto;">
+				    		</div>
+				       		<label for="fileName" class="custom-file-upload text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+									    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5 cursor-pointer" style="white-space: nowrap; height: 30px;">
+								<i class="fa-duotone fa-file-circle-check"></i>
+								    파일첨부
+							<input type="file" id="fileName" multiple name="fileName" style="display: none;">
+							</label>
+			            <button
+			                type="button"
+			                id="updateReqBtn"
+			                onclick='fn_orderMod(${JSON.stringify(data.resultList1)})'
+			                class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+			                focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5" style="white-space: nowrap; height: 30px;">
+			                <i class="fa-regular fa-feather"></i>
+			                	수정요청
+			            </button>
+			            <button
+			                type="button"
+			                id="cancelReqBtn"
+			                onclick="fn_orderCancel()"
+			                class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+			                focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5" style="white-space: nowrap; height: 30px;">
+			                <i class="fa-regular fa-xmark"></i>
+			        			취소요청
+			            </button>
+			            <button
+			                type="button"
+			                onclick="fn_addShipReqBtn(${row}, ${orderSeq})"
+			                class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+			                focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-0.5 focus:outline-none duration-300 text-sm mt-5" style="white-space: nowrap; height: 30px;">
+			                <i class="fa-solid fa-plus"></i>
+			                	추가요청
+			            </button>
+			            <form name="shipFileDownForm" method="post" action="/shipping/insertShippingReqList.do">
+			                <input type="hidden" name="shipFileDown" id="shipFileDown"/>
+			            </form>`;
+			        if (data.resultList1[0].orderState == '배차' || data.resultList1[0].orderState == '입차' || data.resultList1[0].orderState == '출발'){
+			        	$(".custom-file-upload").css('visibility', 'hidden');
+			        	$("#fileList").css('visibility', 'hidden');
+			        	$("#cancelReqBtn").css('visibility', 'hidden');
+			        	$("#updateReqBtn").css('visibility', 'hidden');
+			        }
+			        $('.removeBtn').css('visibility', 'hidden');
+			        setUpFileInputListener();
+			        
+			    } else if (data.resultList1.length === 0 && data.resultList2.length !== 0 ){ // 운송요청X, 임시저장 O
+					console.log(data.resultList2[0])
+					
+					$("#fromDt").val(data.resultList2[0].fromDt.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3'));
+					$("#fromTime").val(data.resultList2[0].fromTime);
+					$("#fromAddr").val(data.resultList2[0].fromAddr);
+					$("#toDt").val(data.resultList2[0].toDt.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3'));
+					$("#goodsWeights").val(data.resultList2[0].goodsWeights);
+					$("#mixYn").val(data.resultList2[0].mixYn);
+					$("#fromReq").val(data.resultList2[0].fromReq);
+			    	//$("#toStaff").val(data.resultList2[0].toStaff);
+			    	//$("#toPhnNo").val(data.resultList2[0].toPhnNo.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3'));
+			    	//$("#toAddr").val(data.resultList2[0].toAddr);
+			    	//$("#shipperManager").val(data.resultList2[0].shipperManager);
+			    	//$("#shipperMail").val(data.resultList2[0].shipperMail);
+			    	$("#cmpnyNm").val(data.resultList2[0].cmpnyNm);
+			    	$("#corpNo").val(data.resultList2[0].corpNo);
+			    	$("#managerNm").val(data.resultList2[0].managerNm);
+			    	$("#billEmail").val(data.resultList2[0].billEmail);
+			    	if (data.resultList2[0].transDetails === 'Y') {
+			            $("#transDetails").prop("checked", true);
+			        }
+			    	if (data.resultList2[0].taxInvoice === 'Y') {
+			            $("#taxInvoice").prop("checked", true);
+			        }
+					
+					for (var i = 0; i < data.resultList2.length; i++) {
+			              if(i >= 1){
+			            	  addShipInfo2();
+			           	  }
+			              $("#fromSpecifics"+i).val(data.resultList2[i].fromSpecifics);
+			           	  $("#ctNo"+i).val(data.resultList2[i].ctNo);
+			           	  $("#toTime"+i).val(data.resultList2[i].toTime);
+			           	  $("#toStaff"+i).val(data.resultList2[i].toStaff);
+			           	  $("#toPhnNo" +i).val(data.resultList2[i].toPhnNo.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3'));
+			           	  $("#toAddr"+i).val(data.resultList2[i].toAddr);
+			           	  $("#shipperManager"+i).val(data.resultList2[i].shipperManager);
+			           	  $("#shipperMail"+i).val(data.resultList2[i].shipperMail);
+			           }
+					
+					const buttonDiv = document.getElementById('buttonDiv');
+					buttonDiv.innerHTML = "";
+					buttonDiv.innerHTML = `
+							<div id="fileList" class="border border-primary-500  
+					     		font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm" style="width:415px; height:52px; overflow: auto;">
+				    		</div>
+				       		<label for="fileName" class="custom-file-upload text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+									    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5 cursor-pointer">
+								<i class="fa-duotone fa-file-circle-check"></i>
+								    파일첨부
+							<input type="file" id="fileName" multiple name="fileName" style="display: none;">
+							</label>
+		      				<button
+							    type="button"
+							    onclick="fn_addrTempSave('${rptNo}', '${blNo}')"
+							    class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+							    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5">
+							    <i class="fa-regular fa-floppy-disk"></i>
+							   	    임시저장
+							</button>
+							<button
+							    type="button"
+							    onclick="fn_addrReq('${rptNo}', '${blNo}', '${orderSeq}')"
+							    class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+							    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5">
+							    <i class="fa-duotone fa-cart-flatbed-boxes"></i>
+							   	     운송요청
+							</button>
+							<form name="shipFileDownForm" method="post"
+								  action="/shipping/insertShippingReqList.do">
+								<input type="hidden" name="shipFileDown" id="shipFileDown"/>
+						    </form>`;
+					setUpFileInputListener();
+					
+				} else {
+					const buttonDiv = document.getElementById('buttonDiv');
+					buttonDiv.innerHTML = "";
+					buttonDiv.innerHTML = `
+							<div id="fileList" class="border border-primary-500  
+					     		font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm" style="width:415px; height:52px; overflow: auto;">
+					    
+				    		</div>
+				       		<label for="fileName" class="custom-file-upload text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+									    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5 cursor-pointer">
+								       <i class="fa-duotone fa-file-circle-check"></i>
+										    파일첨부
+							<input type="file" id="fileName" multiple name="fileName" style="display: none;">
+							</label>
+		      				<button
+							    type="button"
+							    onclick="fn_addrTempSave('${rptNo}', '${blNo}')"
+							    class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+							    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5">
+							    <i class="fa-regular fa-floppy-disk"></i>
+							   	    임시저장
+							</button>
+							<button
+							    type="button"
+							    onclick="fn_addrReq('${rptNo}', '${blNo}','${orderSeq}')"
+							    class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+							    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5">
+							    <i class="fa-duotone fa-cart-flatbed-boxes"></i>
+							   	    운송요청
+							</button>
+							<form name="shipFileDownForm" method="post"
+								  action="/shipping/insertShippingReqList.do">
+								<input type="hidden" name="shipFileDown" id="shipFileDown"/>
+						    </form>`;
+					
+					 setUpFileInputListener();
+				}
+				
+			},
+			error : function(e, textStatus, errorThrown) {
+				if(e.status == 400){
+					alert("Your request is up. Please log back in if you wish continue");
+					location.href = document.referrer;
+				} else {
+					console.log(errorThrown);
+					alert(msgSearchError);
+				}
+			}
+		});
+		
+		setUpInputEnterListener();
+}
+
+
+function setUpInputEnterListener(){
+  document.getElementById('fromDt').addEventListener('change', function() {
+      document.getElementById('fromTime').focus();
+  });
+
+  document.querySelectorAll('input').forEach(function(input, index, inputs) {
+      input.addEventListener('keydown', function(event) {
+          if (event.key === 'Enter') {
+              event.preventDefault();
+
+              if (input.id === 'fromDt' || input.id === 'toDt') {
+                  $('.calendar-popup-container').removeClass('calendar-popup-container_active');
+                  input.blur(); // 포커스 해제
+              }
+              let nextInput = inputs[index + 1];
+              while (nextInput && (nextInput.type === "hidden" || nextInput.disabled || nextInput.style.display === "none")) {
+                  nextInput = inputs[++index + 1];
+              }
+              if (nextInput) {
+                  nextInput.focus();
+              }
+          }
+      });
+  });
+}
+
+
+function setUpFileInputListener() {
+    const fileInput = document.getElementById('fileName'); // 클릭 시
+    const fileListDiv = document.getElementById('fileList');
+    filesList = [];
+
+    fileInput.addEventListener('change', function() {
+        const newFiles = Array.from(this.files);
+        filesList = filesList.concat(newFiles);
+        updateFileList();
+    });
+
+    fileListDiv.addEventListener('dragover', function(event) {
+        event.preventDefault();
+        fileListDiv.classList.add('drag-over');
+    });
+    fileListDiv.addEventListener('dragleave', function() {
+        fileListDiv.classList.remove('drag-over');
+    });
+    fileListDiv.addEventListener('drop', function(event) {
+        event.preventDefault(); 
+        fileListDiv.classList.remove('drag-over');
+        const newFiles = Array.from(event.dataTransfer.files);
+        filesList = filesList.concat(newFiles);
+        updateFileList();
+    });
+
+    // 파일 목록 업데이트 및 어펜드
+    function updateFileList() {
+        fileListDiv.innerHTML = ''; 
+
+        filesList.forEach((file, index) => {
+            const fileDiv = document.createElement('div');
+            fileDiv.classList.add('file-item', 'flex', 'justify-between', 'items-center', 'mb-2');
+
+            const fileName = document.createElement('span');
+            fileName.textContent = file.name;
+            fileName.classList.add('truncate-text');
+            fileDiv.appendChild(fileName);
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'X';
+            removeButton.classList.add('ml-2', 'bg-red-500', 'text-white', 'px-2', 'rounded');
+            removeButton.onclick = function() {
+                removeFile(index);
+            };
+            fileDiv.appendChild(removeButton);
+
+            fileListDiv.appendChild(fileDiv);
+        });
+         
+        const fileName = filesList.map(file => file.name).join('/');
+    }
+
+    // X 클릭
+    function removeFile(index) {
+        filesList.splice(index, 1);
+        updateFileList();
+    }
+}
+
+
+function shipReqModalClose(){
+	$("#shipReqViewListPopUp").modal("hide");
+	fn_clearShipReqBtn();
+}
+
+
+var rowCount = 0;
+function addShipInfo(ctNoList) {
+    if (ctNoList.length > 0 && rowCount === 0) {
+        const ctNoInput = document.querySelector(`#ctNo0`);
+        if (ctNoInput) {
+            ctNoInput.value = ctNoList[0];
+        }
+    }
+
+    for (var i = 1; i < ctNoList.length; i++) {
+        if (rowCount < i) {
+            rowCount++; 
+            const newRow = document.createElement('div');
+            newRow.setAttribute('id', 'newRowId');
+            newRow.classList.add('flex', 'col-span-8', 'items-center', 'justify-between');
+            newRow.innerHTML = `
+                <div id="transInfo-container" class="container mx-auto p-3 border border-gray-300" style="width: 100%; height: 130px;">
+                    <div class="grid grid-cols-8 gap-1">
+                        <div class="flex items-center justify-end font-bold col-span-8 text-base">
+                            <button type="button"
+                                onclick="removeTransInfo(this)"
+                                class="removeBtn p-1.5 text-white flex items-center justify-center bg-rose-600 rounded-lg hover:opacity-50 duration-200">
+                                <i class="fa-solid fa-minus"></i>
+                            </button>
+                        </div>
+                        <div class="flex col-span-8 items-center justify-between">
+                            <div class="flex items-center justify-end w-full">
+                                <label class="font-medium text-gray-900 text-base mr-2 w-21">컨테이너 번호</label>
+                                <div class="relative flex items-center" style="flex: 1;">
+                                    <input id="ctNo${rowCount}" type="text" class="border border-gray-300 rounded-lg text-base p-1 pr-8" style="width: 218px; text-align: center;" readonly>
+                                    <input id="orderId${rowCount}" type="hidden">
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="font-medium text-gray-900 text-base mr-2 w-20">특이사항</label>
+                                <input id="fromSpecifics${rowCount}" type="text" class="border border-gray-300 rounded-lg text-base p-1" style="width: 220px;">
+                            </div>
+                        </div>
+                        <div class="flex col-span-8 items-center justify-between">
+                            <div class="flex items-center">
+                                <label class="font-medium text-gray-900 text-base mr-2 w-20">* 도착시간</label>&nbsp;&nbsp;
+                                <input id="toTime${rowCount}" type="time" style="width: 220px; font-size: 14px;"
+                                    class="font-medium bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block ps-10 py-1 px-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const container = document.querySelector('#addContainer');
+            container.appendChild(newRow);
+
+            var today = new Date().toISOString().substring(0, 10);
+
+            const ctNoInput = document.querySelector(`#ctNo${rowCount}`);
+            ctNoInput.value = ctNoList[i]; 
+
+            $("#fromDt" + rowCount).val(today);
+            $("#toDt" + rowCount).val(today);
+            $("#fromTime" + rowCount).val(getCurrentTime());
+            $("#toTime" + rowCount).val(getCurrentTime());
+        }
+    }
+    
+    setUpInputEnterListener();
+}
+
+function addShipInfo2() {
+	rowCount ++;
+    const newRow = document.createElement('div');
+    newRow.setAttribute('id', 'newRowId');
+    newRow.classList.add('flex', 'col-span-8', 'items-center', 'justify-between');
+    newRow.innerHTML = `
+    	<div id="transInfo-container" class="container mx-auto p-3 border border-gray-300" style="width: 100%; height: 280px;">
+		    <div class="grid grid-cols-8 gap-1">
+		        <div class="flex items-center justify-end font-bold col-span-8 text-base">
+		            <button type="button"
+		                onclick="removeTransInfo(this)"
+		                class="removeBtn p-1.5 text-white flex items-center justify-center bg-rose-600 rounded-lg hover:opacity-50 duration-200">
+		                <i class="fa-solid fa-minus"></i>
+		            </button>
+		        </div>
+		        <div class="flex col-span-8 items-center justify-between">
+		            <div class="flex items-center">
+		                <label class="font-medium text-gray-900 text-base mr-2 w-21">컨테이너 번호</label>&nbsp;&nbsp;
+		                <input id="ctNo${rowCount}" type="text" class="border border-gray-300 rounded-lg text-base p-1" style="width: 220px;  text-align: center;">
+		                <input id="orderId${rowCount}" type="hidden">
+		            </div>
+		            <div class="flex items-center">
+		                <label class="font-medium text-gray-900 text-base mr-2 w-20">특이사항</label>
+		                <input id="fromSpecifics${rowCount}" type="text" class="border border-gray-300 rounded-lg text-base p-1" style="width: 220px;">
+		            </div>
+		        </div>
+		        <div class="flex col-span-8 items-center justify-between">
+		            <div class="flex items-center">
+		                <label class="font-medium text-gray-900 text-base mr-2 w-20">* 도착시간</label>&nbsp;&nbsp;
+		                <input id="toTime${rowCount}" type="time" style="width: 220px; font-size: 14px;"
+		                    class="font-medium bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+		            </div>
+		        </div>
+		    </div>
+		    <div class="mt-2 grid grid-cols-8 gap-1 col-span-8">
+                <div class="flex items-center justify-between font-bold col-span-8 text-base">
+				    <div>도착지 정보</div>
+				    <div class="flex items-center">
+				        <button
+				            type="button"
+				            onclick="fn_loadAddrList(${rowCount})"
+				            class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+				            focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm">
+				            <i class="fa-solid fa-chevron-right"></i>
+				           	 불러오기
+				        </button>
+				    </div>
+				</div>
+                <div class="flex col-span-8 items-center justify-between">
+		            <div class="flex items-center">
+		                <label class="font-medium text-gray-900 text-base mr-2">* 수령자</label>&nbsp;&nbsp;&nbsp;&nbsp;
+		                <input id="toStaff${rowCount}" type="text" class="border border-gray-300 rounded-lg text-base p-1">
+		            </div>
+		            <div class="flex items-center">
+		                <label class="font-medium text-gray-900 text-base mr-2">* 연락처</label>
+		                <input id="toPhnNo${rowCount}" type="text" class="border border-gray-300 rounded-lg text-base p-1" style="width: 200px;">
+		            </div>
+		        </div>
+		        <div class="flex col-span-8 items-center">
+		            <label class="font-medium text-gray-900 text-base mr-2">* 주소</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		            <input id="toAddr${rowCount}" type="text" class="border border-gray-300 rounded-lg text-sm p-1 flex-1" style="height: 2rem; font-size: 0.875rem;">
+		        </div>
+		        <div class="flex col-span-8 items-center justify-between">
+		            <div class="flex items-center">
+		                <label class="font-medium text-gray-900 text-base mr-2">화주 담당자</label>
+		                <input id="shipperManager${rowCount}" type="text" class="border border-gray-300 rounded-lg text-base p-1">
+		            </div>
+		            <div class="flex items-center">
+		                <label class="font-medium text-gray-900 text-base mr-2">화주 메일</label>
+		                <input id="shipperMail${rowCount}" type="text" class="border border-gray-300 rounded-lg text-base p-1" style="width: 200px;">
+		            </div>
+		        </div>
+		    </div>
+		</div>	
+    `;
+
+    const container = document.querySelector('#addContainer');
+    container.appendChild(newRow);
+    
+    var date = new Date();
+    var today = new Date().toISOString().substring(0,10);
+  
+    $("#fromDt" + rowCount).val(today);
+  	$("#toDt" + rowCount).val(today);
+  	$("#fromTime" + rowCount).val(getCurrentTime());
+  	$("#toTime" + rowCount).val(getCurrentTime());
+  	
+  	$("#toStaff" + rowCount).val(document.getElementById('toStaff0').value);
+  	$("#toPhnNo" + rowCount).val(document.getElementById('toPhnNo0').value);
+  	$("#toAddr" + rowCount).val(document.getElementById('toAddr0').value);
+  	$("#shipperManager" + rowCount).val(document.getElementById('shipperManager0').value);
+  	$("#shipperMail" + rowCount).val(document.getElementById('shipperMail0').value);
+
+    setUpInputEnterListener();
+}
+
+function removeTransInfo(button) {
+	var container = button.closest('#newRowId');
+	container.remove();
+}
+
+
+function fn_loadAddrList(rowCount) {
+	//console.log(rowCount);
+	$("#addrRowCount").val(rowCount);
+	$("#loadAddrListPopUp").modal("show");
+	var sData = {};
+	fn_loading(true);
+
+	$.ajax({
+		type : "POST",
+		url : "/shipping/selectShippingDstnList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+	    success : function(data) {
+	    	loadDstnListHot.loadData([]);
+	    	loadDstnListHot.loadData(data.resultList);
+			setTimeout(function() {loadDstnListHot.render()}, 10);
+			fn_loading(false);
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("에러 발생");
+		    	location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+}
+
+function fn_loadAddrDefault(rowCount) {
+	var sData = {};
+	$.ajax({
+		type : "POST",
+		url : "/shipping/selectShippingDstnList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+	    success : function(data) {
+	    	console.log(data.resultList);
+	    	if (data.resultList.length > 0){
+	    	document.getElementById('toStaff0').value = data.resultList[0].addrNm;
+	        var formattedPhoneNo = data.resultList[0].phnNo.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+	        document.getElementById('toPhnNo0').value = formattedPhoneNo;
+	        var address = data.resultList[0].baseAddr + " " + data.resultList[0].dtlsAddr;
+	        document.getElementById('toAddr0').value = address;
+	    	}
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("에러 발생");
+		    	location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+}
+
+
+function fn_handsonGridLoadDstnListPopupOption() {
+	loadDstnPopupSettings = {
+        columns: [
+            { data: 'checkBox', type: 'checkbox', className: "htCenter", checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly: false },
+            { data: 'addrNm', type: 'text', className: "htCenter", readOnly: true},
+            { data: 'phnNo', 
+                type: 'text', 
+                className: "htCenter", 
+                readOnly: true,
+                renderer: function(instance, td, row, col, prop, value, cellProperties) {
+                    if (value) {
+                        value = value.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3');
+                        td.innerHTML = value;
+                    }
+                    Handsontable.renderers.TextRenderer.apply(this, arguments);
+                }
+            },
+            { data: 'baseAddr', type: 'text', className: "htCenter", readOnly: true},
+            { data: 'dtlsAddr', type: 'text', className: "htCenter", readOnly: true},
+            { data: 'zipCode', type: 'text', className: "htCenter", readOnly: true},
+            { data: 'seq', type: 'text', className: "htCenter", readOnly: true}
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["", "수령자", "연락처", "주소", "상세주소", "", ""],
+        colWidths: [30, 60, 90, 150, 150],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [5,6]},
+        mergeCells: false,
+        allowInsertRow: false,
+    };
+    return loadDstnPopupSettings;
+}
+
+
+document.addEventListener('input', function (event) {
+    if (event.target.id && event.target.id.startsWith('toPhnNo')) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, ''); // 숫자만 추출
+        
+        if (value.length <= 3) {
+            input.value = value;
+        } else if (value.length <= 7) {
+            input.value = value.slice(0, 3) + '-' + value.slice(3);
+        } else {
+            input.value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+        }
+    }
+});
+
+
+function loadAddrListClose(){
+	$("#loadAddrListPopUp").modal("hide");
+}
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape") {
+        loadAddrListClose();
+    }
+});
+
+function fn_regist() {
+	const addrBtnDiv = document.getElementById('addrBtnDiv');
+	addrBtnDiv.innerHTML = `
+	<div>
+		<button
+			type="button"
+			onclick="fn_addrRegist()"
+			class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+			focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm">
+			<i class="fa-solid fa-check"></i>
+			확인
+		</button>
+		<button
+			type="button"
+			onclick="addrRegistPopupClose()"
+			class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+			focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm">
+			<i class="fa-regular fa-floppy-disk"></i>
+			취소
+		</button>
+	</div> `;
+	
+	$("#addrRegistPopUp").modal("show");
+}
+
+function fn_addrDel() {
+	var rowData = loadDstnListHot.getSourceData();
+	let selected = [];
+    var cnt = 0;
+    for (let i = 0; i < rowData.length; i++) {
+        if (rowData[i].checkBox === "yes") {
+        	selected.push(rowData[i]);
+        	cnt++;
+        }
+    }
+    if (cnt == 0){
+    	alert("삭제할 도착지를 선택해주세요.");
+    	return;
+    }
+    if (confirm("선택하신 도착지를 삭제하시겠습니까?")) {
+        $.ajax({
+        	type: "POST",
+            url: "/shipping/deleteAddr.do",
+            data: JSON.stringify(selected), 
+            contentType: 'application/json', 
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("AJAX", "true");
+            },
+            success: function(data) {
+            	console.log(selected);
+            	for (let i = selected.length - 1; i >= 0; i--) {
+                    loadDstnListHot.alter('remove_row', selected[i]);
+                }
+                fn_loadAddrList(data);
+                data = [];
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                if (xhr.status == 400) {
+                    alert("에러 발생");
+                    location.href = document.referrer;
+                } else {
+                    console.log(errorThrown);
+                    alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+                }
+            }
+        });
+    }
+}
+
+function addrRegistPopupClose(){
+	$("#addrRegistPopUp").modal("hide");
+	document.getElementById('addrNm').value = '';
+
+    const contactInputs = document.querySelectorAll('input[type="text"].w-24');
+    contactInputs.forEach(input => input.value = '');
+
+    document.getElementById('zipCode').value = '';
+    document.getElementById('baseAddr').value = '';
+    document.getElementById('dtlsAddr').value = '';
+}
+
+function fn_addrRegist() {
+	var addrNm = document.getElementById('addrNm').value;
+	var phnNo1 = document.getElementById('phnNo1').value;
+	var phnNo2 = document.getElementById('phnNo2').value;
+	var phnNo3 = document.getElementById('phnNo3').value;
+    var phnNo = phnNo1 + phnNo2 + phnNo3;
+    var zipCode = document.getElementById('zipCode').value;
+    var baseAddr = document.getElementById('baseAddr').value;
+    var dtlsAddr = document.getElementById('dtlsAddr').value;
+    
+    if (!addrNm) {
+        alert("수령자를 입력하세요.");
+        document.getElementById('addrNm').focus();
+        return;
+    }
+    if (!phnNo1 || !phnNo2 || !phnNo3) {
+        alert("연락처를 입력하세요.");
+        const phnNoElement = !phnNo1 ? 'phnNo1' : (!phnNo2 ? 'phnNo2' : 'phnNo3');
+        document.getElementById(phnNoElement).focus();
+        return;
+    }
+    if (phnNo2.length !== 4 || phnNo3.length !== 4) {
+        alert("연락처 뒷자리는 4자리 이상이어야 합니다.");
+        if (phnNo2.length !== 4) {
+            document.getElementById('phnNo2').focus();
+        } else {
+            document.getElementById('phnNo3').focus();
+        }
+        return;
+    }
+    if (!zipCode) {
+        alert("우편번호를 입력하세요.");
+        document.getElementById('zipCode').focus();
+        return;
+    }
+    if (!baseAddr) {
+        alert("주소를 입력하세요.");
+        document.getElementById('baseAddr').focus();
+        return;
+    }
+    if (!dtlsAddr) {
+    	if(!confirm("상세주소를 입력하지 않았습니다. 그대로 저장하시겠습니까?")) {
+            document.getElementById('dtlsAddr').focus();
+            return;
+        }
+    }
+    
+    var aData = {};
+    aData["addrNm"] = addrNm;
+    aData["phnNo"] = phnNo;
+    aData["zipCode"] = zipCode;
+    aData["baseAddr"] = baseAddr;
+    aData["dtlsAddr"] = dtlsAddr;
+    
+	$.ajax({
+		type : "POST",
+		url : "/shipping/insertAddr.do",
+		data : aData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+	    success : function(data) {
+	    	$("#addrRegistPopUp").modal("hide");
+	    	var rowData = loadDstnListHot.getSourceData();
+	    	let selected = [];
+	        for (let i = 0; i < rowData.length; i++) {
+	        	loadDstnListHot.alter('insert_row_below', i, 1);
+	        }
+	    	fn_loadAddrList(rowCount);
+			data = [];
+			
+	    	document.getElementById('addrNm').value = '';
+
+	        const contactInputs = document.querySelectorAll('input[type="text"].w-24');
+	        contactInputs.forEach(input => input.value = '');
+
+	        document.getElementById('addrNm').value = '';
+	        document.getElementById('zipCode').value = '';
+	        document.getElementById('baseAddr').value = '';
+	        document.getElementById('dtlsAddr').value = '';
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("에러 발생");
+		    	location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+}
+
+
+function fn_searchAddr() {
+	new daum.Postcode({
+		oncomplete: function(data) {
+			var addr = ''; // 주소 변수
+	
+			if (data.userSelectedType === 'R') { // 도로명 주소
+				addr = data.roadAddress;
+			} else { // 지번 주소
+				addr = data.jibunAddress;
+			}
+			document.getElementById('zipCode').value = data.zonecode;
+			document.getElementById("baseAddr").value = addr;
+			document.getElementById("dtlsAddr").focus();
+	    }
+    }).open();
+}
+
+function fn_saveAddr() {
+	var rowCount = $("#addrRowCount").val();
+	var rowData = loadDstnListHot.getSourceData();
+	let selected = [];
+    var cnt = 0;
+    for (let i = 0; i < rowData.length; i++) {
+        if (rowData[i].checkBox === "yes") {
+        	selected.push(rowData[i]);
+        	cnt++;
+        	console.log(selected);
+        }
+    }
+    if (cnt > 1){
+    	alert("도착지는 한 개만 선택 가능합니다.");
+    	return;
+    }
+    if (cnt == 0){
+    	alert("저장할 도착지를 선택해주세요.");
+    	return;
+    }
+    
+    document.getElementById('toStaff' + rowCount).value = selected[0].addrNm;
+    var formattedPhoneNo = selected[0].phnNo.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+    document.getElementById('toPhnNo' + rowCount).value = formattedPhoneNo;
+    var address = selected[0].baseAddr + " " + selected[0].dtlsAddr;
+    document.getElementById('toAddr' + rowCount).value = address;
+    $("#loadAddrListPopUp").modal("hide");
+    
+}
+
+function fn_addrTempSave(rptNo, blNo) {
+	var basicData = [];
+
+	//var toStaff = document.getElementById('toStaff').value;
+	//var toPhnNo = document.getElementById('toPhnNo').value.replace(/-/g, '');
+	//var toAddr = document.getElementById('toAddr').value;
+	var cmpnyNm = document.getElementById('cmpnyNm').value;
+	var corpNo = document.getElementById('corpNo').value;
+	var managerNm = document.getElementById('managerNm').value;
+	var fromDt = document.getElementById('fromDt').value.replace(/-/g, '');
+	var fromAddr = document.getElementById('fromAddr').value;
+	var toDt = document.getElementById('toDt').value.replace(/-/g, '');
+	var billEmail = document.getElementById('billEmail').value;
+	var goodsWeights = document.getElementById('goodsWeights').value;
+	var mixYn = document.getElementById('mixYn').value;
+	var fromReq = document.getElementById('fromReq').value;
+	//var shipperManager = document.getElementById('shipperManager').value;
+	//var shipperMail = document.getElementById('shipperMail').value;
+	var taxInvoice = document.getElementById('taxInvoice').checked ? "Y" : "N";
+	var transDetails = document.getElementById('transDetails').checked ? "Y" : "N";
+	var fromTime = document.getElementById('fromTime').value;
+	
+	
+	if (fromTime.disabled) {
+		fromTime = '즉시';
+	} else {
+		fromTime = fromTime.value;
+	}
+	
+	var ctRows = document.querySelectorAll('[id^="ctNo"]');
+    var orderSeq = 1; 
+    for (var i = 0; i < ctRows.length; i++) {
+        var row = ctRows[i];
+        var seq = row.id.replace('ctNo', '');
+        var ctNo = document.getElementById('ctNo' + seq).value;
+        var fromSpecifics = document.getElementById('fromSpecifics' + seq).value;
+        var toTime = document.getElementById('toTime' + seq).value;
+        var toStaff = document.getElementById('toStaff' + seq).value;
+        var toPhnNo = document.getElementById('toPhnNo' + seq).value;
+        var toAddr = document.getElementById('toAddr' + seq).value;
+        var shipperManager = document.getElementById('shipperManager' + seq).value;
+        var shipperMail = document.getElementById('shipperMail' + seq).value;
+        
+        basicData.push({
+        	orderSeq, blNo, rptNo, ctNo, fromSpecifics, fromDt, fromTime, fromAddr, 
+	    	toDt, toTime, goodsWeights, mixYn, fromReq,
+	    	toStaff, toPhnNo, toAddr, cmpnyNm, corpNo, managerNm, billEmail,
+	    	shipperManager, shipperMail, taxInvoice, transDetails
+        })
+        orderSeq++;
+    }
+    
+	
+	$.ajax({
+	   type: "POST",
+	   url: "/shipping/insertShippingTempList.do",
+	   data: JSON.stringify(basicData),
+	   beforeSend: function(xmlHttpRequest){
+	       xmlHttpRequest.setRequestHeader("AJAX", "true");
+	   },
+	   contentType: "application/json; charset=utf-8",
+	   success: function(data) {
+	       if(data === "success") {
+	           alert("잔여 여부 및 파일은 임시저장되지 않습니다.\n임시저장이 완료되었습니다.");
+	       }
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	       if(e.status == 400){
+	           alert("Your request is up. Please log back in if you wish continue");
+	           location.href = document.referrer;
+	       } else {
+	           console.log(errorThrown);
+	           alert(msgSaveError);
+	       }
+	    }
+	});
+}
+
+function fn_clearShipReqBtn() {
+    var today = new Date().toISOString().substring(0, 10);
+
+    for (var i = 1; i < rowCount + 1; i++) {
+        var container = document.querySelector(`#ctNo${i}`).closest('#transInfo-container');
+        if (container) {
+            container.remove();
+        }
+    }
+    
+    rowCount = 0;
+
+    $("#fromDt").val(today); 
+    $("#toDt").val(today);
+    $("#fromTime").val(getCurrentTime()); 
+    $("#toTime0").val(getCurrentTime());
+
+    $("#ctNo0").val("");
+    $("#fromSpecifics0").val("");
+    $("#fromAddr").val("");
+    $("#goodsWeights").val("");
+    $("#mixYn").val("Y");
+    $("#fromReq").val("");
+    $("#toStaff0").val("");
+    $("#toPhnNo0").val("");
+    $("#toAddr0").val("");
+    $("#cmpnyNm").val("");
+    $("#corpNo").val("");
+    $("#managerNm").val("");
+    $("#billEmail").val("");
+    $("#shipperManager0").val("");
+    $("#shipperMail0").val("");
+    $('#taxInvoice').prop('checked', false);
+    
+}
+
+
+function makeHyphen() {
+    const timeInput = document.getElementById('fromTime');
+    const checkbox = document.getElementById('fromTimeNow');
+    if (checkbox.checked) {
+        timeInput.value = '-';
+        timeInput.disabled = true;
+    } else {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        timeInput.value = `${hours}:${minutes}`;
+        timeInput.disabled = false;
+    }
+}
+
+
+function ctNoList(rptNo) {
+	$("#ctListPopUp").modal("show");
+	var rptNoTitle = "신고번호: " + rptNo;
+    var listTitle = document.querySelector('.modal-content .ctList-title span');
+    listTitle.textContent = rptNoTitle;
+    
+    var sData = {};
+    sData["srch1"] = rptNo;
+	//fn_loading(true);
+
+	$.ajax({
+		type : "POST",
+		url : "/shipping/selectCtNoList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+	    success : function(data) {
+	    	ctNoListHot.loadData([]);
+	    	ctNoListHot.loadData(data.resultList);
+			setTimeout(function() {ctNoListHot.render()}, 10);
+			fn_loading(false);
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("에러 발생");
+		    	location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+}
+
+function fn_handsonGridCtNoListPopupOption() {
+   ctNoPopupSettings = {
+        columns: [
+            { data: 'checkBox', type: 'checkbox', className: "htCenter", checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly: false,
+               renderer: function(instance, td, row, col, prop, value, cellProperties) {
+                    const rowData = instance.getSourceDataAtRow(row);
+                    const shipReqYnValue = rowData.shipReqYn;
+                    if (shipReqYnValue === 'N') {
+                        Handsontable.renderers.CheckboxRenderer.apply(this, arguments);
+                    } else {
+                        td.innerHTML = '';
+                    }
+                }
+            },
+            { data: 'contSeq', type: 'text', className: "htCenter", readOnly: true},
+            { data: 'contNo', type: 'text', className: "htCenter", readOnly: true},
+            { data: 'shipReqYn', type: 'text', className: "htCenter", readOnly: true},
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["", "순번", "컨테이너 번호", ""],
+        colWidths: [30, 30, 90],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [3] },
+        afterGetColHeader: function(col, TH){
+           if(col == 0){
+             TH.innerHTML = "<input type='checkbox' class='checker' id='id_checkAllCtNoListPopup' onclick='fn_checkAllCtNoListPopup();'>";
+          }
+        }
+    };
+    return ctNoPopupSettings;
+}
+
+
+function fn_checkAllCtNoListPopup(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_checkAllCtNoListPopup").prop("checked") == false) {
+		check = "yes" ;
+		isAllChecked = true;
+	} else {
+		check = "no" ;
+		isAllChecked = false;
+	}
+
+	var data = ctNoListHot.getData();
+
+	for(var i=0; i< data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	ctNoListHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_checkAllCtNoListPopup").prop("checked", true);
+	} else {
+		$("#id_checkAllCtNoListPopup").prop("checked", false);
+	}
+}
+
+function ctNoListClose(){
+	$("#ctListPopUp").modal("hide");
+}
+
+
+function fn_saveCtNo() {
+	if (rowCount > 0) {
+        fn_clearShipReqBtn();
+    }
+    
+	var data = ctNoListHot.getSourceData();
+	var ctNoList = [];
+    for (var i = 0; i < data.length; i++) {
+        if (data[i]["checkBox"] === "yes") {
+        	ctNoList.push(data[i].contNo);
+        }
+    }
+
+    ctNoList.forEach(function(contNo) {
+        addShipInfo(ctNoList);
+    });
+    ctNoListClose();
+}
+
+
+function fn_addrReq(rptNo, blNo, orderSeq) {
+    var sData = [];
+    var orderSeq = orderSeq;
+    var mngDeptId = 'D20240104165622001'; // 일양 배차 부서
+    var inOutSctn = '01'; // 수출입구분
+    var truckTypeCode = 'TR'; // 운송유형
+    var sComName = 'a'; // 상차지명
+    var eComName = 'a'; // 하차지명
+    //var goodsName = ''; // 화물정보
+    var chargeType = '01'; // 01:인수증, 02:선착불
+    var sellCharge = 0; // 운송료
+    var externalFlag = 'SH'; // 외부연계
+    var carTonCode = '5'; 
+    var carTypeCode = '06';
+    
+    var externalInfomation = blNo;
+    var externalNumber = rptNo;
+    //var eStaff = document.getElementById('toStaff').value;
+    //var eTel = document.getElementById('toPhnNo').value;
+    //var eAddr = document.getElementById('toAddr').value;
+    //var shipperManager = document.getElementById('shipperManager').value;
+    //var shipperMail = document.getElementById('shipperMail').value;
+    var bizName = document.getElementById('cmpnyNm').value;
+    var bizNum = document.getElementById('corpNo').value;
+    var managerNm = document.getElementById('managerNm').value; // 담당자:메일로 대체, ''
+    var sDate = document.getElementById('fromDt').value.replace(/-/g, '');
+    var sAddr = document.getElementById('fromAddr').value;
+    var eDate = document.getElementById('toDt').value.replace(/-/g, '');
+    var billEmail = document.getElementById('billEmail').value; // ''
+    var transDetails = document.getElementById('transDetails').checked ? 'Y':'N';
+    var taxInvoice = document.getElementById('taxInvoice').checked ? 'Y':'N';
+    var goodsWeights = document.getElementById('goodsWeights').value;
+    var mixYn = document.getElementById('mixYn').value;
+    var reqMemo = document.getElementById('fromReq').value;
+    var fromTime = document.getElementById('fromTime').value;
+    var fileName = filesList.map(file => file.name).join('/');
+    var fileSize = true;
+
+    filesList.forEach((file, index) => {
+        let fileSizeMB = file.size / (1024 * 1024);
+        //console.log(`파일 ${index + 1} 용량 (MB):`, fileSizeMB.toFixed(2));
+        if (fileSizeMB > 28) {
+            alert(`30MB를 초과하는 파일이 포함되어 있어 운송 요청할 수 없습니다.`);
+            fileSize = false;
+            filesList = [];
+        }
+    });
+    if (!fileSize) return;
+    
+    if (document.getElementById('fromTime').disabled) {
+        fromTime = '즉시';
+    } else {
+        fromTime = document.getElementById('fromTime').value;
+    }
+
+    var emptyField = false;
+    function validateField(selector, fieldName) {
+        if ($(selector).val() === "" && !emptyField) {
+            $(selector).css("border", "3px solid red");
+            alert(fieldName + "를 입력해주세요.");
+            emptyField = true;
+            return false;
+        } else {
+            $(selector).css("border", "");
+            return true;
+        }
+    }
+    function validateField2(selector, fieldName) {
+    	if ($(selector).val() === "" && !emptyField) {
+    		$(selector).css("border", "3px solid red");
+    		alert(fieldName + "을 입력해주세요.");
+    		emptyField = true;
+    		return false;
+    	} else {
+    		$(selector).css("border", "");
+    		return true;
+    	}
+    }
+    if (
+		!validateField('#fromAddr', '상차지') ||
+		!validateField('#toStaff', '수령자') ||
+		!validateField('#toPhnNo', '연락처') ||
+        !validateField('#toAddr', '주소') ||
+        !validateField2('#cmpnyNm', '업체명') ||
+        !validateField('#corpNo', '사업자 번호') ||
+        !validateField('#managerNm', '담당자') ||
+        !validateField2('#billEmail', '계산서 메일')
+        ) { return; }
+    
+    orderSeq++;
+    var ctRows = document.querySelectorAll('[id^="ctNo"]'); // ctNo0 ,ctNo3
+    for (var i = 0; i < ctRows.length; i++) {
+        var row = ctRows[i];
+        var seq = row.id.replace('ctNo', '');
+        var ctNoElement = document.getElementById('ctNo' + seq);
+        var ctNo = ctNoElement && ctNoElement.value ? ctNoElement.value : '';
+        var sMemo = document.getElementById('fromSpecifics' + seq).value;
+        var toTime = document.getElementById('toTime' + seq).value;
+        var eStaff = document.getElementById('toStaff' + seq).value;
+        var eTel = document.getElementById('toPhnNo' + seq).value;
+        var eAddr = document.getElementById('toAddr' + seq).value;
+        var shipperManager = document.getElementById('shipperManager' + seq).value;
+        var shipperMail = document.getElementById('shipperMail' + seq).value;
+        
+        sData.push({
+        	orderSeq, ctNo, mngDeptId, externalInfomation, externalNumber,
+        	inOutSctn, truckTypeCode, sComName, chargeType, sellCharge, externalFlag, carTonCode, carTypeCode,
+        	eStaff, eComName, eTel, eAddr, eDate, bizName, bizNum, managerNm, shipperManager, shipperMail, transDetails, taxInvoice,
+        	sDate, sAddr, sMemo, billEmail, goodsWeights, mixYn,
+            reqMemo, fromTime, toTime, fileName
+        })
+    }
+    
+    
+    var formData = new FormData();
+
+    formData.append('sData', JSON.stringify(sData));
+    filesList.forEach(function(file, index) {
+    	formData.append('files', file);
+    });
+
+    sData.forEach((data, index) => {
+        console.log(`${index + 1}:`, data);
+    });
+    
+    if(!confirm("운송 요청하시겠습니까?")){return;}
+    
+    $.ajax({
+ 	   type: "POST",
+ 	   url: "/shipping/insertShippingReqList.do",
+ 	   data: formData,
+ 	   beforeSend: function(xmlHttpRequest){
+ 	       xmlHttpRequest.setRequestHeader("AJAX", "true");
+ 	   },
+ 	   processData: false,
+ 	   contentType: false,
+ 	   success: function(data) {
+ 		   console.log(data);
+ 	       if(data === "success") {
+ 	           alert("운송 요청이 완료되었습니다.");
+ 	           filesList = []
+ 	           fn_searchImportView();
+ 	       }
+ 	       $("#shipReqViewListPopUp").modal("hide");
+ 	    },
+ 	    error: function(e, textStatus, errorThrown) {
+ 	       if(e.status == 400){
+ 	           alert("Your request is up. Please log back in if you wish continue");
+ 	           location.href = document.referrer;
+ 	       } else {
+ 	           console.log(errorThrown);
+ 	           alert(msgSaveError);
+ 	       }
+ 	    }
+ 	});
+}
+
+
+function fn_orderCancel(){
+	if(!confirm("취소 요청하시겠습니까?")){return;}
+	
+	var sData = [];
+	
+	const rows = document.querySelectorAll('[id^="orderId"]');
+
+    rows.forEach(row => {
+    	var mngDeptId = "D20240104165622001";
+    	var orderId = row.value
+    	sData.push({mngDeptId, orderId});
+    });
+    
+    $.ajax({
+  	   type: "POST",
+  	   url: "/shipping/orderCancel.do",
+  	   data: JSON.stringify(sData),
+  	   beforeSend: function(xmlHttpRequest){
+  	      xmlHttpRequest.setRequestHeader("AJAX", "true");
+  	      xmlHttpRequest.setRequestHeader("Content-Type", "application/json"); // JSON 타입 설정
+  	   },
+  	   processData: false,
+  	   contentType: false,
+  	   success: function(data) {
+  	       if(data === "success") {
+  	    	 alert("취소 요청이 완료되었습니다.");
+  	    	 fn_searchImportView();
+ 	       }
+ 	       $("#shipReqViewListPopUp").modal("hide");
+  	    },
+  	    error: function(e, textStatus, errorThrown) {
+  	       if(e.status == 400){
+  	           alert("Your request is up. Please log back in if you wish continue");
+  	           location.href = document.referrer;
+  	       } else {
+  	           console.log(errorThrown);
+  	           alert(msgSaveError);
+  	       }
+  	    }
+  	});
+	
+}
+
+
+function fn_addShipReqBtn(row, orderSeq){
+	document.getElementById('addShipInfo2').style.display = 'block';
+	rowCount = 0;
+	const rows = document.querySelectorAll('#newRowId');
+
+    rows.forEach(row => {
+        row.remove();
+    });
+	
+	var rowData = shippingOrderHot.getSourceDataAtRow(row);
+	var blNo = rowData.blno;
+	var rptNo = rowData.rptNo.replace(/-/g, '');
+	var nabFirm = rowData.nabFirm;
+	var nabSdno = rowData.nabSdno;
+	var goodsWeights = rowData.totWt;
+	var addr = rowData.addr
+	const ctDivHtml = document.getElementById('ctDiv');
+	ctDivHtml.innerHTML = "";
+	ctDivHtml.innerHTML = `<input id="ctNo0" type="text" class="border border-gray-300 rounded-lg text-base p-1 pr-8" style="width: 210px; text-align: center;">
+						    <input id="orderId0" type="hidden">
+						    <i class="fas fa-search search-icon absolute right-2 cursor-pointer" style="cursor: pointer; margin-left: 10px;" onclick="ctNoList('${rptNo}')"></i>`;
+	
+	const loadBtnDivHtml = document.getElementById('loadBtnDiv');
+	loadBtnDivHtml.innerHTML = "";
+	loadBtnDivHtml.innerHTML = `<button
+						            type="button"
+						            onclick="fn_loadAddrList(${rowCount})"
+						            class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+						            focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm">
+						            <i class="fa-solid fa-chevron-right"></i>
+						           	 불러오기
+						        </button>`;
+	
+	$("#cmpnyNm").val(nabFirm);
+	$("#corpNo").val(nabSdno);
+	$("#fromAddr").val(addr);
+	$("#goodsWeights").val(goodsWeights);
+	
+	$("#shipReqViewListPopUp").modal("show");
+	var blNoTitle = "B/L 번호: " + blNo;
+	
+    var shipReqModalTitle = document.querySelector('.modal-content .shipReqModal-title span');
+    shipReqModalTitle.textContent = blNoTitle;
+    
+    var date = new Date();
+	var today = new Date().toISOString().substring(0,10);
+	  
+	$("#fromDt").val(today);
+	$("#toDt").val(today);
+//	$("#fromTime").val(getCurrentTime())
+	if (document.getElementById('fromTime').disabled) {
+        fromTime = '즉시';
+    } else {
+        fromTime = document.getElementById('fromTime').value;
+    }
+	$("#toTime0").val(getCurrentTime())
+	$("#fromSpecifics0").val("");
+	$("#ctNo0").val("");
+ 	$("#orderId0").val("");
+	$("#mixYn").val("Y");
+	$("#fromReq").val("");
+	$("#toStaff0").val("");
+	$("#toPhnNo0").val("");
+	$("#toAddr0").val("");
+	$("#shipperManager0").val("");
+	$("#shipperMail0").val("");
+	
+	fn_loadAddrDefault();
+
+	var shipReqModalTime = document.querySelector('.modal-content .shipReqModal-time span');
+	shipReqModalTime.textContent = today + " " + getCurrentTime();
+	
+	const buttonDiv = document.getElementById('buttonDiv');
+	buttonDiv.innerHTML = "";
+	buttonDiv.innerHTML = `
+			<div id="fileList" class="border border-primary-500  
+	     		font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm" style="width:415px; height:52px; overflow: auto;">
+    		</div>
+       		<label for="fileName" class="custom-file-upload text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+					    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5 cursor-pointer">
+				       <i class="fa-duotone fa-file-circle-check"></i>
+						    파일첨부
+			<input type="file" id="fileName" multiple name="fileName" style="display: none;">
+			</label>
+			<button
+			    type="button"
+			    onclick="fn_addrTempSave('${rptNo}', '${blNo}')"
+			    class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+			    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5">
+			    <i class="fa-regular fa-floppy-disk"></i>
+			   	    임시저장
+			</button>
+			<button
+			    type="button"
+			    onclick="fn_addrReq('${rptNo}', '${blNo}', ${orderSeq})"
+			    class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+			    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm mt-5">
+			    <i class="fa-duotone fa-cart-flatbed-boxes"></i>
+			   	    운송요청
+			</button>
+			<form name="shipFileDownForm" method="post"
+				  action="/shipping/insertShippingReqList.do">
+				<input type="hidden" name="shipFileDown" id="shipFileDown"/>
+		    </form>`;
+	
+	 setUpFileInputListener();
+}
+
+function fn_orderMod(data) {
+    console.log(data);
+    var sData = [];
+    
+    var mngDeptId = 'D20240104165622001'; // 일양 배차 부서
+    var inOutSctn = '01'; // 수출입구분
+    var truckTypeCode = 'TR'; // 운송유형
+    var sComName = 'a'; // 상차지명
+    var eComName = 'a'; // 하차지명
+    var chargeType = '01'; // 01:인수증, 02:선착불
+    var sellCharge = 0; // 운송료
+    var carTonCode = '5'; 
+    var carTypeCode = '06';
+    var fileName = filesList.map(file => file.name).join('/');
+    var orderSeq = data[0].orderSeq;
+
+    var emptyField = false;
+    function validateField(selector, fieldName) {
+        if ($(selector).val() === "" && !emptyField) {
+            $(selector).css("border", "3px solid red");
+            alert(fieldName + "를 입력해주세요.");
+            emptyField = true;
+            return false;
+        } else {
+            $(selector).css("border", "");
+            return true;
+        }
+    }
+
+    if (
+        !validateField('#fromAddr', '상차지') ||
+        !validateField('#toStaff', '수령자') ||
+        !validateField('#toPhnNo', '연락처') ||
+        !validateField('#toAddr', '주소') ||
+        !validateField('#cmpnyNm', '업체명') ||
+        !validateField('#corpNo', '사업자 번호') ||
+        !validateField('#managerNm', '담당자') ||
+        !validateField('#billEmail', '계산서 메일')
+    ) { return; }
+
+    const ctRows = document.querySelectorAll('[id^="ctNo"]');
+    const fromSpecificsVal = document.querySelectorAll('[id^="fromSpecifics"]'); 
+    const toTimeVal = document.querySelectorAll('[id^="toTime"]');
+    const eStaffVal = document.querySelectorAll('[id^="toStaff"]');
+    const eTelVal = document.querySelectorAll('[id^="toPhnNo"]');
+    const eAddrVal = document.querySelectorAll('[id^="toAddr"]');
+    const shipperManagerVal = document.querySelectorAll('[id^="shipperManager"]');
+    const shipperMailVal = document.querySelectorAll('[id^="shipperMail"]');
+
+    for (var i = 0; i < ctRows.length; i++) {
+        var row = ctRows[i];
+        var ctNo = row.value;
+        
+        var sMemo = fromSpecificsVal[i] ? fromSpecificsVal[i].value : "";
+        var toTime = toTimeVal[i] ? toTimeVal[i].value : "";
+        var eStaff = eStaffVal[i] ? eStaffVal[i].value : "";
+        var toTime = toTimeVal[i] ? toTimeVal[i].value : "";
+        var eTel = eTelVal[i] ? eTelVal[i].value : "";
+        var eAddr = eAddrVal[i] ? eAddrVal[i].value : "";
+        var shipperManager = shipperManagerVal[i] ? shipperManagerVal[i].value : "";
+        var shipperMail = shipperMailVal[i] ? shipperMailVal[i].value : "";
+        var sDate = document.getElementById('fromDt').value.replace(/-/g, '');
+        var eDate = document.getElementById('toDt').value.replace(/-/g, '');
+        var reqMemo = document.getElementById('fromReq').value;
+        var managerNm = document.getElementById('managerNm').value;
+        var cmpnyNm = document.getElementById('cmpnyNm').value;
+        var corpNo = document.getElementById('corpNo').value;
+        var billEmail = document.getElementById('billEmail').value;
+        //var eStaff = document.getElementById('toStaff').value;
+        var mixYn = document.getElementById('mixYn').value;
+        //var eTel = document.getElementById('toPhnNo').value;
+        //var eAddr = document.getElementById('toAddr').value;
+        var sAddr = document.getElementById('fromAddr').value;
+        var goodsWeights = document.getElementById('goodsWeights').value;
+        var fromTime = document.getElementById('fromTimeNow').checked ? '즉시' : document.getElementById('fromTime').value;
+        //var shipperManager = document.getElementById('shipperManager').value;
+        //var shipperMail = document.getElementById('shipperMail').value;
+        var transDetails = document.getElementById('transDetails').checked ? 'Y':'N';
+        var taxInvoice = document.getElementById('taxInvoice').checked ? 'Y':'N';
+        
+        sData.push({
+            orderSeq,
+            rptNo: data[i].rptNo, blNo: data[i].blNo, ctNo: ctNo, orderId: data[i].orderId, regDt: data[i].regDt,
+            sMemo: sMemo, sDate, fromTime, sAddr, sellCharge: data[i].estCharge,
+            goodsWeights, mixYn, reqMemo,
+            eStaff:eStaff, eTel:eTel, eAddr:eAddr, eDate, eComName,
+            toTime: toTime,shipperManager:shipperManager, shipperMail:shipperMail, transDetails, taxInvoice,
+            mngDeptId:mngDeptId, inOutSctn:inOutSctn, truckTypeCode:truckTypeCode, sComName:sComName, goodsName:ctNo, chargeType:chargeType, carTonCode:carTonCode, carTypeCode:carTypeCode,
+            cmpnyNm, managerNm, billEmail, corpNo, fileName
+        });
+    }
+
+    var formData = new FormData();
+    formData.append('sData', JSON.stringify(sData));
+    filesList.forEach(function(file, index) {
+        formData.append('files', file);
+    });
+
+    sData.forEach((data, index) => {
+        console.log(`${index + 1}:`, data);
+    });
+
+    if (!confirm("수정 요청하시겠습니까?")) { return; }
+    $.ajax({
+        type: "POST",
+        url: "/shipping/updateShippingReqList.do",
+        data: formData,
+        beforeSend: function(xmlHttpRequest) {
+            xmlHttpRequest.setRequestHeader("AJAX", "true");
+        },
+        processData: false,
+        contentType: false,
+        success: function(data) {
+            if (data === "success") {
+            	alert("수정 요청이 완료되었습니다.");
+            	fn_searchImportView();
+  	       }
+  	       $("#shipReqViewListPopUp").modal("hide");
+        },
+        error: function(e, textStatus, errorThrown) {
+            if (e.status == 400) {
+                alert("Your request is up. Please log back in if you wish to continue");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert("Error occurred while saving.");
+            }
+        }
+    });
+}
+
+
+function fn_addrMod() {
+	var cnt = 0;
+	var data = loadDstnListHot.getSourceData();
+	checkData = [];
+	
+	for (var i = 0; i < data.length; i++) {
+		if (data[i]["checkBox"] == "yes") {
+			cnt++;
+			checkData.push(data[i]);
+			document.getElementById('addrNm').value = checkData[0]["addrNm"];
+			document.getElementById('phnNo1').value = checkData[0]["phnNo"].substring(0, 3);
+			document.getElementById('phnNo2').value = checkData[0]["phnNo"].substring(3, 7);
+			document.getElementById('phnNo3').value = checkData[0]["phnNo"].substring(7);
+			document.getElementById('baseAddr').value = checkData[0]["baseAddr"];
+			document.getElementById('dtlsAddr').value = checkData[0]["dtlsAddr"];
+			document.getElementById('zipCode').value = checkData[0]["zipCode"];
+			document.getElementById('addrSeq').value = checkData[0]["seq"];
+	       
+			data[i]["checkBox"] = "no";
+		}
+	}
+	if (cnt == 0) {
+		alert("수정할 도착지를 선택해 주세요.");
+		return;
+	}
+	
+	const addrBtnDiv = document.getElementById('addrBtnDiv');
+	addrBtnDiv.innerHTML ="";
+	addrBtnDiv.innerHTML = `
+		<div>
+			<button
+				type="button"
+				id="addrUpdate"
+				onclick="fn_addrUpdate()"
+				class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+				focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm">
+				<i class="fa-solid fa-check"></i>
+				확인
+			</button>
+			<button
+				type="button"
+				id="addrRegistPopupClose"
+				onclick="addrRegistPopupClose()"
+				class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+				focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm">
+				<i class="fa-regular fa-floppy-disk"></i>
+				취소
+			</button>
+		</div> `;
+	
+	$("#addrRegistPopUp").modal("show");
+	
+	loadDstnListHot.loadData(data);
+    loadDstnListHot.updateSettings({
+        cells: function(row, col) {
+            var cellProperties = {};
+            if (col === 0) {
+                cellProperties.checked = false;
+            }
+            return cellProperties;
+        }
+    });
+    loadDstnListHot.render();
+    console.log(checkData);
+    
+}
+
+
+function fn_addrUpdate() {
+	var addrNm = document.getElementById('addrNm').value;
+	var phnNo1 = document.getElementById('phnNo1').value;
+	var phnNo2 = document.getElementById('phnNo2').value;
+	var phnNo3 = document.getElementById('phnNo3').value;
+    var phnNo = phnNo1 + phnNo2 + phnNo3;
+    var zipCode = document.getElementById('zipCode').value;
+    var baseAddr = document.getElementById('baseAddr').value;
+    var dtlsAddr = document.getElementById('dtlsAddr').value;
+    var addrSeq = document.getElementById('addrSeq').value;
+    
+    if (!addrNm) {
+        alert("수령자를 입력하세요.");
+        document.getElementById('addrNm').focus();
+        return;
+    }
+    if (!phnNo1 || !phnNo2 || !phnNo3) {
+        alert("연락처를 입력하세요.");
+        const phnNoElement = !phnNo1 ? 'phnNo1' : (!phnNo2 ? 'phnNo2' : 'phnNo3');
+        document.getElementById(phnNoElement).focus();
+        return;
+    }
+    if (phnNo2.length !== 4 || phnNo3.length !== 4) {
+        alert("연락처 뒷자리는 4자리 이상이어야 합니다.");
+        if (phnNo2.length !== 4) {
+            document.getElementById('phnNo2').focus();
+        } else {
+            document.getElementById('phnNo3').focus();
+        }
+        return;
+    }
+    if (!zipCode) {
+        alert("우편번호를 입력하세요.");
+        document.getElementById('zipCode').focus();
+        return;
+    }
+    if (!baseAddr) {
+        alert("주소를 입력하세요.");
+        document.getElementById('baseAddr').focus();
+        return;
+    }
+    if (!dtlsAddr) {
+    	if(!confirm("상세주소를 입력하지 않았습니다. 그대로 저장하시겠습니까?")) {
+            document.getElementById('dtlsAddr').focus();
+            return;
+        }
+    }
+    var uData = {};
+    uData["addrNm"] = addrNm;
+    uData["phnNo"] = phnNo;
+    uData["zipCode"] = zipCode;
+    uData["baseAddr"] = baseAddr;
+    uData["dtlsAddr"] = dtlsAddr;
+    uData["seq"] = addrSeq;
+    
+	$.ajax({
+		type : "POST",
+		url : "/shipping/updateAddr.do",
+		data : uData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+	    success : function(data) {
+	    	$("#addrRegistPopUp").modal("hide");
+	    	fn_loadAddrList(data);
+	    	document.getElementById('addrNm').value = '';
+
+	        const contactInputs = document.querySelectorAll('input[type="text"].w-24');
+	        contactInputs.forEach(input => input.value = '');
+
+	        document.getElementById('addrNm').value = '';
+	        document.getElementById('zipCode').value = '';
+	        document.getElementById('baseAddr').value = '';
+	        document.getElementById('dtlsAddr').value = '';
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("에러 발생");
+		    	location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+}

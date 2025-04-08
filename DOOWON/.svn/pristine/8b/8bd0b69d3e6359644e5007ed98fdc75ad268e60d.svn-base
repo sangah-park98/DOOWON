@@ -1,0 +1,374 @@
+package egovframework.pf.exp.service.impl;
+
+import java.util.List;
+import javax.annotation.Resource;
+import org.springframework.stereotype.Service;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.exp.service.SaveExpFileVO;
+import egovframework.pf.exp.service.SaveExpInvoiceVO;
+import egovframework.pf.exp.service.SaveExpMainVO;
+import egovframework.pf.exp.service.pfExportService;
+import egovframework.rte.psl.dataaccess.EgovAbstractMapper;
+
+@Service("pfExportService")
+public class pfExportServiceImpl extends EgovAbstractMapper implements pfExportService {
+
+	@Resource(name="pfExportMapper")
+	private pfExportMapper pfExportMapper;
+
+	// Invoice 등록 조회
+	@Override
+	public List<?> selectExportInList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportInList(vo);
+	}
+	@Override
+	public List<?> selectExpViewFilesList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExpViewFilesList(vo);
+	}
+	// 편집 라디오 버튼의  PDF 파일 저장
+	@Override
+	public void saveExportFileInfo(SaveExpFileVO vo) throws Exception {
+		pfExportMapper.saveExportFileInfo(vo);
+	}
+	// 읽기 라디오 버튼의 'Invoice 등록' PDF 파일 저장
+	@Override
+	public void insertExportFilesInfo(SaveExpFileVO vo) throws Exception {
+		pfExportMapper.insertExportFilesInfo(vo);
+	}
+	@Override
+	public List<?> selectInFilesList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectInFilesList(vo);
+	}
+	@Override
+	public List<?> selectExportMkInList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportMkInList(vo);
+	}
+	@Override
+	public List<?> selectExportMkInIncotermsList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportMkInIncotermsList(vo);
+	}
+	@Override
+	public List<?> selectExportMkInAprPortList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportMkInAprPortList(vo);
+	}
+	@Override
+	public List<?> selectExportMkInNationList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportMkInNationList(vo);
+	}
+	@Override
+	public List<?> selectExportMkInUOMList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportMkInUOMList(vo);
+	}
+	@Override
+	public List<?> selectExportMkInCurrencyList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportMkInCurrencyList(vo);
+	}
+	@Override
+	public void saveInvoiceMainList(List<SaveExpMainVO> voList, UserSessionVO userVO) throws Exception {
+		String id = userVO.getId();
+		String corpNo = userVO.getCorpNo();
+		for(int i = 0; i < voList.size(); i++) {
+		    SaveExpMainVO vo = voList.get(i);
+		    if(i == 0) {
+		        vo.setRegId(id);
+		        vo.setCorpNo(corpNo);
+		        pfExportMapper.insertInvoiceMainList(vo);
+		    }
+		}
+	}
+	@Override
+	public void saveTempExpMakeInList(List<SaveExpMainVO> voList, UserSessionVO userVO) throws Exception {
+		String id = userVO.getId();
+		String cmpnyCd = userVO.getCmpnyCd();
+		String corpNo = userVO.getCorpNo();
+		for(int i = 0; i < voList.size(); i++) {
+		    SaveExpMainVO vo = voList.get(i);
+		    if(i == 0) {
+		        vo.setRegId(id);
+		        vo.setCmpnyCd(cmpnyCd);
+		        vo.setCorpNo(corpNo);
+		        pfExportMapper.saveTempExpMakeInList(vo);
+		    }
+		}
+	}
+	@Override
+	public void saveTempExpMakeInSubList(List<SaveExpMainVO> voList, UserSessionVO userVO, String mainSeq2) throws Exception {
+		String id = userVO.getId();
+		for(int i = 1; i < voList.size(); i++) {
+		    SaveExpMainVO vo = voList.get(i);
+		    	vo.setRegId(id);
+				vo.setMainIndex(mainSeq2);
+				pfExportMapper.saveTempExpMakeInSubList(vo);
+		}
+	}
+	@Override
+	public String selectTempInvoiceMainIdex(String index) throws Exception {
+		return pfExportMapper.selectTempInvoiceMainIdex(index);
+	}
+	@Override
+	public String checkTempInvoiceNumber(SearchVO schVo) throws Exception {
+		return pfExportMapper.checkTempInvoiceNumber(schVo);
+	}
+	@Override
+	public String selectInvoiceMainIdex(String index) throws Exception {
+		 return pfExportMapper.selectInvoiceMainIdex(index);
+	}
+	@Override
+	public void saveInvoiceSubList(List<SaveExpMainVO> voList, UserSessionVO userVO, String index) throws Exception {
+		String id = userVO.getId();
+		for(int i = 1; i < voList.size(); i++) {
+		    SaveExpMainVO vo = voList.get(i);
+		    vo.setRegId(id);
+				vo.setMainIndex(index);
+				pfExportMapper.insertInvoiceSubList(vo);
+		}
+	}
+	@Override
+	public void savePackingListMainList(List<SaveExpMainVO> voList, UserSessionVO userVO) throws Exception {
+		String id = userVO.getId();
+		for(int i = 0; i < voList.size(); i++) {
+		    SaveExpMainVO vo = voList.get(i);
+		    if(i == 0) {
+		        vo.setRegId(id);
+		        pfExportMapper.insertPackingListMainList(vo);
+		    }
+		}
+	}
+	@Override
+	public String selectPackingListMainIdex(String index) throws Exception {
+		return pfExportMapper.selectPackingListMainIdex(index);
+	}
+	@Override
+	public void insertPackingListSubList(List<SaveExpMainVO> voList, UserSessionVO userVO, String index) throws Exception {
+		String id = userVO.getId();
+		for(int i = 1; i < voList.size(); i++) {
+	    SaveExpMainVO vo = voList.get(i);
+	    	vo.setRegId(id);
+			vo.setMainIndex(index);
+			vo.setRegId(id);
+			pfExportMapper.insertPackingListSubList(vo);
+		}
+	}
+	@Override
+	public List<?> selectExportMkPLtotCntList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportMkPLtotCntList(vo);
+	}
+	@Override
+	public List<?> selectExportUpdateList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportUpdateList(vo);
+	}
+	@Override
+	public List<?> selectExportViewSpecList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportViewSpecList(vo);
+	}
+	@Override
+	public List<?> selectExportViewList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportViewList(vo);
+	}
+	@Override
+	public List<?> selectExportViewLanList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportViewLanList(vo);
+	}
+	@Override
+	public String checkInvoiceNumber(SearchVO schVo) throws Exception {
+		return pfExportMapper.checkInvoiceNumber(schVo);
+	}
+	@Override
+	public void updateManufactPackList(SearchVO schVo) throws Exception {
+		pfExportMapper.updateManufactPackList(schVo);
+	}
+	@Override
+	public void saveMakeInFile(SaveExpFileVO vo) throws Exception {
+		pfExportMapper.saveMakeInFile(vo);
+	}
+	@Override
+	public void updateTempManufactPlList(SearchVO schVo) throws Exception {
+		pfExportMapper.updateTempManufactPlList(schVo);
+	}
+	@Override
+	public String selectTempPlMainIdex(String index) throws Exception {
+		return pfExportMapper.selectTempPlMainIdex(index);
+	}
+	@Override
+	public void saveTempExpMakePlSubList(List<SaveExpMainVO> voList, UserSessionVO userVO, String index)
+			throws Exception {
+		String id = userVO.getId();
+		for(int i = 1; i < voList.size(); i++) {
+	    SaveExpMainVO vo = voList.get(i);
+	    	vo.setRegId(id);
+			vo.setMainIndex(index);
+			vo.setRegId(id);
+			pfExportMapper.saveTempExpMakePlSubList(vo);
+		}
+	}
+	@Override
+	public List<?> selectTempInvoiceMainList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectTempInvoiceMainList(vo);
+	}
+	@Override
+	public List<?> selectTempInvoiceSubList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectTempInvoiceSubList(vo);
+	}
+	@Override
+	public void deleteTempExpMakeInList(SearchVO vo) throws Exception {
+		pfExportMapper.deleteTempExpMakeInList(vo);
+	}
+	@Override
+	public void deleteTempExpMakeInSubList(SearchVO vo) throws Exception {
+		pfExportMapper.deleteTempExpMakeInSubList(vo);
+	}
+	@Override
+	public void deleteExpInFile(SearchVO vo) throws Exception {
+		pfExportMapper.deleteExpInFile(vo);
+	}
+	@Override
+	public void saveExpUserMemo(SearchVO vo) throws Exception {
+		pfExportMapper.saveExpUserMemo(vo);
+	}
+	@Override
+	public void expRequestBl(SearchVO vo) throws Exception {
+		pfExportMapper.expRequestBl(vo);
+	}
+	@Override
+	public List<?> selectExportViewLanListExcel(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportViewLanListExcel(vo);
+	}
+	@Override
+	public List<?> selectExportViewSpecListExcel(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportViewSpecListExcel(vo);
+	}
+	@Override
+	public List<?> selectLoadDataList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectLoadDataList(vo);
+	}
+	@Override
+	public List<?> selectLoadDataMainView(SaveExpMainVO vo) throws Exception {
+		return pfExportMapper.selectLoadDataMainView(vo);
+	}
+	@Override
+	public List<?> selectLoadDataSubView(SaveExpMainVO vo) throws Exception {
+		return pfExportMapper.selectLoadDataSubView(vo);
+	}
+	@Override
+	public void deleteLoadDataMainView(SearchVO vo) throws Exception {
+		pfExportMapper.deleteLoadDataMainView(vo);
+	}
+	@Override
+	public void deleteLoadDataSubView(SearchVO vo) throws Exception {
+		pfExportMapper.deleteLoadDataSubView(vo);
+	}
+	@Override
+	public int selectExportItemCntList(String invoiceNo) throws Exception {
+		return pfExportMapper.selectExportItemCntList(invoiceNo);
+	}
+	@Override
+	public int selectExportItemCntList2(String ciNo) throws Exception {
+		return pfExportMapper.selectExportItemCntList2(ciNo);
+	}
+	@Override
+	public String checkInvoiceNumber2(SearchVO schVo) throws Exception {
+		return pfExportMapper.checkInvoiceNumber2(schVo);
+	}
+	@Override
+	public void saveInvoiceInfoList2(List<SaveExpInvoiceVO> voList, UserSessionVO userVO) throws Exception {
+		String id = userVO.getId();
+		String corpNo = userVO.getCorpNo();
+		for(int i = 0; i < voList.size(); i++) {
+			SaveExpInvoiceVO vo = voList.get(i);
+		    if(i == 0) {
+		        vo.setRegId(id);
+		        vo.setCorpNo(corpNo);
+		        pfExportMapper.saveInvoiceInfoList2(vo);
+		    }
+		}
+	}
+	@Override
+	public String selectInvoiceMainIdex2(String index) throws Exception {
+		return pfExportMapper.selectInvoiceMainIdex2(index);
+	}
+	@Override
+	public void saveInvoiceSubList2(List<SaveExpInvoiceVO> voList, UserSessionVO userVO, String index) throws Exception {
+		String id = userVO.getId();
+		for(int i = 1; i < voList.size(); i++) {
+			SaveExpInvoiceVO vo = voList.get(i);
+		    	vo.setRegId(id);
+				vo.setMainIndex(index);
+				pfExportMapper.saveInvoiceSubList2(vo);
+		}
+	}
+	@Override
+	public String checkTempInvoiceNumber2(SearchVO schVo) throws Exception {
+		return pfExportMapper.checkTempInvoiceNumber2(schVo);
+	}
+	@Override
+	public void saveTempExpMakeInList2(List<SaveExpInvoiceVO> voList, UserSessionVO userVO) throws Exception {
+		String id = userVO.getId();
+		String cmpnyCd = userVO.getCmpnyCd();
+		String corpNo = userVO.getCorpNo();
+		for(int i = 0; i < voList.size(); i++) {
+			SaveExpInvoiceVO vo = voList.get(i);
+		    if(i == 0) {
+		        vo.setRegId(id);
+		        vo.setCmpnyCd(cmpnyCd);
+		        vo.setCorpNo(corpNo);
+		        pfExportMapper.saveTempExpMakeInList2(vo);
+		    }
+		}
+	}
+	@Override
+	public String selectTempInvoiceMainIdex2(String index) throws Exception {
+		return pfExportMapper.selectTempInvoiceMainIdex2(index);
+	}
+	@Override
+	public void saveTempExpMakeInSubList2(List<SaveExpInvoiceVO> voList, UserSessionVO userVO, String mainSeq2)
+			throws Exception {
+		String id = userVO.getId();
+		for(int i = 1; i < voList.size(); i++) {
+			SaveExpInvoiceVO vo = voList.get(i);
+		    	vo.setRegId(id);
+				vo.setMainIndex(mainSeq2);
+				pfExportMapper.saveTempExpMakeInSubList2(vo);
+		}
+	}
+	@Override
+	public List<?> selectLoadDataList2(SearchVO vo) throws Exception {
+		return pfExportMapper.selectLoadDataList2(vo);
+	}
+	@Override
+	public List<?> selectLoadDataMainView2(SaveExpInvoiceVO vo) throws Exception {
+		return pfExportMapper.selectLoadDataMainView2(vo);
+	}
+	@Override
+	public List<?> selectLoadDataSubView2(SaveExpInvoiceVO vo) throws Exception {
+		return pfExportMapper.selectLoadDataSubView2(vo);
+	}
+	@Override
+	public void deleteLoadDataSubView2(SearchVO vo) throws Exception {
+		pfExportMapper.deleteLoadDataSubView2(vo);
+	}
+	@Override
+	public void deleteLoadDataMainView2(SearchVO vo) throws Exception {
+		pfExportMapper.deleteLoadDataMainView2(vo);
+	}
+	@Override
+	public void deleteTempExpMakeInList2(SearchVO vo) throws Exception {
+		pfExportMapper.deleteTempExpMakeInList2(vo);
+	}
+	@Override
+	public void deleteTempExpMakeInSubList2(SearchVO vo) throws Exception {
+		pfExportMapper.deleteTempExpMakeInSubList2(vo);
+	}
+	@Override
+	public List<?> selectTempInvoiceMainList2(SaveExpInvoiceVO vo) throws Exception {
+		return pfExportMapper.selectTempInvoiceMainList2(vo);
+	}
+	@Override
+	public List<?> selectTempInvoiceSubList2(SaveExpInvoiceVO vo) throws Exception {
+		return pfExportMapper.selectTempInvoiceSubList2(vo);
+	}
+	@Override
+	public List<?> selectExportMkInConditionList(SearchVO vo) throws Exception {
+		return pfExportMapper.selectExportMkInConditionList(vo);
+	}
+}

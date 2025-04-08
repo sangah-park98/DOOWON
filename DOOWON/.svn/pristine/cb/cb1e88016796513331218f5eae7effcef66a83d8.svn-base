@@ -1,0 +1,240 @@
+package egovframework.pf.exp.service.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.exp.service.CustomsExportUpdateService;
+import egovframework.pf.exp.service.SaveExpFileVO;
+import egovframework.pf.exp.service.SaveExpMainVO;
+import egovframework.pf.exp.service.pfExportService;
+import egovframework.pf.imp.service.impl.CustomsImportUpdateMapper;
+import egovframework.rte.psl.dataaccess.EgovAbstractMapper;
+
+@Service("customsExportUpdateService")
+public class customsExportUpdateServiceImpl extends EgovAbstractMapper implements CustomsExportUpdateService {
+
+	@Resource(name="customsExportUpdateMapper")
+	private customsExportUpdateMapper customsExportUpdateMapper;
+
+	@Override
+	public Map<String, Object> insertExportTempExcelData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		System.out.println("columnCount"+excelData.get("columnCount").toString());
+		//레디
+		if(excelData.get("columnCount").toString().equals("138")) {
+			System.out.println("레디");
+			result = insertReadyExportData(excelData,loginUser);
+		}//엔컴
+		else if(excelData.get("columnCount").toString().equals("176")) {
+			System.out.println("엔컴");
+			result = insertEncomExportData(excelData,loginUser);
+		}
+		return result;
+	}
+
+	
+	//레디 
+		private Map<String, Object> insertReadyExportData(Map<String, Object> excelData, UserSessionVO loginUser) {
+			System.out.println("레디 수출");
+			List<Map<String, Object>> dataList = (List<Map<String, Object>>) excelData.get("dataList");
+			//신고일자
+			List<String> registerDate = new ArrayList<String>();
+			//파일이름
+			String fileName = (String) excelData.get("fileName");
+			
+			int failCount = 0;
+			int successCount = 0;
+			int doubleCount = 0;
+			System.out.println("dataList"+dataList);
+			
+			
+			for(Map<String,Object>data : dataList) {
+				System.out.println("data"+data);
+				//신고일자
+				if (data.get("excel_2") != null && StringUtils.isNotEmpty(data.get("excel_2").toString())) {
+	                registerDate.add(data.get("excel_2").toString());
+	            }
+				//데이터유효성
+				data.put("FAIL_REASON", null);
+				if(data.size() < 138) {
+					//갯수가 적음
+					data.put("FAIL_REASON", "열의 개수가 맞지 않습니다.");
+					failCount += 1;
+				}else if(data.get("excel_7") == null || !data.get("excel_7").toString().equals(loginUser.getCorpNo())){
+					//사업자번호다름 
+					data.put("FAIL_REASON", "사업자번호가 다릅니다.");      
+		            failCount += 1;
+				}else if(data.get("excel_0") == null) {
+					 data.put("FAIL_REASON", "신고번호가 누락되었습니다.");      //필수데이터누락
+		             failCount += 1;
+				}
+			
+	             data.put("fileName", fileName);
+	             
+	           
+	            data.put("Id", loginUser.getId());
+	            
+	          
+	            System.out.println("data"+data);
+	            String rptNo = data.get("excel_0").toString();
+	            System.out.println("rptNo"+rptNo);
+				//공통내역 seq
+	            String resultCount1Seq = customsExportUpdateMapper.insertReadyExportDataA1Seq(rptNo);
+	            System.out.println("Count1Seq"+resultCount1Seq);
+	            data.put("resultCount1", resultCount1Seq);
+	            //란 seq
+	            String resultCount2Seq = customsExportUpdateMapper.insertReadyExportDataB1Seq(rptNo);
+	            System.out.println("Count2Seq"+resultCount2Seq);
+	            data.put("resultCount2", resultCount2Seq);
+	            //규격 seq
+	            String resultCount3Seq = customsExportUpdateMapper.insertReadyExportDataC1Seq(rptNo);
+	            System.out.println("Count3Seq"+resultCount3Seq);
+	            data.put("resultCount3", resultCount3Seq);
+	            
+	            //공통내역
+				int resultCount1 = customsExportUpdateMapper.insertReadyExportDataA1(data);
+				//란
+				int resultCount2 = customsExportUpdateMapper.insertReadyExportDataB1(data);
+				//규격
+				int resultCount3 = customsExportUpdateMapper.insertReadyExportDataC1(data);
+				
+				
+			}
+			
+			
+			return null;
+		}
+	
+	
+	//엔컴
+	private Map<String, Object> insertEncomExportData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		System.out.println("레디 수출");
+		List<Map<String, Object>> dataList = (List<Map<String, Object>>) excelData.get("dataList");
+		//신고일자
+		List<String> registerDate = new ArrayList<String>();
+		//파일이름
+		String fileName = (String) excelData.get("fileName");
+		
+		int failCount = 0;
+		int successCount = 0;
+		int doubleCount = 0;
+		System.out.println("dataList"+dataList);
+		
+		
+		for(Map<String,Object>data : dataList) {
+			System.out.println("data"+data);
+			//신고일자
+			if (data.get("excel_2") != null && StringUtils.isNotEmpty(data.get("excel_2").toString())) {
+                registerDate.add(data.get("excel_2").toString());
+            }
+			//데이터유효성
+			data.put("FAIL_REASON", null);
+			if(data.size() < 138) {
+				//갯수가 적음
+				data.put("FAIL_REASON", "열의 개수가 맞지 않습니다.");
+				failCount += 1;
+			}else if(data.get("excel_7") == null || !data.get("excel_7").toString().equals(loginUser.getCorpNo())){
+				//사업자번호다름 
+				data.put("FAIL_REASON", "사업자번호가 다릅니다.");      
+	            failCount += 1;
+			}else if(data.get("excel_0") == null) {
+				 data.put("FAIL_REASON", "신고번호가 누락되었습니다.");      //필수데이터누락
+	             failCount += 1;
+			}
+		
+             data.put("fileName", fileName);
+             
+           
+            data.put("Id", loginUser.getId());
+            
+          
+            System.out.println("data"+data);
+            String rptNo = data.get("excel_4").toString();
+            System.out.println("rptNo"+rptNo);
+			//공통내역 seq
+            String resultCount1Seq = customsExportUpdateMapper.insertReadyExportDataA1Seq(rptNo);
+            System.out.println("Count1Seq"+resultCount1Seq);
+            data.put("resultCount1", resultCount1Seq);
+            //란 seq
+            String resultCount2Seq = customsExportUpdateMapper.insertReadyExportDataB1Seq(rptNo);
+            System.out.println("Count2Seq"+resultCount2Seq);
+            data.put("resultCount2", resultCount2Seq);
+            //규격 seq
+            String resultCount3Seq = customsExportUpdateMapper.insertReadyExportDataC1Seq(rptNo);
+            System.out.println("Count3Seq"+resultCount3Seq);
+            data.put("resultCount3", resultCount3Seq);
+            
+            //공통내역
+			int resultCount1 = customsExportUpdateMapper.insertEncomExportDataA1(data);
+			//란
+			int resultCount2 = customsExportUpdateMapper.insertEncomExportDataB1(data);
+			//규격
+			int resultCount3 = customsExportUpdateMapper.insertEncomExportDataC1(data);
+		}
+		return null;
+	}
+
+	
+
+	
+	@Override
+	public int insertExportTempDataUploadLog(Map<String, Object> excelData, Map<String, Object> returnData,
+			UserSessionVO loginUser) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	@Override
+	public int deleteTempData(Map<String, Object> loginUser) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	// 타관세사 데이터 공통 리스트
+	@Override
+	public List<?> selectCustomsExportViewList(SearchVO vo) {
+		// TODO Auto-generated method stub
+		return customsExportUpdateMapper.selectCustomsExportViewList(vo);
+	}
+
+	// 타관세사 데이터 업로드 정보 
+	@Override
+	public List<?> selectCustomsFileList(SearchVO vo) {
+		// TODO Auto-generated method stub
+		return customsExportUpdateMapper.selectCustomsFileList(vo);
+	}
+
+
+	@Override
+	public List<?> selectExportViewLanList(SearchVO vo) {
+		// TODO Auto-generated method stub
+		return customsExportUpdateMapper.selectExportViewLanList(vo);
+	}
+
+
+	@Override
+	public List<?> selectExportViewSpecList(SearchVO vo) {
+		// TODO Auto-generated method stub
+		return customsExportUpdateMapper.selectExportViewSpecList(vo);
+	}
+
+	//리스트 삭제
+	@Override
+	public void deleteExportView(SearchVO vo) {
+		customsExportUpdateMapper.deleteCustomsExportDataA1(vo);
+		customsExportUpdateMapper.deleteCustomsExportDataB1(vo);
+		customsExportUpdateMapper.deleteCustomsExportDataC1(vo);
+		
+	}
+
+	
+}

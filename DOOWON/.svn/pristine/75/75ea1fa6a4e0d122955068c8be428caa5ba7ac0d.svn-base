@@ -1,0 +1,666 @@
+var newsHot;
+var newsSettings;
+var newsIndex = 9999;
+var newsScrollTp = true;
+var newsSeq;
+var newsPageNumber;
+
+
+$( document ).ready(function() {
+	generatePaginationButtons();
+	fn_newsSearch(null);
+	
+	$('#newsContent a').attr('target', '_blank');
+	
+	
+	/* $('#newsContent').on('click', 'a', function(event) {
+        // 기본 동작 (현재 창에서 열리는 것)을 막음
+        event.preventDefault();
+        
+        // 클릭된 요소의 태그 이름을 가져옴
+        var tagName = this.tagName.toLowerCase();
+        
+        // 새 창으로 열기
+        window.open(document.location.origin + document.location.pathname + '#' + tagName);
+    });*/
+});
+
+function generatePaginationButtons() {
+    var paginationButtonsDiv = document.getElementById('paginationButtons');
+    paginationButtonsDiv.innerHTML = '';
+
+    var pageSize = 10; // 한 페이지당 보여줄 버튼의 수 
+    var currentPage = 1; // 현재 페이지
+    var pageCount = totCnt; // 전체 페이지 수
+    var startPage = Math.floor((currentPage - 1) / pageSize) * pageSize + 1; // 현재 그룹의 시작 페이지
+    var endPage = Math.min(startPage + pageSize - 1, pageCount); // 현재 그룹의 끝 페이지
+
+    // 페이지 버튼 생성
+    for (var i = startPage; i <= endPage; i++) {
+        var button = document.createElement('button');
+        button.textContent = i;
+        button.className = 'newsPagenation-link hover:text-primary-400 duration-200';
+        button.setAttribute('type', 'button');
+        paginationButtonsDiv.appendChild(button);
+        paginationButtonsDiv.appendChild(document.createTextNode('\u00A0')); // 공백 추가
+    }
+}
+
+
+function  generatePaginationButtons2(nextPage){
+	var paginationButtonsDiv = document.getElementById('paginationButtons');
+    paginationButtonsDiv.innerHTML = '';
+	
+	var pageSize = 10; 
+    var currentPage = 1;
+    var pageCount = totCnt;
+    var startPage = Math.floor((currentPage - 1) / pageSize) * pageSize + 1; // 현재 그룹의 시작 페이지
+    var endPage = Math.min(startPage + pageSize - 1, pageCount);
+	
+	for (var i = nextPage; i <= totCnt; i++) {
+        var button = document.createElement('button');
+        button.textContent = i;
+        button.className = 'newsPagenation-link hover:text-primary-400 duration-200';
+        button.setAttribute('type', 'button');
+        paginationButtonsDiv.appendChild(button);
+        paginationButtonsDiv.appendChild(document.createTextNode('\u00A0'));
+    }
+}
+
+function  generatePaginationButtons3(backPage){
+	var paginationButtonsDiv = document.getElementById('paginationButtons');
+	paginationButtonsDiv.innerHTML = '';
+	
+	var pageSize = 10;
+	var currentPage = (backPage-9); 
+	var pageCount = totCnt;
+	var startPage = Math.floor((currentPage - 1) / pageSize) * pageSize + 1; // 현재 그룹의 시작 페이지
+	var endPage = Math.min(startPage + pageSize - 1, pageCount);
+	
+	for (var i = currentPage; i <= backPage; i++) {
+		var button = document.createElement('button');
+		button.textContent = i;
+		button.className = 'newsPagenation-link hover:text-primary-400 duration-200';
+		button.setAttribute('type', 'button');
+		paginationButtonsDiv.appendChild(button);
+		paginationButtonsDiv.appendChild(document.createTextNode('\u00A0'));
+	}
+}
+
+function  generatePaginationButtons4(pageNumber){
+	var paginationButtonsDiv = document.getElementById('paginationButtons');
+	paginationButtonsDiv.innerHTML = '';
+	
+	var pageSize = 10; 
+	var pageCount = totCnt;
+	var startPage = Math.floor( pageNumber / pageSize) * pageSize + 1; 
+	var endPage = pageNumber;
+	
+	for (var i = startPage; i <= endPage; i++) {
+		var button = document.createElement('button');
+		button.textContent = i;
+		button.className = 'newsPagenation-link hover:text-primary-400 duration-200';
+		button.setAttribute('type', 'button');
+		paginationButtonsDiv.appendChild(button);
+		paginationButtonsDiv.appendChild(document.createTextNode('\u00A0'));
+	}
+}
+
+//등록팝업 호출
+function fn_newRegist(row){
+	if(row == undefined){
+		$("#noticeFileForm").show();
+		$("#noticeFileDownForm").hide();
+		$("#attach3").hide();
+		$("#attach4").hide();
+	}else{
+		var rowData = newsHot.getSourceDataAtRow(row);
+		fn_searchPopNews(rowData.newsSeq);
+	}
+	$("#newsPop").find("input").val(null);
+	$("#newsPop").find("textarea").val(null);
+	$("#newsPop").find("select").val("N");
+	$("#newsPop").modal("show");
+
+};
+
+//팝업검색
+function fn_searchPopNotice(newsSeq){
+	var sData = {};
+	sData["srch9"] = newsSeq;
+
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/selectNoticeInfo.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	if(data.result.fileOrgNm == undefined || data.result.fileOrgNm == ""){
+        		$("#noticeFileForm").show();
+        		$("#noticeFileDownForm").hide();
+        		$("#attach3").hide();
+        		$("#attach4").hide();
+        	}else{
+        		$("#noticeFileForm").hide();
+        		$("#noticeFileDownForm").show();
+        		$("#attach3").show();
+        		$("#attach4").show();
+        	}
+
+        	$.each(data.result, function(key, value){
+        		$("#newsPop").find("input[name='" + key + "']").val(value);
+        		$("#newsPop").find("textarea[name='" + key + "']").val(value);
+        		if(key == "delYn"){
+        			$("#newsPop").find("select[name='delYn']").val(value);
+        		}else if(key == "noticeType"){
+        			$("#newsPop").find("select[name='noticeType']").val(value);
+        		}
+        	});
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+newsPage = document.getElementById('paginationButtons');
+newsPage.addEventListener('click', function(event) {
+    if (event.target.classList.contains('newsPagenation-link')) {
+        fn_newsSearch2(event);
+
+        $('.newsPagenation-link').css({
+            'background-color': 'transparent',
+            'color': 'initial',
+            'font-weight': 'initial'
+        }).removeClass('active');
+
+        $(event.target).css({
+            'background-color': 'rgb(45, 126, 98)',
+            'color': 'white',
+            'margin-right': '10px',
+            'font-weight': '500'
+        }).addClass('active');
+    }
+});
+
+
+function fn_newsSearch(event){
+	
+	generatePaginationButtons();
+	
+	var htmlContent;
+	if(event==null) {
+		htmlContent = 1;
+	} else {
+		htmlContent = event;
+		htmlContent = event.target.innerHTML.trim();
+	}
+	$('button.newsPagenation-link').css({
+	    'background-color': 'transparent',
+	    'color': 'initial',
+	    'width': '20px',
+	    'height': '20px',
+	    'border-radius': '10px',
+	    'display': 'inline-block',
+	    'margin-right': '10px',
+	    'font-weight': 'initial'
+	});
+
+	if (htmlContent == 1) {
+	    $('button.newsPagenation-link').each(function() {
+	        if ($(this).text().trim() === '1') {
+	            $(this).css({
+	                'background-color': 'rgb(45, 126, 98)',
+	                'color': 'white',
+	                'font-weight': '500'
+	            });
+	            $(this).addClass('active');
+	        }
+	    });
+	}
+	
+    var sData = {};
+	sData["recordCountPerPage"] = (htmlContent-1)*10;
+	
+	$.ajax({
+	    type: "POST",
+	    url: "/cmmn/selectNewsViewList.do",
+	    data: sData,
+	    beforeSend: function(xmlHttpRequest) {
+	        xmlHttpRequest.setRequestHeader("AJAX", "true");
+	    },
+	    dataType: "json",
+	    success: function(data) {
+	        var newsList = $('#newsList');
+	        newsList.empty();
+
+	        $.each(data.resultList, function(index, item) {
+	        	
+	            var row = $('<tr>');
+	            var numberCell = $('<td>').css('text-align', 'center');
+	            var titleKrCell = $('<td>').css({
+	                'text-align': 'center',
+	                'cursor': 'pointer'
+	            });
+	            if (item.newsType === 'Y') {
+	                numberCell.html('<i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i> <b>' + item.newsSeq + '</b>');
+	                titleKrCell.html('<b>' + item.titleKr + '</b>');
+	            } else {
+	                numberCell.text(item.newsSeq);
+	                titleKrCell.text(item.titleKr);
+	            }
+	            row.append(numberCell);
+	            row.append(titleKrCell); 
+	            row.append($('<td>').text(item.source).css('text-align', 'center'));
+	
+	            var formattedDate = item.regDt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+	            row.append($('<td>').text(formattedDate).css('text-align', 'center'));
+	            row.data('seq', item.seq);
+	            newsList.append(row);
+	        });
+	    },
+	});
+}
+
+
+
+function fn_newsSearch2(event){
+	
+	var htmlContent;
+	htmlContent = event.target.innerHTML.trim();
+
+    var sData = {};
+	sData["recordCountPerPage"] = (htmlContent-1)*10;
+	
+	$.ajax({
+	    type: "POST",
+	    url: "/cmmn/selectNewsViewList.do",
+	    data: sData,
+	    beforeSend: function(xmlHttpRequest) {
+	        xmlHttpRequest.setRequestHeader("AJAX", "true");
+	    },
+	    dataType: "json",
+	    success: function(data) {
+	        var newsList = $('#newsList');
+	        newsList.empty();
+
+	        $.each(data.resultList, function(index, item) {
+	        	
+	            var row = $('<tr>');
+	            var numberCell = $('<td>').css('text-align', 'center');
+	            var titleKrCell = $('<td>').css({
+	                'text-align': 'center',
+	                'cursor': 'pointer'
+	            });
+	            if (item.newsType === 'Y') {
+	                numberCell.html('<i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i> <b>' + item.newsSeq + '</b>');
+	                titleKrCell.html('<b>' + item.titleKr + '</b>');
+	            } else {
+	                numberCell.text(item.newsSeq);
+	                titleKrCell.text(item.titleKr);
+	            }
+	            row.append(numberCell);
+	            row.append(titleKrCell); 
+	            row.append($('<td>').text(item.source).css('text-align', 'center'));
+	
+	            var formattedDate = item.regDt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+	            row.append($('<td>').text(formattedDate).css('text-align', 'center'));
+	            row.data('seq', item.seq);
+	            newsList.append(row);
+	        });
+	    },
+	});
+}
+
+$(document).on('click', '#newsList td:nth-child(2)', function() {
+    $('#newsTitlePopUp').show();
+    var seq = $(this).closest('tr').data('seq');
+    fn_newsModalContentPopUp(seq);
+});
+
+
+function newsPopUpClose(){
+	$("#newsTitlePopUp").hide();
+}
+
+
+function fn_newsModalContentPopUp(seq){
+	var sData = {};
+	sData["srch3"] = seq;
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/selectNewsModalViewList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	fillNewsModalContent(data.resultList);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+function fillNewsModalContent(resultList) {
+    var news = resultList[0];
+    var regDt = news.regDt;
+    var year = regDt.substring(0, 4);
+    var month = regDt.substring(4, 6);
+    var day = regDt.substring(6, 8);
+    var formattedNewsDt = year + "." + month + "." + day;
+    
+    var edtDt = news.edtDt;
+    
+    document.querySelector('.news-modal h3').textContent = news.titleKr;
+    document.querySelector('.news-modal span').textContent = news.regDt;
+    document.querySelector('.news-modal span').textContent = news.edtDt;
+    //document.querySelector('.news-modal textarea').textContent = news.cnKr;
+    $("#newsSeq").val(news.seq);
+    $("#newsContent").html(news.cnKr);
+    $('#newsContent a').attr('target', '_blank');
+    
+    var dateInfo = document.querySelector('.news-modal .text-sm');
+    if(edtDt == '' || edtDt == null ) {
+    	dateInfo.textContent = '등록일: ' + formattedNewsDt;
+    } else {
+        var edtyear = edtDt.substring(0, 4);
+        var edtmonth = edtDt.substring(4, 6);
+        var edtday = edtDt.substring(6, 8);
+        var formattedEdtDt = edtyear + "." + edtmonth + "." + edtday;
+        
+    	dateInfo.textContent = '등록일: ' + formattedNewsDt + ' , 수정일: ' + formattedEdtDt;
+    }
+    dateInfo.style.fontSize = '13px';
+    
+    document.getElementById('newsTitlePopUp').style.display = 'block';
+    
+}
+
+function newsBackBtn() {
+	var htmlContent;
+	if(event==null) {
+	    htmlContent = 1;
+	} else {
+	    htmlContent = event.target.innerHTML.trim();
+	}
+
+	var currentPage = parseInt($('.newsPagenation-link.active').text().trim());
+
+	var backPage = currentPage - 1;
+	if (backPage < 1) {
+	    backPage = 1;
+	}
+	
+	if(backPage % 10 == 0) {
+		generatePaginationButtons3(backPage);
+	}
+
+	var recordCountPerPage = (backPage - 1) * 10;
+
+	$('button.newsPagenation-link').css({
+	    'background-color': 'transparent', 
+	    'color': 'initial',
+	    'width': '20px',
+	    'height': '20px', 
+	    'border-radius': '10px', 
+	    'display': 'inline-block', 
+	    'margin-right': '10px',
+	    'font-weight': 'initial'
+	});
+	$('.newsPagenation-link').removeClass('active');
+	
+	$('button.newsPagenation-link').each(function() {
+	    if ($(this).text().trim() === backPage.toString()) {
+	        $(this).css({
+	            'background-color': 'rgb(45, 126, 98)', 
+	            'color': 'white',
+	            'font-weight': '500'
+	        });
+	        $(this).addClass('active');
+	    }
+	});
+
+	var sData = {};
+	sData["recordCountPerPage"] = recordCountPerPage;
+
+	$.ajax({
+	    type: "POST",
+	    url: "/cmmn/selectNewsViewList.do",
+	    data: sData,
+	    beforeSend: function(xmlHttpRequest) {
+	        xmlHttpRequest.setRequestHeader("AJAX", "true");
+	    },
+	    dataType: "json",
+	    success: function(data) {
+	        var newsList = $('#newsList');
+	        newsList.empty();
+
+	        $.each(data.resultList, function(index, item) {
+	            var row = $('<tr>');
+	            var numberCell = $('<td>').css('text-align', 'center');
+	            var titleKrCell = $('<td>').css({
+	                'text-align': 'center',
+	                'cursor': 'pointer'
+	            });
+	            if (item.newsType === 'Y') {
+	                numberCell.html('<i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i> <b>' + item.newsSeq + '</b>');
+	                titleKrCell.html('<b>' + item.titleKr + '</b>');
+	            } else {
+	                numberCell.text(item.newsSeq);
+	                titleKrCell.text(item.titleKr);
+	            }
+	            row.append(numberCell);
+	            row.append(titleKrCell); 
+	            row.append($('<td>').text(item.source).css('text-align', 'center'));
+
+	            var formattedDate = item.regDt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+	            row.append($('<td>').text(formattedDate).css('text-align', 'center'));
+	            row.data('seq', item.seq);
+	            newsList.append(row);
+	        });
+	    },
+	});
+}
+
+function newsNextBtn() {
+    var currentPage = parseInt($('.newsPagenation-link.active').text().trim());
+    var nextPage = currentPage + 1;
+    var recordCountPerPage = (nextPage - 1) * 10;
+    
+    if(nextPage % 10 == 1) {
+    	generatePaginationButtons2(nextPage);
+    }
+    
+    $('button.newsPagenation-link').css({
+        'background-color': 'transparent', 
+        'color': 'initial',
+        'width': '20px',
+        'height': '20px', 
+        'border-radius': '10px', 
+        'display': 'inline-block', 
+        'margin-right': '10px',
+        'font-weight': 'initial'
+    });
+    $('.newsPagenation-link').removeClass('active');
+    $('button.newsPagenation-link').each(function() {
+        if ($(this).text().trim() === nextPage.toString()) {
+            $(this).css({
+                'background-color': 'rgb(45, 126, 98)', 
+                'color': 'white',
+                'font-weight': '500'
+            });
+            $(this).addClass('active');
+        }
+    });
+
+    var sData = {};
+    sData["recordCountPerPage"] = recordCountPerPage;
+
+    $.ajax({
+        type: "POST",
+        url: "/cmmn/selectNewsViewList.do",
+        data: sData,
+        beforeSend: function(xmlHttpRequest) {
+            xmlHttpRequest.setRequestHeader("AJAX", "true");
+        },
+        dataType: "json",
+        success: function(data) {
+            var newsList = $('#newsList');
+            newsList.empty();
+
+            $.each(data.resultList, function(index, item) {
+                var row = $('<tr>');
+                var numberCell = $('<td>').css('text-align', 'center');
+                var titleKrCell = $('<td>').css({
+                    'text-align': 'center',
+                    'cursor': 'pointer'
+                });
+                if (item.newsType === 'Y') {
+                    numberCell.html('<i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i> <b>' + item.newsSeq + '</b>');
+                    titleKrCell.html('<b>' + item.titleKr + '</b>');
+                } else {
+                    numberCell.text(item.newsSeq);
+                    titleKrCell.text(item.titleKr);
+                }
+                row.append(numberCell);
+                row.append(titleKrCell); 
+                row.append($('<td>').text(item.source).css('text-align', 'center'));
+
+                var formattedDate = item.regDt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+                row.append($('<td>').text(formattedDate).css('text-align', 'center'));
+                row.data('seq', item.seq);
+                newsList.append(row);
+            });
+        },
+    });
+}
+
+
+function newsEndPage(pageNumber) {
+	var htmlContent;
+	if(event==null) {
+		htmlContent = 1;
+	} else {
+		htmlContent = event.target.innerHTML.trim();
+	}
+	var pageNumber;
+	generatePaginationButtons4(pageNumber);
+	var recordCountPerPage = (pageNumber - 1) * 10;
+	
+	$('button.newsPagenation-link').css({
+	    'background-color': 'transparent', 
+	    'color': 'initial',
+	    'width': '20px',
+	    'height': '20px', 
+	    'border-radius': '10px', 
+	    'display': 'inline-block', 
+	    'margin-right': '10px',
+	    'font-weight': 'initial'
+	});
+
+	$('button.newsPagenation-link').each(function() {
+	    if ($(this).text().trim() === pageNumber.toString()) {
+	        $(this).css({
+	            'background-color': 'rgb(45, 126, 98)', 
+	            'color': 'white',
+	            'font-weight': '500'
+	        });
+	        $(this).addClass('active');
+	    }
+	});
+
+    var sData = {};
+	sData["recordCountPerPage"] = recordCountPerPage;
+	
+	$.ajax({
+	    type: "POST",
+	    url: "/cmmn/selectNewsViewList.do",
+	    data: sData,
+	    beforeSend: function(xmlHttpRequest) {
+	        xmlHttpRequest.setRequestHeader("AJAX", "true");
+	    },
+	    dataType: "json",
+	    success: function(data) {
+	        var newsList = $('#newsList');
+	        newsList.empty();
+
+	        $.each(data.resultList, function(index, item) {
+	            var row = $('<tr>');
+	            var numberCell = $('<td>').css('text-align', 'center');
+	            var titleKrCell = $('<td>').css({
+	                'text-align': 'center',
+	                'cursor': 'pointer'
+	            });
+	            if (item.newsType === 'Y') {
+	                numberCell.html('<i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i> <b>' + item.newsSeq + '</b>');
+	                titleKrCell.html('<b>' + item.titleKr + '</b>');
+	            } else {
+	                numberCell.text(item.newsSeq);
+	                titleKrCell.text(item.titleKr);
+	            }
+	            row.append(numberCell);
+	            row.append(titleKrCell); 
+	            row.append($('<td>').text(item.source).css('text-align', 'center'));
+	
+	            var formattedDate = item.regDt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+	            row.append($('<td>').text(formattedDate).css('text-align', 'center'));
+	            row.data('seq', item.seq);
+	            newsList.append(row);
+	        });
+	    },
+	});
+}
+
+
+function newsDelete() {
+	if(!confirm('삭제 하시겠습니까?'))return;
+	
+	sData = {};
+	sData["srch3"] = $("#newsSeq").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/deleteNewsViewList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	alert('삭제가 완료되었습니다.');
+            const modalNewsView = document.querySelector('#newsTitlePopUp');
+            modalNewsView.style.display = 'none';
+            popupState = false;
+            generatePaginationButtons();
+            fn_newsSearch(null);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}

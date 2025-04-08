@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.trade.service.impl.TradeMapper">
+	
+	<select id="selectTradeViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		A.sn,
+		B.SN,
+		B.Ran_No,
+		C.Sil,
+		A.rpt_no,
+		A.exp_firm,
+		A.EXP_lis_day,
+		CONCAT(A.exc_divi, '-', A.exc_diviNm ) AS exc_divi,
+		C.Gnm1,
+		C.Mg_cd,
+		C.Qty,
+		C.Qty_ut,
+		B.Mg_Code,
+		A.Buy_Firm,
+		A.Buy_Mark
+		FROM cusdec830a1 A
+		LEFT JOIN cusdec830b1 B
+		ON A.SN = B.SNA1
+		AND A.Rpt_No = B.Rpt_No
+		LEFT JOIN cusdec830c1 C
+		ON A.SN = C.SNA1
+		AND A.Rpt_No = C.Rpt_No
+		AND B.SN = C.SNB1 
+		AND B.Ran_No = C.Ran_No
+		WHERE A.rece = '수리'
+		AND A.Exc_Divi = '29'
+		LIMIT 100;
+	 </select>
+	
+</mapper>
+

@@ -1,0 +1,931 @@
+package egovframework.pf.imp.web;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import egovframework.pf.cmmn.service.CmmnService;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.exp.service.SaveExpFileVO;
+import egovframework.pf.exp.web.ZipFileDownload;
+import egovframework.pf.imp.service.ImportService;
+import egovframework.pf.member.utill.EmailUtill;
+import egovframework.pf.util.ExcelUtil;
+import egovframework.pf.util.importUpdate_ExcelUtil;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+
+@Controller
+public class ImportController {
+
+	@Resource(name = "CmmnService")
+	private CmmnService CmmnService;
+	
+	@Resource(name = "importService")
+	private ImportService importService;
+	
+	//수입신고현황 호출
+	@RequestMapping(value = "/import/importView.do")
+	public String importView(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		model.addAttribute("writable","Y".equals(userVO.getAdminYn())?"Y":CmmnService.selectWriteCheck(request.getServletPath(), userVO));
+		SearchVO vo = new SearchVO();
+		String lang = userVO.getLang();
+		vo.setLang(lang);
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		model.addAttribute("lang", lang);
+		System.out.println("11");
+		model.addAttribute("userCmpnyCd", userVO.getCmpnyCd());
+
+		return "import/importView";
+	}
+	
+	//수입신고정정 호출
+	@RequestMapping(value = "/import/importUpdate.do")
+	public String importUpdate(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		model.addAttribute("writable","Y".equals(userVO.getAdminYn())?"Y":CmmnService.selectWriteCheck(request.getServletPath(), userVO));
+		SearchVO vo = new SearchVO();
+		String lang = userVO.getLang();
+		vo.setLang(lang);
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		model.addAttribute("lang", lang);
+		model.addAttribute("userCmpnyCd", userVO.getCmpnyCd());
+		
+		return "import/importUpdate";
+	}
+	
+	//BL 등록 호출
+	@RequestMapping(value = "/import/importBl.do")
+	public String importBl(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		model.addAttribute("writable","Y".equals(userVO.getAdminYn())?"Y":CmmnService.selectWriteCheck(request.getServletPath(), userVO));
+		SearchVO vo = new SearchVO();
+		String lang = userVO.getLang();
+		vo.setLang(lang);
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		model.addAttribute("lang", lang);
+		model.addAttribute("userCmpnyCd", userVO.getCmpnyCd());
+		
+		return "import/importBl";
+	}
+	
+	
+	@RequestMapping(value = "/import/selectImportViewList.do")
+	public ModelAndView selectImportViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCmpnyCd(userVO.getCmpnyCd());
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+
+		List<?> resultList = importService.selectImportViewList(vo);
+		model.addAttribute("resultList", resultList);
+		
+		int totCnt = importService.selectImportViewListCnt(vo);
+		model.addAttribute("totCnt", totCnt);
+
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/import/selectImportViewLanList.do")
+	public ModelAndView selectImportViewLanList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		
+		List<?> resultList = importService.selectImportViewLanList(vo);
+		model.addAttribute("resultList", resultList);
+		
+		/*int totCnt = purchaseService.selectPurchaseListCnt(vo);
+		model.addAttribute("totCnt", totCnt);*/
+		
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	public ModelAndView selectImportViewLanListExcel(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		
+		List<?> resultList = importService.selectImportViewLanListExcel(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/import/selectImportViewSpecList.do")
+	public ModelAndView selectImportViewSpecList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		
+		List<?> resultList = importService.selectImportViewSpecList(vo);
+		model.addAttribute("resultList", resultList);
+		
+		
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	public ModelAndView selectImportViewSpecListExcel(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		
+		List<?> resultList = importService.selectImportViewSpecListExcel(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/import/selectImportUpList.do")
+	public ModelAndView selectImportUpdateList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCmpnyCd(userVO.getCmpnyCd());
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+		
+		List<?> resultList = importService.selectImportUpdateList(vo);
+		model.addAttribute("resultList", resultList);
+		
+		int totCnt = importService.selectImportUpdateListCnt(vo);
+		model.addAttribute("totCnt", totCnt);
+		
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/import/selectImportBlList.do")
+	public ModelAndView selectImportBlList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCmpnyCd(userVO.getCmpnyCd());
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+		
+		List<?> resultList = importService.selectImportBlList(vo);
+		model.addAttribute("resultList", resultList);
+		
+		int totCnt = importService.selectImportBlListCnt(vo);
+		model.addAttribute("totCnt", totCnt);
+		
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	private String extractBlNumber(String orgFileName) {
+		if (orgFileName != null && !orgFileName.isEmpty()) {
+			String fileNameWithoutExtension = orgFileName.substring(0, orgFileName.lastIndexOf('.'));
+			return fileNameWithoutExtension.substring(fileNameWithoutExtension.indexOf("BL_") + 3);
+		}
+		return "";
+	}
+	
+	@RequestMapping(value = "/import/insertImportFilesInfo.do")
+	public ModelAndView insertImportFilesInfo(
+									@RequestParam("fileBl[]") MultipartFile[] filesBl,
+									@RequestParam("fileIn[]") MultipartFile[] filesIn,
+									@RequestParam("filePl[]") MultipartFile[] filesPl,
+									@RequestParam("fileOt[]") MultipartFile[] filesOt,
+									@RequestParam("blNo") String bl,
+									@RequestParam("blRptNo") String blRpt,
+									 HttpServletRequest request, ModelMap model
+									 ) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		String blNo = "";
+		String cmpnyCd = userVO.getCmpnyCd();
+		String regId = userVO.getId();
+		String expBlNumber =""; 
+		System.out.println("bl: " + bl);
+		System.out.println("blRpt: " + blRpt);
+		
+		
+		  for (MultipartFile file : filesBl) {
+			  	
+	            System.out.println("Received file Bl: " + file.getOriginalFilename());
+	            String name = file.getName();
+				String fileName = file.getOriginalFilename();
+				expBlNumber = extractBlNumber(fileName);
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveExpFileVO vo = new SaveExpFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setName("BL");
+				vo.setFileName(fileName);
+				if(bl.equals("")) {
+					blNo = expBlNumber;
+				} else {
+					blNo = bl;
+				}
+				vo.setBl(blNo);
+				vo.setRptNo(blRpt);
+				vo.setBl(blNo);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				
+				importService.insertImportFilesInfo(vo);
+	        }
+		  for (MultipartFile file : filesIn) {
+			  System.out.println("Received file In: " + file.getOriginalFilename());
+			  	String name = file.getName();
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveExpFileVO vo = new SaveExpFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setName("CI");
+				vo.setFileName(fileName);
+				if(bl.equals("")) {
+					blNo = expBlNumber;
+				} else {
+					blNo = bl;
+				}
+				vo.setBl(blNo);
+				vo.setRptNo(blRpt);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				
+				importService.insertImportFilesInfo(vo);
+				
+		  }
+		  for (MultipartFile file : filesPl) {
+			  System.out.println("Received file Pl: " + file.getOriginalFilename());
+			  	String name = file.getName();
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveExpFileVO vo = new SaveExpFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setName("PL");
+				vo.setFileName(fileName);
+				if(bl.equals("")) {
+					blNo = expBlNumber;
+				} else {
+					blNo = bl;
+				}
+				vo.setBl(blNo);
+				vo.setRptNo(blRpt);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				
+				importService.insertImportFilesInfo(vo);
+		  }
+		  for (MultipartFile file : filesOt) {
+			  System.out.println("Received file Re: " + file.getOriginalFilename());
+			  	String name = file.getName();
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveExpFileVO vo = new SaveExpFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setName("OT");
+				vo.setFileName(fileName);
+				if(bl.equals("")) {
+					blNo = expBlNumber;
+				} else {
+					blNo = bl;
+				}
+				vo.setBl(blNo);
+				vo.setRptNo(blRpt);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				
+				importService.insertImportFilesInfo(vo);
+		  }
+
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+
+
+
+	/*
+
+	//파일 업로드
+	@RequestMapping(value = "/base/saveFileInfo.do")
+	public ModelAndView saveImportFileInfo(@RequestParam("file") MultipartFile file,
+									 @RequestParam("cmpnyCd") String cmpnyCd,
+									 @RequestParam("plntCd") String plntCd,
+									 @RequestParam("vndrCd") String vndrCd,
+									 @RequestParam("purchaseNo") String purchaseNo,
+									 @RequestParam("purchaseOrdr") String purchaseOrdr,
+									 @RequestParam("itemCd") String itemCd,
+									 @RequestParam("ftaCd") String ftaCd,
+									 HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+
+		try {
+		    String orgFileName = file.getOriginalFilename();
+		    String fileName = UUID.randomUUID().toString();
+		    String directory = "/home/files";
+
+		    String filepath = Paths.get(directory, fileName).toString();
+
+		    BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+		    stream.write(file.getBytes());
+		    stream.close();
+
+		    //파일정보 저장
+		    SavePurchaseVO vo = new SavePurchaseVO();
+		    vo.setCmpnyCd(cmpnyCd);
+		    vo.setPlntCd(plntCd);
+		    vo.setVndrCd(vndrCd);
+		    vo.setPurchaseNo(purchaseNo);
+		    vo.setPurchaseOrdr(purchaseOrdr);
+		    vo.setItemCd(itemCd);
+		    vo.setFtaCd(ftaCd);
+		    vo.setEdtId(userVO.getId());
+		    vo.setEdtIp(userVO.getIp());
+		    vo.setDocuFile(fileName);
+		    vo.setDocuOrgFile(orgFileName);
+		    purchaseService.updateDocuFileInfo(vo);
+
+		    model.addAttribute("docuFile", fileName);
+		    model.addAttribute("docuOrgFile", orgFileName);
+		    model.addAttribute("result", "success");
+		  }
+		  catch (Exception e) {
+		    System.out.println(e.getMessage());
+		    model.addAttribute("result", "error");
+		  }
+
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+
+	//파일 다운로드
+	@RequestMapping(value = "/base/downloadFile.do")
+	public void downloadImportFile(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String docuFile = request.getParameter("docuFile");
+		String docuOrgFile = request.getParameter("docuOrgFile");
+
+		String saveDir = "/home/files";
+		File file = new File(saveDir + "/" + docuFile);
+		docuOrgFile = new String(docuOrgFile.getBytes("UTF-8"), "ISO-8859-1");
+		response.setHeader("Content-Disposition","attachment;filename=\"" + docuOrgFile + "\";");
+
+		FileInputStream fileInputStream = new FileInputStream(file);
+		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+		byte b [] = new byte[1024];
+		int data = 0;
+
+		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
+		{
+			servletOutputStream.write(b, 0, data);
+		}
+
+		servletOutputStream.flush();
+		servletOutputStream.close();
+		fileInputStream.close();
+	}*/
+	
+	@RequestMapping(value = "/export/selectBlFilesList.do")
+	public ModelAndView selectBlFilesList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request,
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		List<?> impblList = importService.selectBlFilesList(vo);
+		model.addAttribute("impblList", impblList);
+
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@PostMapping(value = "/import/downLoadZipFileBlList.do")
+	public void downLoadZipFileBlList(@RequestBody List<ZipFileDownload> downloadFile,
+			@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model,
+			HttpServletResponse response) throws Exception {
+		System.out.println("downLoadZipFileInList_____________");
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+
+		String saveDir = "/home/files";
+		String zipFileName = downloadFile.get(0).getBlno() + ".zip";
+
+		try {
+			FileOutputStream fos = new FileOutputStream(saveDir + File.separator + zipFileName);
+            ZipOutputStream zipOut = new ZipOutputStream(fos);
+
+            // 파일 목록을 순회하며 압축 파일에 추가
+            for (ZipFileDownload file : downloadFile) {
+                addFileToZip(saveDir, file.getDocuFile(), zipOut);
+            }
+	            // ZIP 출력 스트림 닫기
+	            zipOut.close();
+	            
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			
+		}
+	}
+	
+    // 파일을 ZIP 파일에 추가하는 메서드
+    private void addFileToZip(String directoryPath, String fileName, ZipOutputStream zipOut) throws IOException {
+        File file = new File(directoryPath, fileName);
+        FileInputStream fis = new FileInputStream(file);
+        ZipEntry zipEntry = new ZipEntry(fileName);
+        zipOut.putNextEntry(zipEntry);
+
+        byte[] bytes = new byte[1024];
+        int length;
+        while ((length = fis.read(bytes)) >= 0) {
+            zipOut.write(bytes, 0, length);
+        }
+        fis.close();
+    }
+
+    //파일 다운로드
+  	@RequestMapping(value = "/import/downloadBlFile.do")
+  	public void downloadFile(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  		String zipName = request.getParameter("zipName");
+  		System.out.println("zipName : " + zipName);
+  		String saveDir = "/home/files";
+  		File file = new File(saveDir + "/" + zipName + ".zip");
+  		response.setHeader("Content-Disposition","attachment;filename=\"" + zipName + ".zip\";");
+
+  		FileInputStream fileInputStream = new FileInputStream(file);
+  		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+  		byte b [] = new byte[1024];
+  		int data = 0;
+
+  		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
+  		{
+  			servletOutputStream.write(b, 0, data);
+  		}
+
+  		servletOutputStream.flush();
+  		servletOutputStream.close();
+  		fileInputStream.close();
+  	}
+  	
+	//운송 현황 호출
+	@RequestMapping(value = "/import/importTrans.do")
+	public String importTrans(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		model.addAttribute("writable","Y".equals(userVO.getAdminYn())?"Y":CmmnService.selectWriteCheck(request.getServletPath(), userVO));
+		SearchVO vo = new SearchVO();
+		String lang = userVO.getLang();
+		vo.setLang(lang);
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		model.addAttribute("lang", lang);
+		model.addAttribute("userCmpnyCd", userVO.getCmpnyCd());
+		
+		return "import/importTrans";
+	}
+	
+	@RequestMapping(value = "/import/importSendEmail.do")
+  	public void importSendEmail(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  		String sendBlNo = request.getParameter("sendBlNo");
+  		String sendCmpnyCd = request.getParameter("sendCmpnyCd");
+  		System.out.println("sendBlNo : " + sendBlNo);
+  		System.out.println("sendCmpnyCd : " + sendCmpnyCd);
+  		SearchVO vo = new SearchVO();
+  		vo.setSrch1(sendBlNo);
+  		importService.impRequestBl(vo);
+  		List<?> impblList = importService.selectBlFilesList(vo);
+  		
+  		String saveDir = "/home/files";
+		String zipFileName = sendBlNo + ".zip";
+
+		try {
+			FileOutputStream fos = new FileOutputStream(saveDir + File.separator + zipFileName);
+            ZipOutputStream zipOut = new ZipOutputStream(fos);
+            
+            for (Object obj : impblList) {
+     			 if (obj instanceof Map) {
+     		        Map<?, ?> map = (Map<?, ?>) obj;
+     		        String docuFile = (String) map.get("docuFile");
+     		        System.out.println(docuFile);
+     		        addFileToZip(saveDir, docuFile, zipOut);
+     		    }
+     		}
+	            zipOut.close();
+	            
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			
+		}
+  		
+  		EmailUtill.sendEmailWithFile(sendBlNo, sendCmpnyCd, "isseo@kordsystems.com", "IMPORT", null, "kr", zipFileName);
+  		
+  	}
+	
+	
+	@RequestMapping(value = "/import/saveImportMemo.do", method = RequestMethod.POST)
+	@ResponseBody
+	public ModelAndView saveImportMemo(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		vo.setCorpNo(userVO.getCorpNo());
+		importService.saveImpMemo(vo);
+		
+		model.addAttribute("SaveStatus", "success");
+		
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	// 수입신고현황 rptNo fileList popUp
+	@RequestMapping(value = "/import/selectImpViewFilesList.do")
+	public ModelAndView selectImpViewFilesList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request,
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		List<?> impViewList = importService.selectImpViewFilesList(vo);
+		model.addAttribute("impViewList", impViewList);
+
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+		
+	@PostMapping(value = "/import/impViewZipCreate.do")
+	public void impViewZipCreate(@RequestBody List<ZipFileDownload> downloadFile,
+	        @ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model,
+	        HttpServletResponse response) throws Exception {
+	    System.out.println("---------------impViewZipCreate---------------");
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+
+		String saveDir = "/home/files";
+		String zipFileName = downloadFile.get(0).getRptNo() + ".zip";
+		System.out.println(downloadFile.get(0).getRptNo());
+		System.out.println(zipFileName);
+
+		try {
+			FileOutputStream fos = new FileOutputStream(saveDir + File.separator + zipFileName);
+            ZipOutputStream zipOut = new ZipOutputStream(fos);
+
+            // 파일 목록을 순회하며 압축 파일에 추가
+            for (ZipFileDownload file : downloadFile) {
+                addFileToZip(saveDir, file.getDocuFile(), zipOut);
+            }
+	            // ZIP 출력 스트림 닫기
+	            zipOut.close();
+	            
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {}
+	}
+		
+		
+	@RequestMapping(value = "/import/downloadImpViewFile.do")
+  	public void downloadImpViewFile(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  		String zipName = request.getParameter("impViewZipDown"); 
+  		System.out.println("zipName : " + zipName);
+  		String saveDir = "/home/files";
+  		File file = new File(saveDir + "/" + zipName + ".zip");
+  		response.setHeader("Content-Disposition","attachment;filename=\"" + zipName + ".zip\";");
+
+  		FileInputStream fileInputStream = new FileInputStream(file);
+  		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+  		byte b [] = new byte[1024];
+  		int data = 0;
+
+  		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
+  		{
+  			servletOutputStream.write(b, 0, data);
+  		}
+
+  		servletOutputStream.flush();
+  		servletOutputStream.close();
+  		fileInputStream.close();
+  	}
+	
+
+		@RequestMapping(value="/import/importUpdatedownloadExcel.do")
+		public ModelAndView dowloadExcel(@ModelAttribute("searchVO")SearchVO vo, HttpServletRequest request,HttpServletResponse response)throws Exception{
+			HttpSession httpSession = request.getSession(true);
+			UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			vo.setLang(userVO.getLang());      
+			vo.setCorpNo(userVO.getCorpNo());
+			vo.setRecordCountPerPage(99999999);
+			vo.setStartPage(0);
+			ModelAndView mv = new ModelAndView("jsonView");
+			ModelAndView dataMv = new ModelAndView();
+			String resultCode="200";
+			try {
+				//전체
+				if("01".equals(vo.getExType())) {
+					System.out.println("전체");
+					dataMv = this.selectImportUpdateList(vo, request, new ModelMap());
+					List<?> resultList = (List<?>) dataMv.getModel().get("resultList"); 
+					System.out.println("resultList111"+resultList);
+					XSSFWorkbook workBook = new XSSFWorkbook();
+					XSSFSheet sheet = importUpdate_ExcelUtil.createSheetWithTitleRow(workBook, "수입신고정정", vo.getExCol().split("\\|\\|").length);
+					ArrayList<String> conts = new ArrayList<String>();
+					conts.add("1");
+					sheet = importUpdate_ExcelUtil.createSummaryCont(sheet, conts);
+					sheet = importUpdate_ExcelUtil.createMainTable(sheet, resultList, vo);
+					
+					importUpdate_ExcelUtil.generateExcelFile(workBook, userVO.getCmpnyCd().concat("_수입신고정정"), response);
+				// 수리
+				}else if("02".equals(vo.getExType())) {
+					System.out.println("수리");
+					dataMv = this.selectImportUpdateList(vo, request, new ModelMap());
+					List<?> resultList = (List<?>) dataMv.getModel().get("resultList"); 
+					System.out.println("resultList2222"+resultList);
+					XSSFWorkbook workBook = new XSSFWorkbook();
+					
+					XSSFSheet sheet = importUpdate_ExcelUtil.createSheetWithTitleRow(workBook, "수입신고정정(수리)", vo.getExCol().split("\\|\\|").length);
+					ArrayList<String> conts = new ArrayList<String>();
+					conts.add("1");
+					sheet = importUpdate_ExcelUtil.createSummaryCont(sheet, conts);
+					sheet = importUpdate_ExcelUtil.createMainTable(sheet, resultList, vo);
+					importUpdate_ExcelUtil.generateExcelFile(workBook, userVO.getCmpnyCd().concat("_수입신고정정(수리)"), response);
+				// 미결
+				}else if("03".equals(vo.getExType())) {
+					System.out.println("미결");
+					dataMv = this.selectImportUpdateList(vo, request, new ModelMap());
+					List<?> resultList = (List<?>) dataMv.getModel().get("resultList"); 
+					System.out.println("resultList2222"+resultList);
+					XSSFWorkbook workBook = new XSSFWorkbook();
+					
+					XSSFSheet sheet = importUpdate_ExcelUtil.createSheetWithTitleRow(workBook, "수입신고정정(미결)", vo.getExCol().split("\\|\\|").length);
+					ArrayList<String> conts = new ArrayList<String>();
+					conts.add("1");
+					sheet = importUpdate_ExcelUtil.createSummaryCont(sheet, conts);
+					sheet = importUpdate_ExcelUtil.createMainTable(sheet, resultList, vo);
+					importUpdate_ExcelUtil.generateExcelFile(workBook, userVO.getCmpnyCd().concat("_수입신고정정(미결)"), response);
+				
+				}
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			
+			mv.addObject("resultCode", resultCode);
+			return mv;
+			}
+		
+		
+		@RequestMapping(value = "/import/deleteImpBlFile.do", method = RequestMethod.POST)
+		@ResponseBody
+		public ModelAndView deleteImpBlFile(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+			HttpSession httpSession = request.getSession(true);
+			UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			vo.setLang(userVO.getLang());
+			
+			importService.deleteImpBlFile(vo);
+			model.addAttribute("SaveStatus", "SaveStatus");
+			ModelAndView mav = new ModelAndView("jsonView", model);
+			return mav ;
+		}
+		
+		@RequestMapping(value = "/import/impPopupDeleteList.do", method = RequestMethod.POST)
+		@ResponseBody
+		public ModelAndView impPopupDeleteList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+			HttpSession httpSession = request.getSession(true);
+			UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			vo.setLang(userVO.getLang());
+			
+			System.out.println(vo.getSrch1());
+			
+			importService.impPopupDeleteList(vo);
+			model.addAttribute("SaveStatus", "SaveStatus");
+			ModelAndView mav = new ModelAndView("jsonView", model);
+			return mav;
+		}
+		
+		@RequestMapping(value = "/import/importDownloadExcel.do")
+		public ModelAndView importDownloadExcel(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, HttpServletResponse response) throws Exception {
+			HttpSession httpSession = request.getSession(true);
+			UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			vo.setLang(userVO.getLang());      
+			vo.setCorpNo(userVO.getCorpNo());
+			vo.setRecordCountPerPage(99999999);
+			vo.setStartPage(0);
+			
+			ModelAndView mv = new ModelAndView("jsonView");
+			String resultCode="200";
+			
+			try {
+				ModelAndView dataMv = new ModelAndView();
+				List<?> reslutList = new ArrayList<>();
+		    
+				XSSFWorkbook workBook = new XSSFWorkbook();
+				String[] colUnion = {};
+				String[] haedUnion =  {};
+				String[] divUnion = {};
+				int unionIdx = 0;
+				
+				
+					
+				colUnion = vo.getExCol().split("\\|\\|\\|");
+				haedUnion = vo.getExTit().split("\\|\\|\\|\\|");
+				divUnion = vo.getExTitDiv().split("\\|\\|", -1);
+				
+				for(String div : divUnion) {
+					String divIdx = div.split("\\|")[0];
+					String divName = div.split("\\|")[1];
+					
+					Boolean summary = false;
+					ArrayList<Double> summaryDats = null;
+					
+					XSSFSheet sheet = ExcelUtil.createSheetWithTitleRow(workBook, divName, colUnion[unionIdx].split("\\|\\|").length);
+					
+					SearchVO sheetSearchVo = new SearchVO();
+					sheetSearchVo.setLang(userVO.getLang());      
+					sheetSearchVo.setCorpNo(userVO.getCorpNo());
+					sheetSearchVo.setRecordCountPerPage(99999999);
+					sheetSearchVo.setStartPage(0);
+					
+					sheetSearchVo.setSrch2((String) vo.getSrch2());
+					sheetSearchVo.setSrch3((String) vo.getSrch3());
+					sheetSearchVo.setSrch4((String) vo.getSrch4());
+					sheetSearchVo.setSrch5((String) vo.getSrch5());
+					sheetSearchVo.setSrch6((String) vo.getSrch6());
+					sheetSearchVo.setSrch7((String) vo.getSrch7());
+					
+					
+					if("01".equals(vo.getExType())) {
+					
+						switch (divIdx) {
+						case "1":
+							dataMv = this.selectImportViewList(sheetSearchVo, request, new ModelMap());
+							reslutList = (List<?>) dataMv.getModel().get("resultList");
+							summary = true; 
+							break;
+						case "2":
+							dataMv = this.selectImportViewLanListExcel(sheetSearchVo, request, new ModelMap());
+							reslutList = (List<?>) dataMv.getModel().get("resultList");
+							summary = true;
+							break;
+						case "3":
+							dataMv = this.selectImportViewSpecListExcel(sheetSearchVo, request, new ModelMap());
+							reslutList = (List<?>) dataMv.getModel().get("resultList");
+							summary = true;
+							break;
+						default:
+							break;
+						}
+					}
+					
+					ArrayList<String> conts = new ArrayList<String>();
+					conts.add("1");
+					//sheet = ExcelUtil.createSummaryCont(sheet, conts);
+					
+					sheetSearchVo.setExCol(colUnion[unionIdx]);
+					sheetSearchVo.setExTit(haedUnion[unionIdx]);
+					sheet = ExcelUtil.createMainTable(sheet, reslutList, sheetSearchVo);
+					
+					// data건수가 0이면  summary 동작안함
+					
+					unionIdx++;
+				}
+				
+				// cell 너비 조정 및 하단 타임 스탬프
+				int sheetCnt = workBook.getNumberOfSheets();
+				SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				Date now = new Date();         
+				String nowTime = sdf1.format(now);
+				
+				for(int i=0; i < sheetCnt; i++) {
+					XSSFSheet tempSheet = workBook.getSheetAt(i);
+					int cellCnt = tempSheet.getPhysicalNumberOfRows();
+					
+					for(int j=1; j < cellCnt; j++) {
+						tempSheet.autoSizeColumn(j);
+					}
+					
+					tempSheet.createRow(tempSheet.getLastRowNum() +1);
+					XSSFRow row = tempSheet.createRow(tempSheet.getLastRowNum() +1);
+					XSSFCell cell = row.createCell(0);
+					cell.setCellValue(nowTime);
+				}
+				
+				ExcelUtil.generateExcelFile(workBook, userVO.getCmpnyCd().concat(" ").concat(vo.getSrch40().replace("_", " ")), response);
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			mv.addObject("resultCode", resultCode);
+			return mv;
+		}
+}

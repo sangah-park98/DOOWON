@@ -1,0 +1,66 @@
+package egovframework.pf.rpt.service.impl;
+
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.rpt.service.deadLineService;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+
+/**
+ * @Class Name : ItemServiceImpl.java
+ * @Description : ItemServiceImpl Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2024.02.16          	권예지         			최초 생성
+ *
+ * @author 권예지
+ * @since 2024.01.10
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KordSystems All right reserved.
+ */
+
+@Service("deadLineService")
+public class deadLineServiceImpl extends EgovAbstractServiceImpl implements deadLineService {
+
+
+	@Resource(name="deadLineMapper")
+	private deadLineMapper deadLineMapper;
+	
+
+	// 수입 리스트
+	@Override
+	public List<?> selectImportdeadLineList(SearchVO vo) throws Exception {
+		// TODO Auto-generated method stub
+		return deadLineMapper.selectImportdeadLineList(vo);
+	}
+	// 수입 리스트 갯수
+	@Override
+	public int selectImportdeadLineListCnt(SearchVO vo) throws Exception {
+		// TODO Auto-generated method stub
+		return deadLineMapper.selectImportdeadLineListCnt(vo);
+	}
+	// 수출 리스트
+	@Override
+	public List<?> selectExportdeadLineList(SearchVO vo) throws Exception {
+		// TODO Auto-generated method stub
+		return deadLineMapper.selectExportdeadLineList(vo);
+	}
+	// 수출 리스트 갯수
+	@Override
+	public int selectExportdeadLineListCnt(SearchVO vo) throws Exception {
+		// TODO Auto-generated method stub
+		return deadLineMapper.selectExportdeadLineListCnt(vo);
+	}
+	
+	
+	
+}

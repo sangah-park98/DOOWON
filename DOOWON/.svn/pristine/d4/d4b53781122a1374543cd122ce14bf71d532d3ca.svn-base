@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.trade.service.impl.TradeMapper">
+	
+	<select id="selectTradeViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			COUNT(*) over() AS cnt,
+		    rece,
+		    fail,
+		    rece_result,
+		    rpt_no,
+		    invoice,
+		    BlNo,
+		    exp_firm,
+		    buy_firm,
+		    Ta_St_iso,
+		    reporter,
+		    rpt_Day,
+		    Exp_Lis_Day,
+		    Juk_Day,
+		    ship_day,
+		    exp_details,
+		    Exc_Cot,
+		    Con_MetNm,
+		    incoterms,
+		    tot_pack_cnt,
+		    tot_wt,
+		    approval,
+		    factory_code,
+		    sr_ordr,
+		    user_memo, 
+		    cus_memo
+		FROM (
+			SELECT
+		    SUBSTRING_INDEX(a.user_memo, '\n', 1) AS factory_code,
+		    CASE WHEN STR_CNT(a.user_memo, '\n') >= 1 THEN
+			SUBSTRING_INDEX(SUBSTRING_INDEX(a.user_memo, '\n', 2), '\n', -1)
+			ELSE '' END AS sr_ordr,
+		    a.rece,
+		    '' AS fail,
+		    a.rece_result,
+		    CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no,
+		    b.mg_code AS invoice,
+		    a.BlNo,
+		    a.exp_firm,
+		    a.buy_firm,
+		    a.Ta_St_iso,
+		    IFNULL(I.cmmn_nm,'타관세법인') AS reporter,
+		    CASE WHEN a.Rpt_Day != '' THEN DATE_FORMAT(a.Rpt_Day, '%Y-%m-%d') ELSE '' END AS rpt_Day,
+		    CASE WHEN a.Exp_Lis_Day != '' THEN DATE_FORMAT(a.Exp_Lis_Day, '%Y-%m-%d') ELSE '' END AS Exp_Lis_Day,
+		    CASE WHEN a.Juk_Day != '' THEN DATE_FORMAT(a.Juk_Day, '%Y-%m-%d') ELSE '' END AS Juk_Day,
+		    case when a.ship_day IS NULL then '-' 
+		    	 when a.ship_day = '' then '-'
+			ELSE DATE_FORMAT(a.ship_day, '%Y-%m-%d') end as ship_day,
+		    '' AS exp_details,
+		    CONCAT(a.Exc_Divi, '-', a.Exc_DiviNm) AS Exc_Cot,
+		    a.Con_MetNm,
+		    b.amt_cod AS incoterms,
+		    CONCAT(a.Tot_Pack_Cnt, ' (', a.tot_pack_ut, ')') AS tot_pack_cnt,
+		    CONCAT(a.Tot_Wt, ' (', a.ut, ')') AS tot_wt,
+		    '' AS approval,
+		    IFNULL(E.user_memo,'') as user_memo, 
+		    '' AS cus_memo
+		FROM 
+		    (SELECT @row_number:=0) AS row_number,
+		    CUSDEC830A1 a
+		    
+		    LEFT JOIN
+			(select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'EXPSHRPTCD') I
+			on I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+			
+		INNER JOIN 
+		    (SELECT COUNT(*) over() AS cnt, sna1, rpt_no, MAX(mg_code) AS mg_code, amt_cod FROM cusdec830b1 GROUP BY sna1, rpt_no) b
+		ON a.sn = b.sna1
+		AND a.rpt_no = b.rpt_no
+		LEFT JOIN MEMO_INFO E
+		on a.rpt_no = E.rpt_no
+		AND E.memo_type = 'exp'
+		WHERE 
+		    A.rpt_seq = '00'
+		    <choose>
+		    <when test="srch1 =='02'">
+		    AND A.rece = '수리'
+		    </when>
+		    <when test="srch1 =='03'">
+		    AND A.rece NOT IN ('수리', '승인')
+		    </when>
+		    <when test="srch1 == '04'">
+			AND A.rece = ''
+			</when>
+			<when test="srch1 == '05'">
+			AND A.rece != ''
+			</when>
+		    </choose>
+			<choose>
+		    <when test="srch8 =='01'">
+		    AND A.rpt_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		    </when>
+		    <otherwise>
+		    AND A.exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		    </otherwise>
+		    </choose>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE CONCAT('%',UPPER(REPLACE(#{srch4},'-','')),'%')
+			</if>
+			<if test="list2 != null and list2.size() > 0">
+			    AND (
+			        <foreach item="blNo" collection="list2" open="(" separator="OR" close=")">
+			            b.mg_code LIKE CONCAT('%',UPPER(#{blNo}),'%')
+			        </foreach>
+			    )
+			</if>
+			<if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+        	</if>
+		) AS EXPORT
+		WHERE 1=1
+			<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+			AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+			</if>
+			<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+			AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+			</if>
+			ORDER BY rpt_day desc, rpt_no desc
+			LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	 </select>
+	
+</mapper>
+

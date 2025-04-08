@@ -1,0 +1,619 @@
+var tradeInfoHot;
+var tradeInfoSettings;
+var tradeInfoPopupSettings;
+var tradeInfoIndex = 9999;
+var tradeInfoScrollTp = true;
+
+$( document ).ready(function() {
+	
+	$('.band-calendar').each(function(){ regCal(this) ;})
+    $('.datepicker').datepicker("option","dateFormat",calFormat);
+
+    var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	  
+	$("#tradeInfo_srch2").val(mtoday);
+	$("#tradeInfo_srch3").val(today);
+	  
+	var tradeInfoElement = document.querySelector('#tradeInfoTable');
+	var tradeInfoElementContainer = tradeInfoElement.parentNode;
+
+	tradeInfoHot = new Handsontable(tradeInfoElement, tradeInfoSettings);
+
+	fn_changeTradeView('read');
+	 
+	//scroll 이벤트
+	fn_tradeViewasEventReg();
+	$("#tradeInfo_div6 p").html(
+		'<i class="fa-duotone fa-chart-network text-primary-900"></i>&nbsp;&nbsp;' +
+		korExpResultCnt + ': <span id="tradeInfoCnt">0</span>'
+	);
+});
+
+$(document).mousedown(function(e){	
+	if(e.target.name == "tradeInfo1_date" || e.target.name == "tradeInfo2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}	
+	}
+});
+
+$("input:radio[name=tradeInfo_srch20]").change(function(){
+	$("input[name=tradeInfoType][value=read]").prop("checked", true);
+	fn_changeTradeView("read");
+})
+
+$("input[name=tradeInfo_srch1]").change(function(){
+	
+	var selectedValue = $(this).val();
+    if(selectedValue === "01") {
+    	$("#tradeInfo_div6 p").html(
+			'<i class="fa-duotone fa-chart-network text-primary-900"></i>&nbsp;&nbsp;' +
+			korExpResultCnt + ': <span id="tradeInfoCnt">0</span>'
+    	);
+        fn_changeTradeViewType(selectedValue);
+    } else if(selectedValue === "02") {
+    	$("#tradeInfo_div6 p").html(
+			'<i class="fa-duotone fa-chart-network text-primary-900"></i>&nbsp;&nbsp;' +
+			VnmImpResultCnt + ': <span id="tradeInfoCnt">0</span>'
+    	);
+        fn_changeTradeViewType(selectedValue);
+    } else if(selectedValue === "03") {
+    	$("#tradeInfo_div6 p").html(
+			'<i class="fa-duotone fa-chart-network text-primary-900"></i>&nbsp;&nbsp;' +
+			sehyVnResultCnt + ': <span id="tradeInfoCnt">0</span>'
+    	);
+        fn_changeTradeViewType(selectedValue);
+    }
+});
+
+
+function fn_tradeViewchgDate1() {
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var day = date.getDay();
+	  var today = new Date().toISOString().substring(0,10).replace(/-/g,'-');
+	  var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10).replace(/-/g,'-');
+	  
+	  $("#tradeInfo_srch2").val(today);
+	  $("#tradeInfo_srch3").val(today);
+}
+
+function fn_tradeViewchgDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	var today = new Date().toISOString().substring(0,10).replace(/-/g,'-');
+	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10).replace(/-/g,'-');
+	
+	$("#tradeInfo_srch2").val(mtoday);
+	$("#tradeInfo_srch3").val(today);
+}
+function fn_tradeViewchgDate3() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	var today = new Date().toISOString().substring(0,10).replace(/-/g,'-');
+	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10).replace(/-/g,'-');
+	
+	$("#tradeInfo_srch2").val(mtoday);
+	$("#tradeInfo_srch3").val(today);
+}
+function fn_tradeViewchgDate4() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	var startDt = new Date();
+	startDt.setDate(1);
+  	startDt.setMonth(startDt.getMonth() - 1);
+
+  	var endDt = new Date();
+  	endDt.setMonth(endDt.getMonth(), 1);
+  	endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10).replace(/-/g,'-')
+	var mtoday = endDt.toISOString().substring(0,10).replace(/-/g,'-')
+	
+	$("#tradeInfo_srch2").val(today);
+	$("#tradeInfo_srch3").val(mtoday);
+}
+
+//row 수
+$("select[name=tradeInfoPageCnt]").change(function(){
+	  fn_searchTradeView();
+});
+
+
+// 스크롤할 때 행이 자동으로 추가 로드될 수 있게 하는 함수
+function fn_tradeViewasEventReg(){
+	
+   $("#tradeInfoTable .wtHolder").scroll(function(){
+	  //fn_tradeViewFileList(row, col)
+  	  var scrollTop = $("#tradeInfoTable .wtHolder").scrollTop();
+  	  var countPerPage = $("#tradeInfoPageCnt option:selected").val();
+  	  var rowHeight = tradeInfoHot.getRowHeight();
+
+  	  var addCnt = 790;
+  	  if(countPerPage == "50"){
+  		  addCnt = 790;
+  	  }else if(countPerPage == "100"){
+  		  addCnt = 2040;
+  	  }else if(countPerPage == "200"){
+  		  addCnt = 3290;
+  	  }else if(countPerPage == "500"){
+  		  addCnt = 4540;
+  	  }
+  	  if(tradeInfoScrollTp && tradeInfoIndex != 9999 && scrollTop >= (countPerPage * tradeInfoIndex * rowHeight) + addCnt){
+  		  fn_tradeInfoScroll();
+  	  }
+   });
+}
+
+// 스크롤
+function fn_tradeInfoScroll(){
+	if( $("input[name=tradeInfoType]:checked").val() == "enrol")
+		return;
+	fn_loading(true);
+	tradeInfoScrollTp = false;
+	tradeInfoIndex++;
+	var data = fn_setTradeViewForm();
+
+	$.ajax({
+		type : "POST",
+		url : "/trade/selectTradeViewList.do",
+		data : JSON.stringify(data),
+		contentType: "application/json; charset=utf-8",
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	var getData = tradeInfoHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	tradeInfoHot.loadData(meargeJson);
+        	tradeInfoScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+// 검색
+function fn_searchTradeView(){
+	tradeInfoIndex = 0;
+	
+	var data = fn_setTradeViewForm();
+	var valid = fn_validateSearchDate(data["srch2"], data["srch3"]);
+
+	if(valid === "false"){
+		data["srch2"] = null;
+		data["srch3"] = null;
+		$("#tradeInfo_srch2").val("");
+		$("#tradeInfo_srch3").val("");
+		return;
+	} else {
+		data["srch2"] = $("#tradeInfo_srch2").val();
+		data["srch3"] = $("#tradeInfo_srch3").val();
+	}
+	
+	if(data["srch2"] == null || data["srch2"] == "" || data["srch3"] == "" || data["srch3"] == null){
+		alert("날짜를 입력해 주세요.");
+		return;
+	}
+	
+	fn_loading(true);
+
+	$.ajax({
+		type : "POST",
+		url : "/trade/selectTradeViewList.do",
+		data : JSON.stringify(data),
+		contentType: "application/json; charset=utf-8", 
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	tradeInfoHot.loadData([]);
+        	tradeInfoHot.loadData(data.resultList);
+        	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+        	$("#tradeInfoCnt").text(totCnt); 
+    	fn_loading(false);
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+};
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchTradeView();
+    }
+}
+
+
+// 검색조건 생성
+function fn_setTradeViewForm(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=tradeInfo_srch1]:checked").val();
+	sData["srch2"] = $("#tradeInfo_srch2").val();
+	sData["srch3"] = $("#tradeInfo_srch3").val();
+	sData["srch4"] = $("#tradeInfo_srch4").val();
+	sData["srch5"] = $("#tradeInfo_srch5").val();
+	var list2 = sData["srch5"].split(/[, ]+/).map(function(item) {
+        return item.trim();
+    }).filter(function(item) {
+        return item.length > 0; 
+    });
+    sData["list2"] = list2;
+	sData["srch8"] = $("#tradeInfoDateType option:selected").val();
+	sData["recordCountPerPage"] = $("#tradeInfoPageCnt option:selected").val();
+	sData["pageIndex"] = tradeInfoIndex;
+	
+	sData["srchType1"] = $("#tradeInfoSrchType1 option:selected").val();
+	sData["srchText1"] = $("#tradeInfoSrchText1").val();
+	
+	sData["srchType2"] = $("#tradeInfoSrchType2 option:selected").val();
+	sData["srchText2"] = $("#tradeInfoSrchText2").val();
+	return sData;
+};
+
+//검색조건 초기화
+function fn_clearTradeView(){
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+  
+	$("input:radio[name=tradeInfo_srch1][value=01]").prop('checked', true);
+	$("#tradeInfo_srch2").val(mtoday);
+	$("#tradeInfo_srch3").val(today);
+	$("#tradeInfo_srch4").val("");
+	$("#tradeInfo_srch5").val("");
+	$("#tradeInfoDateType").val("01");
+	
+	$("#tradeInfoSrchType1").val("");
+	$("#tradeInfoSrchType2").val("");
+	
+	$("#tradeInfoSrchText1").val("");
+	$("#tradeInfoSrchText2").val("");
+	
+};
+
+
+// 테이블 컬럼
+function fn_tradeViewTableCol(){
+	// 사용여부
+	var tradeType = $("input:radio[name=tradeInfo_srch1]:checked").val(); 
+	
+	var qtyRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+	    var $qtyInput = $('<input type="text" class="bg-gray-50 border border-gray-300 rounded-lg" id="tradeQty' + row + '" style="height:8px; width:60px;" value="' + value + '"/>');
+	    $(td).empty().append($qtyInput).css("text-align", "center");
+	    $qtyInput.val(value);
+	};
+	
+	var remarkRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		var $remarkInput = $('<input type="text" class="bg-gray-50 border border-gray-300 rounded-lg" id="tradeRemark' + row + '" style="height:8px; width:140px;" value="' + value + '"/>');
+		var $remarkButton = $('<button type="button" onclick="fn_tradeSave(' + row + ',' + col + ')" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-rose-700 ml-1 hover:bg-rose-500">저장</button>');
+		$(td).empty().append($remarkInput).append($remarkButton).css("text-align", "right");
+		$remarkButton.css({
+			'font-family': '맑은 고딕',
+			'font-size': '13px'
+		});
+		$remarkButton.css({
+			'font-family': '맑은 고딕',
+			'font-size': '13px'
+		});
+		$remarkInput.val(value);
+	};
+	
+	if (tradeType == "01"){
+		this.tradeViewCol = [
+			{data : 'rptNo', className : "htCenter", width: lang === 'en' ? 180 : 140, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'expLisDay', className : "htCenter", width: lang === 'en' ? 120 : 90, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'excDivi', className : "htCenter", width: 120, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'itemName', className : "htCenter", width: 250, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'itemCode', className : "htCenter", width: lang === 'en' ? 170 : 120, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'qty', type : 'numeric', width: 90 , className : "htRight" , 	numericFormat : {pattern : '0,0'},readOnly : true},
+			{data : 'qtyUt', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'mgCode', className : "htCenter", width: 130, wordWrap: false, readOnly:true},
+			{data : 'buyFirm', className : "htCenter", width: 200, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'tradeQty', type : 'numeric', width: lang === 'en' ? 125 : 90 , className : "htRight" , 	numericFormat : {pattern : '0,0'},readOnly : true},
+			{data : 'tradeRemark', className : "htCenter", width: 200, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'regDt', className : "htCenter", width: lang === 'en' ? 120 : 90, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'regId', className : "htCenter", width: 75, wordWrap: false, className : "htCenter", readOnly:true},
+		] ;
+	} else if (tradeType == "02"){
+		this.tradeViewCol = [
+			{data : 'rptNo', className : "htCenter", width: lang === 'en' ? 180 : 140, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'rptDay', className : "htCenter", width: lang === 'en' ? 120 : 90, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'tradeType', className : "htCenter", width: 120, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'itemName', className : "htCenter", width: 250, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'itemCode', className : "htCenter", width: lang === 'en' ? 170 : 120, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'qty', type : 'numeric', width: 90 , className : "htRight" , 	numericFormat : {pattern : '0,0'},readOnly : true},
+			{data : 'unit', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'invoiceNo', className : "htCenter", width: 130, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'invoiceDate', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'buyFirm', className : "htCenter", width: 200, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'tradeQty', type : 'numeric', className : "htRight" , 	numericFormat : {pattern : '0,0'},readOnly : true},
+			{data : 'tradeRemark', className : "htCenter", width: 220, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'regDt', className : "htCenter", width: lang === 'en' ? 120 : 90, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'regId', className : "htCenter", width: 70, wordWrap: false, className : "htCenter", readOnly:true},
+			] ;
+	} else {
+		this.tradeViewCol = [
+			{data : 'entryDt', type : 'date',className : "htCenter",readOnly : true},
+			{data : 'rptNo', type : 'text',className : "htLeft",readOnly : true},
+			{data : 'wareInfo',	type : 'text',className : "htLeft",readOnly : true},
+			{data : 'itemNote',	type : 'text',className : "htCenter",readOnly : true},
+			{data : 'itemCode',	type : 'text',className : "htCenter",readOnly : true},
+			{data : 'cusItemCd', type : 'text',className : "htCenter",readOnly : true},
+			{data : 'impDt', type : 'date',className : "htCenter",readOnly : true},
+			{data : 'unit',	type : 'text',className : "htCenter",readOnly : true},
+			{data : 'qty', type : 'numeric', width: 90 , className : "htRight" , 	numericFormat : {pattern : '0,0'},readOnly : true},
+			{data : 'trdCd', type : 'text',className : "htCenter",readOnly : true},
+			{data : 'cdNo',	type : 'text',className : "htLeft",readOnly : true},				
+			{data : 'tradeQty', type : 'numeric', width: lang === 'en' ? 120 : 90 , className : "htRight" , 	numericFormat : {pattern : '0,0'},readOnly : true},
+			{data : 'tradeRemark', className : "htCenter", width: 180, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'regDt', className : "htCenter", width: lang === 'en' ? 120 : 90, wordWrap: false, className : "htCenter", readOnly:true},
+			{data : 'regId', className : "htCenter", width: 70, wordWrap: false, className : "htCenter", readOnly:true},
+		] ;
+	}
+}
+
+// 테이블 헤더
+function fn_tradeViewTableHeader(){
+	var tableType = $("input:radio[name=tradeInfoType]:checked").val(); 
+	
+	var chkTradeType = $("input:radio[name=tradeInfo_srch1]:checked").val();
+	// 사용여부
+	//var tradeInfo_srch20 = $("input:radio[name=tradeInfo_srch20]:checked").val(); 
+	if(chkTradeType == "01"){
+	this.tradeViewHeader = [
+		expRptNo, lisDay, tradeType, goodsName, specItemCd, qty,
+		unit, invoiceNo, overseas, revisionQty, revisionReason, revisionDt, register
+		 // "수출신고번호", "수리일자", "거래구분", "거래품명", "규격(ITEM CODE)" , "수량" , 
+		 // "단위" ,"인보이스 번호", "해외거래처",  "보정 수량", "보정 사유", "보정 일자", "등록자"
+	 ] ;
+	} else if (chkTradeType == "02"){
+	this.tradeViewHeader = [
+		impRptNo, lisDay, tradeType, goodsName, specItemCd, qty,
+		unit, invoiceNo, invoiceDt, partner, revisionQty, revisionReason, revisionDt, register
+		 // "수입신고번호", "수리일자", "거래구분", "거래품명", "규격(ITEM CODE)" , "수량" , 
+		 // "단위" , "인보이스 번호", "인보이스 일자", "거래상대방", "보정 수량", "보정 사유", "보정 일자", "등록자"
+	 ] ;
+	} else {
+	this.tradeViewHeader = [
+		regDt, transactionNo, wareHousingType, uniqueVal, tariffCd, customsDeclareCd, carryInDt, unit,
+		qty, tradeType, invoiceNo, revisionQty, revisionReason, revisionDt, register
+		// "등록일자", "거래번호", "창고구분", "고유값", "품목코드(ITEM CODE)", "세관신고코드", "입고일자", "단위" , 
+		// "수량" , "거래구분", "인보이스 번호",  "보정 수량", "보정 사유", "보정 일자", "등록자"
+	] ;
+	}
+}
+	
+// 테이블 히든컬럼
+function fn_tradeViewTableHidden(){
+	var tableType = $("input:radio[name=tradeInfoType]:checked").val();
+	this.tradeViewHidden = [];
+}
+
+// table
+function fn_handsonGridTradeViewOption(col, header, hidden){
+	var tableType = $("input:radio[name=tradeInfoType]:checked").val();
+	
+	tradeInfoSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 500,
+	  rowHeights : 27,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualColumnResize : true,
+	  manualRowMove : true,
+	  manualColumnResize : true,
+	  manualColumnMove : false,
+	  licenseKey: 'non-commercial-and-evaluation',
+	  //dropdownMenu : true,
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+      autoColumnSize : {samplingRatio : 30},
+      mergeCells : false,
+      wordWrap : true
+	};
+
+	return tradeInfoSettings;
+}
+
+//테이블 타입 변경
+function fn_changeTradeView(type){
+
+	tradeInfoHot.updateSettings({readOnly:true, contextMenu : false});
+	$("#btnTradeViewSave").hide();
+	$("#expExcel").show();
+	$("#docBtn").children().show();
+	fn_changeTradeViewType();
+};
+
+//검색구분 변경
+function fn_changeTradeViewType(type){
+	
+	let tradeViewCol = new fn_tradeViewTableCol();
+	let tradeViewHeader = new fn_tradeViewTableHeader();
+	let tradeViewHidden = new fn_tradeViewTableHidden();
+	
+	
+	var col, header, hidden ;	
+
+	//구매원장
+	col = tradeViewCol.tradeViewCol;
+	header = tradeViewHeader.tradeViewHeader;
+	hidden = tradeViewHidden.tradeViewHidden;
+	
+	tradeInfoHot.updateSettings(fn_handsonGridTradeViewOption(col, header, hidden));
+	fn_searchTradeView();
+};
+	
+
+function fn_tradeInfoExcelDownload(){
+	 var type = $("input:radio[name=tradeInfo_srch1]:checked").val();
+	 fn_loading(true);
+		//엑셀옵션
+		var exTitArr = [];
+		var exTit = "";
+		var exColArr = [];
+		var exCol = "";
+	    var exTitDivArr = [];
+	    var exTitDiv = "";
+		
+		let tradeViewCol = new fn_tradeViewTableCol();
+		let tradeViewHeader = new fn_tradeViewTableHeader();
+	    exColArr.push(fn_getExcelCol(tradeViewCol.tradeViewCol));
+		exTitArr.push(fn_getExcelHead(tradeViewHeader.tradeViewHeader));
+		
+	 	exCol = exColArr.join("|||");
+		exTit = exTitArr.join("||||");
+		exTitDiv = "1|거래정보관리||";
+			
+	   
+	   var parameters = {exCol : "", exTit: "", exTitDiv: "", exType: "", srch40: ""};
+		
+	   // 검색옵션
+	   $.each(fn_setTradeViewForm(), function(attrName, attrValue){
+	   	parameters[attrName] = attrValue;
+	   });
+		
+		parameters.exCol = exCol.replace(/ /g,"_");
+		parameters.exTit = exTit.replace(/ /g,"_");
+		parameters.exTitDiv = exTitDiv.replace(/ /g,"_");
+		parameters.exType = type;
+		parameters.srch40 = "거래정보관리";
+		
+		$.ajax({
+			 url: "/trade/tradeViewExcel.do",
+			 data: parameters,
+			 type: 'POST',
+			 cache: false,
+			 timeout: 200000,
+			 xhrFields: {
+				 responseType: "blob",
+			 },
+		    success: function(blob, status, xhr) {
+		    	try {
+					// check for a filename
+					 var fileName = "";
+					 var disposition = xhr.getResponseHeader("Content-Disposition");
+
+				       if (disposition && disposition.indexOf("attachment") !== -1) {
+				      	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+				           var matches = filenameRegex.exec(disposition);
+
+				           if (matches != null && matches[1]) {
+				               fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+				           }
+				       }
+
+				       // for IE
+				       if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+				           window.navigator.msSaveOrOpenBlob(blob, fileName);
+				       } else {
+				           var URL = window.URL || window.webkitURL;
+				           var downloadUrl = URL.createObjectURL(blob);
+
+				           if (fileName) {
+				               var a = document.createElement("a");
+
+				               // for safari
+				               if (a.download === undefined) {
+				                   window.location.href = downloadUrl;
+				               } else {
+				                   a.href = downloadUrl;
+				                   a.download = fileName;
+				                   document.body.appendChild(a);
+				                   a.click();
+				               }
+				           } else {
+				               window.location.href = downloadUrl;
+				           }
+				       }
+			       fn_loading(false);
+				} catch (e) {
+					console.log(e);
+					fn_loading(false);
+				};
+		    },
+		    error: function(e, textStatus, errorThrown) {
+		    	if(e.status == 400){
+		    		alert("Your request is up. Please log back in if you wish continue");
+		    		location.href = document.referrer;
+		    	} else {
+		        	console.log(errorThrown);
+		    	}
+		    }
+		});
+}
+
+function fn_getExcelCol(viewCol){
+    return viewCol.map(item => item['data'] + '|' + item['className'] + '|' + item['width']).join("||");
+}
+ 
+function fn_getExcelHead(viewHead){
+    var result = [];
+    
+    if(viewHead.length > 1 && typeof(viewHead[0][0]) == 'object') {
+        for(var i=0; i < viewHead.length; i++) {
+            if(i == viewHead.length -1){
+                result.push(viewHead[i].join("|null||") + "|null");
+            }else {
+                result.push(viewHead[i].map(item => (item['label'] ? item['label'] : 'null') + '|' + (item['colspan'] ? item['colspan'] : 'null')).join("||"));
+            }
+        }
+        return result.join("|||");
+    }else{
+        return viewHead.join("|null||") + "|null";
+    };
+}
+
+

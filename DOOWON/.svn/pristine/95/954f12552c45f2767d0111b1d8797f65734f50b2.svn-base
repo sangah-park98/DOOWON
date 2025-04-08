@@ -1,0 +1,1924 @@
+var calculateHot;
+var calculateSettings;
+var calculatePopupSettings;
+var calculateIndex = 9999;
+var calculateScrollTp = true;
+
+var calculateDetailHot;
+var calculateDetailSettings;
+
+var calculateDetailHot2;
+var calculateDetailSettings2;
+
+var colCount = 0;
+var excelUploadHot;
+var selectedList = {};
+var callBackList = [];
+
+$( document ).ready(function() {
+	
+	  //달력 사용시 반드시 넣어주세요.
+      $('.band-calendar').each(function(){ regCal(this) ;})
+	  //캘린더 포맷
+      $('.datepicker').datepicker("option","dateFormat",calFormat);
+
+      var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	  
+	  $("#calculate_srch2").val(mtoday);
+	  $("#calculate_srch3").val(today);
+	  
+	  var calculateElement = document.querySelector('#calculateTable');
+	  var calculateElementContainer = calculateElement.parentNode;
+
+	  calculateHot = new Handsontable(calculateElement, calculateSettings);
+	  
+	  var calculateDetailElement = document.querySelector('#calculateDetailTable');
+	  var calculateDetailElementContainer = calculateDetailElement.parentNode;
+	  calculateDetailSettings = fn_handsonGridCalDetailOption();
+	  calculateDetailHot = new Handsontable(calculateDetailElement, calculateDetailSettings);
+	  
+	  var calculateDetailElement2 = document.querySelector('#calculateDetailTable2');
+	  var calculateDetailElementContainer2 = calculateDetailElement2.parentNode;
+	  calculateDetailSettings2 = fn_handsonGridCalDetailOption2();
+	  calculateDetailHot2 = new Handsontable(calculateDetailElement2, calculateDetailSettings2);
+
+	  $("#calculate_div1").show();
+	  $("#calculate_div2").show();
+	  $("#calculate_div3").hide();
+	  $("#calculate_div4").hide();
+	  $("#btnCalculViewSave").hide();
+	  $("#calculateInfo1").hide();
+	  $("#calculateInfo2").hide();
+	  fn_changeCalculView('read');
+	 
+	  //scroll 이벤트
+	  //fn_calculateasEventReg();
+	 // calculateUseEventReg();
+	  
+	  $("#calculTextView").text("수입");
+	  $("#calculTextView").prepend('<i class="fa-duotone fa-feather text-primary-900"></i>'); 
+	  
+	  var excelUploadPopupElement = document.querySelector('#excelUploadPopUpTable');
+	  var excelUploadPopupElementContainer = excelUploadPopupElement.parentNode;
+	  excelUploadPopupSettings = fn_handsonGridexcelUploadPopupOption();
+	  excelUploadHot = new Handsontable(excelUploadPopupElement, excelUploadPopupSettings);
+	  
+
+	 /*  const timePicker = document.querySelector(".custom-time-picker");
+       const minutePicker = document.querySelector(".custom-minute-picker");
+       const timeInput = document.querySelector(".custom-time-input");
+       const minuteInput = document.querySelector(".custom-minute-input");
+       const timeDropdown = document.querySelector(".custom-time-dropdown");
+       const minuteDropdown = document.querySelector(".custom-minute-dropdown");
+
+       // 시간 옵션 생성 (00 ~ 23)
+       function generateHourOptions() {
+           for (let hour = 0; hour < 24; hour++) {
+               const option = document.createElement("div");
+               const formattedHour = hour.toString().padStart(2, "0");
+               option.textContent = formattedHour;
+               option.classList.add("custom-time-option");
+               option.addEventListener("click", function () {
+                   timeInput.value = formattedHour;
+                   timeDropdown.classList.remove("active");
+               });
+               timeDropdown.appendChild(option);
+           }
+       }
+
+       // 분 옵션 생성 (01 ~ 59)
+       function generateMinuteOptions() {
+           for (let minute = 0; minute < 60; minute++) {
+               const option = document.createElement("div");
+               const formattedMinute = minute.toString().padStart(2, "0");
+               option.textContent = formattedMinute;
+               option.classList.add("custom-minute-option");
+               option.addEventListener("click", function () {
+                   minuteInput.value = formattedMinute;
+                   minuteDropdown.classList.remove("active");
+               });
+               minuteDropdown.appendChild(option);
+           }
+       }
+
+       // 입력된 값이 유효한 시간 값인지 확인
+       function validateHourInput(input) {
+           const value = parseInt(input.value, 10);
+           if (value >= 0 && value <= 23) {
+               return true;
+           } else {
+               alert("00 과 23 사이의 시간 값을 입력해주세요.");
+               timeInput.value = '';
+               return false;
+           }
+       }
+
+       // 입력된 값이 유효한 분 값인지 확인
+       function validateMinuteInput(input) {
+           const value = parseInt(input.value, 10);
+           if (value >= 0 && value <= 59) {
+               return true;
+           } else {
+               alert("00 과 59 사이의 분 값을 입력해주세요.");
+               minuteInput.value = '';
+               return false;
+           }
+       }
+       // 입력된 값에 따라 시간 드롭다운 필터링
+       timeInput.addEventListener("input", function () {
+           const filterValue = timeInput.value;
+           const options = document.querySelectorAll(".custom-time-option");
+
+           // 모든 옵션을 확인하면서 입력값과 일치하는지 확인
+           options.forEach(option => {
+               if (option.textContent.startsWith(filterValue)) {
+                   option.classList.remove("hidden");
+               } else {
+                   option.classList.add("hidden");
+               }
+           });
+
+           // 드롭다운을 다시 열어서 필터링된 옵션을 보여줌
+           timeDropdown.classList.add("active");
+       });
+
+
+       // 입력에 따라 분 드롭다운 필터링
+       minuteInput.addEventListener("input", function () {
+           const filterValue = minuteInput.value;
+           const options = document.querySelectorAll(".custom-minute-option");
+
+           // 모든 옵션을 확인하면서 입력값과 일치하는지 확인
+           options.forEach(option => {
+               if (option.textContent.startsWith(filterValue)) {
+                   option.classList.remove("hidden");
+               } else {
+                   option.classList.add("hidden");
+               }
+           });
+
+           // 드롭다운을 다시 열어서 필터링된 옵션을 보여줌
+           minuteDropdown.classList.add("active");
+       });
+
+       // 입력 필드에서 직접 입력했을 때만 유효성 검사
+       timeInput.addEventListener("input", function () {
+           // 타이핑할 때만 유효성 검사
+           validateHourInput(timeInput);
+       });
+
+       minuteInput.addEventListener("input", function () {
+           // 타이핑할 때만 유효성 검사
+           validateMinuteInput(minuteInput);
+       });
+
+       // 시간 드롭다운 토글
+       timeInput.addEventListener("click", function (event) {
+           event.stopPropagation();
+           timeDropdown.classList.toggle("active");
+           minuteDropdown.classList.remove("active");
+       });
+
+       // 분 드롭다운 토글
+       minuteInput.addEventListener("click", function (event) {
+           event.stopPropagation();
+           minuteDropdown.classList.toggle("active");
+           timeDropdown.classList.remove("active");
+       });
+
+       // 드롭다운 외부 클릭 시 닫기
+       document.addEventListener("click", function (event) {
+           if (!timeInput.contains(event.target)) {
+               timeDropdown.classList.remove("active");
+           }
+           if (!minuteInput.contains(event.target)) {
+               minuteDropdown.classList.remove("active");
+           }
+       });
+
+       // 페이지 로드 시 시간 및 분 옵션 생성
+       generateHourOptions();
+       generateMinuteOptions();*/
+	  
+});
+/** 이벤트 Start **/
+
+$(document).mousedown(function(e){	
+	if(e.target.name == "calculate1_date" || e.target.name == "calculate2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}	
+	}
+});
+
+$("input:radio[name=calculate_srch20]").change(function(){
+	$("input[name=calculateType][value=read]").prop("checked", true);
+	fn_changeCalculView("read");
+})
+
+//검색구분 변경
+$("input[name=calculate_srch1]").change(function(){
+
+	  fn_changeCalculView($("#calculateType").val());
+	  
+	  var radioValue = document.querySelector('input[name="calculate_srch1"]:checked').value;
+	  if (radioValue === '02') {
+	      document.getElementById('blNoLabel').innerText = 'Invoice 번호';
+	      document.getElementById('calculate_srch7').placeholder = 'Invoice 번호를 입력해주세요.';
+	      document.getElementById('poNoLabel').innerText = 'SO 번호';
+	      document.getElementById('calculate_srch9').placeholder = 'SO 번호를 입력해주세요.';
+	      $("#calculTextView").text("수출");
+	      $("#calculTextView").prepend('<i class="fa-duotone fa-feather text-primary-900"></i>'); 
+	  } else {
+		  document.getElementById('blNoLabel').innerText = 'B/L 번호';
+		  document.getElementById('calculate_srch7').placeholder = 'B/L 번호를 입력해주세요.';
+		  document.getElementById('poNoLabel').innerText = 'PO 번호';
+		  document.getElementById('calculate_srch9').placeholder = 'PO 번호를 입력해주세요.';
+		  $("#calculTextView").text("수입");
+	      $("#calculTextView").prepend('<i class="fa-duotone fa-feather text-primary-900"></i>'); 
+	  }
+});
+
+
+//테이블 타입 변경
+/*$("input[name=calculateType]").change(function(){
+	  fn_changeCalculView($(this).val());
+});*/ 
+
+function fn_calculChgDate1() {
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var day = date.getDay();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10);
+	  
+	  $("#calculate_srch2").val(today);
+	  $("#calculate_srch3").val(today);
+	  //$("#importView_srch3").val(today);
+}
+
+function fn_calculChgDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10);
+	
+	$("#calculate_srch2").val(mtoday);
+	$("#calculate_srch3").val(today);
+}
+function fn_calculChgDate3() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10);
+	
+	$("#calculate_srch2").val(mtoday);
+	$("#calculate_srch3").val(today);
+}
+function fn_calculChgDate4() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	  var startDt = new Date();
+	  startDt.setDate(1);
+	  startDt.setMonth(startDt.getMonth() - 1);
+
+	  var endDt = new Date();
+	  endDt.setMonth(endDt.getMonth(), 1);
+	  endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10);
+	var mtoday = endDt.toISOString().substring(0,10);
+	
+	$("#calculate_srch2").val(today);
+	$("#calculate_srch3").val(mtoday);
+}
+
+//정렬항목
+/*$("select[name=alignImportView]").change(function(){
+	  fn_searchImportView();
+});
+*/
+
+function fn_setCalculView(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=calculate_srch1]:checked").val(); //srch1: 검색구분
+	sData["srch2"] = $("input[name=calculate1_date]").val(); // srch7: 신고일자 처음
+	sData["srch3"] = $("input[name=calculate2_date]").val(); // srch8: 신고일자 끝
+	sData["srch6"] = $("#calculate_srch6").val();
+	sData["srch7"] = $("#calculate_srch7").val();
+	sData["srch8"] = $("#calculate_srch8").val();
+	sData["srch9"] = $("#calculate_srch9").val();
+	sData["srch33"] = $("#calculate_day option:selected").val(); // srch33: 신고일자 select
+	
+	sData["recordCountPerPage"] = $("#calculatePageCnt option:selected").val();
+	
+	// console.log(sData);
+	
+	return sData;
+};
+
+//검색 버튼 클릭 시 호출되는 함수
+function fn_searchCalView(){
+	fn_loading(true);
+	
+	var sData = fn_setCalculView();
+	
+	console.log(sData);
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/selectCalculInfo.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	calculateHot.loadData([]);
+        	calculateDetailHot.loadData([]);
+        	calculateDetailHot2.loadData([]);
+        	calculateHot.loadData(data.resultList);
+        	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+        	$("#calculateCnt").text(totCnt); //검색결과 총 갯수
+        	
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+//검색 버튼 클릭 시 호출되는 함수
+function fn_searchCalDetailView(rptNo, type, hawb){
+	
+	fn_loading(true);
+	
+	console.log(rptNo);
+	console.log(type);
+	console.log(hawb);
+	
+	var sData = {};
+	if(type=="세관"){
+		sData["searchType"] = "01";
+	} else {
+		sData["searchType"] = "02";
+	}
+	sData["srch1"] = rptNo;
+	sData["srch2"] = hawb;
+	sData["srch3"] = $("input:radio[name=calculate_srch1]:checked").val();
+
+	
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/selectCalculDetailInfo.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+			calculateDetailHot.loadData([]);
+			calculateDetailHot.loadData(data.resultList);
+			calculateDetailHot2.loadData([]);
+			calculateDetailHot2.loadData(data.resultList2);
+			
+			fn_loading(false);
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("Your request is up. Please log back in if you wish continue");
+				location.href = document.referrer;
+			} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+};
+
+
+
+//row 수
+$("select[name=calculatePageCnt]").change(function(){
+	fn_searchCalView();
+});
+
+
+// 스크롤할 때 행이 자동으로 추가 로드될 수 있게 하는 함수
+function fn_calculateasEventReg(){
+ $("#calculateTable .wtHolder").scroll(function(){
+	  	  var scrollTop = $("#calculateTable .wtHolder").scrollTop();
+	  	  var countPerPage = $("#calculatePageCnt option:selected").val();
+	  	  var rowHeight = calculateHot.getRowHeight();
+
+	  	  var addCnt = 790;
+	  	  if(countPerPage == "50"){
+	  		  addCnt = 790;
+	  	  }else if(countPerPage == "100"){
+	  		  addCnt = 2040;
+	  	  }else if(countPerPage == "200"){
+	  		  addCnt = 3290;
+	  	  }else if(countPerPage == "500"){
+	  		  addCnt = 4540;
+	  	  }
+	  	  if(calculateScrollTp && calculateIndex != 9999 && scrollTop >= (countPerPage * calculateIndex * rowHeight) + addCnt){
+	  		  fn_calculateScroll();
+	  	  }
+	  });
+
+}
+
+
+//스크롤
+/*function fn_calculateScroll(){
+	if( $("input[name=calculateType]:checked").val() == "enrol")
+		return;
+	fn_loading(true);
+	calculateScrollTp = false;
+	calculateIndex++;
+	$.ajax({
+		type : "POST",
+		url : "/document/selectDocumentImpViewList.do",
+		data : fn_setCalculViewForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	var getData = calculateHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	calculateHot.loadData(meargeJson);
+        	calculateScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}*/
+
+
+//Popup 테이블 스크롤
+function calculateUseEventReg(){
+	$("#popUsedTable .wtHolder").scroll(function(){
+	  fn_popUsedStories(row, col)
+	  var data = exportViewHot.getSourceData();
+	  var scrollTop = $("#popUsedTable .wtHolder").scrollTop();
+	  var countPerPage = 50;
+	  var rowHeight = jdgmntUsageHot.getRowHeight();
+	  var addCnt = 790;
+
+//	  var addCnt = 790;
+//	  if(countPerPage == "50"){
+//		  addCnt = 790;
+//	  }else if(countPerPage == "100"){
+//		  addCnt = 2040;
+//	  }else if(countPerPage == "200"){
+//		  addCnt = 3290;
+//	  }else if(countPerPage == "500"){
+//		  addCnt = 4540;
+//	  }
+
+	  if(calculatePopScrollTp && calculateIndex != 9999 && scrollTop >= (countPerPage * calculateIndex * rowHeight) + addCnt){
+		  fn_calculatePopScroll(data[row]);
+	  }
+});
+
+}
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchCalView();
+    }
+}
+
+
+//검색조건 초기화
+function fn_clearCalView(){
+	
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	  
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	
+	$("#calculate_srch2").val(mtoday);
+	$("#calculate_srch3").val(today);
+	$("#calculate_srch4").val("");
+	$("#calculate_srch5").val("");
+	$("#calculate_srch6").val("");
+	$("#calculate_srch7").val("");
+};
+
+
+//테이블 컬럼
+function fn_calculateTableCol(){
+	
+		function checkBoxRenderer(instance, td, row, col, prop, value, cellProperties) {
+	      const typeValue = instance.getDataAtRowProp(row, 'type');
+	      
+	      // Conditionally set readOnly based on the type value
+	      if (typeValue != '세관') {
+	        cellProperties.readOnly = false;
+	      } else {
+	        cellProperties.readOnly = true;
+	      }
+
+	      // Use the default Handsontable checkbox renderer
+	      Handsontable.renderers.CheckboxRenderer.apply(this, arguments);
+	    }
+	
+		this.calculateCol = [
+			{data : 'checkBox', type : 'text', className : "htCenter", width: 60,type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false, renderer: checkBoxRenderer},
+			{data : 'areaNm', className : "htCenter", width: 150, className : "htCenter", readOnly:true},
+			{data : 'type', className : "htCenter", width: 150, className : "htCenter", readOnly:true},
+			{data : 'po', className : "htCenter", width: 150, className : "htCenter", readOnly:true},
+			{data : 'hawb', className : "htCenter", width: 150, className : "htCenter", readOnly:true},
+			{data : 'singoDt', className : "htCenter", width: 150, className : "htCenter", readOnly:true},
+			{data : 'suriDt', className : "htCenter", width: 150, className : "htCenter", readOnly:true},
+			{data : 'rptNo', className : "htCenter", width: 150, className : "htCenter"},
+			{data : 'saleSupEk', width: 150, type : 'numeric', className : "htRight", 	numericFormat : {pattern : '0,0'}, readOnly:true},
+			{data : 'saleTaxEk', width: 150, type : 'numeric', className : "htRight", 	numericFormat : {pattern : '0,0'}, readOnly:true},
+			{data : 'saleSumEk', width: 150, type : 'numeric', className : "htRight", 	numericFormat : {pattern : '0,0'}, readOnly:true},
+		];
+}
+
+//테이블 컬럼
+function fn_calculateDetailTableCol(){
+	
+	this.calculateDetailCol = [
+		{data : 'checkBox', type : 'text', className : "htCenter", width: 60,type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},
+		{data : 'adjNm', className : "htCenter", width: 150, readOnly:true},
+		{data : 'adjCd', className : "htCenter", width: 150, readOnly:true},
+		{data : 'supEk', width: 150, type : 'numeric', className : "htRight", 	numericFormat : {pattern : '0,0'}, readOnly:true},
+		{data : 'taxEk', width: 150, type : 'numeric', className : "htRight", 	numericFormat : {pattern : '0,0'}, readOnly:true},
+		{data : 'sumEk', width: 150, type : 'numeric', className : "htRight", 	numericFormat : {pattern : '0,0'}, readOnly:true},
+		{data : 'wfYn', className : "htCenter", width: 150, className : "htCenter", readOnly:true},
+		];
+}
+
+//테이블 컬럼
+function fn_calculateDetailTableCol2(){
+	
+	this.calculateDetailCol = [
+		{data : 'checkBox', type : 'text', className : "htCenter", width: 60,type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},
+		{data : 'adjNm', className : "htCenter", className : "htCenter", readOnly:true},
+		{data : 'adjDetail', className : "htCenter", className : "htCenter", readOnly:true},
+		{data : 'adjCode', className : "htCenter", className : "htCenter", readOnly:true},
+		{data : 'adjType', className : "htCenter", className : "htCenter", readOnly:true},
+		];
+}
+
+
+function chipRenderer(hotInstance, td, row, column, prop, value, cellProperties) {
+	  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+	  td.classList.add('chip-cell');
+	  td.classList.add('text-center');
+	  switch (value) {
+	    case "수출":
+	      td.innerHTML = `<span class="chip chip-blue">${value}</span>`
+	      break
+	    case "수입":
+	      td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+	      break
+	    default:
+	      td.innerHTML = ``
+	      break
+	  }
+}
+
+
+//테이블 헤더
+function fn_calculateTableHeader(){
+	
+		if($("input:radio[name=calculate_srch1]:checked").val() == '01'){
+			this.calculateHeader = [
+				"B/L No.", "신고번호", "신고일자", "구분", "적요", "수리일자", "공급가액", "VAT", "합계", "비고", "대납여부"
+				]; 
+		} else {
+			this.calculateHeader = [
+				"",
+				"비용발행", "구분" ,"S.O No.", "Invoice No.","신고일자", "수리일자", "신고번호", "공급가액", "VAT", "합계"
+				]; 
+		}
+	
+}
+
+//테이블 헤더
+function fn_calculateDetailTableHeader(){
+	
+	this.calculateDetailHeader = [
+		"구분", "B/L No." , "신고번호" ,"공급가액", "VAT", "합계", "대납여부"
+		]; 
+}
+
+function fn_calculateDetailTableHeader2(){
+	
+	this.calculateDetailHeader = [
+		"","구분", "은행", "계좌번호", "비용"
+		]; 
+}
+//항목명	비용코드	비용	부가세	합계	정산
+
+
+//테이블 히든컬럼
+function fn_calculateTableHidden(){
+	var tableType = $("input:radio[name=calculateType]:checked").val();
+	this.calculateHidden = [];
+}
+
+function fn_calculateDetailTableHidden(){
+	this.calculateDetailHidden = [0];
+}
+
+function fn_calculateDetailTableHidden2(){
+	this.calculateDetailHidden = [0];
+}
+
+
+//table
+function fn_handsonGridCalOption(col, header, hidden){
+	var tableType = $("input:radio[name=calculateType]:checked").val();
+	var tableType2 = $("input:radio[name=calculate_srch1]:checked").val();
+
+	calculateSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 300,
+	  rowHeights : 25,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualColumnResize : true,
+	  manualRowMove : true,
+	  manualColumnMove : false,
+	  //dropdownMenu : true,
+
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+      autoColumnSize : {samplingRatio : 23},
+      mergeCells : false,
+      wordWrap : true,
+      afterOnCellMouseDown : function(event, coords){
+    	  var dataList = calculateHot.getSourceData(coords.row, 35);
+    	  var rptNo = dataList[dataList.length-1].rptNo;
+    	  var type = dataList[dataList.length-1].type;
+    	  var hawb = dataList[dataList.length-1].hawb;
+    	  //fn_searchDetailView(rptNo, type, hawb);
+    	  
+    	  fn_searchCalDetailView(rptNo, type, hawb);
+      }
+	};
+
+	return calculateSettings;
+}
+
+
+//table
+function fn_handsonGridCalDetailOption(col, header, hidden){
+	var tableType = $("input:radio[name=calculateType]:checked").val();
+	var tableType2 = $("input:radio[name=calculate_srch1]:checked").val();
+	
+	calculateDetailSettings = {
+			columns : col,
+			colHeaders : header,
+			hiddenColumns : {
+				copyPasteEnabled : false,
+				indicators : false,
+				columns : hidden
+			},
+			stretchH : 'all',
+			width : '100%',
+			autoWrapRow : true,
+			height : 300,
+			rowHeights : 25,
+			columnHeaderHeight : 25,
+			manualRowResize : true,
+			manualColumnResize : true,
+			manualRowMove : true,
+			manualColumnMove : false,
+			//dropdownMenu : true,
+			
+			contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+					filters : true,
+					readOnly : (tableType == "read") ? true : false,
+							allowInsertRow : true,
+							allowRemoveRow : true,
+							// columnSorting : {indicator : true},
+							autoColumnSize : {samplingRatio : 23},
+							mergeCells : false,
+							wordWrap : true,
+	};
+	
+	return calculateDetailSettings;
+}
+
+//table
+function fn_handsonGridCalDetailOption2(col, header, hidden){
+	var tableType = $("input:radio[name=calculateType]:checked").val();
+	var tableType2 = $("input:radio[name=calculate_srch1]:checked").val();
+	
+	calculateDetailSettings2 = {
+			columns : col,
+			colHeaders : header,
+			hiddenColumns : {
+				copyPasteEnabled : false,
+				indicators : false,
+				columns : hidden
+			},
+			stretchH : 'all',
+			width : '100%',
+			autoWrapRow : true,
+			height : 300,
+			rowHeights : 25,
+			columnHeaderHeight : 25,
+			manualRowResize : true,
+			manualColumnResize : true,
+			manualRowMove : true,
+			manualColumnMove : false,
+			//dropdownMenu : true,
+			
+			contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+					filters : true,
+					readOnly : (tableType == "read") ? true : false,
+							allowInsertRow : true,
+							allowRemoveRow : true,
+							// columnSorting : {indicator : true},
+							autoColumnSize : {samplingRatio : 23},
+							mergeCells : false,
+							wordWrap : true,
+	};
+	
+	return calculateDetailSettings2;
+}
+
+
+//검색 그리드
+function fn_searchGridPurchOption(type){
+	if(type){
+		$("#calculateEnrol").show();
+		$("#calculate_div1").show();
+		$("#calculate_div2").show();
+		$("#calculate_div3").hide();
+		$("#calculate_div4").hide();
+		$("#calculate_div5").show();
+		$("#calculate_div6").show();
+		$("#calculate_div7").show();
+		$("#calculate_div8").show();
+		$("#calculate_div12").hide();
+		$("#calculateInfo1").hide();
+		$("#calculateInfo2").hide();
+		$("#docBtn").show();
+	}else{
+		$("#calculateEnrol").hide();
+		$("#calculate_div1").show();
+		$("#calculate_div2").hide();
+		$("#calculate_div3").show();
+		$("#calculate_div4").show();
+		$("#calculate_div5").hide();
+		$("#calculate_div12").hide();
+		$("#calculate_div6").show();
+		$("#calculate_div7").hide();
+		$("#calculate_div8").show();
+		$("#calculateInfo1").show();
+		$("#calculateInfo2").show();
+		$("#docBtn").hide();
+	}
+}
+
+function fn_searchGridPurchOption2(){
+	
+		$("#calculateEnrol").show();
+		$("#calculate_div1").show();
+		$("#calculate_div12").show();
+		$("#calculate_div2").hide();
+		$("#calculate_div3").hide();
+		$("#calculate_div4").hide();
+		$("#calculate_div5").hide();
+		$("#calculate_div6").hide();
+		$("#calculate_div7").hide();
+		$("#calculate_div8").hide();
+		$("#calculateInfo1").hide();
+		$("#calculateInfo2").hide();
+		$("#docBtn").hide();		
+}
+
+//테이블 타입 변경
+function fn_changeCalculView(type){
+
+	var searchTp = $("input:radio[name=calculate_srch1]:checked").val();
+
+	if(type == "edit"){
+			$("#btnCalculViewSave").show();
+			$("#expExcel").hide();
+			$("#docBtn").children().hide();
+			fn_changeCalculViewType(searchTp);
+	}else if(type == "enrol"){
+			$("#btnCalculViewSave").show();
+			$("#expExcel").hide();
+			$("#docBtn").children().hide();
+			fn_changeCalculViewType(searchTp);
+	}else{
+		calculateHot.updateSettings({readOnly:true, contextMenu : false});
+		$("#btnCalculViewSave").hide();
+		$("#expExcel").show();
+		$("#docBtn").children().show();
+		fn_changeCalculViewType(searchTp);
+	}
+	
+	calculateHot.render();
+	/*console.log('22222');
+	calculateHot.updateSettings({
+		afterUpdateSettings: function() {
+			console.log('11111');
+		    document.getElementById('id_checkAll').onclick = checkAll;
+		  }
+	});*/
+};
+
+//검색구분 변경
+function fn_changeCalculViewType(type){
+	let calculateCol = new fn_calculateTableCol();
+	let calculateHeader = new fn_calculateTableHeader();
+	let calculateHidden = new fn_calculateTableHidden();
+	
+	let calculateDetailCol = new fn_calculateDetailTableCol();
+	let calculateDetailHeader = new fn_calculateDetailTableHeader();
+	let calculateDetailHidden = new fn_calculateDetailTableHidden();
+	
+	let calculateDetailCol2 = new fn_calculateDetailTableCol2();
+	let calculateDetailHeader2 = new fn_calculateDetailTableHeader2();
+	let calculateDetailHidden2 = new fn_calculateDetailTableHidden2();
+	
+	var col, header, hidden, col2, header2, hidden2, col3, header3, hidden3 ;
+
+	//$('#alignImportView option:eq(0)').prop('selected', true);
+
+	//구매원장
+	fn_searchGridPurchOption(true);
+	col = calculateCol.calculateCol;
+	header = calculateHeader.calculateHeader;
+	hidden = calculateHidden.calculateHidden;
+	//searchHeader = documentSearchHeader.documentSearchHeader;
+	col2 = calculateDetailCol.calculateDetailCol;
+	header2 = calculateDetailHeader.calculateDetailHeader;
+	hidden2 = calculateDetailHidden.calculateDetailHidden;
+	
+	col3 = calculateDetailCol2.calculateDetailCol;
+	header3 = calculateDetailHeader2.calculateDetailHeader;
+	hidden3 = calculateDetailHidden2.calculateDetailHidden;
+	
+	calculateHot.updateSettings(fn_handsonGridCalOption(col, header, hidden));
+	calculateDetailHot.updateSettings(fn_handsonGridCalDetailOption(col2, header2, hidden2));
+	calculateDetailHot2.updateSettings(fn_handsonGridCalDetailOption2(col3, header3, hidden3));
+
+	calculateHot.render();
+	fn_searchCalView();
+};
+	
+
+
+// 드롭다운 
+excelFile = document.getElementById('excelUploadFile');
+
+// 파일이 추가되었을 때 이벤트 처리
+excelFile.addEventListener('change', (event) => {
+	event.preventDefault(); 
+	
+	colCount = 0;
+	
+    	var file = event.target.files[0];
+        var reader = new FileReader();
+
+        reader.onload = function(event) {
+            var data = event.target.result;
+            var workbook = XLSX.read(data, { type: 'binary' });
+
+            // 첫 번째 시트 가져오기
+            var sheetName = workbook.SheetNames[0];
+            var sheet = workbook.Sheets[sheetName];
+
+            // 병합된 셀 정보 가져오기
+            var merges = sheet['!merges'];
+
+            // 데이터를 담을 배열 초기화
+            var rowData = [];
+            var rowData2 = [];
+
+            // 헤더 행 처리
+            var optionValues = [];
+
+            // 헤더 행 처리
+            var headerRow = [];
+            // 첫 번째 열에 대한 select 태그 생성
+            var selectTag = ''; // selectTag 변수를 이동하고 초기화
+            var optionTag = '';
+            
+            $("select[name=cmmn_code] option").each(function() {
+                // option 태그의 값을 가져옴
+                var value = $(this).val();
+                var text = $(this).text();
+                
+                optionTag += '<option value="' + value + '">' + text + '</option>';
+                optionValues.push({"value" : value, "text":text});
+            });
+            $("select[name=calcul_code] option").each(function() {
+                // option 태그의 값을 가져옴
+                var value = $(this).val();
+                var text = $(this).text();
+                if(value != ""){
+                	optionTag += '<option value="' + value + '">' + text + '</option>';
+                	optionValues.push({"value" : value, "text":text});
+                }
+            });
+            
+            var headerRowEmpty = true;
+            var headerRowIndex = 0;
+            
+            
+            
+            for (var cellAddress in sheet) {
+                if (cellAddress[0] === '!') continue; // 시트 메타 정보 건너뛰기
+
+                var cell = sheet[cellAddress];
+                var cellRef = XLSX.utils.decode_cell(cellAddress);
+
+                // 헤더 행이 비어 있지 않으면 플래그를 false로 설정하고 루프 종료
+                if (cell && cellRef.r === headerRowIndex) { 
+                    headerRowEmpty = false;
+                    break;
+                }
+            }
+            
+         // 헤더 행이 비어 있을 때 다음 행을 헤더로 처리
+            if (headerRowEmpty) {
+                headerRowIndex++; // 다음 행으로 이동
+            }
+
+            for (var cellAddress in sheet) {
+                if (cellAddress[0] === '!') continue; // 시트 메타 정보 건너뛰기
+
+                var cell = sheet[cellAddress];
+                var cellRef = XLSX.utils.decode_cell(cellAddress);
+
+                // 열 인덱스가 0부터 시작하므로 헤더 행의 데이터만 처리
+                if (cell && cellRef.r === headerRowIndex) { 
+                    // 병합된 셀 처리
+                    if (merges) {
+                        var mergedCell = merges.find(function(merge) {
+                            return merge.s.r <= cellRef.r && merge.e.r >= cellRef.r && merge.s.c <= cellRef.c && merge.e.c >= cellRef.c;
+                        });
+                        
+                        if (mergedCell) {
+                            // 병합된 셀의 범위를 헤더에 추가
+                            for (var col = mergedCell.s.c; col <= mergedCell.e.c; col++) {
+                                selectTag = '<select id="calData' +(col+1)+'" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1">';
+                                selectTag += optionTag;
+                                selectTag += '</select>';
+                                headerRow.push(selectTag); // 첫 번째 열의 select 태그를 모든 열에 복사
+                            }
+                        }
+                    } else {
+                        selectTag = '<select id="calData' +(col+1)+'" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1">';
+                        selectTag += optionTag;
+                        selectTag += '</select>';
+                        headerRow.push(selectTag); // 첫 번째 열의 select 태그를 모든 열에 복사
+                    }
+                }
+            }
+            
+            
+            function findCalCode(text, callBackList) {
+                for (var i = 0; i < callBackList.length; i++) {
+                    if (callBackList[i].calCodeNm === text) {
+                        return callBackList[i].calCode;
+                    }
+                }
+                return null; // 찾지 못한 경우 null 반환
+            }
+            
+            var startRowFound = false; // 시작 행을 찾았는지 여부를 나타내는 플래그
+            var calCode2Array = []; 
+            for (var rowIndex = 0; rowIndex <= XLSX.utils.decode_range(sheet['!ref']).e.r; rowIndex++) {
+                var row = [];
+                var rowFalse = [];
+                for (var colIndex = 0; colIndex < headerRow.length; colIndex++) {
+                    var cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
+                    var cell = sheet[cellAddress];
+                    
+                    // 셀 데이터 추출
+                    var cellData = null;
+                    if (cell && cell.t === 'n') { // 숫자 형식인 경우
+                        cellData = cell.w; // cell.w를 사용하여 값을 가져옴
+                        rowFalse.push(cell.w);
+                    } else if (cell && cell.t === 's') { // 문자열 형식인 경우
+                        cellData = cell.v; // cell.v를 사용하여 값을 가져옴
+                        rowFalse.push(cell.v);
+                    } else {
+                    	rowFalse.push(null);
+                    }
+                    
+                    
+                    
+                    if (!startRowFound) { // 시작 행을 아직 찾지 못한 경우
+                        // 읽어온 텍스트와 callBackList의 calCodeNm을 비교하여 일치하는 calCode를 찾음
+                        var calCode = findCalCode(cellData, callBackList);
+                        if (calCode) { // 일치하는 행을 찾은 경우
+                        	
+                            startRowFound = true; // 시작 행을 찾았음을 표시
+                        }
+                    }
+
+                    if (startRowFound) { // 시작 행을 찾은 경우
+                    	for (var colIndex = 0; colIndex < headerRow.length; colIndex++) {
+                            var cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
+                            var cell = sheet[cellAddress];
+                            
+                            // 셀 데이터 추출
+                            var cellData = null;
+                            if (cell && cell.t === 'n') { // 숫자 형식인 경우
+                                cellData = cell.w; // cell.w를 사용하여 값을 가져옴
+                            } else if (cell && cell.t === 's') { // 문자열 형식인 경우
+                                cellData = cell.v; // cell.v를 사용하여 값을 가져옴
+                            }
+                            
+                            var calCode2 = findCalCode(cellData, callBackList);
+                            if(calCode2){
+                            	 calCode2Array.push({"calCode" : calCode2, "Index" : colIndex});
+                            }
+                            
+                            row.push(cellData);
+                        }
+                    } 
+                }
+                
+                if (startRowFound) { // 시작 행을 찾은 경우에만 rowData에 추가
+                    rowData.push(row);
+                } else {
+                	rowData2.push(rowFalse);
+                }
+            }
+            
+            headerRow.forEach(function(header, colIndex) {
+                if (colIndex > 0 && colIndex < headerRow.length) { // 첫 번째 열은 헤더가 아님
+                    var calCodeIndex = colIndex - 1; // calCode2Array의 인덱스를 계산
+                    var calCodeInfo = calCode2Array[calCodeIndex]; /// calCode2Array의 인덱스는 colIndex보다 1 작음
+                    if (calCodeInfo) {
+                    	var selectTag = '<select id="calData' + (calCodeInfo.Index+1) + '" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1">';
+                        optionValues.forEach(function(optionValue) {
+                            // 옵션 값이 현재 calCodeInfo의 calCode와 일치하는지 확인하여 선택 여부를 지정
+                            var selected = optionValue.value === calCodeInfo.calCode ? ' selected' : '';
+                            selectTag += '<option value="' + optionValue.value + '"' + selected + '>' + optionValue.text + '</option>';
+                            if (optionValue.value === calCodeInfo.calCode) {
+                                selectedList['calData' + (calCodeInfo.Index+1)] = optionValue.value;
+                            }
+                        });
+                        selectTag += '</select>';
+                        headerRow[calCodeInfo.Index] = selectTag;
+                    }
+                }
+            });
+            // Handsontable 구성
+            var hotElement = document.getElementById('excelUploadPopUpTable');
+            var hotSettings = {
+            			data: startRowFound ? rowData : rowData2,
+            			colHeaders: headerRow,
+            			stretchH: 'all',
+            			width: '100%',
+            			contextMenu : ['undo', 'redo', 'remove_row', 'remove_col']
+            	// 필요한 경우 더 많은 옵션 추가 가능
+            	}
+
+            // Handsontable 초기화
+            excelUploadHot = new Handsontable(hotElement, hotSettings);
+            
+            excelUploadHot.addHook('beforeRemoveCol', function(index, amount, physicalColumns, source) {
+                selectedList = {};
+            });
+            
+           /* excelUploadHot.addHook('beforeRemoveRow', function(index, amount, physicalColumns, source) {
+                selectedList = {};
+                headerRow.forEach(function(header, colIndex) {
+                    if (colIndex > 0 && colIndex < headerRow.length) { // 첫 번째 열은 헤더가 아님
+                        var selectTag = '<select id="calData' + colIndex + '" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1">';
+                        var calCodeIndex = colIndex - 1; // calCode2Array의 인덱스를 계산
+                        var calCodeInfo = calCode2Array.find(info => info.Index === calCodeIndex);
+                        if (calCodeInfo) {
+                            optionValues.forEach(function(optionValue) {
+                                var selected = optionValue.value === calCodeInfo.calCode ? ' selected' : '';
+                                selectTag += '<option value="' + optionValue.value + '"' + selected + '>' + optionValue.text + '</option>';
+                                if (optionValue.value === calCodeInfo.calCode) {
+                                    selectedList['calData' + colIndex] = optionValue.value;
+                                }
+                            });
+                            selectTag += '</select>';
+                            headerRow[colIndex] = selectTag;
+                        } else {
+                            optionValues.forEach(function(optionValue) {
+                                var selected = optionValue.value === "" ? ' selected' : '';
+                                selectTag += '<option value="' + optionValue.value + '"' + selected + '>' + optionValue.text + '</option>';
+                            });
+                            selectTag += '</select>';
+                            headerRow[colIndex] = selectTag;
+                        }
+                    }
+                });
+            });
+*/
+            excelUploadHot.addHook('afterRemoveCol', function(index, amount, physicalColumns, source) {
+                selectedList = {};
+                // calCode2Array에서 삭제된 열의 인덱스를 조정
+                calCode2Array.forEach(function(item) {
+                    if (item.Index >= index) {
+                        item.Index -= amount;
+                    }
+                });
+
+                // headerRow에서 삭제된 인덱스에 해당하는 부분 제거
+                headerRow.splice(index, amount);
+
+                // headerRow 및 calCode2Array를 사용하여 select 태그 업데이트
+                headerRow.forEach(function(header, colIndex) {
+                    if (colIndex < headerRow.length) { // 첫 번째 열도 헤더로 간주
+                        var selectTag = '<select id="calData' + (colIndex + 1) + '" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1">';
+                        var calCodeIndex = colIndex; // calCode2Array의 인덱스를 계산
+                        var calCodeInfo = calCode2Array.find(info => info.Index === calCodeIndex);
+                        if (calCodeInfo) {
+                            optionValues.forEach(function(optionValue) {
+                                var selected = optionValue.value === calCodeInfo.calCode ? ' selected' : '';
+                                selectTag += '<option value="' + optionValue.value + '"' + selected + '>' + optionValue.text + '</option>';
+                                if (optionValue.value === calCodeInfo.calCode) {
+                                    selectedList['calData' + (colIndex + 1)] = optionValue.value;
+                                }
+                            });
+                            selectTag += '</select>';
+                            headerRow[colIndex] = selectTag;
+                        } else {
+                            optionValues.forEach(function(optionValue) {
+                                var selected = optionValue.value === "" ? ' selected' : '';
+                                selectTag += '<option value="' + optionValue.value + '"' + selected + '>' + optionValue.text + '</option>';
+                            });
+                            selectTag += '</select>';
+                            headerRow[colIndex] = selectTag;
+                        }
+                    }
+                });
+
+                reinitializeHandsontable();
+            });
+            
+            function reinitializeHandsontable() {
+            	var newData = excelUploadHot.getData();
+                excelUploadHot.updateSettings({
+                	 data: newData,
+                    colHeaders: headerRow,
+                    stretchH: 'all',
+                    width: '100%',
+                    contextMenu : ['undo', 'redo', 'remove_row', 'remove_col']
+                    // 필요한 경우 더 많은 옵션 추가 가능
+                })
+            }
+        };
+
+        reader.onerror = function(event) {
+            console.error("File could not be read! Code " + event.target.error.code);
+        };
+
+        reader.readAsBinaryString(file);
+	
+});
+
+
+
+excelFile.addEventListener('dragover', (event) => {
+	event.preventDefault(); 
+	
+});
+  
+excelFile.addEventListener('drop', (event) => {
+	event.preventDefault(); 
+	
+});
+
+$(document).on('change', 'select[id^="calData"]', function() {
+    var id = $(this).attr('id').replace('calData', ''); // 해당 select 요소의 숫자를 가져옴
+    var selectedValue = $(this).val(); // 선택된 값
+	selectedList['calData' + id] = selectedValue;
+	console.log(selectedList);
+});
+
+
+document.querySelector('.excel-upload-button').addEventListener('click', function() {
+	
+	if($("select[name=partn_cmpny] option:selected").val() == ""){
+		alert('업체를 선택해주세요.');
+		return;
+	}
+	
+	fn_searchCalCodeList();
+    document.getElementById('excelUploadFile').click(); // 파일 입력 요소 클릭
+});
+
+document.querySelector('.excel-save-button').addEventListener('click', function() {
+	
+	
+	
+	
+	var length = Object.keys(selectedList).reduce(function (acc, key) {
+	    if (selectedList[key] !== undefined && selectedList[key] !== null && selectedList[key] !== '') {
+	        return acc + 1;
+	    } else {
+	        return acc;
+	    }
+	}, 0);
+	
+	var data = excelUploadHot.getSourceData();
+	var columnCount = data[0].length;
+	
+	console.log("columnCount " , columnCount);
+	console.log("length " , length);
+	
+	/*
+	if(length != columnCount){
+		alert('Header Option 선택 에러');
+		return;
+	}
+	*/
+	var rowsWithAllNullValues = [];
+	for (var i = 0; i < data.length; i++) {
+	    var allNull = true;
+	    for (var j = 0; j < data[i].length; j++) {
+	        if (data[i][j] !== null) {
+	            allNull = false;
+	            break;
+	        }
+	    }
+	    if (allNull) {
+	        rowsWithAllNullValues.push(i);
+	    }
+	}
+	
+	if(rowsWithAllNullValues.length != 0 ){
+		alert('Empty Row 에러');
+	}
+	
+	
+	
+	console.log(data);
+	var calCode = [];
+	var partnType = $("select[name=partn_type] option:selected").val();
+	var partnCmpnyNm = $("select[name=partn_cmpny] option:selected").val();
+	
+	
+	var dbArray = [];
+
+	console.log(partnType);
+	console.log(partnCmpnyNm);
+	// data 배열을 반복하여 DB 배열에 추가
+	for (var i = 0; i < data.length; i++) {
+	    var dbObject = {};
+
+	    // selectedList의 값을 DB 배열에 추가
+	    Object.keys(selectedList).forEach(function (key) {
+	        dbObject[key] = selectedList[key];
+	    });
+
+	    // data의 값을 DB 배열에 추가
+	    for (var j = 0; j < data[i].length; j++) {
+	        dbObject['calDataDetail' + (j + 1)] = data[i][j];
+	    }
+
+	    dbObject['partnType'] = partnType;
+	    dbObject['partnCmpnyNm'] = partnCmpnyNm;
+	    dbArray.push(dbObject);
+	}
+
+	console.log(dbArray);
+
+	dbArray.forEach(dbObject => {
+	    // 새롭게 정의할 객체
+	    let newDbObject = {};
+	    let calDataIndex = 1;
+	    let calDataDetailIndex = 1;
+	    let calCodeIndex = 1;
+	    let calamtIndex = 1;
+
+	    // B/L No., Description, VAT 값을 설정하고 나머지 값을 순서대로 추가합니다
+	    Object.keys(dbObject).forEach(key => {
+	        if (key.startsWith('calData') && !key.startsWith('calDataDetail')) {
+	            let index = key.slice('calData'.length);
+	            let detailKey = 'calDataDetail' + index;
+
+	            if (dbObject[key] === 'B/L No.') {
+	                newDbObject['blNo'] = dbObject[detailKey];
+	            } else if (dbObject[key] === 'Description') {
+	                newDbObject['description'] = dbObject[detailKey];
+	            } else if (dbObject[key] === 'VAT') {
+	                newDbObject['vat'] = dbObject[detailKey];
+	            } else if (dbObject[key].startsWith('CMMN')) {
+	                newDbObject['calData' + calDataIndex] = dbObject[key];
+	                newDbObject['calDataDetail' + calDataDetailIndex] = dbObject[detailKey];
+	                calDataIndex++;
+	                calDataDetailIndex++;
+	            } else {
+	                newDbObject['calCode' + calCodeIndex] = dbObject[key];
+	                newDbObject['calAmt' + calamtIndex] = dbObject[detailKey];
+	                calCodeIndex++;
+	                calamtIndex++;
+	            }
+	        }
+	    });
+
+	    newDbObject['partnType'] = dbObject['partnType'];
+	    newDbObject['partnCmpnyNm'] = dbObject['partnCmpnyNm'];
+
+	    // 원래 객체를 새로 정의된 객체로 교체합니다
+	    Object.keys(dbObject).forEach(key => delete dbObject[key]);
+	    Object.keys(newDbObject).forEach(key => dbObject[key] = newDbObject[key]);
+	});
+
+	console.log(dbArray);
+
+	// DB 배열 출력
+	
+
+	
+	for (var key in selectedList) {
+	    if (selectedList.hasOwnProperty(key)) {
+	        var value = selectedList[key];
+	        var newObj = {
+	        	"calCode" : value,
+	        	"partnType" : partnType,
+	        	"partnCmpnyNm" : partnCmpnyNm
+	        };
+	        calCode.push(newObj);
+	    }
+	}
+	
+	
+	
+	var requestData = {
+		    dbArray: dbArray,
+		    calCode: calCode
+		};
+	
+	console.log(requestData);
+
+fn_loading(true);
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/saveCalExcel.do",
+		data : JSON.stringify(requestData),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		contentType: "application/json; charset=utf-8",
+        success : function(data) {
+        	alert('저장 되었습니다.');
+        	
+        	excelUploadClose();
+        	fn_searchCalView();
+        	fn_loading(false);
+        	
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSaveError);
+        	}
+        }
+	});
+	
+});
+
+
+function fn_excelUploadPopUp(){
+	excelUploadHot.loadData([]);
+	
+	$("#excelUploadPopUp").modal("show");
+	$("#cal1").hide();
+	$("#cal2").hide();
+	$("select[name=partn_type]").val("");
+	$("select[name=partn_cmpny]").val("");
+	$("select[name=calcul_code]").val("");
+	$("#partnCmpnyInsert").val("");
+	$("#calCodeInsert").val("");
+	
+};
+
+function excelUploadClose(){
+	$("#excelUploadPopUp").modal("hide");
+}
+
+
+function fn_handsonGridexcelUploadPopupOption() {
+	excelUploadPopupSettings = {
+			columns: [
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				""
+				],
+				stretchH: 'all',
+				width: '100%',
+				height: 500,
+				rowHeights: 25,
+				columnHeaderHeight: 25,
+				colHeaders: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J","K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"],
+				manualRowResize: true,
+				manualColumnResize: true,
+				manualRowMove: true,
+				manualColumnMove: false,
+				contextMenu: false,
+				dropdownMenu: false,
+				filters: true,
+				readOnly: false,
+				columnSorting: { indicator: true },
+				autoColumnSize: { samplingRatio: 23 },
+				mergeCells: false,
+				allowInsertRow: false
+	};
+	
+	return excelUploadPopupSettings;
+}
+
+
+$("select[name=partn_type]").change(function(){
+	fn_changePartnType();
+});
+
+$("select[name=partn_cmpny]").change(function(){
+	fn_changePartnCmpny();
+});
+
+function fn_changePartnType (){
+	document.getElementById("partnCmpnyBtn").style.display = 'block';
+	document.getElementById("calculCodeBtn").style.display = 'block';
+	
+	
+	document.getElementById("partnCmpnyBtn").style.display = 'block';
+	document.getElementById("partn_cmpny").style.display = 'block';
+	document.getElementById("partnCmpnyInsert").style.display = 'none';
+	document.getElementById("partnCmpnySaveBtn").style.display = 'none';
+	document.getElementById("partnCmpnyCancelBtn").style.display = 'none';
+	
+	document.getElementById("calculCodeBtn").style.display = 'block';
+	document.getElementById("calcul_code").style.display = 'block';
+	document.getElementById("calCodeInsert").style.display = 'none';
+	document.getElementById("calcodeSaveBtn").style.display = 'none';
+	document.getElementById("calcodeCancelBtn").style.display = 'none';
+	
+	
+	$("select[name=partn_cmpny]").val("");
+	$("select[name=calcul_code]").val("");
+	$("#partnCmpnyInsert").val("");
+	$("#calCodeInsert").val("");
+	
+	
+	var type = "";
+	
+	type = $("select[name=partn_type] option:selected").val();
+	if (type == ""){
+		$("#cal1").hide();
+		$("#cal2").hide();
+	} else {
+		$("#cal1").show();
+		if($("select[name=partn_cmpny]").val() == ""){
+			$("#cal2").hide();
+		}
+	}
+	
+	sData = {};
+	sData["srch1"] = type;
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/selectCalculPartnList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	
+    		$("select[name=partn_cmpny] option").remove();
+    		$("select[name=partn_cmpny]").append('<option value="">선택</option>');
+			for (var i = 0; i < data.resultList.length; i++) {
+				$("select[name=partn_cmpny]").append('<option value="'+data.resultList[i].partnCmpnyNm+'">'+data.resultList[i].partnCmpnyNm+'</option>');
+			}
+			
+			$("select[name=partn_cmpny]").val("");
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+	
+	
+};
+
+
+function fn_changePartnCmpny(){
+	
+	var type = "";
+	
+	type = $("select[name=partn_type] option:selected").val();
+	
+	sData = {};
+	sData["srch1"] = type;
+	sData["srch2"] = $("select[name=partn_cmpny] option:selected").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/selectCalculCodeList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	
+    		$("select[name=calcul_code] option").remove();
+    		$("select[name=calcul_code]").append('<option value="">선택</option>');
+    		$("select[name=calcul_code]").append('<option value="VAT">VAT</option>');
+			for (var i = 0; i < data.resultList.length; i++) {
+				$("select[name=calcul_code]").append('<option value="'+data.resultList[i].calCode+'">['+data.resultList[i].calCode + "] " + data.resultList[i].calCodeNm+'</option>');
+			}
+			
+			$("select[name=calcul_code]").val("");
+			
+			$("select[name=cmmn_code] option").remove();
+			$("select[name=cmmn_code]").append('<option value="">선택</option>');
+			$("select[name=cmmn_code]").append('<option value="B/L No.">B/L No.</option>');
+    		$("select[name=cmmn_code]").append('<option value="Description">Description</option>');
+			for (var i = 0; i < data.resultList2.length; i++) {
+				$("select[name=cmmn_code]").append('<option value="'+data.resultList2[i].calCode+'">['+data.resultList2[i].calCode + "] " + data.resultList2[i].calCodeNm+'</option>');
+			}
+			
+			$("select[name=cmmn_code]").val("");
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+	
+}
+
+
+$("select[name=partn_cmpny]").change(function(){
+	var type = $(this).val();
+	if (type == ""){
+		$("#cal2").hide();
+		document.getElementById("partnCmpnyBtn").style.display = 'block';
+		//document.getElementById("calculCodeBtn").style.display = 'block';
+	} else {
+		$("#cal2").show();
+		document.getElementById("partnCmpnyBtn").style.display = 'none';
+		//document.getElementById("calculCodeBtn").style.display = 'none';
+	}
+	
+});
+
+
+$("#partnCmpnyBtn").on('click', function(){
+	
+	document.getElementById("partnCmpnyBtn").style.display = 'none';
+	document.getElementById("partn_cmpny").style.display = 'none';
+	document.getElementById("partnCmpnyInsert").style.display = 'block';
+	document.getElementById("partnCmpnySaveBtn").style.display = 'block';
+	document.getElementById("partnCmpnyCancelBtn").style.display = 'block';
+	
+});
+
+$("#partnCmpnyCancelBtn").on('click', function(){
+	$("#partnCmpnyInsert").val("");
+	
+	document.getElementById("partnCmpnyBtn").style.display = 'block';
+	document.getElementById("partn_cmpny").style.display = 'block';
+	document.getElementById("partnCmpnyInsert").style.display = 'none';
+	document.getElementById("partnCmpnySaveBtn").style.display = 'none';
+	document.getElementById("partnCmpnyCancelBtn").style.display = 'none';
+	
+});
+
+
+$("#partnCmpnySaveBtn").on('click', function(){
+	
+	
+	console.log($("select[name=partn_type] option:selected").val());
+	console.log($("#partnCmpnyInsert").val());
+	
+	sData = {};
+	sData["srch1"] = $("select[name=partn_type] option:selected").val();
+	sData["srch2"] = $("#partnCmpnyInsert").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/partnCmpnySave.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	alert('저장 되었습니다.')
+        	fn_changePartnType();
+        	
+        	document.getElementById("partnCmpnyBtn").style.display = 'block';
+        	document.getElementById("partn_cmpny").style.display = 'block';
+        	document.getElementById("partnCmpnyInsert").style.display = 'none';
+        	document.getElementById("partnCmpnySaveBtn").style.display = 'none';
+        	document.getElementById("partnCmpnyCancelBtn").style.display = 'none';
+        	
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+	
+})
+
+
+
+$("#calculCodeBtn").on('click', function(){
+	
+	document.getElementById("calculCodeBtn").style.display = 'none';
+	document.getElementById("calcul_code").style.display = 'none';
+	document.getElementById("calCodeInsert").style.display = 'block';
+	document.getElementById("calcodeSaveBtn").style.display = 'block';
+	document.getElementById("calcodeCancelBtn").style.display = 'block';
+	
+});
+
+$("#calcodeCancelBtn").on('click', function(){
+	
+	$("#calCodeInsert").val("");
+	
+	document.getElementById("calculCodeBtn").style.display = 'block';
+	document.getElementById("calcul_code").style.display = 'block';
+	document.getElementById("calCodeInsert").style.display = 'none';
+	document.getElementById("calcodeSaveBtn").style.display = 'none';
+	document.getElementById("calcodeCancelBtn").style.display = 'none';
+	
+});
+
+
+$("#calcodeSaveBtn").on('click', function(){
+	
+	
+	console.log($("select[name=partn_type] option:selected").val());
+	console.log($("select[name=partn_cmpny] option:selected").val());
+	console.log($("#calCodeInsert").val());
+	var partnType = $("select[name=partn_type] option:selected").val();
+	var codeType = "";
+	
+	if(partnType == "01"){
+		codeType = "TAX";
+	} else if(partnType == "02"){
+		codeType = "CUS";
+	} else if(partnType == "03"){
+		codeType = "WARE";
+	} else {
+		codeType = "FOR";
+	}
+	
+	console.log(codeType);
+	
+	
+	sData = {};
+	sData["srch1"] = $("select[name=partn_type] option:selected").val();
+	sData["srch2"] = $("#calCodeInsert").val();
+	sData["srch3"] = codeType;
+	sData["srch4"] = $("select[name=partn_cmpny] option:selected").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/calCodeSave.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+			alert('저장 되었습니다.')
+			fn_changePartnCmpny();
+			
+			$("#calCodeInsert").val("");
+			
+			document.getElementById("calculCodeBtn").style.display = 'block';
+			document.getElementById("calcul_code").style.display = 'block';
+			document.getElementById("calCodeInsert").style.display = 'none';
+			document.getElementById("calcodeSaveBtn").style.display = 'none';
+			document.getElementById("calcodeCancelBtn").style.display = 'none';
+			
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("Your request is up. Please log back in if you wish continue");
+				location.href = document.referrer;
+			} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+	
+})
+
+
+function fn_searchCalCodeList(){
+	
+	var sData = {};
+	sData["srch1"] = $("select[name=partn_type] option:selected").val();
+	sData["srch2"] = $("select[name=partn_cmpny] option:selected").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/selectCalCodeList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+			console.log(data.resultList);
+			for (var i = 0; i < data.resultList.length; i++) {
+				callBackList.push(data.resultList[i]);
+			}
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("Your request is up. Please log back in if you wish continue");
+				location.href = document.referrer;
+			} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+	
+}
+
+
+
+$("#cmmnCodeBtn").on('click', function(){
+	
+	document.getElementById("cmmnCodeBtn").style.display = 'none';
+	document.getElementById("cmmn_code").style.display = 'none';
+	document.getElementById("cmmnCodeInsert").style.display = 'block';
+	document.getElementById("cmmnCodeSaveBtn").style.display = 'block';
+	document.getElementById("cmmnCodeCancelBtn").style.display = 'block';
+	
+});
+
+$("#cmmnCodeCancelBtn").on('click', function(){
+	
+	$("#cmmnCodeInsert").val("");
+	
+	document.getElementById("cmmnCodeBtn").style.display = 'block';
+	document.getElementById("cmmn_code").style.display = 'block';
+	document.getElementById("cmmnCodeInsert").style.display = 'none';
+	document.getElementById("cmmnCodeSaveBtn").style.display = 'none';
+	document.getElementById("cmmnCodeCancelBtn").style.display = 'none';
+	
+});
+
+
+$("#cmmnCodeSaveBtn").on('click', function(){
+	
+	
+	var partnType = $("select[name=partn_type] option:selected").val();
+	var codeType = "";
+	
+	codeType = "CMMN";
+	
+	
+	
+	sData = {};
+	sData["srch1"] = "00";
+	sData["srch2"] = $("#cmmnCodeInsert").val();
+	sData["srch3"] = codeType;
+	sData["srch4"] = $("select[name=partn_cmpny] option:selected").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/calCodeSave.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+			alert('저장 되었습니다.');
+			fn_changePartnCmpny();
+			
+			$("#cmmnCodeInsert").val("");
+			
+			document.getElementById("cmmnCodeBtn").style.display = 'block';
+			document.getElementById("cmmn_code").style.display = 'block';
+			document.getElementById("cmmnCodeInsert").style.display = 'none';
+			document.getElementById("cmmnCodeSaveBtn").style.display = 'none';
+			document.getElementById("cmmnCodeCancelBtn").style.display = 'none';
+			
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("Your request is up. Please log back in if you wish continue");
+				location.href = document.referrer;
+			} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+	
+})
+

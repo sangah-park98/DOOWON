@@ -1,0 +1,435 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="/WEB-INF/tiles/inc/taglib.jsp"%>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In</title>
+  <!-- 회원정보 -->
+<c:forEach var="userInfo" items="${userInfo}">
+	<c:set var="MEMBER_ID" value="${userInfo.MEMBER_ID}"/>
+	<c:set var="MEMBER_NAME" value="${userInfo.MEMBER_NAME}"/>
+	<c:set var="MEMBER_TEL" value="${userInfo.MEMBER_TEL}"/>
+	<c:set var="MEMBER_EMAIL" value="${userInfo.MEMBER_EMAIL}"/>
+	<c:set var="alarmEmail" value="${userInfo.alarmEmail}"/>
+	<c:set var="alarmSMS" value="${userInfo.alarmSMS}"/>
+	<c:set var="alarmKakao" value="${userInfo.alarmKakao}"/>
+	<c:set var="MEMBER_PASSWORD" value="${userInfo.MEMBER_PASSWORD}"/>
+</c:forEach>
+
+  <style type="text/css">
+  input[readonly] {
+    background-color: #D3D3D3; /* 진한 회색 */
+}
+  </style>
+  <script type="text/javascript">
+  var alarmEmail = '${alarmEmail}';
+  var alarmSMS = '${alarmSMS}';
+  var alarmKakao = '${alarmKakao}';
+  
+  if (alarmEmail === "Y") {
+      document.getElementById("alarmEmail").checked = true;
+  }
+  if (alarmSMS === "Y") {
+      document.getElementById("alarmSMS").checked = true;
+  }
+  if (alarmKakao === "Y") {
+      document.getElementById("alarmKakao").checked = true;
+  }
+  
+/*   document.getElementById("alarmSelect").addEventListener("click", function() {
+      var email = document.getElementById("alarmEmail");
+      var sms = document.getElementById("alarmSMS");
+      var kakao = document.getElementById("alarmKakao");
+
+      if (email.checked) {
+          email.value = "true";
+      } else {
+          email.value = "false";
+      }
+
+      if (sms.checked) {
+          sms.value = "true";
+      } else {
+          sms.value = "false";
+      }
+
+      if (kakao.checked) {
+          kakao.value = "true";
+      } else {
+          kakao.value = "false";
+      }
+
+      console.log("email: " + email.value);
+      console.log("sms: " + sms.value);
+      console.log("kakao: " + kakao.value);
+  }); */
+  </script>
+
+  
+  <script src="/pf/js/function.js"></script>
+  <script type="text/javascript" src="/pf/js/member/myPage.js"></script>
+</head>
+
+<body class="flex flex-col max-h-fit">
+  
+  <main class="p-2 grow flex flex-col gap-2">
+    <div class="w-full p-10 pt-6 bg-white rounded-xl
+    border
+    border-primary-300
+    shadow-2xl
+    duration-500
+    transition-all
+    max-w-[1000px]
+    mx-auto
+    ">
+    <form id="myPageFrm" name="myPageFrm" method="post" action="/member/myPageJoin.do" class="text-lg grid grid-cols-[1fr_2.4fr_1fr] gap-x-2 gap-y-1 items-center py-3">
+      <!-- Account Information -->
+       <input type="hidden" value="${MEMBER_PASSWORD}" name="MEMBER_CURRENTPWD" id="MEMBER_CURRENTPWD">
+      <h2 class="text-primary-800 pb-1 font-bold flex items-center gap-2 text-2xl px-2 col-span-3"><i class="fa-duotone fa-feather"></i>계정정보</h2>
+      <label for="account_id" class="text-primary-700 font-semibold px-2 text-left">아이디</label>
+      <div>
+        ${MEMBER_ID}
+      </div>
+      <!-- Blank -->
+      <p></p>
+      <!-- /Blank -->
+        <label for="user_email" class="text-primary-700 font-semibold px-2 text-left">현재 비밀번호</label>
+      <input
+        type="password"
+        id="MEMBER_PASSWORD"
+        name = "MEMBER_PASSWORD"
+        class="font-['Pretendard'] bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5 text-lg"
+        placeholder="현재비밀번호를 입력해주세요."
+      >
+      <button 
+	    type="button"
+	    class="block w-full py-1 px-2.5 font-semibold text-center text-white border border-secondary-700 bg-secondary-700 rounded-lg hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 dark:bg-secondary-600 dark:hover:bg-secondary-700 dark:focus:ring-secondary-800 leading-6"
+	    onclick="passChk()"
+	  >비밀번호 변경</button>
+      <label for="account_password" class="text-primary-700 font-semibold px-2 text-left">새 비밀번호</label>
+      <input
+        type="password"
+        id="MEMBER_PASS"
+        onkeyup="memberPassChk('pw')"
+        name = "MEMBER_PASS"
+        readonly
+        class="font-['Pretendard'] bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5 text-lg"
+        placeholder="새로운 비밀번호를 입력해주세요."
+      >
+       <p class="block text-green-500 text-2xl" id="passwordIndicator">
+       <!-- <i class="fa-duotone fa-check bg-primary-200 rounded-full flex items-center justify-center p-1"></i></p> -->
+      <p class="passCheck1 text-primary-500 pb-1 flex items-center gap-2 text-1 px-2 col-span-3" style="color:red;">
+                  ● 비밀번호(대문자, 소문자, 특수기호, 숫자 포함, 5~20자리)를 입력해주세요</p>
+	  <label for="account_password" class="text-primary-700 font-semibold px-2 text-left">비밀번호 확인</label>
+      <input
+        type="password"
+        name="MEMBER_PASS_CHK"
+        id="MEMBER_PASS_CHK"
+        onkeyup="memberPassChk('pw_re')"
+        readonly
+        class="font-['Pretendard'] bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5 text-lg"
+        placeholder="비밀번호를 한번 더 입력해주세요."
+      >
+	
+      <!-- Checking Password indicator -->
+      <p class="block text-green-500 text-2xl" id="passwordIndicator">
+      <p class="passCheck2 text-primary-500 pb-1 flex items-center gap-2 text-1 px-2 col-span-3" style="color:red;">
+● 비밀번호를 획인해주세요</p>
+      <!-- Checking Password indicator -->
+     
+      <!-- <p class="text-sm text-red-700 px-2">비밀번호를 확인해주세요</p> -->
+      <!-- line -->
+      <div class="col-span-3 my-3 h-[1px] bg-gray-200 mx-10"></div>
+      <h2 class="text-primary-800 pt-4 pb-1 font-bold flex items-center gap-2 text-2xl px-2 col-span-3"><i class="fa-duotone fa-user"></i>개인정보</h2>
+      <label for="user_name" class="text-primary-700 font-semibold px-2 text-left">이름</label>
+      <input
+        type="text"
+        name="MEMBER_NAME" 
+        id="MEMBER_NAME"
+        value="${MEMBER_NAME}" 
+        class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5 text-lg"
+        placeholder="이름을 입력해주세요."
+      >
+      <!-- Blank -->
+      <p></p>
+      <!-- /Blank -->
+      <label for="user_mobile" class="text-primary-700 font-semibold px-2 text-left">전화번호</label>
+      <input
+        type="text"
+        name="MEMBER_TEL" 
+        id="MEMBER_TEL"
+        value="${MEMBER_TEL}"
+        oninput="removeHyphen(event)"
+        class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5 text-lg"
+        placeholder="전화번호를 입력해주세요."
+      >
+      <!-- Blank -->
+      <p></p>
+      <!-- /Blank -->
+	<label for="user_email" class="text-primary-700 font-semibold px-2 text-left">이메일</label>
+      <input
+        type="text"
+        id="MEMBER_EMAIL"
+        name = "MEMBER_EMAIL"
+        value="${MEMBER_EMAIL}"
+        readonly 
+        class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5 text-lg"
+        placeholder="이메일을 입력해주세요."
+      >
+      <button 
+	    type="button"
+	    id="emailButton" 
+	    class="block w-full py-1 px-2.5 font-semibold text-center text-white border border-secondary-700 bg-secondary-700 rounded-lg hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 dark:bg-secondary-600 dark:hover:bg-secondary-700 dark:focus:ring-secondary-800 leading-6"
+	    onclick="toggleButton()"
+	  >이메일 수정</button>
+      <label for="user_email_check" class="text-primary-700 font-semibold px-2 text-left">인증번호 입력</label>
+      <input
+        type="text"
+        name="CERT_NUM" 
+        id="CERT_NUM"
+        class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5 text-lg"
+        placeholder="인증번호를 입력해주세요."
+      >
+      <input type="hidden" id="CERT_CHECK" name="CERT_CHECK" value="N"/>
+      <button 
+        type="button"
+        onclick="certNumberConfirm()"
+        class="block w-full py-1 px-2.5 font-semibold text-center text-white border border-gray-300 bg-gray-300 rounded-lg hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 dark:bg-secondary-600 dark:hover:bg-secondary-700 dark:focus:ring-secondary-800 leading-6"
+      >인증하기</button>
+      <p class="timer text-primary-500 pb-1 flex items-center gap-2 text-1 px-2 col-span-3" style="color:#55A5B7;"></p>
+      <h2 class="text-primary-700 font-semibold px-2 text-left">수리 알림 방식</h2>
+      <div id="alarmSelect"class="col-span-2 flex items-center gap-4">
+        <div class="flex items-center py-2">
+          <input id="alarmEmail" name="alarmEmail" type="checkbox" value="true" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+          <label for="alarmEmail" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">이메일</label>
+        </div>
+        <div class="flex items-center py-2">
+          <input id="alarmKakao" name="alarmKakao" type="checkbox" value="true" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+          <label for="alarmKakao" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">카카오톡</label>
+        </div>
+        <div class="flex items-center py-2">
+          <input id="alarmSMS" name="alarmSMS" type="checkbox" value="true" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+          <label for="alarmSMS" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">문자</label>
+        </div>
+      </div>
+      <!-- active -->
+      <!-- <button 
+        type="button"
+        class="block w-full py-1 px-2.5 font-semibold text-center text-white border border-primary-700 bg-primary-700 rounded-lg hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 dark:bg-secondary-600 dark:hover:bg-secondary-700 dark:focus:ring-secondary-800 leading-6"
+      >인증하기</button> -->
+      <!-- line -->
+      <div class="col-span-3 my-3 h-[1px] bg-gray-200 mx-10"></div>
+      <h2 class="text-primary-800 pt-4 pb-1 font-bold flex items-center gap-2 text-2xl px-2 col-span-3"><i class="fa-duotone fa-building"></i>업체정보</h2>
+      <!-- 사업자 1세트 -->
+     <!--  <label for="company_name" class="text-primary-700 font-semibold px-2 text-left">사업자 명</label>
+      <input
+        type="text"
+        id="company_name"
+        class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5 text-lg"
+        placeholder="사업자 명을 입력해주세요."
+      >
+      Blank
+      <p></p>
+      /Blank
+      <label for="company_number" class="text-primary-700 font-semibold px-2 text-left">사업자 번호</label>
+      <input
+        type="text"
+        id="company_number"
+        class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5 text-lg"
+        placeholder="사업자 번호를 입력해주세요." 
+      >-->
+      <div class="col-span-3 my-3 h-[1px] bg-gray-100 mx-20"></div>
+      <!-- /사업자 1세트 -->
+      <!-- line -->
+      <div id="companySet1" class="companySets-container col-span-3 pt-2">
+      </div>
+      <div class="col-span-3 flex justify-center">
+        <button 
+          onclick="addRow()"
+          type="button"
+          class="py-1 px-8 font-semibold text-center text-white border border-red-500 bg-red-500 rounded-lg hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 dark:bg-secondary-600 dark:hover:bg-secondary-700 dark:focus:ring-secondary-800 leading-6"
+        >추  가</button>
+        </div>
+         <!-- Blank -->
+      <p></p>
+      <button 
+        type="button"
+        onclick="myPageDataConfirm()"
+        class="col-span-3 block w-full px-5 py-3 text-xl font-semibold text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+      >
+        저  장
+      </button>
+    </form>
+  </div>
+  </main>
+	  <div class="modal fade fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center duration-300" id="searchCmpnyInfoPopUp"
+			tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+			aria-hidden="true" style="display: none; ">
+	 <div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+		<div class="modal-dialog modal-xl" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width:800px;" >
+			<div class="modal-content bg-white shadow-lg relative rounded min-w-80 overflow-hidden">
+				<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center justify-between">
+					<h4 class="modal-title">
+						<span>회사 검색</span>
+					</h4>
+					<button type="button" onclick="cmpnySearchPopupClose()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+					</div>
+					<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center justify-between">
+						<div class="p-3" style="width: 300px;" align="center">
+			                <label for="currency-group-search" class="sr-only">Search</label>
+			                <div class="relative">
+			                  <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+			                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+			                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+			                    </svg>
+			                  </div>
+			                  <input type="text" id="cmpnySrch1" onkeyUp="enterKeyPopUp();" class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+			                </div>
+	              		</div>
+					</div>
+					<div class="modal-body">
+						<div id="cmpnyPopupListTable" class="grow bg-white shadow-sm h-full max-h-[100rem] rounded-lg border border-slate-200 z-0"></div>
+				    </div> 
+		    </div>
+	   </div>
+  </div>  
+</body>
+<footer class="w-full
+    mx-auto flex justify-between justify-self-end items-center
+    shrink-0 bg-primary-900 text-gray-200 px-6 py-2 gap-4">
+
+    <span>KORD Systems Inc.</span>
+    <span class="mr-auto">Copyright KORD Systems Inc. All rights reserved.</span>
+
+    <a href="mailto:kord@kordsystems.com">
+      <i class="fa-regular fa-envelopes"></i>
+      kord@kordsystems.com
+    </a>
+    <p>
+      <i class="fa-regular fa-phone-volume"></i>
+      +82-2-2038-8299
+    </p>
+
+    <a href="#" class="hover:underline">시스템소개</a>
+    <a href="#" class="hover:underline">사용자매뉴얼</a>
+    <!-- Start -->
+    <div class="relative inline-flex" x-data="{ open: false, selected: 0 }">
+      <button
+          class="btn justify-between min-w-40 bg-white/30 dark:bg-slate-800 border-slate-200 hover:border-slate-300 text-white hover:text-slate-200 py-1"
+          aria-label="Select date range"
+          aria-haspopup="true"
+          @click.prevent="open = !open"
+          :aria-expanded="open"
+      >
+                  <span class="flex items-center">
+                      <span x-text="$refs.options.children[selected].children[1].innerHTML"></span>
+                  </span>
+        <svg class="shrink-0 ml-1 fill-current text-slate-400" width="11" height="7" viewBox="0 0 11 7">
+          <path d="M5.4 6.8L0 1.4 1.4 0l4 4 4-4 1.4 1.4z"/>
+        </svg>
+      </button>
+      <div
+          class="z-10 absolute bottom-full left-0 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-1.5 rounded shadow-lg overflow-hidden mt-1"
+          @click.outside="open = false"
+          @keydown.escape.window="open = false"
+          x-show="open"
+          x-transition:enter="transition ease-out duration-100 transform"
+          x-transition:enter-start="opacity-0 -translate-y-2"
+          x-transition:enter-end="opacity-100 translate-y-0"
+          x-transition:leave="transition ease-out duration-100"
+          x-transition:leave-start="opacity-100"
+          x-transition:leave-end="opacity-0"
+          x-cloak
+      >
+        <div class="font-medium text-sm text-slate-600 dark:text-slate-300" x-ref="options">
+
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 0 && 'text-primary-900'"
+              @click="selected = 0;open = false"
+              @focus="open = true"
+              @focusout="open = false"
+          >
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 0 && 'invisible'"
+                 width="12" height="9" viewBox="0 0 12 9">
+              <path
+                  d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>참고사이트</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 1 && 'text-primary-900'"
+              @click="selected = 1;open = false"
+              @focus="open = true"
+              @focusout="open = false"
+          >
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 1 && 'invisible'"
+                 width="12" height="9" viewBox="0 0 12 9">
+              <path
+                  d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>유니패스</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 2 && 'text-primary-900'"
+              @click="selected = 2;open = false"
+              @focus="open = true"
+              @focusout="open = false"
+          >
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 2 && 'invisible'"
+                 width="12" height="9" viewBox="0 0 12 9">
+              <path
+                  d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>관세법령정보포털</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 3 && 'text-primary-900'"
+              @click="selected = 3;open = false"
+              @focus="open = true"
+              @focusout="open = false"
+          >
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 3 && 'invisible'"
+                 width="12" height="9" viewBox="0 0 12 9">
+              <path
+                  d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>FTA 포털</span>
+          </button>
+          <button
+              tabindex="0"
+              class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+              :class="selected === 4 && 'text-primary-900'"
+              @click="selected = 4;open = false"
+              @focus="open = true"
+              @focusout="open = false"
+          >
+            <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 4 && 'invisible'"
+                 width="12" height="9" viewBox="0 0 12 9">
+              <path
+                  d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+            </svg>
+            <span>트레이드테비</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- End -->
+	<script>
+    $(".portal-renderer").slideUp(0)
+    $("#portal-rendering-button").on("click", function () {
+      $(".portal-renderer").slideToggle(200)
+      $(this).children(".fa-chevron-down").toggleClass("rotate-180")
+    });
+  </script>
+  </footer>
+</html>

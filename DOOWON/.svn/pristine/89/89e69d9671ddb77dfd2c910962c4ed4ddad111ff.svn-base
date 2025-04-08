@@ -1,0 +1,1405 @@
+var cusImpViewHot;
+var cusImpViewSettings;
+var cusImpViewPopupSettings;
+var cusImpViewIndex = 9999;
+var cusImpViewScrollTp = true;
+var cusImpViewLanHot;
+var cusImpViewLanSettings;
+var cusImpViewLanIndex = 9999;
+var cusImpViewLanScrollTp = true;
+var cusImpViewSpecHot;
+var cusImpViewSpecSettings;
+var cusImpViewSpecIndex = 9999;
+var cusImpViewSpecScrollTp = true;
+var cusImpViewData = {};
+
+var numberValidator = function (value, callback) {
+	var tmpStr='';
+	var valueStr = (''+value).replace(/\s/g, '');
+	for(var i = 0 ; i<valueStr.length; i++){
+		tmpStr =valueStr.substring(i, i+1);
+		if(    tmpStr == '0' || tmpStr == '1' || tmpStr == '2'
+                        || tmpStr == '3' || tmpStr == '4' || tmpStr == '5'
+                        || tmpStr == '6' || tmpStr == '7' || tmpStr == '8'
+                        || tmpStr == '9' || tmpStr == ',' || tmpStr == '.'){
+
+		}else{
+			callback(false);
+			break;
+		}
+		callback(true);
+	}
+
+};
+
+$( document ).ready(function() {
+	 //달력 사용시 반드시 넣어주세요.
+    $('.band-calendar').each(function(){ regCal(this) ;})
+	  //캘린더 포맷
+    $('.datepicker').datepicker("option","dateFormat",calFormat);
+
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	  
+	  $("#cusImpView_srch2").val(mtoday);
+	  $("#cusImpView_srch3").val(today);
+	  
+	  var cusImpViewElement = document.querySelector('#cusImpViewTable');
+	  var cusImpViewElementContainer = cusImpViewElement.parentNode;
+
+
+	  cusImpViewHot = new Handsontable(cusImpViewElement, cusImpViewSettings);
+	  
+	  var cusImpViewLanElement = document.querySelector('#cusImpViewLanTable');
+	  var cusImpViewLanElementContainer = cusImpViewLanElement.parentNode;
+
+
+	  cusImpViewLanHot = new Handsontable(cusImpViewLanElement, cusImpViewLanSettings);
+	  
+	  var cusImpViewSpecElement = document.querySelector('#cusImpViewSpecTable');
+	  var cusImpViewSpecElementContainer = cusImpViewSpecElement.parentNode;
+	  
+	  
+	  cusImpViewSpecHot = new Handsontable(cusImpViewSpecElement, cusImpViewSpecSettings);
+	  
+	  
+	  var customsImpViewListPopupElement = document.querySelector('#customsImpViewListPopupTable');
+	  var customsImpViewListPopupElementContainer = customsImpViewListPopupElement.parentNode;
+	  customsImpViewListPopupSettings = fn_handsonGridImpViewListPopupOption();
+	  customsImpViewListHot = new Handsontable(customsImpViewListPopupElement, customsImpViewListPopupSettings);
+
+
+	
+	  fn_changeCusImpView($("input:radio[name=cusImpView_srch1]:checked").val());
+	  
+	  //scroll 이벤트
+	  fn_cusViewasEventReg();
+	  //cusViewUseEventReg();
+	  $("#cusViewTextView").text("전체");
+      $("#cusViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+      $(".cusImp_div7").hide();
+
+	  $(document).on("click", '.itemCdClass', function(){
+		  alert($(this).index());
+	  });
+});
+/** 이벤트 Start **/
+
+
+$(document).mousedown(function(e){	
+	if(e.target.name == "cusImpView1_date" || e.target.name == "cusImpView2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}	
+	}
+});
+
+
+$("input:radio[name=cusView_srch20]").change(function(){
+	$("input[name=cusViewType][value=read]").prop("checked", true);
+	fn_changeCusImpView($("input:radio[name=cusImpView_srch1]:checked").val());
+})
+
+//테이블 타입 변경
+$("input[name=cusImpView_srch1]").change(function(){
+	  fn_changeCusImpView($("input:radio[name=cusImpView_srch1]:checked").val());
+});
+
+
+$("input[name=cusImpView_srch1]").change(function(){
+	
+	var selectedValue = $(this).val();
+    if(selectedValue === "01") {
+    	$("#cusImpUp_div1").hide();
+    	$(".cusImp_div7").hide();
+    	$("#cusImpViewLanTable").show();
+    	$("#cusImpViewSpecTable").show();
+    	$("#dataDelete").show();
+    	$("#excelDownload").show();
+    	$(".cusImp_div1").show();
+    	$("#cusImp_div2").show();
+    	$(".cusImp_div3").show();
+    	$(".cusImp_div4").show();
+    	$(".cusImp_div5").show();
+    	$(".cusImp_div6").show();
+    	$("#cusImpSearch").show();
+    	$("#cusImpClear").show();
+    	$(".cusImpResult").show();
+        $("#cusViewCnt").show();
+        $("#cusImpViewPageCnt").show();
+        $("#cusViewTextView").text("전체");
+        $("#cusViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "02") {
+    	$("#cusImpUp_div1").show();
+    	$(".cusImp_div7").show();
+    	$("#cusImpViewLanTable").hide();
+    	$("#cusImpViewSpecTable").hide();
+    	$("#dataDelete").hide();
+    	$("#excelDownload").hide();
+    	$(".cusImp_div1").hide();
+    	$("#cusImp_div2").hide();
+    	$(".cusImp_div3").hide();
+    	$(".cusImp_div4").hide();
+    	$(".cusImp_div5").hide();
+    	$(".cusImp_div6").hide();
+    	$("#cusImpSearch").hide();
+    	$("#cusImpClear").hide();
+        $("#cusViewTextView").text("데이터업로드 정보");
+        
+        $(".cusImpResult").hide();
+        $("#cusViewCnt").hide();
+        $("#cusImpViewPageCnt").hide();
+        $("#cusViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } 
+});
+
+function fn_cusViewchgDate1() {
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var day = date.getDay();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10);
+	  
+	  $("#cusImpView_srch2").val(today);
+	  $("#cusImpView_srch3").val(today);
+	  //$("#cusImpView_srch2").val(today);
+}
+
+function fn_cusViewchgDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10);
+	
+	$("#cusImpView_srch2").val(mtoday);
+	$("#cusImpView_srch3").val(today);
+}
+function fn_cusViewchgDate3() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10);
+	
+	$("#cusImpView_srch2").val(mtoday);
+	$("#cusImpView_srch3").val(today);
+}
+function fn_cusViewchgDate4() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	  var startDt = new Date();
+	  startDt.setMonth(startDt.getMonth() - 1);
+	  startDt.setDate(1);
+
+	  var endDt = new Date();
+	  endDt.setMonth(endDt.getMonth(), 1);
+	  endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10);
+	var mtoday = endDt.toISOString().substring(0,10);
+	
+	$("#cusImpView_srch2").val(today);
+	$("#cusImpView_srch3").val(mtoday);
+}
+
+//정렬항목
+/*$("select[name=alignImportView]").change(function(){
+	  fn_searchCusImpView();
+});
+*/
+//row 수
+$("select[name=customscusImpViewPageCnt]").change(function(){
+	  fn_searchCusImpView();
+});
+
+
+function fn_cusViewasEventReg(){
+	
+ $("#cusViewTable .wtHolder").scroll(function(){
+	  //fn_cusViewFileList(row, col)
+  	  var scrollTop = $("#cusViewTable .wtHolder").scrollTop();
+  	  var countPerPage = $("#customscusImpViewPageCnt option:selected").val();
+  	  var rowHeight = cusImpViewHot.getRowHeight();
+  	  var addCnt = 790;
+  	  if(countPerPage == "50"){
+  		  addCnt = 790;
+  	  }else if(countPerPage == "100"){
+  		  addCnt = 2040;
+  	  }else if(countPerPage == "200"){
+  		  addCnt = 3290;
+  	  }else if(countPerPage == "500"){
+  		  addCnt = 4540;
+  	  }
+
+  	  if(cusImpViewScrollTp && cusImpViewIndex != 9999 && scrollTop >= (countPerPage * cusImpViewIndex * rowHeight) + addCnt){
+  		  fn_cusViewScroll();
+  	  }
+  });
+}
+/** 이벤트 End **/
+//스크롤
+function fn_cusViewScroll(){
+	if( $("input[name=cusViewType]:checked").val() == "enrol")
+		return;
+	fn_loading(true);
+	cusImpViewScrollTp = false;
+	cusImpViewIndex++;
+
+	$.ajax({
+		type : "POST",
+		url : "/cusImp/selectCusImpViewList.do",
+		data : fn_setImportViewForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	var getData = cusImpViewHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	cusImpViewHot.loadData(meargeJson);
+        	cusImpViewScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	//alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+//Popup 테이블 스크롤
+
+//검색
+function fn_searchCusImpView(){
+	cusImpViewIndex = 0;
+
+	var data = fn_setImportViewForm();
+	
+	fn_loading(true);
+	
+	$.ajax({
+		type : "POST",
+		url : "/cusImp/selectCusImpViewList.do",
+		data : fn_setImportViewForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        		cusImpViewHot.loadData([]);
+        		cusImpViewSpecHot.loadData([]);
+        		cusImpViewLanHot.loadData([]);
+            	cusImpViewHot.loadData(data.resultList);
+            	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+            	$("#cusViewCnt").text(totCnt); //검색결과 총 갯수
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+        		console.log("Error:", errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+// 특송 체크박스 해제
+document.querySelectorAll('input[type="radio"][name="cusImpView_srch6"]').forEach(function(radio) {
+    radio.addEventListener('click', function(event) {
+        // 선택된 라디오 버튼을 다시 클릭할 경우 선택 해제
+        if (this.checked && this.previousValue === "checked") {
+            this.checked = false;
+            this.previousValue = "";
+        } else {
+            // 처음 클릭하거나, 다른 라디오 버튼이 클릭된 경우
+            this.previousValue = "checked";
+        }
+    });
+});
+function fn_searchCusImpViewLan(rptNo) {
+	fn_loading(true);
+	rptNo = rptNo.replace(/-/g, '');
+	
+	var lData = {};
+	lData["srch2"] = rptNo;
+	
+	lData["recordCountPerPage"] = $("#customscusImpViewPageCnt option:selected").val();
+	lData["pageIndex"] = cusImpViewIndex;
+	
+	
+	$.ajax({
+		type : "POST",
+		url : "/cusImp/selectCusImpViewLanList.do",
+		data : lData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        		cusImpViewSpecHot.loadData([]);
+        		cusImpViewLanHot.loadData([]);
+            	cusImpViewLanHot.loadData(data.resultList);
+            	cusImpViewLanHot.updateSettings({
+            	        autoColumnSize: {samplingRatio: 30}
+            	    });
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+function fn_searchCusImpViewSpec(rptNo, ranNo) {
+	
+	fn_loading(true);
+	
+	var pData = {};
+	pData["srch2"] = rptNo;
+	pData["srch3"] = ranNo;
+	
+	pData["recordCountPerPage"] = $("#customscusImpViewPageCnt option:selected").val();
+	pData["pageIndex"] = cusImpViewIndex;
+	
+	
+	$.ajax({
+		type : "POST",
+		url : "/cusImp/selectCusImpViewSpecList.do",
+		data : pData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+				cusImpViewSpecHot.loadData([]);
+				cusImpViewSpecHot.loadData(data.resultList);
+			fn_loading(false);
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("Your request is up. Please log back in if you wish continue");
+				location.href = document.referrer;
+			} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+};
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchCusImpView();
+    }
+}
+
+//판정 사용 내역 조회
+
+
+//검색조건 생성
+function fn_setImportViewForm(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=cusImpView_srch1]:checked").val();
+	sData["srch2"] = $("#cusImpView_srch2").val();
+	sData["srch3"] = $("#cusImpView_srch3").val();
+	sData["srch4"] = $("#cusImpView_srch4").val();
+	sData["srch5"] = $("#cusImpView_srch5").val();
+	sData["srch6"] = $("input:radio[name=cusImpView_srch6]:checked").val();
+	sData["srch8"] = $("#cusViewDateType option:selected").val();
+	sData["recordCountPerPage"] = $("#cusImpViewPageCnt option:selected").val();
+	sData["pageIndex"] = cusImpViewIndex;
+	
+	sData["srchType1"] = $("#cusViewSrchType1 option:selected").val();
+	sData["srchText1"] = $("#cusViewSrchText1").val();
+	
+	sData["srchType2"] = $("#cusViewSrchType2 option:selected").val();
+	sData["srchText2"] = $("#cusViewSrchText2").val();
+	
+	
+	return sData;
+};
+
+//검색조건 초기화
+function fn_clearCusImpView(){
+	
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	
+	$("input:radio[name=cusImpView_srch1][value=01]").prop('checked', true);
+	$("input:radio[name=cusImpView_srch6]").prop();
+	$("#cusImpView_srch2").val(mtoday);
+	$("#cusImpView_srch3").val(today);
+	$("#cusImpView_srch4").val("");
+	$("#cusImpView_srch5").val("");
+	$("#cusViewDateType").val("01");
+	
+	$("#cusViewSrchType1").val("");
+	$("#cusViewSrchType2").val("");
+	
+	$("#cusViewSrchText1").val("");
+	$("#cusViewSrchText2").val("");
+	
+};
+
+function fn_memoSave(row, col){
+	var rowData = cusImpViewHot.getSourceDataAtRow(row);
+	
+	var rptNo = rowData.rptNo;
+	var value2 = $("#unreMemo"+row).val();
+	
+	var sData = {};
+	sData["srch1"] = rptNo;
+	sData["srch2"] = value2;
+	
+	if(confirm("저장하시겠습니까?")){
+		
+		$.ajax({
+			type : "POST",
+			url : "/import/saveImportMemo.do",
+			data : sData,
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			dataType: "json",
+			success : function(data) {
+				alert('저장되었습니다.')
+				fn_searchCusImpView();
+				
+			},
+			error : function(e, textStatus, errorThrown) {
+				if(e.status == 400){
+					alert("Your request is up. Please log back in if you wish continue");
+					location.href = document.referrer;
+				} else {
+					console.log(errorThrown);
+					alert(msgSearchError);
+				}
+			}
+		});
+	} else {
+		return;
+	}
+	
+}
+
+
+//테이블 컬럼
+function fn_cusViewTableCol(){
+	var tableType = $("input:radio[name=cusViewType]:checked").val();
+	var type = $("input:radio[name=cusImpView_srch1]:checked").val();
+	console.log("type"+type);
+	// 사용여부
+	var cusView_srch20 = $("input:radio[name=cusView_srch20]:checked").val(); 
+
+	var cusViewFileLoadRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+        var $fileButton;
+        if (value != '' && value != null) {
+            $fileButton = $('<i class="fas fa-search search-icon" style="cursor:pointer;" onclick="fn_cusViewFileList('+row+','+col+')"></i>');
+        } else {}
+        $(td).empty().append($fileButton).append("  " + value);
+	};
+	
+	var cusMemoRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		var $cusMemo = $('<input type="text" style="height:14px;" id="cusMemo" /><div class="btn btn-primary new-button">SAVE</div>');
+		$(td).empty().append(value+"	").append($cusMemo).css("text-align", "right");
+		};
+	
+	var unreMemoRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+	    var $unreMemoInput = $('<input type="text" class="row-start-3 col-start-2 bg-gray-50 border border-gray-300 rounded-lg" id="unreMemo' + row + '" style="height:8px; width:150px;" value="' + value + '"/>');
+	    var $unreMemoButton = $('<button type="button" onclick="fn_memoSave(' + row + ',' + col + ')" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-rose-700 ml-1 hover:bg-rose-500">저장</button>');
+	    $(td).empty().append($unreMemoInput).append($unreMemoButton).css("text-align", "right");
+	    $unreMemoInput.css({
+	        'font-family': '맑은 고딕',
+	        'font-size': '13px'
+	    });
+	    $unreMemoButton.css({
+	        'font-family': '맑은 고딕',
+	        'font-size': '13px'
+	    });
+	    $unreMemoInput.val(value);
+	};
+
+	
+	var chipRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		  td.classList.add('chip-cell');
+		  td.classList.add('text-center');
+		  switch (value) {
+		    case "예":
+		    case "접수":
+		    case "Y":
+		      td.innerHTML = `<span class="chip chip-blue">${value}</span>`
+		      break
+		    case "수리":
+		      td.innerHTML = `<span class="chip chip-green">${value}</span>`
+		      break
+		    case "N":
+		    case "서류 미비":
+		      td.innerHTML = `<span class="chip chip-red">${value}</span>`
+		      break
+		    case "자수":
+		      td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+		      break
+		    case "":
+	    	  td.innerHTML = `<span>${value}</span>`
+    		  break
+		    default:
+		      td.innerHTML = `<span class="chip chip-primary">${value}</span>`
+		      break
+		  }
+	};
+	
+	function saveRenderer(instance, td, row, col, prop, value, cellProperties) {
+		  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		  td.classList.add('save-cell');
+		  td.classList.add('text-center');
+		  td.classList.add('text-center');
+		  td.innerHTML = `${value}<button type="button" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-rose-700 ml-1 hover:bg-rose-500">저장</button>`
+		}
+
+	this.cusViewCol = (type == "01") ? [
+		{data : 'checkBox', type : 'text', className : "htCenter", width: 60,type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},
+		{data : 'sn', className : "htCenter", width: 60,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rece', className : "htCenter", width: 50,wordWrap: false, className : "htCenter", readOnly:true, renderer : chipRenderer},
+		//{data : 'unreMemo', className : "htCenter",wordWrap: false, className : "htCenter", readOnly:true, renderer : unreMemoRenderer},
+		{data : 'cs', className : "htCenter", width: 60,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter", readOnly:true, renderer : cusViewFileLoadRenderer},
+		{data : 'blno', className : "htCenter", width: 130,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'nabFirm', className : "htCenter",width: 180, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'supFirm', className : "htCenter", width: 200,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'incDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'lisDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'excCot', className : "htCenter", width: 110,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conKiCot', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conCod', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'freKrw', className : "htCenter", width: 90,wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'insuKrw', className : "htCenter",width: 90, wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'totWt', className : "htCenter",width: 120, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'totPackCnt', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conCur', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conTotAmt', className : "htCenter",width: 120, wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'lawCd', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'supSt', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'fodMark', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'oriStPrfYn', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true,renderer : chipRenderer},
+		{data : 'rmv', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true,renderer : chipRenderer},
+		{data : 'rptYn', className : "htCenter",width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'plntCd', className : "htCenter",width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'prOrdr', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'userMemo', className : "htCenter", width: 250,wordWrap: false, className : "htCenter", readOnly:true, renderer : unreMemoRenderer},
+		{data : 'reporter', className : "htCenter", width: 120,wordWrap: false, className : "htCenter", readOnly:true},
+	] :[
+		{data : 'checkBox', type : 'text', className : "htCenter", width: 60,type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},
+		{data : 'rptDayRange', className : "htCenter",width: 180, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'fileName', className : "htCenter", width: 200,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'regDate', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'refNoCount', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true}
+		];
+		
+
+	//판정 사용 내역 컬럼
+		
+		  Handsontable.renderers.registerRenderer('chip', chipRenderer);
+		  Handsontable.renderers.registerRenderer('save', saveRenderer);
+}
+//테이블 헤더
+function fn_cusViewTableHeader(){
+	var tableType = $("input:radio[name=cusViewType]:checked").val();
+	var type = $("input:radio[name=cusImpView_srch1]:checked").val();
+	// 사용여부
+	//var cusView_srch20 = $("input:radio[name=cusView_srch20]:checked").val(); 
+	
+	this.cusViewHeader = (type == "01") ? [
+		"","sn","상태", "C/S검사", "신고번호", "B/L번호", "납세의무자", "무역거래처",  "반입일자", "신고일자", "수리일자", "거래구분",
+		"결제방법", "인코텀즈", "운임", "보험료", "총중량", "총포장개수", "통화단위", "신고금액",  "요건승인", "해외공급자국가부호", "적출국(부호)", "FTA적용여부", "감면여부", "확정신고대상여부",
+		"부서코드", "PO", "사용자메모", "신고인"
+	 ] : [
+		 "","첫 신고일 - 마지막 신고일","파일명","업로드일자","업로드갯수"
+	 ];
+}
+
+
+function fn_cusViewLanTableCol(){
+	this.cusViewLanCol = [
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter"},
+		{data : 'ranNo', className : "htCenter", width: 100,wordWrap: false, className : "htCenter"},
+		{data : 'hs', className : "htCenter", width: 100,wordWrap: false, className : "htCenter"},
+		{data : 'na', className : "htCenter", width: 100,wordWrap: false, className : "htCenter"},
+		{data : 'gsRate', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'stdGname1', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'excGname1', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'taxUsd', wordWrap: false, width: 100, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true},
+		{data : 'gs', wordWrap: false, width: 100, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'vat', wordWrap: false, width: 100, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'csChkCot', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"}
+	];
+}
+
+function fn_cusViewLanTableHeader(){
+	this.cusViewLanHeader = [
+		"신고번호","란번호","세번부호","구분","세율","품명","거래품명","과세가격원화","관세","부가세","CS"
+	];
+}
+
+function fn_cusViewSpecTableCol(){
+	this.cusViewSpecCol = [
+		{data : 'rptNo', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'ranNo', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'sil', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'impGname1', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'qty', wordWrap: false, type : 'numeric', width: 100, className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'ut', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'upi', wordWrap: false, type : 'numeric', width: 100, className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'amt', wordWrap: false, type : 'numeric', width: 100, className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'impGname2', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'compoent1', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'compoent2', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		];
+}
+
+function fn_cusViewSpecTableHeader(){
+	this.cusViewSpecHeader = [
+		"신고번호","란번호","규격번호","품명","수량","단위","단가","금액","품명2","성분1","성분2"
+		];
+}
+
+//테이블 히든컬럼
+function fn_cusViewTableHidden(){
+	var type = $("input:radio[name=cusImpView_srch1]:checked").val();
+	if(type == '01'){
+		this.cusViewHidden = [1];
+	}else{
+		this.cusViewHidden = [0];
+	}
+	
+}
+
+function fn_cusViewLanTableHidden(){
+	this.cusViewLanHidden = [0];
+}
+
+function fn_cusViewSpecTableHidden(){
+	this.cusViewSpecHidden = [0];
+}
+
+
+//table
+function fn_handsonGridViewOption(col, header, hidden){
+	var tableType = $("input:radio[name=cusViewType]:checked").val();
+
+	cusImpViewSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 300,
+	  rowHeights : 27,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualRowMove : true,
+	  manualColumnMove : true,
+	  licenseKey: 'non-commercial-and-evaluation', // for non-commercial use only
+	  //dropdownMenu : true,
+
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+	  autoColumnSize : {samplingRatio : 30},
+      mergeCells : false,
+      wordWrap : true,
+      afterGetColHeader: function(col, TH){
+        	if(col == 0){
+          	TH.innerHTML = "<input type='checkbox'  class='checker' id='id_checkImportAll' onclick='fn_importAllClick();'>";
+          }
+        },
+      afterOnCellMouseDown : function(event, coords){
+    	  
+    	  var excludedColumns = [26];
+    	  
+    	  if (excludedColumns.includes(coords.col)) {
+    	        return; // 함수 실행 중단
+    	    }
+    	  //26
+    	  var dataList = "";
+    	  var rptNo = "";
+    	  var dataList = cusImpViewHot.getSourceData(coords.row, 35);
+    	  var rptNo = dataList[dataList.length-1].rptNo.replace(/-/g, '');
+          fn_searchCusImpViewLan(rptNo);
+          setTimeout(function() {
+              fn_searchCusImpViewSpec(rptNo, "001");
+          }, 1);
+      }
+	};
+
+	return cusImpViewSettings;
+}
+
+function fn_handsonGridLanOption(col, header, hidden){
+	var tableType = $("input:radio[name=cusViewType]:checked").val();
+
+	
+	cusImpViewLanSettings = {
+			columns : col,
+			colHeaders : header,
+			hiddenColumns : {
+				copyPasteEnabled : false,
+				indicators : false,
+				columns : hidden
+			},
+			stretchH : 'all',
+			width : '100%',
+			autoWrapRow : true,
+			height : 200,
+			border : 1,
+			rowHeights : 25,
+			columnHeaderHeight : 25,
+			manualRowResize : true,
+			manualColumnResize : true,
+			manualRowMove : true,
+			manualColumnMove : false,
+			licenseKey: 'non-commercial-and-evaluation',
+			  filters : true,
+			  readOnly :  true ,
+			  allowInsertRow : true,
+			  allowRemoveRow : true,
+			 // columnSorting : {indicator : true},
+			  autoColumnSize : {samplingRatio : 30},
+		      mergeCells : false,
+		      wordWrap : true,
+
+			afterOnCellMouseDown : function(event, coords){
+				var dataList = "";
+				var rptNo = "";
+				var ranNo = "";
+				var dataList = cusImpViewLanHot.getSourceData(coords.row, 35);
+				var rptNo = dataList[dataList.length-1].rptNo;
+				var ranNo = dataList[dataList.length-1].ranNo;
+				fn_searchCusImpViewSpec(rptNo, ranNo);
+			}
+	};
+	
+	return cusImpViewLanSettings;
+}
+
+function fn_handsonGridSpecOption(col, header, hidden){
+	
+	cusImpViewSpecSettings = {
+			columns : col,
+			colHeaders : header,
+			hiddenColumns : {
+				copyPasteEnabled : false,
+				indicators : false,
+				columns : hidden
+			},
+			stretchH : 'all',
+			width : '100%',
+			autoWrapRow : true,
+			height : 200,
+			rowHeights : 25,
+			columnHeaderHeight : 25,
+			manualRowResize : true,
+			manualColumnResize : true,
+			licenseKey: 'non-commercial-and-evaluation',
+			manualRowMove : true,
+			manualColumnMove : false,
+			
+			filters : true,
+			readOnly : true ,
+			allowInsertRow : true,
+			allowRemoveRow : true,
+			autoColumnSize : {samplingRatio : 30},
+			mergeCells : false,
+			wordWrap : true,
+	};
+	
+	return cusImpViewSpecSettings;
+}
+
+// 전체체크버튼
+function fn_importAllClick(){
+	//id_checkImportAll
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_checkImportAll").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+
+	var data = cusImpViewHot.getData();
+
+	for(var i=0; i< data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	cusImpViewHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_checkImportAll").prop("checked", true);
+	} else {
+		$("#id_checkImportAll").prop("checked", false);
+	}
+}
+
+function fn_cusImpViewdelete() {
+    var data = cusImpViewHot.getData();
+    var checked = false;
+    var customsData = []; // customsData 배열을 초기화
+
+    for (var i = 0; i < data.length; i++) {
+        if (data[i][0] === 'yes') { // 체크박스 상태가 'yes'인 경우만 처리
+            checked = true;
+            customsData.push({
+            	srch1: data[i][1],      // SN 추가
+            	srch2: data[i][4]    // 신고번호 추가
+            });
+        }
+    }
+   console.log("customsData",JSON.stringify(customsData));
+   
+    if (!checked) {
+        alert("체크박스를 선택해 주세요.");
+        return false;
+    }
+
+    if (confirm("삭제하시겠습니까?")) {
+        $.ajax({
+            type: "POST",
+            url: "/cusImp/deleteImportView.do",
+            data: JSON.stringify(customsData), // JSON 형태로 데이터 전송
+            dataType: "json",
+            contentType: "application/json",
+            success: function (data) {
+            	if (data.status === "success") {
+                    alert('삭제되었습니다.');
+                    fn_searchCusImpView(); // 삭제 후 검색 함수 호출
+                }
+            },
+            error: function (e, textStatus, errorThrown) {
+                if (e.status == 400) {
+                    alert("Your request is up. Please log back in if you wish continue");
+                    location.href = document.referrer;
+                } else {
+                    console.log(errorThrown);
+                    alert("삭제 중 오류가 발생했습니다."); // 에러 메시지 수정
+                }
+            }
+        });
+    } else {
+        return;
+    }
+}
+
+
+
+
+//검색 그리드
+function fn_searchGridPurchOption(type){
+	if(type){
+		$("#cusViewEnrol").show();
+		$("#cusView_div1").show();
+		$("#cusView_div2").show();
+		$("#cusView_div3").hide();
+		$("#cusView_div4").hide();
+		$("#cusView_div12").hide();
+		$("#cusView_div5").show();
+		$("#cusView_div6").show();
+		$("#cusView_div7").show();
+		$("#cusView_div8").show();
+		$("#cusViewInfo1").hide();
+		$("#cusViewInfo2").hide();
+		$("#docBtn").show();
+	}else{
+		$("#cusViewEnrol").hide();
+		$("#cusView_div1").show();
+		$("#cusView_div2").hide();
+		$("#cusView_div3").show();
+		$("#cusView_div4").show();
+		$("#cusView_div5").hide();
+		$("#cusView_div12").hide();
+		$("#cusView_div6").show();
+		$("#cusView_div7").hide();
+		$("#cusView_div8").show();
+		$("#cusViewInfo1").show();
+		$("#cusViewInfo2").show();
+		$("#docBtn").hide();
+	}
+}
+
+function fn_searchGridPurchOption2(){
+	
+		$("#cusViewEnrol").show();
+		$("#cusView_div1").show();
+		$("#cusView_div12").show();
+		$("#cusView_div2").hide();
+		$("#cusView_div3").hide();
+		$("#cusView_div4").hide();
+		$("#cusView_div5").hide();
+		$("#cusView_div6").hide();
+		$("#cusView_div7").hide();
+		$("#cusView_div8").hide();
+		$("#cusViewInfo1").hide();
+		$("#cusViewInfo2").hide();
+		$("#docBtn").hide();		
+}
+
+//테이블 타입 변경
+function fn_changeCusImpView(type){
+
+	var searchTp = $("input:radio[name=cusImpView_srch1]:checked").val();
+
+	cusImpViewHot.updateSettings({readOnly:true, contextMenu : false});
+	$("#btnImportViewSave").hide();
+	$("#impExcel").show();
+	$("#docBtn").children().show();
+	
+	
+	//리스트	
+	if(searchTp == "01"){
+	$("#cusImpUp_div1").hide();
+	//	업로드
+	}else if(searchTp == "02"){
+		$("#cusImpUp_div1").show();
+	}
+	
+	fn_changeCusImpViewType(searchTp);
+	
+};
+
+//검색구분 변경
+function fn_changeCusImpViewType(type){
+	let cusViewCol = new fn_cusViewTableCol();
+	let cusViewHeader = new fn_cusViewTableHeader();
+	let cusViewHidden = new fn_cusViewTableHidden();
+	
+	let cusViewLanCol = new fn_cusViewLanTableCol();
+	let cusViewLanHeader = new fn_cusViewLanTableHeader();
+	let cusViewLanHidden = new fn_cusViewLanTableHidden();
+	
+	let cusViewSpecCol = new fn_cusViewSpecTableCol();
+	let cusViewSpecHeader = new fn_cusViewSpecTableHeader();
+	let cusViewSpecHidden = new fn_cusViewSpecTableHidden();
+	
+	var col, header, hidden, col2, header2, hidden2, col3, header3, hidden3 ;
+
+	//$('#alignImportView option:eq(0)').prop('selected', true);
+
+	//구매원장
+		fn_searchGridPurchOption(true);
+		col = cusViewCol.cusViewCol;
+		header = cusViewHeader.cusViewHeader;
+		hidden = cusViewHidden.cusViewHidden;
+		
+		col2 = cusViewLanCol.cusViewLanCol;
+		header2 = cusViewLanHeader.cusViewLanHeader;
+		hidden2 = cusViewLanHidden.cusViewLanHidden;
+		
+		col3 = cusViewSpecCol.cusViewSpecCol;
+		header3 = cusViewSpecHeader.cusViewSpecHeader;
+		hidden3 = cusViewSpecHidden.cusViewSpecHidden;
+		
+		cusImpViewHot.updateSettings(fn_handsonGridViewOption(col, header, hidden));
+		cusImpViewLanHot.updateSettings(fn_handsonGridLanOption(col2, header2, hidden2));
+		cusImpViewSpecHot.updateSettings(fn_handsonGridSpecOption(col3, header3, hidden3));
+	
+	fn_searchCusImpView();
+};
+
+
+//파일업로드
+function fn_submitFileUpload(){
+	if(dropzone.files.length > 0) {
+		// 1.tempData 삭제
+		$.ajax({
+			type : "POST",
+			url : "/cusImp/deleteTempData.do",
+			data : null,
+			contentType: "application/json",
+	        success : function(response) {
+	        	submitFileUploadSet(response);
+	        },
+	        error: function(xhr, status, error) { 
+	            console.error("Request failed with status: " + status + " and error: " + error);
+	        }
+		});
+	}
+}
+
+// 파일전체 삭제
+function fn_dropzoneReset(){
+	dropzone.removeAllFiles(true);
+}
+
+//업로드 결과
+function submitFileUploadSet(respones){
+	 //파일전송
+    dropzone.enqueueFiles(dropzone.getFilesWithStatus(Dropzone.ADDED));
+    $("#saveBtn").css("display", "block");
+    $("#saveCancel").css("display", "none");
+    //document.querySelector(".fileinput-button").style.display="none";
+    let dzRemoves = document.querySelectorAll(".dz-remove");
+    for(let dzRemove of dzRemoves){
+        dzRemove.style.display= "none";
+    }
+    $("#upload-2").css("display", "block");
+    //$.unblockUI();
+}
+
+
+function fn_cusViewFileList(row, col){
+
+	var data = cusImpViewHot.getSourceDataAtRow(row);
+	console.log(data);
+	$("#cusViewFileListPopUp").modal("show");
+	
+	var rptNoTitle = "신고번호: " + data.rptNo;
+    
+    var uploadImpViewFileListTitle = document.querySelector('.modal-content .impModal-title span');
+	uploadImpViewFileListTitle.textContent = rptNoTitle;
+	
+    var sData = fn_rptNoForPopup(data);
+    fn_searchImpViewFilesPopup(sData);
+};
+
+function fn_rptNoForPopup(selectedRow){
+	var sData = {};
+
+	sData["srch1"] = selectedRow["rptNo"].replace(/-/g, '');
+	sData["srch2"] = selectedRow["name"];
+	sData["srch3"] = selectedRow["orgFileName"];
+	return sData;
+}
+
+
+function fn_searchImpViewFilesPopup(data){
+	
+		fn_loading(true);
+	
+    	$.ajax({
+		type : "POST",
+		url : "/import/selectImpViewFilesList.do",
+		data : data,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	customsImpViewListHot.loadData([]);
+        	customsImpViewListHot.loadData(data.cusViewList);
+			setTimeout(function() {customsImpViewListHot.render()}, 200);
+			fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("에러 발생");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+function fn_handsonGridImpViewListPopupOption() {
+	customsImpViewListPopupSettings = {
+        columns: [
+        	{ data :'checkBox', type :'text', className :"htCenter", width: 30, type:'checkbox', checkedTemplate:'yes', uncheckedTemplate:'no', readOnly:false },
+        	{ data : 'rptNo', type: 'text', className: "htCenter", readOnly: true, 
+        		renderer: function(instance, td, row, col, prop, value, cellProperties) {
+                value = value.replace(/^(\d{5})(\d{2})(\d{6})(\w)$/, '$1-$2-$3$4');
+                Handsontable.renderers.TextRenderer.apply(this, arguments);
+                }
+        	  },
+            {
+                data: 'docuType',
+                type: 'text',
+                className: "htCenter",
+                readOnly: true,
+                renderer: function (instance, td, row, col, prop, value, cellProperties) {
+                	if (value === 'CI') {
+                        td.innerHTML = '<div style="text-align: center;">Invoice</div>';
+                    } else if (value === 'PL') {
+                        td.innerHTML = '<div style="text-align: center;">Packing List</div>';
+                    } else if (value === 'DC') {
+                        td.innerHTML = '<div style="text-align: center;">신고필증</div>';
+                    } else if (value === 'CB') {
+                        td.innerHTML = '<div style="text-align: center;">통합</div>';
+                    } else if (value === 'UC') {
+                        td.innerHTML = '<div style="text-align: center;">정정 통합</div>';
+                    } else if (value === 'CO') {
+                        td.innerHTML = '<div style="text-align: center;">원산지증명서</div>';
+                    } else if (value === 'RQ') {
+                        td.innerHTML = '<div style="text-align: center;">요건 서류</div>';
+                    } else if (value === 'OT') {
+                        td.innerHTML = '<div style="text-align: center;">기타</div>';
+                    } else if (value === 'AC') {
+                        td.innerHTML = '<div style="text-align: center;">정산서</div>';
+                    } else {
+                        td.innerHTML = '<div style="text-align: center;">B/L</div>';
+                    }
+                }
+            },
+            { data: 'docuOrgFile', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'docuFile', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'uploadDt', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'docuPath', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'blno', type: 'text', className: "htCenter", readOnly: true }
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["", "신고번호", "파일 타입", "파일명", "", "업로드 일자", "파일 경로"],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [1,4,6,7]},
+        afterGetColHeader: function(col, TH){
+        	if(col == 0){
+          	TH.innerHTML = "<input type='checkbox'  class='checker' id='id_cusViewAllClick' onclick='fn_cusViewAllClick();'>";
+          }
+        }
+    };
+
+    return customsImpViewListPopupSettings;
+}
+
+
+function fn_cusViewAllClick(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_cusViewAllClick").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+
+	var data = customsImpViewListHot.getData();
+
+	for(var i=0; i<data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	customsImpViewListHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_cusViewAllClick").prop("checked", true);
+	} else {
+		$("#id_cusViewAllClick").prop("checked", false);
+	}
+}
+
+$("#cusViewTable .wtHolder").scroll(function(){
+    var scrollTop = $("#customsImpViewListPopupTable .wtHolder").scrollTop();
+    var countPerPage = 50;
+    var rowHeight = overHot.getRowHeight();
+    var addCnt = 790;
+});
+
+
+$("#popOverTable .wtHolder").scroll(function(){
+	fn_cusViewFileList(row, col)
+	var data = cusImpViewHot.getSourceData();
+	var scrollTop = $("#cusImpViewTable .wtHolder").scrollTop();
+	var countPerPage = 50;
+	var rowHeight = filesHot.getRowHeight();
+	var addCnt = 790;
+	
+});
+
+
+function cusViewFileListClose(){
+	$("#cusViewFileListPopUp").modal("hide");
+}
+
+function fn_cusImpViewExcelDownload(){
+	fn_loading(true);
+	 var type = $("input:radio[name=cusImpView_srch1]:checked").val();
+	
+	//엑셀옵션
+	var exTitArr = [];
+	var exTit = "";
+	var exColArr = [];
+	var exCol = "";
+    var exTitDivArr = [];
+    var exTitDiv = "";
+	
+	let cusViewCol = new fn_cusViewTableCol();
+	let cusViewHeader = new fn_cusViewTableHeader();
+	
+	let cusViewLanCol = new fn_cusViewLanTableCol();
+	let cusViewLanHeader = new fn_cusViewLanTableHeader();
+	
+	let cusViewSpecCol = new fn_cusViewSpecTableCol();
+	let cusViewSpecHeader = new fn_cusViewSpecTableHeader();
+    
+    exColArr.push(fn_getExcelCol(cusViewCol.cusViewCol));
+	exColArr.push(fn_getExcelCol(cusViewLanCol.cusViewLanCol));
+	exColArr.push(fn_getExcelCol(cusViewSpecCol.cusViewSpecCol));
+	
+	exTitArr.push(fn_getExcelHead(cusViewHeader.cusViewHeader));
+	exTitArr.push(fn_getExcelHead(cusViewLanHeader.cusViewLanHeader));
+	exTitArr.push(fn_getExcelHead(cusViewSpecHeader.cusViewSpecHeader));
+	
+ 	exCol = exColArr.join("|||");
+	exTit = exTitArr.join("||||");
+	exTitDiv = "1|수입신고현황||2|수입신고란||3|수입신고규격";
+		
+   var parameters = {exCol : "", exTit: "", exTitDiv: "", exType: "", srch40: ""};
+	
+   // 검색옵션
+   $.each(fn_setImportViewForm(), function(attrName, attrValue){
+   	parameters[attrName] = attrValue;
+   });
+	
+	parameters.exCol = exCol.replace(/ /g,"_");
+	parameters.exTit = exTit.replace(/ /g,"_");
+	parameters.exTitDiv = exTitDiv.replace(/ /g,"_");
+	parameters.exType = type;
+	parameters.srch40 = "수입신고현황";
+	
+	$.ajax({
+		 url: "/import/importDownloadExcel.do",
+		 data: parameters,
+		 type: 'POST',
+		 cache: false,
+		 timeout: 200000,
+		 xhrFields: {
+			 responseType: "blob",
+		 },
+	    success: function(blob, status, xhr) {
+	    	try {
+				// check for a filename
+				 var fileName = "";
+				 var disposition = xhr.getResponseHeader("Content-Disposition");
+
+			       if (disposition && disposition.indexOf("attachment") !== -1) {
+			      	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+			           var matches = filenameRegex.exec(disposition);
+
+			           if (matches != null && matches[1]) {
+			               fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+			           }
+			       }
+
+			       // for IE
+			       if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+			           window.navigator.msSaveOrOpenBlob(blob, fileName);
+			       } else {
+			           var URL = window.URL || window.webkitURL;
+			           var downloadUrl = URL.createObjectURL(blob);
+
+			           if (fileName) {
+			               var a = document.createElement("a");
+
+			               // for safari
+			               if (a.download === undefined) {
+			                   window.location.href = downloadUrl;
+			               } else {
+			                   a.href = downloadUrl;
+			                   a.download = fileName;
+			                   document.body.appendChild(a);
+			                   a.click();
+			               }
+			           } else {
+			               window.location.href = downloadUrl;
+			           }
+			       }
+		        fn_loading(false);
+			} catch (e) {
+				console.log(e);
+				fn_loading(false);
+			};
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+	
+}
+
+function fn_getExcelCol(viewCol){
+    return viewCol.map(item => item['data'] + '|' + item['className'] + '|' + item['width']).join("||");
+}
+ 
+function fn_getExcelHead(viewHead){
+    var result = [];
+    
+    if(viewHead.length > 1 && typeof(viewHead[0][0]) == 'object') {
+        for(var i=0; i < viewHead.length; i++) {
+            if(i == viewHead.length -1){
+                result.push(viewHead[i].join("|null||") + "|null");
+            }else {
+                result.push(viewHead[i].map(item => (item['label'] ? item['label'] : 'null') + '|' + (item['colspan'] ? item['colspan'] : 'null')).join("||"));
+            }
+        }
+        return result.join("|||");
+    }else{
+        return viewHead.join("|null||") + "|null";
+    };
+}

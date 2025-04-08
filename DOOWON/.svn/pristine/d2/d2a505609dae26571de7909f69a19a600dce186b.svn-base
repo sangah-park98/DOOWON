@@ -1,0 +1,384 @@
+package egovframework.pf.imp.service.impl;
+
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.itextpdf.text.log.SysoCounter;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.exp.service.SaveExpFileVO;
+import egovframework.pf.imp.service.CusImpUploadService;
+import egovframework.pf.imp.service.ImportService;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+
+/**
+ * @Class Name : CustomsImportUpdateServiceImpl.java
+ * @Description : CustomsImportUpdateServiceImpl Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2024.08.02          	권예지         			최초 생성
+ *
+ * @author 권예지
+ * @since 2024.08.02
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KordSystems All right reserved.
+ */
+
+@Service("cusImpUploadService")
+public class CusImpUploadServiceImpl extends EgovAbstractServiceImpl implements CusImpUploadService {
+
+	@Resource(name="cusImpUploadMapper")
+	private CusImpUploadMapper cusImpUploadMapper;
+
+	
+	@Override
+	public Map<String, Integer> insertTempExcelData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		 Map<String, Integer> result = new HashMap<String, Integer>();
+		 System.out.println("columnCount"+excelData.get("columnCount").toString());
+			//레디
+			if(excelData.get("columnCount").toString().equals("228")) {
+				System.out.println("레디");
+				result = insertReadyImportData(excelData,loginUser);
+			}//엔컴
+			else if(excelData.get("columnCount").toString().equals("260")) {
+				System.out.println("엔컴");
+				result = insertEncomImportData(excelData,loginUser);
+			}
+			return result;
+	}
+
+
+	private Map<String, Integer> insertEncomImportData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		System.out.println("엔컴2");
+		List<Map<String, Object>> dataList = (List<Map<String, Object>>) excelData.get("dataList");
+		//신고일자
+		List<String> registerDate = new ArrayList<String>();
+		
+		Map<String, Integer> resultMap = new HashMap<>();
+		//파일이름 
+		String fileName = (String) excelData.get("fileName");
+		
+		int failCount = 0;
+		int successCount = 0;
+		int doubleCount = 0;
+		int resultCntView = 0;
+		int resultCntLan = 0;
+		int resultCntSpec = 0;
+		
+		System.out.println("dataList"+dataList);
+		for(Map<String,Object>data : dataList) {
+			System.out.println("data"+data);
+			//신고일자
+			if (data.get("excel_1") != null && StringUtils.isNotEmpty(data.get("excel_2").toString())) {
+                registerDate.add(data.get("excel_1").toString());
+            }
+			//데이터유효성
+			data.put("FAIL_REASON", null);
+			if(data.size() < 261) {
+				//갯수가 적음
+				data.put("FAIL_REASON", "열의 개수가 맞지 않습니다.");
+				failCount += 1;
+			}else if(data.get("excel_18") == null || !data.get("excel_18").toString().equals(loginUser.getCorpNo())){
+				//사업자번호다름 
+				data.put("FAIL_REASON", "사업자번호가 다릅니다.");      
+	            failCount += 1;
+			}else if(data.get("excel_1") == null) {
+				 data.put("FAIL_REASON", "신고번호가 누락되었습니다.");      //필수데이터누락
+	             failCount += 1;
+			}
+			
+			// 화물관리번호 
+			 String num = (String) data.get("excel_59");
+             System.out.println("num"+num);
+			 String mrn = "";
+             String msn = "";
+             String hsn = "";
+             if (num != null) {
+                 mrn = num.length() >= 11 ? num.substring(0, 11) : "";
+                 msn = num.length() >= 15 ? num.substring(11, 15) : "";
+                 hsn = num.length() >= 19 ? num.substring(15, 19) : "";
+             }
+             System.out.println("mrn"+mrn);
+             System.out.println("msn"+msn);
+             System.out.println("hsn"+hsn);
+             data.put("mrn", mrn);
+             data.put("msn", msn);
+             data.put("hsn", hsn);
+             //세관 기제란
+             String cus = (String) data.get("excel_120");
+             String cus1 = "";
+             String cus2 = "";
+             String cus3 = "";
+             String cus4 = "";
+             String cus5 = "";
+             String cus6 = "";
+             String cus7 = "";
+             String cus8 = "";
+             
+             if(cus != null) {
+            	 cus1 = cus.length() >= 60 ? cus.substring(0, 60) : cus;
+        	     cus2 = cus.length() >= 120 ? cus.substring(60, 120) : "";
+        	     cus3 = cus.length() >= 180 ? cus.substring(120, 180) : "";
+        	     cus4 = cus.length() >= 240 ? cus.substring(180, 240) : "";
+        	     cus5 = cus.length() >= 300 ? cus.substring(240, 300) : "";
+        	     cus6 = cus.length() >= 360 ? cus.substring(300, 360) : "";
+        	     cus7 = cus.length() >= 420 ? cus.substring(360, 420) : "";
+        	     cus8 = cus.length() >= 480 ? cus.substring(420, 480) : "";
+             }
+             data.put("cus1", cus1);
+             data.put("cus2", cus2);
+             data.put("cus3", cus3);
+             data.put("cus4", cus4);
+             data.put("cus5", cus5);
+             data.put("cus6", cus6);
+             data.put("cus7", cus7);
+             data.put("cus8", cus8);
+             data.put("fileName", fileName);
+             
+           
+            data.put("Id", loginUser.getId());
+            
+           
+            System.out.println("data"+data);
+            String rptNo = data.get("excel_1").toString();
+            String ranNo = data.get("excel_129").toString();
+            String sil = data.get("excel_217").toString();
+            System.out.println("rptNo"+rptNo);
+			//공통내역 seq
+            Map<String, String> resultMap1 = cusImpUploadMapper.insertReadyImportDataA1Seq(rptNo);
+            String resultCount1Seq = String.valueOf(resultMap1.get("SN"));
+            String result1Status = resultMap1.get("STATUS");
+            data.put("resultCount1", resultCount1Seq);
+            //란 seq
+            Map<String, String> resultMap2 = cusImpUploadMapper.insertReadyImportDataB1Seq(rptNo, ranNo);
+            String resultCount2Seq = String.valueOf(resultMap2.get("SN"));
+            String result2Status = resultMap2.get("STATUS");
+            data.put("resultCount2", resultCount2Seq);
+            
+            
+            Map<String, String> resultMap3 = cusImpUploadMapper.insertReadyImportDataC1Seq(rptNo, ranNo, sil);
+            String resultCount3Seq = String.valueOf(resultMap3.get("SN"));
+            String result3Status = resultMap3.get("STATUS");
+            data.put("resultCount3", resultCount3Seq);
+            
+            //공통내역
+			int resultCount1 = cusImpUploadMapper.insertEncomImportDataA1(data);
+			//란
+			int resultCount2 = cusImpUploadMapper.insertEncomImportDataB1(data);
+			//규격
+			int resultCount3 = cusImpUploadMapper.insertEncomImportDataC1(data);
+			
+			if(result1Status.equals("신규")) {
+				resultCntView += resultCount1;
+			}
+			if(result2Status.equals("신규")) {
+				resultCntLan += resultCount2;
+			}
+			if(result3Status.equals("신규")) {
+				resultCntSpec += resultCount3;
+			}
+			
+		}
+		resultMap.put("main", resultCntView);
+		resultMap.put("lan", resultCntLan);
+		resultMap.put("spec", resultCntSpec);
+		//return  dataProcessing(registerDate(registerDate, "COMMON"), obj.get("fileName").toString(), (successCount - failCount), failCount, doubleCount, null);
+		return resultMap;
+	}
+
+
+	private Map<String, Integer> insertReadyImportData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		System.out.println("레디2");
+		List<Map<String, Object>> dataList = (List<Map<String, Object>>) excelData.get("dataList");
+		//신고일자
+		List<String> registerDate = new ArrayList<String>();
+		Map<String, Integer> resultMap = new HashMap<>();
+		//파일이름 
+		String fileName = (String) excelData.get("fileName");
+		
+		int failCount = 0;
+		int resultCntView = 0;
+		int resultCntLan = 0;
+		int resultCntSpec = 0;
+		int successCount = 0;
+		int doubleCount = 0;
+		System.out.println("dataList"+dataList);
+		for(Map<String,Object>data : dataList) {
+			System.out.println("data"+data);
+			//신고일자
+			if (data.get("excel_2") != null && StringUtils.isNotEmpty(data.get("excel_2").toString())) {
+                registerDate.add(data.get("excel_2").toString());
+            }
+			//데이터유효성
+			data.put("FAIL_REASON", null);
+			if(data.size() < 228) {
+				//갯수가 적음
+				data.put("FAIL_REASON", "열의 개수가 맞지 않습니다.");
+				failCount += 1;
+			}else if(data.get("excel_22") == null || !data.get("excel_22").toString().equals(loginUser.getCorpNo())){
+				//사업자번호다름 
+				data.put("FAIL_REASON", "사업자번호가 다릅니다.");      
+	            failCount += 1;
+			}else if(data.get("excel_0") == null) {
+				 data.put("FAIL_REASON", "신고번호가 누락되었습니다.");      //필수데이터누락
+	             failCount += 1;
+			}
+			
+			// 화물관리번호 
+			 String num = (String) data.get("excel_12");
+             System.out.println("num"+num);
+			 String mrn = "";
+             String msn = "";
+             String hsn = "";
+             if (num != null) {
+                 mrn = num.length() >= 11 ? num.substring(0, 11) : "";
+                 msn = num.length() >= 15 ? num.substring(11, 15) : "";
+                 hsn = num.length() >= 19 ? num.substring(15, 19) : "";
+             }
+             System.out.println("mrn"+mrn);
+             System.out.println("msn"+msn);
+             System.out.println("hsn"+hsn);
+             data.put("mrn", mrn);
+             data.put("msn", msn);
+             data.put("hsn", hsn);
+             //세관 기제란
+             String cus = (String) data.get("excel_120");
+             String cus1 = "";
+             String cus2 = "";
+             String cus3 = "";
+             String cus4 = "";
+             String cus5 = "";
+             String cus6 = "";
+             String cus7 = "";
+             String cus8 = "";
+             
+             if(cus != null) {
+            	 cus1 = cus.length() >= 60 ? cus.substring(0, 60) : cus;
+        	     cus2 = cus.length() >= 120 ? cus.substring(60, 120) : "";
+        	     cus3 = cus.length() >= 180 ? cus.substring(120, 180) : "";
+        	     cus4 = cus.length() >= 240 ? cus.substring(180, 240) : "";
+        	     cus5 = cus.length() >= 300 ? cus.substring(240, 300) : "";
+        	     cus6 = cus.length() >= 360 ? cus.substring(300, 360) : "";
+        	     cus7 = cus.length() >= 420 ? cus.substring(360, 420) : "";
+        	     cus8 = cus.length() >= 480 ? cus.substring(420, 480) : "";
+             }
+             data.put("cus1", cus1);
+             data.put("cus2", cus2);
+             data.put("cus3", cus3);
+             data.put("cus4", cus4);
+             data.put("cus5", cus5);
+             data.put("cus6", cus6);
+             data.put("cus7", cus7);
+             data.put("cus8", cus8);
+             data.put("fileName", fileName);
+             
+           
+            data.put("Id", loginUser.getId());
+            
+            System.out.println("data"+data);
+            String rptNo = data.get("excel_0").toString();
+            String ranNo = data.get("excel_129").toString();
+            String sil = data.get("excel_217").toString();
+            
+            System.out.println("rptNo"+rptNo);
+			//공통내역 seq
+            Map<String, String> resultMap1 = cusImpUploadMapper.insertReadyImportDataA1Seq(rptNo);
+            String resultCount1Seq = String.valueOf(resultMap1.get("SN"));
+            String result1Status = resultMap1.get("STATUS");
+            data.put("resultCount1", resultCount1Seq);
+            //란 seq
+            Map<String, String> resultMap2 = cusImpUploadMapper.insertReadyImportDataB1Seq(rptNo, ranNo);
+            String resultCount2Seq = String.valueOf(resultMap2.get("SN"));
+            String result2Status = resultMap2.get("STATUS");
+            data.put("resultCount2", resultCount2Seq);
+            
+            Map<String, String> resultMap3 = cusImpUploadMapper.insertReadyImportDataC1Seq(rptNo, ranNo, sil);
+            String resultCount3Seq = String.valueOf(resultMap3.get("SN"));
+            String result3Status = resultMap3.get("STATUS");
+            data.put("resultCount3", resultCount3Seq);
+            
+            //공통내역
+			int resultCount1 = cusImpUploadMapper.insertReadyImportDataA1(data);
+			//란
+			int resultCount2 = cusImpUploadMapper.insertReadyImportDataB1(data);
+			//규격
+			int resultCount3 = cusImpUploadMapper.insertReadyImportDataC1(data);
+			
+			if(result1Status.equals("신규")) {
+				resultCntView += resultCount1;
+			}
+			if(result2Status.equals("신규")) {
+				resultCntLan += resultCount2;
+			}
+			if(result3Status.equals("신규")) {
+				resultCntSpec += resultCount3;
+			}
+		}
+		resultMap.put("main", resultCntView);
+		resultMap.put("lan", resultCntLan);
+		resultMap.put("spec", resultCntSpec);
+		//return  dataProcessing(registerDate(registerDate, "COMMON"), obj.get("fileName").toString(), (successCount - failCount), failCount, doubleCount, null);
+		return resultMap;
+		
+		
+	}
+
+
+	@Override
+	public int insertTempDataUploadLog(Map<String, Object> excelData, Map<String, Object> returnData,
+			UserSessionVO loginUser) {
+		return 0;
+	}
+
+
+	@Override
+	public int deleteTempData(Map<String, Object> loginUser) {
+		return 0;
+	}
+
+	// 타관세사 파일 업로드 공통내역
+	@Override
+	public List<?> selectCusImpViewList(SearchVO vo) {
+		return cusImpUploadMapper.selectCusImpViewList(vo);
+	}
+
+	// 타관세사 파일 업로드 란내역
+	@Override
+	public List<?> selectCusImpViewLanList(SearchVO vo) {
+		return cusImpUploadMapper.selectCusImpViewLanList(vo);
+	}
+	
+	// 타관세사 파일 업로드 정보
+	@Override
+	public List<?> selectCusImpFileList(SearchVO vo) {
+		return cusImpUploadMapper.selectCusImpFileList(vo);
+	}
+
+	// 타관세사 파일 업로드 규격내역
+	@Override
+	public List<?> selectCusImpViewSpecList(SearchVO vo) {
+		return cusImpUploadMapper.selectCusImpViewSpecList(vo);
+	}
+
+	// 리스트 삭제
+	@Override
+	public void deleteImportView(SearchVO vo) {
+		cusImpUploadMapper.deleteCusImpDataA1(vo);
+		cusImpUploadMapper.deleteCusImpDataB1(vo);
+		cusImpUploadMapper.deleteCusImpDataC1(vo);
+	}
+}

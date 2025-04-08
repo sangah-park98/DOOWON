@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.cmmn.service.impl.CompanyMapper">
+
+	<!-- 사업자 목록 조회 -->
+	<select id="selectCmpnyList" parameterType="searchVO" resultType="egovMap">
+		SELECT TAX_NO AS compRegNo
+             , CMPNY_NM AS compName
+             , IFNULL(CMPNY_CEO_NM,'') AS compCeo
+		     , IFNULL(CMPNY_ZIP,'') AS compZip
+		     , IFNULL(CMPNY_ADDR1,'')AS compAddr1
+		     , IFNULL(CMPNY_ADDR2,'')AS compAddr2
+			 , IFNULL(MANGER_EMAIL,'')AS mangerEmail
+             , DEL_YN AS delYn
+		  FROM CMPNY_INFO
+		 WHERE DEL_YN = 'N'
+            <if test="srch2 != null and srch2 != ''">
+               AND CMPNY_NM LIKE CONCAT('%',UPPER(#{srch2}),'%')
+            </if>
+            <if test="srch3 != null and srch3 != ''">
+               AND TAX_NO LIKE CONCAT('%',UPPER(#{srch3}),'%')
+            </if>
+            <if test="srch4 != null and srch4 != ''">
+	             <choose>
+			        <when test="srch4 == 'ALL'">
+			            AND 1=1 
+			        </when>
+			        <otherwise>
+			            AND B.AGREE_YN = #{srch4}
+			        </otherwise>
+			    </choose>
+		     </if>
+            <if test="srch6 != null and srch6 != ''">
+               AND A.MANUAL_YN = #{srch6]
+            </if>
+	        <choose>
+	        	<when test="alignItem == 'CMPNY_NM'">
+	        		ORDER BY CMPNY_NM
+	        	</when>
+	        	<when test="alignItem == 'CMPNY_NM_DESC'">
+	        		ORDER BY CMPNY_NM DESC
+	        	</when>
+	        	<when test="alignItem == 'TAX_NO'">
+	        		ORDER BY TAX_NO
+	        	</when>
+	        	<when test="alignItem == 'TAX_NO_DESC'">
+	        		ORDER BY TAX_NO DESC
+	        	</when>
+	        	<otherwise>
+	        		ORDER BY CMPNY_NM
+	        	</otherwise>
+	        </choose>
+		 LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+
+	<!--사업자 목록 갯수 조회 -->
+	<select id="selectCmpnyListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM CMPNY_INFO
+		 WHERE DEL_YN = 'N'
+             <if test="srch2 != null and srch2 != ''">
+               AND CMPNY_NM LIKE CONCAT('%',UPPER(#{srch2}),'%')
+            </if>
+            <if test="srch3 != null and srch3 != ''">
+               AND TAX_NO LIKE CONCAT('%',UPPER(#{srch3}),'%')
+            </if>
+	</select>
+	
+	
+	<!--회사 정보 저장  -->
+	<insert id="insertCompny" parameterType="egovframework.pf.cmmn.service.SaveMemberUpateVO">
+		INSERT 
+			INTO CMPNY_INFO (
+						  TAX_NO
+						, CMPNY_NM
+						, CMPNY_CEO_NM
+						, CMPNY_ZIP
+						, CMPNY_ADDR1
+						, CMPNY_ADDR2
+						, MANGER_EMAIL
+						, DEL_YN
+						, REG_DT
+						, REG_ID
+       ) VALUES (
+       					  #{compRegNo}
+       					, #{compName}
+						, CMPNY_CEO_NM = IFNULL(#{compCeo},'')
+						, IFNULL(#{compZip},'')
+						, IFNULL(#{compAddr1},'')
+						, IFNULL(#{compAddr2},'')
+						, IFNULL(#{mangerEmail},'')
+						 <choose>
+							<when test="delYn != null and delYn != ''">
+							   , #{delYn}
+							</when>
+							<otherwise>
+							   , 'N'
+							</otherwise>
+						</choose>
+						, DATE_FORMAT(NOW(), '%Y%m%d')
+						, #{regId}
+			) ON DUPLICATE KEY
+            UPDATE EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+				 , EDT_ID = #{edtId}
+				 , CMPNY_NM = #{compName}
+				 , CMPNY_CEO_NM = IFNULL(#{compCeo},'')
+				 , CMPNY_ZIP = IFNULL(#{compZip},'')
+				 , CMPNY_ADDR1 = IFNULL(#{compAddr1},'')
+				 , CMPNY_ADDR2 = IFNULL(#{compAddr2},'')
+				 , MANGER_EMAIL = IFNULL(#{mangerEmail},'')
+ 				<if test = "delYn != null and delYn != ''">
+					, DEL_YN = #{delYn}
+				</if>
+				<if test = "delYn == null and delYn == ''">
+					, DEL_YN = 'N'
+				</if>
+	</insert>
+	
+
+	<!-- 사업자 - 지사 목록 조회 -->
+	<select id="selectCmpnyBranchInfo" parameterType="searchVO" resultType="egovMap">
+			SELECT 			
+					B.CMPNY_NM AS compName
+					,A.TAX_NO AS compRegNo
+					,A.BRANCH_CD AS branchCd
+					,IFNULL (A.CUS_PRG_CD,"")AS cusPrgCd
+					,A.DEL_YN AS delYn
+			  FROM CMPNY_BRANCH_INFO A 
+			  LEFT JOIN CMPNY_INFO B 
+			  ON A.TAX_NO = B.TAX_NO
+			 WHERE A.DEL_YN = 'N'
+            
+            <if test="srch5 != null and srch5 != ''">
+               AND A.TAX_NO LIKE CONCAT('%',UPPER(#{srch5}),'%')
+            </if>
+            
+            <if test="srch6 != null and srch6 != ''">
+               AND A.BRANCH_CD LIKE CONCAT('%',UPPER(#{srch6}),'%')
+            </if>
+	         <choose>
+	        	<when test="alignItem == 'CMPNY_NM'">
+	        		ORDER BY B.CMPNY_NM
+	        	</when>
+	        	<when test="alignItem == 'CMPNY_NM_DESC'">
+	        		ORDER BY B.CMPNY_NM DESC
+	        	</when>
+	        	<when test="alignItem == 'TAX_NO'">
+	        		ORDER BY A.TAX_NO
+	        	</when>
+	        	<when test="alignItem == 'TAX_NO_DESC'">
+	        		ORDER BY A.TAX_NO DESC
+	        	</when>
+	        	<otherwise>
+	        		ORDER BY A.TAX_NO
+	        	</otherwise>
+	        </choose>
+		 LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+
+	<!-- 사업자 - 지사  목록 갯수 조회 -->
+	<select id="selectCmpnyBranchInfoCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM CMPNY_BRANCH_INFO
+		 	WHERE DEL_YN = 'N'
+            <if test="srch5 != null and srch5 != ''">
+               AND TAX_NO LIKE CONCAT('%',UPPER(#{srch5}),'%')
+            </if>
+            <if test="srch6 != null and srch6 != ''">
+               AND BRANCH_CD LIKE CONCAT('%',UPPER(#{srch6}),'%')
+            </if>
+	</select>
+	
+	<!-- 사업자 - 지사 등록 -->
+	<insert id="insertCmpnyBranchInfo" parameterType="egovframework.pf.cmmn.service.SaveMemberUpateVO">
+		INSERT 
+			INTO CMPNY_BRANCH_INFO (
+				  TAX_NO
+				, BRANCH_CD
+				, CUS_PRG_CD
+				, DEL_YN 
+				, REG_DT
+				, REG_ID
+			  	 ) VALUES (
+       					  #{compRegNo}
+       					, #{branchCd}
+						, IFNULL(#{cusPrgCd},'')
+						 <choose>
+							<when test="delYn != null and delYn != ''">
+							   , #{delYn}
+							</when>
+							<otherwise>
+							   , 'N'
+							</otherwise>
+						</choose>
+						, DATE_FORMAT(NOW(), '%Y%m%d')
+						, #{regId}
+			) ON DUPLICATE KEY
+            UPDATE EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+				 , EDT_ID = #{edtId}
+				 , TAX_NO = #{compRegNo}
+				 , BRANCH_CD = IFNULL(#{branchCd},'')
+				 , CUS_PRG_CD = IFNULL(#{cusPrgCd},'')
+				 , DEL_YN = #{delYn}
+	</insert>
+
+
+
+	
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.dw.cmmn.service.impl.CmmnMapper">
+	
+	<!-- 로그인  -->
+	<select id="selectCmpnyIdCheck" parameterType="searchVO" resultType="egovMap">
+		SELECT    
+			b.TAX_NO as CMPNY_CD,
+			b.CMPNY_NM,
+			a.GRP_CD,
+			a.USR_NM  
+		FROM USER_INFO a
+		LEFT JOIN user_cmpny_info b
+		ON a.USR_ID = b.USR_ID
+		WHERE a.USR_ID = #{id}
+	   	AND a.USR_PW = #{pwd}
+	   	AND a.DEL_YN = 'N'
+	   	AND a.APPR_YN = 'Y'
+	   	AND b.MANER_YN ='Y'
+	</select>
+
+</mapper>

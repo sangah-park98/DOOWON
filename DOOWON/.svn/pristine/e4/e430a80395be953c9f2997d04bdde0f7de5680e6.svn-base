@@ -1,0 +1,5212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.imp.service.impl.CusImpUploadMapper">
+	
+	<select id="insertReadyImportDataA1Seq" resultType="map">
+		<!-- SELECT 
+		    CASE 
+		        WHEN COUNT(*) > 0 THEN (SELECT DISTINCT SN FROM CUSDEC929B1_temp WHERE RPT_NO = #{rptNo} AND RPT_SEQ = '00')
+		        ELSE NEXTVAL(seq_cusdec929a1)
+		    END AS SN,
+		    CASE
+            WHEN COUNT(*) > 0 THEN '수정'
+            ELSE '신규'
+        	END AS STATUS
+		FROM 
+		    cusdec929a1 
+		WHERE 
+		    RPT_NO = #{rptNo};	 -->
+		SELECT 
+	    CASE 
+	        WHEN (SELECT COUNT(*) FROM cusdec929a1 WHERE RPT_NO = #{rptNo} AND BRANCH = 'iOOM') > 0 
+	        THEN (SELECT MAX(SN) FROM cusdec929a1 WHERE RPT_NO = #{rptNo} AND BRANCH = 'iOOM') 
+	        ELSE NEXTVAL(seq_cusdec929a1) 
+	    END AS SN, 
+	    CASE 
+	        WHEN (SELECT COUNT(*) FROM cusdec929a1 WHERE RPT_NO = #{rptNo} AND BRANCH = 'iOOM') > 0 
+	        THEN '수정' 
+	        ELSE '신규' 
+	    END AS STATUS 
+	    
+	    <!-- SELECT NEXTVAL(seq_cusdec929a1) AS SN -->
+		    
+	</select>
+	
+	<select id="insertReadyImportDataB1Seq" parameterType="map" resultType="map">
+		SELECT 
+	    CASE 
+	        WHEN (SELECT COUNT(*) FROM cusdec929B1 WHERE RPT_NO = #{rptNo} AND BRANCH = 'iOOM' AND RAN_NO = #{ranNo}) > 0 
+	        THEN (SELECT MAX(SN) FROM cusdec929B1 WHERE RPT_NO = #{rptNo}  AND BRANCH = 'iOOM' AND RAN_NO = #{ranNo}) 
+	        ELSE NEXTVAL(seq_cusdec929B1) 
+	    END AS SN, 
+	    CASE 
+	        WHEN (SELECT COUNT(*) FROM cusdec929B1 WHERE RPT_NO = #{rptNo}  AND BRANCH = 'iOOM' AND RAN_NO = #{ranNo}) > 0 
+	        THEN '수정' 
+	        ELSE '신규' 
+	    END AS STATUS 
+	    
+	    <!--  SELECT NEXTVAL(seq_cusdec929B1) AS SN -->
+	</select>
+	
+	<select id="insertReadyImportDataC1Seq" parameterType="map" resultType="map">
+		<!-- SELECT 
+		    CASE 
+		        WHEN COUNT(*) > 0 THEN (SELECT DISTINCT SN FROM CUSDEC929C1 WHERE RPT_NO = #{rptNo} AND RAN_NO = #{ranNo} AND SIL = #{sil} AND RPT_SEQ = '00')
+		        ELSE NEXTVAL(SEQ_CUSDEC929C1)
+		    END AS SN,
+		    CASE
+            WHEN COUNT(*) > 0 THEN '수정'
+            ELSE '신규'
+        	END AS STATUS
+		FROM 
+		    CUSDEC929C1 
+		WHERE 
+		    RPT_NO = #{rptNo}
+		    AND RAN_NO = #{ranNo}
+		    AND SIL = #{sil};	 -->
+	    SELECT 
+	    CASE 
+	        WHEN (SELECT COUNT(*) FROM cusdec929C1 WHERE RPT_NO = #{rptNo} AND BRANCH = 'iOOM' AND RAN_NO = #{ranNo} AND SIL = #{sil}) > 0 
+	        THEN (SELECT MAX(SN) FROM cusdec929C1 WHERE RPT_NO = #{rptNo}  AND BRANCH = 'iOOM' AND RAN_NO = #{ranNo} AND SIL = #{sil}) 
+	        ELSE NEXTVAL(seq_cusdec929C1) 
+	    END AS SN, 
+	    CASE 
+	        WHEN (SELECT COUNT(*) FROM cusdec929C1 WHERE RPT_NO = #{rptNo}  AND BRANCH = 'iOOM' AND RAN_NO = #{ranNo} AND SIL = #{sil}) > 0 
+	        THEN '수정' 
+	        ELSE '신규' 
+	    END AS STATUS 
+	     <!--  SELECT NEXTVAL(seq_cusdec929C1) AS SN -->
+	</select>
+	
+	<!-- [레디 / 수입신고서 공통내역 - cusdec929a1] INSERT -->
+	<insert id="insertReadyImportDataA1" parameterType="hashmap">
+		INSERT INTO cusdec929a1
+		(BRANCH,
+		CUS_PRG,
+		SN,
+		Rpt_No,
+		Rpt_Seq,
+		Rpt_Day,
+		Rc_Day,
+		Lis_Day,
+		SDateTime,
+		Cus,
+		Tot_Ut,
+		
+		
+		Sec,
+		BlNo,
+		Bl_Yn,
+		Mrn,
+		Msn,
+		Hsn,
+		Arr_Day,
+		Inc_Day,
+		BanChulDay,
+		Lev_Form,
+		
+		Imp_Firm,
+		Imp_TgNo,
+		Nab_TgNo,
+		Nab_Firm,
+		Nab_Name,
+		Nab_SdNo,
+		Sup_Firm,
+		Sup_Mark,
+		Sup_St,
+		FOS_FIRM,
+		
+		FOS_MARK,
+		FOS_ST,
+		Tg_Pln_Mark,
+		Rpt_Divi_Mark,
+		Exc_Divi_Mark,
+		Imp_Ki_Mark,
+		Ori_St_Prf_Yn,
+		Amt_Rpt_Yn,
+		Tot_Wt,
+		Tot_Pack_Cnt,
+		
+		Tot_Pack_Ut,
+		Arr_Mark,
+		Tra_Met,
+		Tra_Chf_Mark,
+		Fod_Mark,
+		Ship,
+		Chk_Pa_Mark,
+		Chk_Pa,
+		Chk_Pa_Name,
+		Tot_Ran_Cnt,
+		
+		Con_Cod,
+		Con_Cur,
+		Con_Rate,
+		Con_Rate_Usd,
+		Con_Tot_Amt,
+		Con_Ki,
+		Con_Amt,
+		Con_Gita_Amt,
+		Tot_Tax_Usd,
+		Tot_Tax_Krw,
+		
+		Fre_Krw,
+		Fre1_Ki,
+		Fre1_Amt,
+		Fre2_Ki,
+		Fre2_Amt,
+		Insu_Krw,
+		Insu1_Ki,
+		Insu1_Amt,
+		Ad_Cst_Krw,
+		Ad_Divi,
+		
+		Ad_Cur_Ki,
+		Ad_Cst_Rate,
+		Ad_Cur_Ki2,
+		Ad_Cst_Rate2,
+		Ad_Amt_Krw,
+		Sub_Cst_Krw,
+		Sub_Divi,
+		Sub_Cur_Ki,
+		Sub_Cst_Rate,
+		Tot_Gs,
+		
+		Tot_Hof,
+		Tot_Gt,
+		Tot_Ky,
+		Tot_Nt,
+		Tot_Vat,
+		Tot_Dly_Tax,
+		Tot_Tax_Sum,
+		Nab_No,
+		Vat_Tax_Ct,
+		Vat_Free_Ct,
+		
+		CB1,
+		CB2,
+		CB3,
+		CB4,
+		CB5,
+		CB6,
+		CB7,
+		CB8,
+		CB9,
+		Ju_Name,
+		
+		Ju_Mark,
+		File_No,
+		Send,
+		Rece,
+		Md_Refe_No,	
+		Imp_Req_No,	
+		Rpt_Firm,	
+		BLYnCd,	
+		BLYnTxt,
+		Rpt_Use_Divi_CD,
+			
+		Rpt_Use_Divi_NM,
+		Rpt_Use_Day,
+		FwdCode,
+		FwdFirm,
+		FwdMark,
+		FwdName,
+		Cus1,
+		Cus2,
+		Cus3,
+		Cus4,
+		
+		Cus5,
+		Cus6,
+		Cus7,
+		Cus8,
+		Cus9,
+		REG_ID,
+		REG_DATE
+		
+		)VALUES(
+		'iOOM',
+		'READY',
+		#{resultCount1},
+		#{excel_0},
+		CASE 
+		    WHEN #{excel_1} = '1' THEN '01'
+		    WHEN #{excel_1} = '2' THEN '02'
+		    WHEN #{excel_1} = '3' THEN '03'
+		    WHEN #{excel_1} = '4' THEN '04'
+		    WHEN #{excel_1} IS NULL THEN '00'
+		    ELSE #{excel_1} 
+		END,
+		#{excel_2},
+		#{excel_3},
+		#{excel_4},
+		#{excel_6},
+		#{excel_7},
+        #{excel_142},
+		
+		#{excel_8},
+		#{excel_10},
+		#{excel_11},
+		#{mrn},
+		#{msn},
+		#{hsn},
+		#{excel_13},
+		#{excel_14},
+		#{excel_15},
+		#{excel_16},
+		
+		#{excel_17},
+		#{excel_18},
+		#{excel_19},
+		#{excel_20},
+		#{excel_21},
+		#{excel_22},
+		#{excel_23},
+		#{excel_24},
+		#{excel_25},
+		#{excel_26},
+		
+		#{excel_27},
+		#{excel_28},
+		#{excel_29},
+		#{excel_30},
+		#{excel_31},
+		#{excel_32},
+		#{excel_34},
+		#{excel_35},
+		ROUND(CAST(REPLACE(#{excel_36}, ',', '') AS DECIMAL(16, 3)), 3),
+		#{excel_39},
+		
+		#{excel_40},
+		#{excel_41},
+		#{excel_42},
+		#{excel_43},
+		#{excel_44},
+		#{excel_45},
+		#{excel_47},
+		#{excel_48},
+		#{excel_49},
+		#{excel_50},
+		
+		#{excel_51},
+		#{excel_52},
+		(CASE 
+        WHEN #{excel_53} = '-' OR #{excel_53} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_53}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_54} = '-' OR #{excel_54} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_54}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_55} = '-' OR #{excel_55} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_55}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_56},
+		(CASE 
+        WHEN #{excel_57} = '-' OR #{excel_57} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_57}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_58} = '-' OR #{excel_58} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_58}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_59} = '-' OR #{excel_59} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_59}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_60} = '-' OR #{excel_60} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_60}, ',', '') AS DECIMAL(20, 4))
+        END),
+        
+		(CASE 
+        WHEN #{excel_61} = '-' OR #{excel_61} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_61}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_62},
+		(CASE 
+        WHEN #{excel_63} = '-' OR #{excel_63} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_63}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_64},
+		(CASE 
+        WHEN #{excel_65} = '-' OR #{excel_65} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_65}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_66} = '-' OR #{excel_66} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_66}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_67},
+		(CASE 
+        WHEN #{excel_68} = '-' OR #{excel_68} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_68}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_69} = '-' OR #{excel_69} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_69}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_70},
+		
+		
+		
+		#{excel_71},
+		(CASE 
+        WHEN #{excel_72} = '-' OR #{excel_72} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_72}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_73},
+		(CASE 
+        WHEN #{excel_74} = '-' OR #{excel_74} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_74}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_75} = '-' OR #{excel_75} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_75}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_76} = '-' OR #{excel_76} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_76}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_77},
+		#{excel_78},
+		(CASE 
+        WHEN #{excel_79} = '-' OR #{excel_79} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_79}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_80} = '-' OR #{excel_80} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_80}, ',', '') AS DECIMAL(20, 4))
+        END),
+        
+        
+		(CASE 
+        WHEN #{excel_82} = '-' OR #{excel_82} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_82}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_83} = '-' OR #{excel_83} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_83}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_84} = '-' OR #{excel_84} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_84}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_85} = '-' OR #{excel_85} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_85}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_86} = '-' OR #{excel_86} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_86}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_87} = '-' OR #{excel_87} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_87}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_88} = '-' OR #{excel_88} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_88}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_89},
+		(CASE 
+        WHEN #{excel_90} = '-' OR #{excel_90} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_90}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_91} = '-' OR #{excel_91} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_91}, ',', '') AS DECIMAL(20, 4))
+        END),
+        
+        
+		#{excel_93},
+		#{excel_94},
+		#{excel_95},
+		#{excel_96},
+		#{excel_97},
+		#{excel_98},
+		#{excel_99},
+		#{excel_100},
+		#{excel_101},
+		#{excel_102},
+		
+		#{excel_103},
+		#{excel_104},
+		#{excel_105},
+		#{excel_106},
+		#{excel_108},
+		#{excel_109},
+		#{excel_110},
+		#{excel_111},
+		#{excel_112},
+		#{excel_113},
+		
+		#{excel_114},
+		#{excel_115},
+		#{excel_116},
+		#{excel_117},
+		#{excel_118},
+		#{excel_119},
+		#{cus1},
+		#{cus2},
+		#{cus3},
+		#{cus4},
+		
+		#{cus5},
+		#{cus6},
+		#{cus7},
+		#{cus8},
+		#{fileName},
+		#{Id},
+		NOW()
+		 )ON DUPLICATE KEY UPDATE
+		 Rpt_Seq  = CASE 
+					    WHEN #{excel_1} = '1' THEN '01'
+					    WHEN #{excel_1} = '2' THEN '02'
+					    WHEN #{excel_1} = '3' THEN '03'
+					    WHEN #{excel_1} = '4' THEN '04'
+					    WHEN #{excel_1} IS NULL THEN '00'
+					    ELSE #{excel_1} 
+					END
+		,Rpt_Day  = #{excel_2}
+		,Rc_Day  = #{excel_3}
+		,Lis_Day  = #{excel_4}
+		,SDateTime  = #{excel_6}
+		,Cus  = #{excel_7}
+		,Tot_Ut = #{excel_142}
+		
+		,Sec = #{excel_8}
+		,BlNo = #{excel_10}
+		,Bl_Yn = #{excel_11}
+		,Mrn = #{mrn}
+		,Msn = #{msn}
+		,Hsn = #{hsn}
+		,Arr_Day = #{excel_13}
+		,Inc_Day = #{excel_14}
+		,BanChulDay = #{excel_15}
+		,Lev_Form = #{excel_16}
+		
+		,Imp_Firm = #{excel_17}
+		,Imp_TgNo = #{excel_18}
+		,Nab_TgNo = #{excel_19}
+		,Nab_Firm = #{excel_20}
+		,Nab_Name = #{excel_21}
+		,Nab_SdNo = #{excel_22}
+		,Sup_Firm = #{excel_23}
+		,Sup_Mark = #{excel_24}
+		,Sup_St = #{excel_25}
+		,FOS_FIRM = #{excel_26}
+		
+		,FOS_MARK = #{excel_27}
+		,FOS_ST = #{excel_28}
+		,Tg_Pln_Mark = #{excel_29}
+		,Rpt_Divi_Mark = #{excel_30}
+		,Exc_Divi_Mark = #{excel_31}
+		,Imp_Ki_Mark = #{excel_32}
+		,Ori_St_Prf_Yn = #{excel_34}
+		,Amt_Rpt_Yn = #{excel_35}
+		,Tot_Wt = ROUND(CAST(REPLACE(#{excel_36}, ',', '') AS DECIMAL(16, 3)), 3)
+		,Tot_Pack_Cnt = #{excel_39}
+		
+		,Tot_Pack_Ut = #{excel_40} 
+		,Arr_Mark = #{excel_41}
+		,Tra_Met = #{excel_42}
+		,Tra_Chf_Mark = #{excel_43}
+		,Fod_Mark = #{excel_44}
+		,Ship = #{excel_45}
+		,Chk_Pa_Mark = #{excel_47}
+		,Chk_Pa = #{excel_48}
+		,Chk_Pa_Name = #{excel_49}
+		,Tot_Ran_Cnt = #{excel_50}
+		
+		,Con_Cod = #{excel_51}
+		,Con_Cur = #{excel_52}
+		,Con_Rate = (CASE WHEN #{excel_53} = '-' OR #{excel_53} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_53}, ',', '') AS DECIMAL(20, 4))END)
+		,Con_Rate_Usd = (CASE WHEN #{excel_54} = '-' OR #{excel_54} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_54}, ',', '') AS DECIMAL(20, 4))END)
+		,Con_Tot_Amt = 	(CASE WHEN #{excel_55} = '-' OR #{excel_55} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_55}, ',', '') AS DECIMAL(20, 4))END)
+		,Con_Ki = #{excel_56}
+		,Con_Amt = (CASE WHEN #{excel_57} = '-' OR #{excel_57} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_57}, ',', '') AS DECIMAL(20, 4))END)
+		,Con_Gita_Amt = (CASE WHEN #{excel_58} = '-' OR #{excel_58} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_58}, ',', '') AS DECIMAL(20, 4))END)
+		,Tot_Tax_Usd = (CASE WHEN #{excel_59} = '-' OR #{excel_59} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_59}, ',', '') AS DECIMAL(20, 4))END)
+		,Tot_Tax_Krw = (CASE WHEN #{excel_60} = '-' OR #{excel_60} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_60}, ',', '') AS DECIMAL(20, 4))END)
+			     
+		,Fre_Krw = (CASE WHEN #{excel_61} = '-' OR #{excel_61} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_61}, ',', '') AS DECIMAL(20, 4))END)
+		,Fre1_Ki = #{excel_62}
+		,Fre1_Amt = (CASE WHEN #{excel_63} = '-' OR #{excel_63} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_63}, ',', '') AS DECIMAL(20, 4))END)
+		,Fre2_Ki = #{excel_64}
+		,Fre2_Amt = (CASE WHEN #{excel_65} = '-' OR #{excel_65} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_65}, ',', '') AS DECIMAL(20, 4))END)
+		,Insu_Krw = (CASE WHEN #{excel_66} = '-' OR #{excel_66} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_66}, ',', '') AS DECIMAL(20, 4))END)
+		,Insu1_Ki = #{excel_67}
+		,Insu1_Amt = (CASE WHEN #{excel_68} = '-' OR #{excel_68} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_68}, ',', '') AS DECIMAL(20, 4))END)
+		,Ad_Cst_Krw = (CASE WHEN #{excel_69} = '-' OR #{excel_69} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_69}, ',', '') AS DECIMAL(20, 4))END)
+		,Ad_Divi = #{excel_70}
+		
+		,Ad_Cur_Ki = #{excel_71}
+		,Ad_Cst_Rate = (CASE WHEN #{excel_72} = '-' OR #{excel_72} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_72}, ',', '') AS DECIMAL(20, 4))END)
+		,Ad_Cur_Ki2 = #{excel_73}
+		,Ad_Cst_Rate2 = (CASE WHEN #{excel_74} = '-' OR #{excel_74} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_74}, ',', '') AS DECIMAL(20, 4))END)
+		,Ad_Amt_Krw = (CASE WHEN #{excel_75} = '-' OR #{excel_75} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_75}, ',', '') AS DECIMAL(20, 4))END)
+		,Sub_Cst_Krw  = (CASE WHEN #{excel_76} = '-' OR #{excel_76} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_76}, ',', '') AS DECIMAL(20, 4))END)
+		,Sub_Divi = #{excel_77}
+		,Sub_Cur_Ki = #{excel_78}
+		,Sub_Cst_Rate  = (CASE WHEN #{excel_79} = '-' OR #{excel_79} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_79}, ',', '') AS DECIMAL(20, 4))END)
+		,Tot_Gs = (CASE WHEN #{excel_80} = '-' OR #{excel_80} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_80}, ',', '') AS DECIMAL(20, 4))END)
+		
+		,Tot_Hof = (CASE WHEN #{excel_82} = '-' OR #{excel_82} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_82}, ',', '') AS DECIMAL(20, 4))END)
+		,Tot_Gt = (CASE WHEN #{excel_83} = '-' OR #{excel_83} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_83}, ',', '') AS DECIMAL(20, 4))END)
+		,Tot_Ky = (CASE WHEN #{excel_84} = '-' OR #{excel_84} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_84}, ',', '') AS DECIMAL(20, 4))END)
+		,Tot_Nt = (CASE WHEN #{excel_85} = '-' OR #{excel_85} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_85}, ',', '') AS DECIMAL(20, 4))END)
+		,Tot_Vat= (CASE WHEN #{excel_86} = '-' OR #{excel_86} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_86}, ',', '') AS DECIMAL(20, 4))END)
+		,Tot_Dly_Tax= (CASE WHEN #{excel_87} = '-' OR #{excel_87} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_87}, ',', '') AS DECIMAL(20, 4))END)
+		,Tot_Tax_Sum= (CASE WHEN #{excel_88} = '-' OR #{excel_88} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_88}, ',', '') AS DECIMAL(20, 4))END)
+		,Nab_No = #{excel_89}
+		,Vat_Tax_Ct= (CASE WHEN #{excel_90} = '-' OR #{excel_90} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_90}, ',', '') AS DECIMAL(20, 4))END)
+		,Vat_Free_Ct = (CASE WHEN #{excel_91} = '-' OR #{excel_91} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(#{excel_91}, ',', '') AS DECIMAL(20, 4))END)
+		
+		,CB1 = #{excel_93}
+		,CB2 = #{excel_94}
+		,CB3 = #{excel_95}
+		,CB4 = #{excel_96}
+		,CB5 = #{excel_97}
+		,CB6 = #{excel_98}
+		,CB7 = #{excel_99}
+		,CB8 = #{excel_100}
+		,CB9 = #{excel_101}
+		,Ju_Name = #{excel_102}
+		
+		,Ju_Mark = #{excel_103}
+		,File_No = #{excel_104}
+		,Send = #{excel_105}
+		,Rece = #{excel_106}
+		,Md_Refe_No = #{excel_108}
+		,Imp_Req_No = #{excel_109}	
+		,Rpt_Firm = #{excel_110}	
+		,BLYnCd = #{excel_111}	
+		,BLYnTxt = #{excel_112}
+		,Rpt_Use_Divi_CD = #{excel_113}
+			
+		,Rpt_Use_Divi_NM = #{excel_114}
+		,Rpt_Use_Day = #{excel_115}
+		,FwdCode = #{excel_116}
+		,FwdFirm = #{excel_117}
+		,FwdMark = #{excel_118}
+		,FwdName = #{excel_119}
+		,Cus1 = #{cus1}
+		,Cus2 = #{cus2}
+		,Cus3 = #{cus3}
+		,Cus4 = #{cus4}
+		
+		,Cus5 = #{cus4}
+		,Cus6 = #{cus4}
+		,Cus7 = #{cus4}
+		,Cus8 = #{cus4}
+		,Cus9 = #{fileName}
+		,REG_ID = #{Id}
+		,REG_DATE = NOW()
+		
+	</insert>
+	
+	
+	<!-- [수입신고서 란내역 - CUSDEC929B1] INSERT -->
+	<insert id="insertReadyImportDataB1" parameterType="hashmap">
+		INSERT INTO CUSDEC929B1
+		(BRANCH,
+		CUS_PRG,
+		SN,
+		SNA1,
+		Rpt_No,
+		RPT_SEQ,
+		RAN_NO,
+		HS,
+		ItemCd,
+		ItemCdSend,
+		
+		Std_GName1,
+		Exc_GName1,
+		Std_Code,
+		Model_GName1,	
+		Att_Yn,
+		Tax_Krw,
+	 	Tax_Usd,	 
+	 	Sun_Wt,
+	 	Sun_Ut,
+		Qty,
+		
+		Qty_Ut,
+		Ref_Wt, 	
+		Ref_Ut,	
+		Cs_Chk_Mark,
+		Chk_Met_Mark,	
+		Ori_St_Mark1,	
+		Ori_St_Mark5,	
+		Ori_St_Mark2,
+		Ori_St_Exempt_CD,
+		Ori_St_Stn,	
+		
+		Ori_St_Name,	
+		Ori_St_Mark6,	
+		Ori_St_PartYn,
+		Tax_Ki_Divi,	
+		Gs_Divi,	 
+		Gs_Rate,
+		Upi_Tax, 	 
+		Gs_Rmv_Rate, 	 
+		Gs, 	 
+		Gs_Rmv, 
+			
+		Gs_Rmv_Mark,	
+		Gs_Rmv_Divi,	 
+		Send_Rate, 	
+		Ng_Divi,	
+		Ng_Ki_Divi,	
+		Ng_Mark,	 
+		Ng_Rate, 	 
+		Ng_Rmv_Amt, 	 
+		Ng,
+		Sp_Tax_Basis,
+		 		 
+		Gt, 	 
+		Hof, 	
+		Ky_Divi,	
+		Ky_Ki_Divi,	 
+		Ky_Rmv_Amt, 	 
+		Ky_Rate,
+		Ky, 	 
+		Nt_Divi,	
+		Nt_Ki_Divi,	 
+		Nt, 
+			 
+		Nt_Rate, 	 
+		Vat_Rate, 	
+		Vat_Divi,	
+		Vat_Ki_Divi,	 
+		Vat, 	
+		Roy_Divi,	 
+		Roy_Rate, 	 
+		Roy_Amt,
+		sub_krw, 	
+		Vat_Rmv_Mark,
+			 
+		Vat_Rmv, 	 
+		Vat_Rmv_Rate, 	
+		Gs_Cet,	 
+		Vat_Tax_Ct, 	 
+		Vat_Free_ct, 		 
+		Tot_Size_Cnt, 	
+		Vit_Chk_Cnt,			 
+		REG_ID,
+		REG_DATE,
+		IF_REF2
+		)VALUES(
+		'iOOM',
+		'READY',
+		#{resultCount2},
+		#{resultCount1},
+		#{excel_0},
+		CASE 
+		    WHEN #{excel_1} = '1' THEN '01'
+		    WHEN #{excel_1} = '2' THEN '02'
+		    WHEN #{excel_1} = '3' THEN '03'
+		    WHEN #{excel_1} = '4' THEN '04'
+		    WHEN #{excel_1} IS NULL THEN '00'
+		    ELSE #{excel_1} 
+		END,
+		#{excel_129},
+		#{excel_130},
+		#{excel_131},
+		#{excel_132},
+		
+		#{excel_133},
+		#{excel_134},
+		#{excel_135},
+		#{excel_136},
+		#{excel_137},
+		(CASE 
+        WHEN #{excel_139} = '-' OR #{excel_139} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_139}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_140} = '-' OR #{excel_140} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_140}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_141} = '-' OR #{excel_141} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_141}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_142},
+        (CASE 
+        WHEN #{excel_143} = '-' OR #{excel_143} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_143}, ',', '') AS DECIMAL(20, 4))
+        END),
+        
+        
+        #{excel_144},
+        (CASE 
+        WHEN #{excel_145} = '-' OR #{excel_145} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_145}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_146},
+		#{excel_147},
+		#{excel_148},
+		#{excel_149},
+		#{excel_150},
+		#{excel_151},
+		#{excel_153},
+		#{excel_158},
+		
+		#{excel_159},
+		#{excel_160},
+		#{excel_161},
+		#{excel_164},
+		#{excel_165},
+		(CASE 
+        WHEN #{excel_166} = '-' OR #{excel_166} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_166}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_169} = '-' OR #{excel_169} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_169}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_170} = '-' OR #{excel_170} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_170}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_171} = '-' OR #{excel_171} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_171}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_172} = '-' OR #{excel_172} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_172}, ',', '') AS DECIMAL(20, 4))
+        END),
+		
+		#{excel_173},
+		#{excel_174},
+		(CASE 
+        WHEN #{excel_175} = '-' OR #{excel_175} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_175}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_176},
+		#{excel_177},
+		#{excel_178},
+		(CASE 
+        WHEN #{excel_179} = '-' OR #{excel_179} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_179}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_180} = '-' OR #{excel_180} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_180}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_181} = '-' OR #{excel_181} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_181}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_184} = '-' OR #{excel_184} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_184}, ',', '') AS DECIMAL(20, 4))
+        END),
+        
+		(CASE 
+        WHEN #{excel_186} = '-' OR #{excel_186} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_186}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_187} = '-' OR #{excel_187} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_187}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_188},
+		#{excel_189},
+		(CASE 
+        WHEN #{excel_190} = '-' OR #{excel_190} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_190}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_191} = '-' OR #{excel_191} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_191}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_192} = '-' OR #{excel_192} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_192}, ',', '') AS DECIMAL(20, 4))
+        END),
+     	#{excel_193},
+		#{excel_194},
+		(CASE 
+        WHEN #{excel_195} = '-' OR #{excel_195} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_195}, ',', '') AS DECIMAL(20, 4))
+        END),
+        
+		(CASE 
+        WHEN #{excel_196} = '-' OR #{excel_196} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_196}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_197} = '-' OR #{excel_197} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_197}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_198},
+        #{excel_199},
+		(CASE 
+        WHEN #{excel_200} = '-' OR #{excel_200} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_200}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_201},
+		(CASE 
+        WHEN #{excel_202} = '-' OR #{excel_202} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_202}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_203} = '-' OR #{excel_203} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_203}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_204} = '-' OR #{excel_204} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_204}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_205},
+        
+        (CASE 
+        WHEN #{excel_206} = '-' OR #{excel_206} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_206}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_207} = '-' OR #{excel_207} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_207}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_208},
+		(CASE 
+        WHEN #{excel_209} = '-' OR #{excel_209} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_209}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_210} = '-' OR #{excel_210} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_210}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_212} = '-' OR #{excel_212} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_212}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_213},
+		#{Id},
+		NOW(),
+		#{fileName}
+		)ON DUPLICATE KEY UPDATE
+			RPT_SEQ = CASE 
+						    WHEN #{excel_1} = '1' THEN '01'
+						    WHEN #{excel_1} = '2' THEN '02'
+						    WHEN #{excel_1} = '3' THEN '03'
+						    WHEN #{excel_1} = '4' THEN '04'
+						    WHEN #{excel_1} IS NULL THEN '00'
+						    ELSE #{excel_1} 
+						END
+			,RAN_NO = #{excel_129}
+			,HS = #{excel_130}
+			,ItemCd = #{excel_131}
+			,ItemCdSend = #{excel_132}
+			
+			,Std_GName1  = #{excel_133}
+			,Exc_GName1 = #{excel_134}
+			,Std_Code = #{excel_135}
+			,Model_GName1 = #{excel_136}	
+			,Att_Yn = #{excel_137}
+			,Tax_Krw = (CASE WHEN #{excel_139 = '-' OR #{excel_139} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_139}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)      	 	  	  	 
+		 	,Tax_Usd = (CASE WHEN #{excel_140 = '-' OR #{excel_140} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_140}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)      	 	  	  		 
+		 	,Sun_Wt = (CASE WHEN #{excel_141 = '-' OR #{excel_141} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_141}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)      	 	  	  	
+		 	,Sun_Ut = #{excel_142}
+			,Qty = (CASE WHEN #{excel_143 = '-' OR #{excel_143} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_143}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)      	 	  	  	
+			
+			,Qty_Ut = #{excel_144}
+			,Ref_Wt = (CASE WHEN #{excel_145 = '-' OR #{excel_145} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_145}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)      	 	  	  	 	
+			,Ref_Ut = #{excel_146}	
+			,Cs_Chk_Mark = #{excel_147}
+			,Chk_Met_Mark = #{excel_148}	
+			,Ori_St_Mark1 = #{excel_149}	
+			,Ori_St_Mark5 = #{excel_150}	
+			,Ori_St_Mark2 = #{excel_151}
+			,Ori_St_Exempt_CD = #{excel_153}
+			,Ori_St_Stn = #{excel_158}	
+			
+			,Ori_St_Name = #{excel_159}	
+			,Ori_St_Mark6 = #{excel_160}	
+			,Ori_St_PartYn = #{excel_161}
+			,Tax_Ki_Divi = #{excel_164}	
+			,Gs_Divi = #{excel_165}	 
+			,Gs_Rate = (CASE WHEN #{excel_166} = '-' OR #{excel_166} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_166}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+			,Upi_Tax = (CASE WHEN #{excel_169 = '-' OR #{excel_169} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_169}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+			,Gs_Rmv_Rate = (CASE WHEN #{excel_170} = '-' OR #{excel_170} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_170}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+			,Gs = (CASE WHEN #{excel_171} = '-' OR #{excel_171} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_171}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+			,Gs_Rmv = (CASE WHEN #{excel_172} = '-' OR #{excel_172} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_172}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+			     
+			,Gs_Rmv_Mark = #{excel_173}	
+			,Gs_Rmv_Divi = #{excel_174}	 
+			,Send_Rate = (CASE WHEN #{excel_175} = '-' OR #{excel_175} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_175}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+			,Ng_Divi = #{excel_176}	
+			,Ng_Ki_Divi = #{excel_177}	
+			,Ng_Mark = #{excel_178}	 
+			,Ng_Rate = (CASE WHEN #{excel_179} = '-' OR #{excel_179} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_179}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 	 
+			,Ng_Rmv_Amt = (CASE WHEN #{excel_180} = '-' OR #{excel_180} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_180}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 	 
+			,Ng = (CASE WHEN #{excel_181} = '-' OR #{excel_181} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_181}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+			,Sp_Tax_Basis = (CASE WHEN #{excel_184} = '-' OR #{excel_184} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_184}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+			 		 
+			,Gt = (CASE WHEN #{excel_186} = '-' OR #{excel_186} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_186}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 	 
+			,Hof = (CASE WHEN #{excel_187} = '-' OR #{excel_187} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_187}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 	
+			,Ky_Divi = #{excel_188}		
+			,Ky_Ki_Divi = #{excel_189}		 
+			,Ky_Rmv_Amt = (CASE WHEN #{excel_190} = '-' OR #{excel_190} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_190}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+			,Ky_Rate = (CASE WHEN #{excel_191} = '-' OR #{excel_191} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_191}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+			,Ky = (CASE WHEN #{excel_192} = '-' OR #{excel_192} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_192}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		 
+			,Nt_Divi = #{excel_193}		
+			,Nt_Ki_Divi = #{excel_194}		 
+			,Nt = (CASE WHEN #{excel_195} = '-' OR #{excel_195} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_195}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		 
+				 
+			,Nt_Rate = (CASE WHEN #{excel_196} = '-' OR #{excel_196} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_196}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 	  	 
+			,Vat_Rate = (CASE WHEN #{excel_197} = '-' OR #{excel_197} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_197}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 	  	
+			,Vat_Divi = #{excel_198}	
+			,Vat_Ki_Divi = #{excel_199}	 
+			,Vat = (CASE WHEN #{excel_200} = '-' OR #{excel_200} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_200}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+			,Roy_Divi = #{excel_201}
+			,Roy_Rate = (CASE WHEN #{excel_202} = '-' OR #{excel_202} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_202}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	 
+			,Roy_Amt = (CASE WHEN #{excel_203} = '-' OR #{excel_203} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_203}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+			,sub_krw = (CASE WHEN #{excel_204} = '-' OR #{excel_204} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_204}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+			,Vat_Rmv_Mark = #{excel_205}
+				 
+			,Vat_Rmv = (CASE WHEN #{excel_206} = '-' OR #{excel_206} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_206}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 	 
+			,Vat_Rmv_Rate = (CASE WHEN #{excel_207} = '-' OR #{excel_207} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_207}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 	
+			,Gs_Cet = #{excel_208}	 
+			,Vat_Tax_Ct = (CASE WHEN #{excel_209} = '-' OR #{excel_209} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_209}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 	 
+			,Vat_Free_ct = (CASE WHEN #{excel_210} = '-' OR #{excel_210} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_210}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 		 
+			,Tot_Size_Cnt = (CASE WHEN #{excel_212} = '-' OR #{excel_212} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_212}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 	
+			,Vit_Chk_Cnt = #{excel_213}			 
+			,REG_ID = #{Id}
+			,REG_DATE = NOW() 
+			,IF_REF2 = #{fileName}  
+	</insert>
+	
+	<!-- [수입신고서 규격내역 - CUSDEC929C1] INSERT -->
+	<insert id="insertReadyImportDataC1" parameterType="hashmap">
+		INSERT  INTO CUSDEC929C1
+		(BRANCH,
+		CUS_PRG,
+		SN,
+		SNA1,
+		SNB1,
+		Rpt_No,
+		RPT_SEQ,
+		RAN_NO,
+		Sil,		
+		Rg_Code,
+			
+		IMP_GName1,	
+		IMP_GName2,	
+		IMP_GName3,	
+		Compoent1,	
+		Compoent2,	
+		Qty,
+		Ut,	
+		Upi,	
+		Amt,
+		REG_ID,
+		REG_DATE,
+		Ref_No
+		
+		)VALUES(
+		'iOOM',
+		'READY',
+		#{resultCount3},
+		#{resultCount1},
+		#{resultCount2},
+		#{excel_0},
+		CASE 
+		    WHEN #{excel_1} = '1' THEN '01'
+		    WHEN #{excel_1} = '2' THEN '02'
+		    WHEN #{excel_1} = '3' THEN '03'
+		    WHEN #{excel_1} = '4' THEN '04'
+		    WHEN #{excel_1} IS NULL THEN '00'
+		    ELSE #{excel_1} 
+		END,
+		#{excel_129},
+		#{excel_217},
+		IFNULL(#{excel_218},''),
+		
+		
+		IFNULL(#{excel_219},''),
+		#{excel_220},
+		#{excel_221},
+		#{excel_222},
+		#{excel_223},
+		(CASE                                     
+        WHEN #{excel_224} = '-' OR #{excel_224} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_224}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_225},
+		(CASE                                     
+        WHEN #{excel_226} = '-' OR #{excel_226} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_226}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_227} = '-' OR #{excel_227} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_227}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{Id},
+		NOW(),
+		#{fileName}
+		)ON DUPLICATE KEY UPDATE
+		RPT_SEQ = CASE 
+					    WHEN #{excel_1} = '1' THEN '01'
+					    WHEN #{excel_1} = '2' THEN '02'
+					    WHEN #{excel_1} = '3' THEN '03'
+					    WHEN #{excel_1} = '4' THEN '04'
+					    WHEN #{excel_1} IS NULL THEN '00'
+					    ELSE #{excel_1} 
+					END
+		,RAN_NO = #{excel_129}
+		,SIL = #{excel_217}
+		,Rg_Code = IFNULL(#{excel_218},'')
+			
+		,IMP_GName1 = IFNULL(#{excel_219},'')	
+		,IMP_GName2 = #{excel_220}	
+		,IMP_GName3 = #{excel_221}
+		,Compoent1 = #{excel_222}
+		,Compoent2 = #{excel_223}
+		,Qty = (CASE WHEN #{excel_224} = '-' OR #{excel_224} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_224}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 	  	 
+		,Ut	 = #{excel_225}                                    
+		,Upi = (CASE WHEN #{excel_226} = '-' OR #{excel_226} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_226}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 	  	 	
+		,Amt = (CASE WHEN #{excel_227} = '-' OR #{excel_227} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_227}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 	  	 
+		,REG_ID =#{Id}
+		,REG_DATE = NOW()
+		,Ref_No = #{fileName}
+	</insert>
+	
+	<!-- 타관세사 수입신고 현황 목록 조회 -->
+	<select id="selectCusImpViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+		    SN,
+		    COUNT(*) OVER() AS cnt,
+		    plnt_cd,
+	    	pr_ordr,
+		    rece,
+		    unre_memo, 
+		    up_memo,
+		    cs,
+		    rpt_no,
+		    blno, 
+		    nab_firm, 
+		    sup_firm,
+		    reporter,
+		    step01_date, 
+		    Inc_Day,
+		    Rpt_Day,
+		    Lis_Day,
+		    BanChulDay,
+		    Exc_Cot, 
+		    Con_Ki_Cot,
+		    Con_Cod, 
+		    Fre_Krw,
+		    Insu_Krw, 
+		    tot_pack_cnt, 
+		    tot_wt,         
+		    con_cur,
+		    con_tot_amt,
+		    mrn, 
+		    law_cd, 
+		    sup_st, 
+		    fod_mark, 
+		    ori_st_prf_yn, 
+		    rmv,
+		    rpt_yn,
+		    user_memo, 
+		    cus_memo 
+		FROM (
+			SELECT 
+		    SN,
+		    SUBSTRING_INDEX(a.user_memo, '\n', 1) AS plnt_cd,
+	    	CASE WHEN STR_CNT(a.user_memo, '\n') >= 1 THEN
+			SUBSTRING_INDEX(SUBSTRING_INDEX(a.user_memo, '\n', 2), '\n', -1)
+			ELSE '' END AS pr_ordr,
+		    a.rece,
+		    '' AS unre_memo, 
+		    '' AS up_memo,
+		    CASE WHEN b.cs = 1 THEN '검사' ELSE '-' END AS cs, 
+		    CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no,
+		    a.blno, 
+		    a.nab_firm, 
+		    a.sup_firm,
+		    a.Rpt_Firm AS reporter,
+		    '' AS step01_date, 
+		    CASE WHEN a.Inc_Day != '' THEN DATE_FORMAT(a.Inc_Day, '%Y-%m-%d') ELSE '' END AS Inc_Day,
+		    CASE WHEN a.Rpt_Day != '' THEN DATE_FORMAT(a.Rpt_Day, '%Y-%m-%d') ELSE '' END AS Rpt_Day,
+		    CASE WHEN a.Lis_Day != '' THEN DATE_FORMAT(a.Lis_Day, '%Y-%m-%d') ELSE '' END AS Lis_Day,
+		    CASE WHEN a.BanChulDay != '' THEN DATE_FORMAT(a.BanChulDay, '%Y-%m-%d') ELSE '' END AS BanChulDay,
+			<!-- CONCAT(a.Exc_Divi_Mark, '-', 
+			CASE WHEN a.Exc_Divi_Cot = ''
+			THEN IFNULL((SELECT CMMN_NM FROM CMMN_CD b WHERE b.GRP_CD = 'EXCDIVI' AND a.Exc_Divi_Mark = b.CMMN_CD ),'')
+			ELSE a.Exc_Divi_Cot END ) AS Exc_Cot, -->
+			CASE 
+			    WHEN a.Exc_Divi_Cot = '' OR a.Exc_Divi_Cot IS NULL THEN a.Exc_Divi_Mark
+			    ELSE CONCAT(a.Exc_Divi_Mark , '-', a.Exc_Divi_Cot) 
+			END AS Exc_Cot,
+   			CASE WHEN a.Con_Ki_Cot = ''
+			THEN IFNULL((SELECT CMMN_NM FROM CMMN_CD b WHERE b.GRP_CD = 'CONKI' AND a.Con_Ki = b.CMMN_CD ),'')
+			ELSE a.Con_Ki_Cot END AS Con_Ki_Cot,
+		    a.Con_Cod, 
+		    a.Fre_Krw,
+		    a.Insu_Krw, 
+		    CONCAT(a.tot_pack_cnt, ' (', a.Tot_Pack_Ut, ')') AS tot_pack_cnt, 
+		    CONCAT(a.Tot_Wt, ' (', a.tot_ut, ')') AS tot_wt,         
+		    a.con_cur,
+		    a.con_tot_amt,
+		    a.mrn, 
+			IFNULL(d.law_cd,'') AS law_cd,
+		    a.sup_st, 
+		    a.fod_mark, 
+		    a.ori_st_prf_yn, 
+		    CASE WHEN c.rmv = 1 THEN 'Y' ELSE 'N' END AS rmv, 
+		    '' AS rpt_yn,
+		    IFNULL(e.user_memo, '') as user_memo,
+		    '' AS cus_memo  
+			FROM cusdec929a1 a
+			LEFT JOIN 
+		    (SELECT sna1, rpt_no, MAX(CASE cs_chk_cot WHEN '청CS기준검사' THEN 1 ELSE 0 END) AS cs FROM CUSDEC929B1 GROUP BY sna1, rpt_no) b ON a.sn = b.sna1 AND a.Rpt_No = b.Rpt_No
+			LEFT JOIN 
+			(SELECT sna1, rpt_no, MAX(CASE gs_rmv_mark WHEN '' THEN 0 ELSE 1 END) AS rmv FROM CUSDEC929B1 GROUP BY sna1, rpt_no) c ON a.sn = c.sna1 AND a.Rpt_No = c.rpt_no
+			LEFT JOIN
+			(SELECT sna1, rpt_no,  GROUP_CONCAT(distinct law_cd SEPARATOR ',') as law_cd FROM cusdec929d1 GROUP BY sna1, rpt_no) d ON a.sn = d.sna1 AND a.Rpt_No = d.RPT_NO    
+			LEFT JOIN
+			(select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+			on I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+			LEFT JOIN 
+			MEMO_INFO e
+			ON a.Rpt_No = e.RPT_NO AND e.MEMO_TYPE = 'imp'
+			WHERE 
+			   <!--  rpt_seq = '00' -->
+			  a.branch = 'iOOM'
+			<!-- <choose>
+			<when test="srch1 =='02'">
+			AND a.rece In ('수리', '자수')			
+			</when>
+			<when test="srch1 =='03'">
+			AND a.rece = '대기'			
+			</when>
+			<when test="srch1 =='04'">
+			AND a.rece = '결재'			
+			</when>
+			<when test="srch1 =='05'">
+			AND a.rece = '미결'			
+			</when>
+			<when test="srch1 =='06'">
+			AND a.rece = '승인'			
+			</when>
+			<when test="srch1 =='07'">
+			AND a.rece = '정정'			
+			</when>
+			</choose> -->
+			<choose>
+			<when test="srch8 =='01'">
+			 AND a.rpt_Day Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			</when>
+			<otherwise>
+			 AND a.Lis_Day Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			</otherwise>
+			</choose>			
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE CONCAT('%',UPPER(REPLACE(#{srch4},'-','')),'%')
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND a.blno LIKE CONCAT('%',UPPER(#{srch5}),'%')
+			</if>
+			<if test="list != null and list.size() > 0">
+	            AND a.nab_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+        	</if>
+			) as IMPORT 
+			WHERE 1=1
+			<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+			AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+			</if>
+			<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+			AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+			</if>
+			ORDER BY rpt_day desc, rpt_no desc
+			LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+	
+	<!-- 타관세사 업로드 목록 조회 -->
+	<select id="selectCusImpFileList" parameterType="searchVO" resultType="egovMap">
+		SELECT  IFNULL (A.CUS9 ,'')AS fileName,
+		        IFNULL (CONCAT(MIN(A.rpt_day), ' - ', MAX(A.rpt_day)),'') AS rptDayRange,
+		        IFNULL (DATE_FORMAT(A.reg_date, '%Y-%m-%d'),'') AS regDate,
+				IFNULL(COUNT(C.Ref_No), 0) AS refNoCount
+		FROM cusdec929a1 A 
+		LEFT JOIN CUSDEC929C1 C
+		ON A.BRANCH = C.BRANCH
+		AND A.SN = C.SNA1
+		AND A.Rpt_No = C.Rpt_No
+		AND A.Rpt_Seq = C.Rpt_Seq
+		WHERE     
+		     A.branch = 'iOOM'
+		<if test="list != null and list.size() > 0">
+	        AND nab_sdno IN 
+	        <foreach item="id" collection="list" open="(" separator="," close=")">
+	            #{id}
+	        </foreach>
+	    </if>
+	    GROUP BY A.CUS9
+	</select>
+	
+	
+	<!-- 타관세사 수입신고 현황 상세 란 목록 조회  -->
+	<select id="selectCusImpViewLanList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			RPT_NO,
+			RAN_NO,
+			CONCAT(SUBSTRING(HS, 1, 4), '.', SUBSTRING(HS, 5, 2), '-', SUBSTRING(HS, 7, 4)) AS HS,
+			GS_DIVI AS na,
+			GS_RATE,
+			STD_GNAME1,
+			EXC_GNAME1,
+			TAX_USD,
+			cs_chk_cot,
+			gs,
+			vat
+		FROM CUSDEC929B1
+			WHERE rpt_no = #{srch2}
+			AND rpt_seq = '00'
+			AND branch = 'iOOM'
+			ORDER BY rpt_no, ran_no;
+	</select>
+	
+	<select id="selectCusImpViewSpecList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			RPT_NO,
+			RAN_NO,
+			Sil,
+			IMP_GNAME1,
+			Qty,
+			Ut,
+			Upi,
+			Amt,
+			IMP_GNAME2,
+			Compoent1,
+			Compoent2
+		FROM CUSDEC929C1
+			WHERE rpt_no = #{srch2}
+			AND RAN_NO = #{srch3}
+			AND rpt_seq = '00'
+			AND branch = 'iOOM'
+			ORDER BY rpt_no, ran_no, sil;
+	</select>
+	
+	<!-- [엔컴 / 수입신고서 공통내역 - cusdec929a1] INSERT -->
+	<insert id="insertEncomImportDataA1" parameterType="hashmap">
+		INSERT INTO cusdec929a1
+		(BRANCH,
+		CUS_PRG,
+		SN,
+		Rpt_No,		
+		Rpt_Firm,	
+		Rpt_Name,	
+		Rpt_TelNo,	
+		Rpt_EMailID,	
+		Imp_Code,	
+		Imp_Firm,
+			
+		Imp_TgNo,	
+		Imp_Divi,	
+		Nab_Code,	
+		Nab_Firm,	
+		Nab_Name,		
+		Nab_Addr1,	
+		Nab_TgNo,	
+		Nab_SdNo_Divi,	
+		Nab_SdNo,	
+		Nab_RegNo,
+			
+		Nab_TelNo,	
+		Nab_EMailID,	
+		FwdMark,	
+		FwdName,	
+		Off_Mark,	
+		Off_Firm,	
+		Cus,	
+		Sec,		
+		Tg_Pln_Mark,	
+		Rpt_Divi_Mark,	
+		
+		Rpt_Day,	
+		Exc_Divi_Mark,	
+		Imp_Ki_Mark,	
+		Ori_St_Prf_Yn,	
+		Amt_Rpt_Yn,	
+		Con_ki,	
+		Arr_Day,	
+		Arr_Mark,	
+		Arr_Name,	
+		Ship,	
+		
+		Mas_BlNo,					
+		Tra_Met,	
+		Tra_Cta,	
+		Fod_Mark,		
+		BlNo,	
+		Bl_Yn,	
+		Inc_Day,	
+		Chk_Pa_Mark,
+		Chk_Pa_Name,			
+		Mrn,
+		
+		Msn,
+		Hsn,	
+		Tot_Ran_Cnt,	
+		Lev_Form,			
+		Nab_No,	
+		Ju_Mark,	
+		Ju_Name,	
+		Con_Cod,	
+		Con_Cur,	
+		Con_Amt,
+			
+		Con_Rate,					
+		Fre1_Ki,		
+		Fre1_Amt,	
+		Fre_Krw,	
+		Insu1_Amt,	
+		Insu_Krw,	
+		Ad_Divi,	
+		Ad_Cst_Rate,	
+		Ad_Cur_Ki,			
+		Ad_Cst_Krw,	
+		
+		Sub_Divi,	
+		Sub_Cst_Rate,	
+		Sub_Cur_Ki,				
+		Sub_Cst_Krw,					
+		Tot_Pack_Cnt,	
+		Tot_Pack_Ut,	
+		Tot_Wt,	
+		Tot_Ut,
+		Tot_Dly_Tax,		
+		Tot_Tax_Sum,
+			
+		Sp_Deli,
+		Cus1,
+		Cus2,
+		Cus3,
+		Cus4,
+		Cus5,
+		Cus6,
+		Cus7,
+		Cus8,
+		Lis_Day,
+			
+		Rc_Day,		
+		Res_Form,				
+		Send,	
+		Rece,	
+		CbUser,
+		Tot_Add_Tax,		
+		File_No,
+		Rpt_Seq,
+		IDateTime,	
+		MOD_DATE,
+				
+		Sup_Mark,	
+		Sup_Firm,	
+		Sup_St,		
+		Ad_Cst_Rate2,	
+		Ad_Cur_Ki2,
+		CB1,	
+		CB2,	
+		CB3,	
+		CB4,	
+		CB5,
+			
+		CB6,	
+		CB7,
+		Ad_Amt_Krw,
+		Cus9,
+		REG_ID,
+		REG_DATE
+		
+		)VALUES(
+		'iOOM',
+		'ENCOM',
+		#{resultCount1},
+		#{excel_1},
+		#{excel_3},
+		#{excel_4},
+		#{excel_5},
+		#{excel_6},
+		#{excel_7},
+		#{excel_8},
+		
+		#{excel_9},
+		#{excel_10},
+		#{excel_11},
+		#{excel_12},
+		#{excel_13},
+		#{excel_15},
+		#{excel_16},
+		#{excel_17},
+		#{excel_18},
+		#{excel_19},
+		
+		#{excel_20},
+		#{excel_21},
+		#{excel_22},
+		#{excel_23},
+		#{excel_24},
+		#{excel_25},
+		#{excel_27},
+		#{excel_28},
+		#{excel_30},
+		#{excel_31},
+		
+		#{excel_32},
+		#{excel_33},
+		#{excel_34},
+		#{excel_35},
+		#{excel_36},
+		#{excel_37},
+		#{excel_38},
+		#{excel_39},
+		#{excel_40},
+		#{excel_42},
+		
+		#{excel_43},
+		#{excel_48},
+		#{excel_49},
+		#{excel_50},
+		#{excel_52},
+		#{excel_53},
+		#{excel_54},
+		#{excel_55},
+		#{excel_56},
+		#{mrn},
+		
+		#{msn},
+		#{hsn},
+		#{excel_60},
+		#{excel_61},
+		#{excel_64},
+		#{excel_65},
+		#{excel_66},
+		#{excel_67},
+		#{excel_68},
+		(CASE 
+        WHEN #{excel_69} = '-' OR #{excel_69} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_69}, ',', '') AS DECIMAL(20, 4))
+        END),
+        
+		(CASE 
+        WHEN #{excel_70} = '-' OR #{excel_70} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_70}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_75},
+		(CASE 
+        WHEN #{excel_77} = '-' OR #{excel_77} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_77}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_78} = '-' OR #{excel_78} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_78}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_79} = '-' OR #{excel_79} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_79}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_80} = '-' OR #{excel_80} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_80}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_81},
+		(CASE 
+        WHEN #{excel_82} = '-' OR #{excel_82} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_82}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_83},
+		(CASE 
+        WHEN #{excel_87} = '-' OR #{excel_87} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_87}, ',', '') AS DECIMAL(20, 4))
+        END),
+        
+        #{excel_88},
+		(CASE 
+        WHEN #{excel_89} = '-' OR #{excel_89} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_89}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_90},
+		(CASE 
+        WHEN #{excel_94} = '-' OR #{excel_94} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_94}, ',', '') AS DECIMAL(20, 4))
+        END),
+		(CASE 
+        WHEN #{excel_99} = '-' OR #{excel_99} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_99}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_100},
+		(CASE 
+        WHEN #{excel_101} = '-' OR #{excel_101} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_101}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_102},
+		(CASE 
+        WHEN #{excel_118} = '-' OR #{excel_118} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_118}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_120} = '-' OR #{excel_120} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_120}, ',', '') AS DECIMAL(20, 4))
+        END),
+        
+		#{excel_121},
+		#{cus1},
+		#{cus2},
+		#{cus3},
+		#{cus4},
+		#{cus5},
+		#{cus6},
+		#{cus7},
+		#{cus8},
+		#{excel_125},
+		
+		#{excel_126},
+		#{excel_128},
+		#{excel_132},
+		#{excel_133},
+		#{excel_134},
+		(CASE 
+        WHEN #{excel_140} = '-' OR #{excel_140} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_140}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{excel_142},
+		CASE 
+		WHEN #{excel_149} = '1' THEN '01'
+		WHEN #{excel_149} = '2' THEN '02'
+		WHEN #{excel_149} = '3' THEN '03'
+		WHEN #{excel_149} = '4' THEN '04'
+		WHEN #{excel_149} IS NULL THEN '00'
+		ELSE  #{excel_149} END ,
+		SUBSTRING(#{excel_152}, 1, 12),
+		#{excel_153},
+		
+		#{excel_155},
+		#{excel_156},
+		#{excel_157},
+		(CASE 
+        WHEN #{excel_159} = '-' OR #{excel_159} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_159}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_160},
+		#{excel_174},
+		#{excel_175},
+		#{excel_176},
+		#{excel_177},
+		#{excel_178},
+		
+		#{excel_179},
+		#{excel_180},
+		#{excel_188},
+		#{fileName},
+		#{Id},
+		NOW()
+		
+		 )ON DUPLICATE KEY UPDATE
+		 	
+		Rpt_Firm = #{excel_3}
+		,Rpt_Name = #{excel_4}	
+		,Rpt_TelNo = #{excel_5}	
+		,Rpt_EMailID = #{excel_6}		
+		,Imp_Code = #{excel_7}		
+		,Imp_Firm = #{excel_8}	
+			
+		,Imp_TgNo = #{excel_9}		
+		,Imp_Divi = #{excel_10}		
+		,Nab_Code = #{excel_11}		
+		,Nab_Firm = #{excel_12}		
+		,Nab_Name = #{excel_13}			
+		,Nab_Addr1 = #{excel_15}		
+		,Nab_TgNo = #{excel_16}		
+		,Nab_SdNo_Divi = #{excel_17}		
+		,Nab_SdNo = #{excel_18}		
+		,Nab_RegNo = #{excel_19}	
+			
+		,Nab_TelNo = #{excel_20}		
+		,Nab_EMailID = #{excel_21}		
+	    ,FwdMark = #{excel_22}		
+		,FwdName = #{excel_23}		
+		,Off_Mark = #{excel_24}		
+		,Off_Firm = #{excel_25}		
+		,Cus = #{excel_27}		
+		,Sec = #{excel_28}			
+		,Tg_Pln_Mark = #{excel_30}		
+		
+		,Rpt_Divi_Mark = #{excel_31}		
+		,Rpt_Day = #{excel_32}		
+		,Exc_Divi_Mark = #{excel_33}		
+		,Imp_Ki_Mark = #{excel_34}		
+		,Ori_St_Prf_Yn = #{excel_35}		
+		,Amt_Rpt_Yn = #{excel_36}		
+		,Con_ki = #{excel_37}		
+		,Arr_Day = #{excel_38}		
+		,Arr_Mark = #{excel_39}		
+		,Arr_Name = #{excel_40}		
+		
+		,Tra_Met = #{excel_48}		
+		,Ship = #{excel_45}		
+		,Mas_BlNo = #{excel_43}							
+		,Tra_Cta = #{excel_49}		
+		,Fod_Mark = #{excel_50}			
+		,BlNo = #{excel_52}		
+		,Bl_Yn = #{excel_53}		
+		,Inc_Day = #{excel_54}		
+		,Chk_Pa_Mark = #{excel_55}
+		
+		,Chk_Pa_Name = #{excel_56}			
+		,Mrn = #{mrn}
+		,Msn = #{msn}
+		,Hsn = #{hsn}	
+		,Tot_Ran_Cnt = #{excel_60}	
+		,Lev_Form = #{excel_61}			
+		,Nab_No = #{excel_64}	
+		,Ju_Mark = #{excel_65}	
+		,Ju_Name = #{excel_66}	
+		,Con_Cod = #{excel_67}	
+		
+		,Con_Cur = #{excel_68}	
+		,Con_Amt= (CASE WHEN #{excel_69 = '-' OR #{excel_69} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_69}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 	  	 	
+		,Con_Rate= (CASE WHEN #{excel_70 = '-' OR #{excel_70} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_70}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 	  	 					
+		,Fre1_Ki = #{excel_75}		
+		,Fre1_Amt= (CASE WHEN #{excel_77 = '-' OR #{excel_77} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_77}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 	  	 	
+		,Fre_Krw= (CASE WHEN #{excel_78 = '-' OR #{excel_78} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_78}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 	  	 	
+		,Insu1_Amt= (CASE WHEN #{excel_79 = '-' OR #{excel_79} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_79}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 	  	 	
+		,Insu_Krw= (CASE WHEN #{excel_80 = '-' OR #{excel_80} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_80}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 	  	 	
+		,Ad_Divi = #{excel_81}	
+		,Ad_Cst_Rate= (CASE WHEN #{excel_82 = '-' OR #{excel_82} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_82}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 	  	 	
+		
+		,Ad_Cur_Ki = #{excel_83}			
+		,Ad_Cst_Krw = (CASE WHEN #{excel_87 = '-' OR #{excel_87} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_87}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Sub_Divi= #{excel_88}		
+		,Sub_Cst_Rate = (CASE WHEN #{excel_89 = '-' OR #{excel_89} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_89}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Sub_Cur_Ki= #{excel_90}				
+		,Sub_Cst_Krw = (CASE WHEN #{excel_94 = '-' OR #{excel_94} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_94}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)					
+		,Tot_Pack_Cnt = (CASE WHEN #{excel_99 = '-' OR #{excel_99} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_99}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Tot_Pack_Ut	= #{excel_100}
+		,Tot_Wt = (CASE WHEN #{excel_101 = '-' OR #{excel_101} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_101}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		
+		,Tot_Ut = #{excel_102}
+		,Tot_Dly_Tax = (CASE WHEN #{excel_101 = '-' OR #{excel_101} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_101}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Tot_Tax_Sum = (CASE WHEN #{excel_101 = '-' OR #{excel_101} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_101}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Sp_Deli = #{excel_102}
+		,Cus1 = #{cus1}
+		,Cus2 = #{cus2}
+		,Cus3 = #{cus3}
+		,Cus4 = #{cus4}
+		,Cus5 = #{cus5}
+		,Cus6 = #{cus6}
+		
+		,Cus7 = #{cus6}
+		,Cus8 = #{cus6}
+		,Lis_Day = #{excel_125}	
+		,Rc_Day = #{excel_126}		
+		,Res_Form = #{excel_128}				
+		,Send = #{excel_132}	
+		,Rece = #{excel_133}	
+		,CbUser = #{excel_134}
+		,Tot_Add_Tax = (CASE WHEN #{excel_140 = '-' OR #{excel_140} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_140}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,File_No = #{excel_142}
+		,Rpt_Seq = 
+					CASE 
+					WHEN #{excel_149} = '1' THEN '01'
+					WHEN #{excel_149} = '2' THEN '02'
+					WHEN #{excel_149} = '3' THEN '03'
+					WHEN #{excel_149} = '4' THEN '04'
+					WHEN #{excel_149} IS NULL THEN '00'
+					ELSE #{excel_149} END 
+		,IDateTime = SUBSTRING(#{excel_152}, 1, 12)
+		,MOD_DATE = #{excel_153}		
+		,Sup_Mark = #{excel_155}	
+		,Sup_Firm = #{excel_156}	
+		,Sup_St = #{excel_157}	
+		,Ad_Cst_Rate2= (CASE WHEN #{excel_159 = '-' OR #{excel_159} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_159}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ad_Cur_Ki2 = #{excel_160}
+		,CB1 = #{excel_174}	
+		,CB2 = #{excel_175}	
+		,CB3 = #{excel_176}	
+		
+		,CB4 = #{excel_177}		
+		,CB5 = #{excel_178}		
+		,CB6 = #{excel_179}		
+		,CB7 = #{excel_180}	
+		,Ad_Amt_Krw = #{excel_188}	
+		,Cus9 = #{fileName}
+		,REG_ID = #{Id}
+		,REG_DATE = NOW()
+	</insert>
+	
+	<!-- [엔컴 / 수입신고서 란내역 - CUSDEC929B1] INSERT -->
+	<insert id="insertEncomImportDataB1" parameterType="hashmap">
+		INSERT INTO CUSDEC929B1
+		(BRANCH,
+		CUS_PRG,
+		SN,
+		SNA1,
+		Rpt_Seq,
+		Rpt_No,
+		Gs,	
+		Ts,	
+		Gt,	
+		Hof,	
+		
+		Ng,	
+		Ky,	
+		Nt,		
+		Vat_Tax_Ct,	
+		Vat_Free_ct,
+		Vat,
+		Ran_No,	
+		Hs,	
+		Gs_Divi,	
+		Tax_Ki_Divi,
+			
+		Std_GName1,	
+		Exc_GName1,	
+		Std_Code,	
+		Model_GName1,
+		Att_Yn,	
+		Tot_Size_Cnt,	
+		Vit_Chk_Cnt,
+		sub_krw,	
+		Gs_Rmv_Divi,	
+		Gs_Rmv_Mark,
+			
+		Gs_Rmv_Rate,
+		Ng_Divi,	
+		Ng_Mark,	
+		Ng_Rate,					
+		Ky_Divi,	
+		Ky_Rate,	
+		Ky_Rmv_Amt,	
+		Nt_Divi,		
+		Nt_Rate,	
+		
+
+		Vat_Divi,	
+		Vat_Rmv_Mark,	
+		Tax_Krw,	
+		Tax_Usd,		
+		Sun_Wt,	
+		Sun_Ut,	
+		Qty,	
+		
+		Qty_Ut,	
+		Ref_Wt,	
+		Ref_Ut,	
+		Ori_St_Mark1,	
+		Sp_Deli,	
+		Cs_Chk_Mark,	
+		Ori_St_Mark2,	
+		Ori_St_Mark3,	
+		Ori_St_Mark4,	
+		Ori_St_Exempt_CD,	
+		
+		Ori_St_No,
+		Ori_St_Day,	
+		Ori_St_iso,	
+		Ori_St_Chf,
+		ItemCd,
+		REG_ID,
+		REG_DATE,
+		IF_REF2 
+		)VALUES(
+		'iOOM',
+		'ENCOM',
+		#{resultCount2},
+		#{resultCount1},
+		CASE 
+		WHEN #{excel_149} = '1' THEN '01'
+		WHEN #{excel_149} = '2' THEN '02'
+		WHEN #{excel_149} = '3' THEN '03'
+		WHEN #{excel_149} = '4' THEN '04'
+		WHEN #{excel_149} IS NULL THEN '00'
+		ELSE  #{excel_149} END,
+		#{excel_1},
+		(CASE 
+        WHEN #{excel_107} = '-' OR #{excel_107} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_107}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_108} = '-' OR #{excel_108} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_108}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_109} = '-' OR #{excel_109} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_109}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_110} = '-' OR #{excel_110} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_110}, ',', '') AS DECIMAL(20, 4))
+        END),
+		
+        (CASE 
+        WHEN #{excel_111} = '-' OR #{excel_111} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_111}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_112} = '-' OR #{excel_112} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_112}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_113} = '-' OR #{excel_113} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_113}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_115} = '-' OR #{excel_115} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_115}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_116} = '-' OR #{excel_116} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_116}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_117} = '-' OR #{excel_117} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_117}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_166},
+        #{excel_167},
+        #{excel_168},
+        #{excel_169},
+        
+        #{excel_170},
+        #{excel_171},
+        #{excel_172},
+        #{excel_173},
+        #{excel_184},
+        (CASE 
+        WHEN #{excel_185} = '-' OR #{excel_185} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_185}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_186},
+        #{excel_189},
+        #{excel_190},
+        #{excel_191},
+        
+        (CASE 
+        WHEN #{excel_192} = '-' OR #{excel_192} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_192}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_198},
+        #{excel_199},
+        (CASE 
+        WHEN #{excel_200} = '-' OR #{excel_200} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_200}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_205},
+        (CASE 
+        WHEN #{excel_206} = '-' OR #{excel_206} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_206}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_207} = '-' OR #{excel_207} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_207}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_209},
+        (CASE 
+        WHEN #{excel_211} = '-' OR #{excel_211} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_211}, ',', '') AS DECIMAL(20, 4))
+        END),
+        
+        #{excel_213},
+		#{excel_214},
+        (CASE
+	    WHEN #{excel_218} = '-' OR #{excel_218} = '- 0' THEN 0
+	    ELSE CAST(REPLACE(#{excel_218}, ',', '') AS DECIMAL(20, 4))
+		END),
+        (CASE 
+        WHEN #{excel_219} = '-' OR #{excel_219} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_219}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_221} = '-' OR #{excel_221} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_221}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_222},
+         (CASE 
+        WHEN #{excel_223} = '-' OR #{excel_223} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_223}, ',', '') AS DECIMAL(20, 4))
+        END),
+		
+        #{excel_224},
+         (CASE 
+        WHEN #{excel_225} = '-' OR #{excel_225} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_225}, ',', '') AS DECIMAL(20, 4))
+        END),
+        #{excel_226},
+        #{excel_227},
+        #{excel_228},
+        #{excel_229},
+        #{excel_230},
+        #{excel_231},
+        #{excel_232},
+    	#{excel_233}, 
+		
+    	#{excel_234},    
+    	#{excel_235},    
+    	#{excel_236},    
+    	#{excel_237},    
+    	#{excel_246},    
+		#{Id},
+		NOW(),
+		#{fileName}  
+		)ON DUPLICATE KEY UPDATE
+		 Rpt_Seq = CASE 
+					WHEN #{excel_149} = '1' THEN '01'
+					WHEN #{excel_149} = '2' THEN '02'
+					WHEN #{excel_149} = '3' THEN '03'
+					WHEN #{excel_149} = '4' THEN '04'
+					WHEN #{excel_149} IS NULL THEN '00'
+					ELSE  #{excel_149} END
+		,Gs = (CASE WHEN #{excel_107} = '-' OR #{excel_107} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_107}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Ts = (CASE WHEN #{excel_108} = '-' OR #{excel_108} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_108}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Gt = (CASE WHEN #{excel_109} = '-' OR #{excel_109} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_109}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Hof = (CASE WHEN #{excel_110} = '-' OR #{excel_110} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_110}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		
+		,Ng= (CASE WHEN #{excel_111} = '-' OR #{excel_111} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_111}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ky= (CASE WHEN #{excel_112} = '-' OR #{excel_112} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_112}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Nt= (CASE WHEN #{excel_113} = '-' OR #{excel_113} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_113}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)			
+		,Vat_Tax_Ct= (CASE WHEN #{excel_115} = '-' OR #{excel_115} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_115}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Vat_Free_ct= (CASE WHEN #{excel_116} = '-' OR #{excel_116} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_116}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Vat= (CASE WHEN #{excel_117} = '-' OR #{excel_117} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_117}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		
+		,Ran_No = #{excel_166}
+		,Hs = #{excel_167}	
+		,Gs_Divi = #{excel_168}	
+		,Tax_Ki_Divi = #{excel_169}
+			
+		,Std_GName1 = #{excel_170}	
+		,Exc_GName1 = #{excel_171}	
+		,Std_Code = #{excel_172}	
+		,Model_GName1 = #{excel_173}
+		,Att_Yn = #{excel_184}	
+		,Tot_Size_Cnt = (CASE WHEN #{excel_185} = '-' OR #{excel_185} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_185}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Vit_Chk_Cnt = #{excel_186}
+		,sub_krw = #{excel_189}	
+		,Gs_Rmv_Divi = #{excel_190}	
+		,Gs_Rmv_Mark = #{excel_191}
+			
+		,Gs_Rmv_Rate= (CASE WHEN #{excel_192} = '-' OR #{excel_192} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_192}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+		,Ng_Divi = #{excel_198}		
+		,Ng_Mark = #{excel_199}		
+		,Ng_Rate= (CASE WHEN #{excel_200} = '-' OR #{excel_200} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_200}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)					
+		,Ky_Divi = #{excel_205}		
+		,Ky_Rate= (CASE WHEN #{excel_206} = '-' OR #{excel_206} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_206}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ky_Rmv_Amt= (CASE WHEN #{excel_207} = '-' OR #{excel_207} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_207}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Nt_Divi = #{excel_209}			
+		,Nt_Rate= (CASE WHEN #{excel_211} = '-' OR #{excel_211} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_211}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		
+
+		,Vat_Divi = #{excel_213}		
+		,Vat_Rmv_Mark = #{excel_214}		
+		,Tax_Krw = (CASE WHEN #{excel_218} = '-' OR #{excel_218} = '- 0' THEN 0
+					ELSE CAST(REPLACE(#{excel_218}, ',', '') AS DECIMAL(20, 4)) END)		
+		,Tax_Usd = (CASE WHEN #{excel_219} = '-' OR #{excel_219} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_219}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)			
+		,Sun_Wt = (CASE WHEN #{excel_221} = '-' OR #{excel_221} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_221}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Sun_Ut = #{excel_222}	
+		,Qty = (CASE WHEN #{excel_223} = '-' OR #{excel_223} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_223}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		
+		,Qty_Ut = #{excel_224}	
+		,Ref_Wt = (CASE WHEN #{excel_225} = '-' OR #{excel_225} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_225}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Ref_Ut = #{excel_226}	
+		,Ori_St_Mark1 = #{excel_227}	
+		,Sp_Deli = #{excel_228}	
+		,Cs_Chk_Mark = #{excel_229}	
+		,Ori_St_Mark2 = #{excel_230}	
+		,Ori_St_Mark3 = #{excel_231}	
+		,Ori_St_Mark4 = #{excel_232}	
+		,Ori_St_Exempt_CD = #{excel_233}	
+		
+		,Ori_St_No = #{excel_234}
+		,Ori_St_Day = #{excel_235}	
+		,Ori_St_iso = #{excel_236}	
+		,Ori_St_Chf = #{excel_237}
+		,ItemCd = #{excel_246}
+		,REG_ID = #{Id}
+		,REG_DATE = NOW()
+		,IF_REF2 = #{fileName}  
+	</insert>
+	
+	<!-- [엔컴 / 수입신고서 규격내역 - CUSDEC929C1] INSERT -->
+	<insert id="insertEncomImportDataC1" parameterType="hashmap">
+		INSERT  INTO CUSDEC929C1
+		(BRANCH,
+		CUS_PRG,
+		SN,
+		SNA1,
+		SNB1,
+		Rpt_Seq,
+		Rpt_No,
+		Sil,
+		Ran_No,	
+		Rg_Code,	
+		IMP_GName1,	
+		IMP_GName2,	
+		
+		IMP_GName3,	
+		Compoent1,	
+		Compoent2,	
+		Qty,	
+		Ut,	
+		Upi,
+		Amt,
+		REG_ID,
+		REG_DATE,
+		Ref_No
+		
+		)VALUES(
+		'iOOM',
+		'ENCOM',
+		#{resultCount3},
+		#{resultCount1},
+		#{resultCount2},
+		CASE 
+		WHEN #{excel_149} = '1' THEN '01'
+		WHEN #{excel_149} = '2' THEN '02'
+		WHEN #{excel_149} = '3' THEN '03'
+		WHEN #{excel_149} = '4' THEN '04'
+		WHEN #{excel_149} IS NULL THEN '00'
+		ELSE  #{excel_149} END ,
+		#{excel_1},
+		#{excel_248},
+		#{excel_247},
+		IFNULL(#{excel_249},''),
+		
+		IFNULL(#{excel_250},''),
+		#{excel_251},
+		#{excel_252},
+		#{excel_253},
+		CONCAT(#{excel_254},#{excel_255}),
+        #{excel_256},
+		#{excel_257},
+		(CASE 
+        WHEN #{excel_258} = '-' OR #{excel_258} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_258}, ',', '') AS DECIMAL(20, 4))
+        END),
+        (CASE 
+        WHEN #{excel_259} = '-' OR #{excel_259} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_259}, ',', '') AS DECIMAL(20, 4))
+        END),
+		#{Id},
+		NOW(),
+		#{fileName}
+		)ON DUPLICATE KEY UPDATE
+		
+		Rpt_Seq = CASE 
+					WHEN #{excel_149} = '1' THEN '01'
+					WHEN #{excel_149} = '2' THEN '02'
+					WHEN #{excel_149} = '3' THEN '03'
+					WHEN #{excel_149} = '4' THEN '04'
+					WHEN #{excel_149} IS NULL THEN '00'
+				ELSE  #{excel_149} END
+		,Sil = #{excel_248}
+		,Ran_No = #{excel_247}	
+		,Rg_Code = IFNULL(#{excel_249},'')	
+		,IMP_GName1 = IFNULL(#{excel_250},'')		
+		,IMP_GName2 = #{excel_251}	
+		
+		,IMP_GName3 = #{excel_252}	
+		,Compoent1 = #{excel_253}	
+		,Compoent2 = CONCAT(#{excel_254},#{excel_255})	
+		,Qty = #{excel_256}	
+		,Ut = #{excel_257}	
+		,Upi = (CASE WHEN #{excel_258 = '-' OR #{excel_258} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_258}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Amt = (CASE WHEN #{excel_259 = '-' OR #{excel_259} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_259}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,REG_ID = #{Id}
+		,REG_DATE = NOW()
+		,Ref_No = #{fileName}
+	</insert>
+	
+	
+	<delete id="deleteCusImpDataA1"  parameterType="searchVO">
+		DELETE 
+		FROM cusdec929a1
+		WHERE BRANCH = 'iOOM'
+		AND SN = #{srch1}
+		AND RPT_NO = REPLACE(#{srch2},'-','')
+	</delete>
+	
+	<delete id="deleteCusImpDataB1"  parameterType="searchVO">
+		DELETE 
+		FROM CUSDEC929B1
+		WHERE BRANCH = 'iOOM'
+		AND SNA1 = #{srch1}
+		AND RPT_NO = REPLACE(#{srch2},'-','')
+	</delete>
+	
+	<delete id="deleteCusImpDataC1"  parameterType="searchVO">
+		DELETE 
+		FROM CUSDEC929C1
+		WHERE BRANCH = 'iOOM'
+		AND SNA1 = #{srch1}
+		AND RPT_NO = REPLACE(#{srch2},'-','')
+	</delete>
+	
+	<!-- [FEDEX / 수입신고서 공통내역 - CUSDEC929A1] INSERT -->
+	<insert id="insertFedexImportDataA1" parameterType="hashmap">
+	INSERT INTO cusdec929a1
+	(BRANCH,
+	CUS_PRG,
+	SN,
+	Rpt_No,	
+	Rpt_Seq,	
+	Rpt_Day,	
+	Rc_Day,	
+	Lis_Day,		
+	SDateTime,	
+	Cus,
+		
+	Sec,	
+	Mas_BlNo,	
+	BlNo,	
+	Bl_Yn,	
+	Mrn,
+	Msn,
+	Hsn,	
+	Arr_Day,	
+	Inc_Day,	
+	BanChulDay,	
+	
+	Lev_Form,	
+	Imp_Firm,	
+	Nab_Firm,	
+	Nab_Name,	
+	Nab_SdNo,	
+	Sup_Firm,	
+	Sup_Mark,	
+	Sup_St,	
+	FOS_FIRM,	
+	FOS_MARK,
+		
+	FOS_ST,	
+	Tg_Pln_Mark,	
+	Rpt_Divi_Mark,	
+	Exc_Divi_Mark,	
+	Imp_Ki_Mark,	
+	Ori_St_Prf_Yn,	
+	Amt_Rpt_Yn,	
+	Tot_Wt,			
+	Tot_Pack_Cnt,	
+	Tot_Pack_Ut,
+		
+	Arr_Mark,	
+	Tra_Met,	
+	Tra_Cta,	
+	Fod_Mark,	
+	Ship,	
+	Tra_Chf_Mark,		
+	Chk_Pa_Mark,	
+	Chk_Pa_Name,	
+	Tot_Ran_Cnt,	
+	Con_Cod,
+		
+	Con_Cur,	
+	Con_Rate,	
+	Con_Rate_Usd,	
+	Con_Tot_Amt,	
+	Con_Ki,	
+	Con_Amt,	
+	Con_Gita_Amt,	
+	Tot_Tax_Usd,	
+	Tot_Tax_Krw,	
+	Fre_Krw,
+		
+	Fre1_Ki,	
+	Fre1_Amt,	
+	Fre2_Ki,	
+	Fre2_Amt,	
+	Insu_Krw,	
+	Insu1_Ki,	
+	Insu1_Amt,	
+	Ad_Cst_Krw,	
+	Ad_Divi,	
+	Ad_Cur_Ki,
+		
+	Ad_Cst_Rate,	
+	Ad_Cur_Ki2,	
+	Ad_Cst_Rate2,	
+	Ad_Amt_Krw,	
+	Sub_Cst_Krw,	
+	Sub_Divi,	
+	Sub_Cur_Ki,	
+	Sub_Cst_Rate,	
+	Tot_Gs,	
+	Tot_Hof,
+		
+	Tot_Gt,	
+	Tot_Ky,	
+	Tot_Nt,	
+	Tot_Vat,	
+	Tot_Dly_Tax,	
+	Tot_Tax_Sum,	
+	Nab_No,	
+	Vat_Tax_Ct,	
+	Vat_Free_Ct,	
+	Sp_Deli,
+		
+	CB1,	
+	CB2,	
+	CB3,	
+	CB4,	
+	CB5,	
+	CB6,	
+	CB7,	
+	CB8,	
+	CB9,	
+	Ju_Name,
+		
+	Ju_Mark,	
+	File_No,	
+	Send,	
+	Rece,		
+	Md_Refe_No,	
+	Imp_Req_No,	
+	Rpt_Firm,	
+	BLYnCd,	
+	BLYnTxt,	
+	Rpt_Use_Divi_CD,
+	
+	Rpt_Use_Divi_NM,	
+	Rpt_Use_Day,	
+	FwdCode,	
+	FwdFirm,	
+	FwdMark,	
+	FwdName,	
+	Cus1,
+	Cus2,
+	Cus3,
+	Cus4,
+	
+	Cus5,
+	Cus6,
+	Cus7,
+	Cus8,	
+	PDateTime,	
+	UDateTime,					
+	SaYu,
+	Cus9,
+	REG_ID,
+	REG_DATE
+	
+	)VALUES(
+	'iOOM',
+	'FEDEX',
+	#{resultCount1},
+	 #{excel_0},
+	 CASE 
+		WHEN #{excel_1} = '1' THEN '01'
+		WHEN #{excel_1} = '2' THEN '02'
+		WHEN #{excel_1} = '3' THEN '03'
+		WHEN #{excel_1} = '4' THEN '04'
+		WHEN #{excel_1} IS NULL THEN '00'
+	ELSE  #{excel_1} END,
+	#{excel_2},
+	#{excel_3},
+	#{excel_4},
+	#{excel_6},
+	#{excel_7},
+	
+	#{excel_8},
+	#{excel_9},
+	#{excel_10},
+	#{excel_11},
+	#{mrn},
+	#{msn},
+	#{hsn},
+	#{excel_13},
+	#{excel_14},
+	#{excel_15},
+	
+	#{excel_16},
+	#{excel_17},
+	#{excel_18},
+	#{excel_19},
+	#{excel_20},
+	#{excel_21},
+	#{excel_22},
+	#{excel_23},
+	#{excel_24},
+	#{excel_25},
+	
+	#{excel_26},
+	#{excel_27},
+	#{excel_28},
+	#{excel_29},
+	#{excel_30},
+	#{excel_32},
+	#{excel_33},
+	(CASE 
+        WHEN #{excel_34} = '-' OR #{excel_34} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_34}, ',', '') AS DECIMAL(20, 4))
+     END),
+	(CASE 
+        WHEN #{excel_37} = '-' OR #{excel_37} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_37}, ',', '') AS DECIMAL(20, 4))
+     END),
+	#{excel_38},
+	
+	#{excel_39},
+	#{excel_40},
+	#{excel_41},
+	#{excel_42},
+	#{excel_43},
+	#{excel_44},
+	#{excel_46},
+	#{excel_47},
+	#{excel_48},
+	#{excel_49},
+	
+	#{excel_50},
+	(CASE 
+        WHEN #{excel_51} = '-' OR #{excel_51} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_51}, ',', '') AS DECIMAL(20, 4))
+     END),
+	 CASE 
+	    WHEN #{excel_52} = '-' OR #{excel_52} = '-  0' OR #{excel_52} = '' THEN 0
+	    ELSE CAST(REPLACE(#{excel_52},',','') AS DECIMAL(20, 4))
+	 END,
+	(CASE 
+        WHEN #{excel_53} = '-' OR #{excel_53} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_53}, ',', '') AS DECIMAL(20, 4))
+     END),
+	#{excel_54},
+	(CASE 
+        WHEN #{excel_55} = '-' OR #{excel_55} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_55}, ',', '') AS DECIMAL(20, 4))
+     END),
+	(CASE 
+        WHEN #{excel_56} = '-' OR #{excel_56} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_56}, ',', '') AS DECIMAL(20, 4))
+     END),
+	(CASE 
+        WHEN #{excel_57} = '-' OR #{excel_57} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_57}, ',', '') AS DECIMAL(20, 4))
+     END),
+	(CASE 
+        WHEN #{excel_58} = '-' OR #{excel_58} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_58}, ',', '') AS DECIMAL(20, 4))
+     END),
+	(CASE 
+        WHEN #{excel_59} = '-' OR #{excel_59} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_59}, ',', '') AS DECIMAL(20, 4))
+     END),
+     
+    #{excel_60},
+	(CASE 
+        WHEN #{excel_61} = '-' OR #{excel_61} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_61}, ',', '') AS DECIMAL(20, 4))
+     END),
+     #{excel_62},
+	(CASE 
+        WHEN #{excel_63} = '-' OR #{excel_63} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_63}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_64} = '-' OR #{excel_64} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_64}, ',', '') AS DECIMAL(20, 4))
+     END),
+	#{excel_65},
+	(CASE 
+        WHEN #{excel_66} = '-' OR #{excel_66} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_66}, ',', '') AS DECIMAL(20, 4))
+     END),
+    (CASE 
+        WHEN #{excel_67} = '-' OR #{excel_67} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_67}, ',', '') AS DECIMAL(20, 4))
+     END),
+	#{excel_68},
+	#{excel_69},
+	
+	(CASE 
+        WHEN #{excel_70} = '-' OR #{excel_70} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_70}, ',', '') AS DECIMAL(20, 4))
+     END),
+	#{excel_71},
+	(CASE 
+        WHEN #{excel_72} = '-' OR #{excel_72} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_72}, ',', '') AS DECIMAL(20, 4))
+     END),
+	(CASE 
+        WHEN #{excel_73} = '-' OR #{excel_73} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_73}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+        WHEN #{excel_74} = '-' OR #{excel_74} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_74}, ',', '') AS DECIMAL(20, 4))
+     END),
+	#{excel_75},
+	#{excel_76},
+	(CASE 
+        WHEN #{excel_77} = '-' OR #{excel_77} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_77}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+        WHEN #{excel_78} = '-' OR #{excel_78} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_78}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+        WHEN #{excel_80} = '-' OR #{excel_80} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_80}, ',', '') AS DECIMAL(20, 4))
+     END),
+     
+     (CASE 
+        WHEN #{excel_81} = '-' OR #{excel_81} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_81}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+        WHEN #{excel_82} = '-' OR #{excel_82} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_82}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+        WHEN #{excel_83} = '-' OR #{excel_83} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_83}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+        WHEN #{excel_84} = '-' OR #{excel_84} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_84}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+        WHEN #{excel_85} = '-' OR #{excel_85} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_85}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_86} = '-' OR #{excel_86} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_86}, ',', '') AS DECIMAL(20, 4))
+     END),
+     #{excel_87},
+     (CASE 
+        WHEN #{excel_88} = '-' OR #{excel_88} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_88}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_89} = '-' OR #{excel_89} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_89}, ',', '') AS DECIMAL(20, 4))
+     END),
+     #{excel_90},
+     
+     #{excel_91},
+     #{excel_92},
+     #{excel_93},
+     #{excel_94},
+     #{excel_95},
+     #{excel_96},
+     #{excel_97},
+     #{excel_98},
+     #{excel_99},
+     #{excel_100},
+     
+     #{excel_101},
+     #{excel_102},
+     #{excel_103},
+     #{excel_104},
+     #{excel_106},
+     #{excel_107},
+     #{excel_108},
+     #{excel_109},
+     #{excel_110},
+     #{excel_111},
+     
+     #{excel_112},
+     #{excel_113},
+     #{excel_114},
+     #{excel_115},
+     #{excel_116},
+     #{excel_117},
+     #{cus1},
+     #{cus2},
+     #{cus3},
+     #{cus4},
+     
+     #{cus5},
+     #{cus6},
+     #{cus7},
+     #{cus8},
+     #{excel_119},
+     #{excel_120},
+     #{excel_126},
+     #{fileName}, 
+     #{Id},
+	 NOW()
+	
+     )ON DUPLICATE KEY UPDATE
+     Rpt_Seq = CASE 
+					WHEN #{excel_1} = '1' THEN '01'
+					WHEN #{excel_1} = '2' THEN '02'
+					WHEN #{excel_1} = '3' THEN '03'
+					WHEN #{excel_1} = '4' THEN '04'
+					WHEN #{excel_1} IS NULL THEN '00'
+				ELSE  #{excel_1} END	
+	,Rpt_Day = #{excel_2}	
+	,Rc_Day = #{excel_3}	
+	,Lis_Day = #{excel_4}		
+	,SDateTime = #{excel_6}	
+	,Cus = #{excel_7}
+		
+	,Sec = #{excel_8}	
+	,Mas_BlNo = #{excel_9}	
+	,BlNo = #{excel_10}	
+	,Bl_Yn = #{excel_11}	
+	,Mrn = #{mrn}
+	,Msn = #{msn}
+	,Hsn = #{hsn}	
+	,Arr_Day = #{excel_13}	
+	,Inc_Day = #{excel_14}	
+	,BanChulDay = #{excel_15}	
+	
+	,Lev_Form = #{excel_16}	
+	,Imp_Firm = #{excel_17}	
+	,Nab_Firm = #{excel_18}	
+	,Nab_Name = #{excel_19}	
+	,Nab_SdNo = #{excel_20}	
+	,Sup_Firm = #{excel_21}	
+	,Sup_Mark = #{excel_22}	
+	,Sup_St = #{excel_23}	
+	,FOS_FIRM = #{excel_24}	
+	,FOS_MARK = #{excel_25}
+		
+	,FOS_ST = #{excel_26}	
+	,Tg_Pln_Mark = #{excel_27}	
+	,Rpt_Divi_Mark = #{excel_28}	
+	,Exc_Divi_Mark = #{excel_29}	
+	,Imp_Ki_Mark = #{excel_30}	
+	,Ori_St_Prf_Yn = #{excel_32}	
+	,Amt_Rpt_Yn = #{excel_33}	
+	,Tot_Wt = (CASE WHEN #{excel_34} = '-' OR #{excel_34} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_34}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)				
+	,Tot_Pack_Cnt = (CASE WHEN #{excel_37} = '-' OR #{excel_37} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_37}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+	,Tot_Pack_Ut = #{excel_38}
+		
+	,Arr_Mark = #{excel_39}	
+	,Tra_Met = #{excel_40}	
+	,Tra_Cta = #{excel_41}	
+	,Fod_Mark = #{excel_42}	
+	,Ship = #{excel_43}	
+	,Tra_Chf_Mark = #{excel_44}		
+	,Chk_Pa_Mark = #{excel_46}	
+	,Chk_Pa_Name = #{excel_47}	
+	,Tot_Ran_Cnt = #{excel_48}	
+	,Con_Cod = #{excel_49}
+		
+	,Con_Cur = #{excel_50}	
+	,Con_Rate = CASE WHEN #{excel_51} = '-' OR #{excel_51} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_51}, ' ', ''), ',', '') AS DECIMAL(20, 4)) 
+			     END	
+	,Con_Rate_Usd = CASE 
+					    WHEN #{excel_52} = '-' OR #{excel_52} = '-  0' OR #{excel_52} = '' THEN 0
+					    ELSE CAST(REPLACE(#{excel_52},',','') AS DECIMAL(16, 4))
+					END
+	,Con_Tot_Amt = CASE WHEN #{excel_53} = '-' OR #{excel_53} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_53}, ' ', ''), ',', '') AS DECIMAL(20, 4))
+			     END	
+	,Con_Ki = #{excel_54}	
+	,Con_Amt = (CASE WHEN #{excel_55} = '-' OR #{excel_55} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_55}, ' ', ''), ',', '') AS DECIMAL(20, 4))
+			     END)	
+	,Con_Gita_Amt = (CASE WHEN #{excel_56} = '-' OR #{excel_56} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_56}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Tot_Tax_Usd = (CASE WHEN #{excel_57} = '-' OR #{excel_57} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_57}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Tot_Tax_Krw = (CASE WHEN #{excel_58} = '-' OR #{excel_58} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_58}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Fre_Krw = (CASE WHEN #{excel_59} = '-' OR #{excel_59} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_59}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+		
+	,Fre1_Ki = #{excel_60}
+	,Fre1_Amt = (CASE WHEN #{excel_61} = '-' OR #{excel_61} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_61}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Fre2_Ki = #{excel_62}
+	,Fre2_Amt = (CASE WHEN #{excel_63} = '-' OR #{excel_63} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_63}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Insu_Krw = (CASE WHEN #{excel_64} = '-' OR #{excel_64} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_64}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Insu1_Ki = #{excel_65}
+	,Insu1_Amt = (CASE WHEN #{excel_66} = '-' OR #{excel_66} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_66}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+	,Ad_Cst_Krw = (CASE WHEN #{excel_67} = '-' OR #{excel_67} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_67}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+	,Ad_Divi = #{excel_68}	
+	,Ad_Cur_Ki = #{excel_69}
+		
+	,Ad_Cst_Rate = (CASE WHEN #{excel_70} = '-' OR #{excel_70} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_70}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Ad_Cur_Ki2 = #{excel_71}	
+	,Ad_Cst_Rate2 = (CASE WHEN #{excel_72} = '-' OR #{excel_72} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_72}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Ad_Amt_Krw = (CASE WHEN #{excel_73} = '-' OR #{excel_73} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_73}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Sub_Cst_Krw = (CASE WHEN #{excel_74} = '-' OR #{excel_74} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_74}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Sub_Divi = #{excel_75}	
+	,Sub_Cur_Ki = #{excel_76}	
+	,Sub_Cst_Rate = (CASE WHEN #{excel_77} = '-' OR #{excel_77} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_77}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Tot_Gs = (CASE WHEN #{excel_78} = '-' OR #{excel_78} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_78}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Tot_Hof = (CASE WHEN #{excel_80} = '-' OR #{excel_80} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_80}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+		
+	,Tot_Gt= (CASE WHEN #{excel_81} = '-' OR #{excel_81} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_81}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Tot_Ky= (CASE WHEN #{excel_82} = '-' OR #{excel_82} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_82}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Tot_Nt= (CASE WHEN #{excel_83} = '-' OR #{excel_83} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_83}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Tot_Vat= (CASE WHEN #{excel_84} = '-' OR #{excel_84} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_84}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Tot_Dly_Tax= (CASE WHEN #{excel_85} = '-' OR #{excel_85} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_85}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Tot_Tax_Sum= (CASE WHEN #{excel_86} = '-' OR #{excel_86} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_86}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Nab_No = #{excel_87}	
+	,Vat_Tax_Ct= (CASE WHEN #{excel_88} = '-' OR #{excel_88} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_88}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Vat_Free_Ct= (CASE WHEN #{excel_89} = '-' OR #{excel_89} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_89}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Sp_Deli = #{excel_90}
+		
+	,CB1 = #{excel_91}	
+	,CB2 = #{excel_92}	
+	,CB3 = #{excel_93}	
+	,CB4 = #{excel_94}	
+	,CB5 = #{excel_95}	
+	,CB6 = #{excel_96}	
+	,CB7 = #{excel_97}	
+	,CB8 = #{excel_98}	
+	,CB9 = #{excel_99}	
+	,Ju_Name = #{excel_100}
+		
+	,Ju_Mark = #{excel_101}
+	,File_No = #{excel_102}
+	,Send = #{excel_103}
+	,Rece = #{excel_104}	
+	,Md_Refe_No = #{excel_106}
+	,Imp_Req_No = #{excel_107}	
+	,Rpt_Firm = #{excel_108}
+	,BLYnCd = #{excel_109}
+	,BLYnTxt = #{excel_110}
+	,Rpt_Use_Divi_CD = #{excel_111}
+	
+	,Rpt_Use_Divi_NM = #{excel_112}	
+	,Rpt_Use_Day = #{excel_113}	
+	,FwdCode = #{excel_114}	
+	,FwdFirm = #{excel_115}	
+	,FwdMark = #{excel_116}	
+	,FwdName = #{excel_117}	
+	,Cus1 = #{cus1}
+	,Cus2 = #{cus2}
+	,Cus3 = #{cus3}
+	,Cus4 = #{cus4}
+	
+	,Cus5 = #{cus5}
+	,Cus6 = #{cus6}
+	,Cus7 = #{cus7}
+	,Cus8 = #{cus8}	
+	,PDateTime = #{excel_119}	
+	,UDateTime = #{excel_120}					
+	,SaYu = #{excel_126}
+	,Cus9 = #{fileName}
+	,REG_ID = #{Id}
+	,REG_DATE = NOW()
+	</insert>
+	
+	<!-- [FEDEX / 수입신고서 규격내역 - CUSDEC929B1] INSERT -->
+	<insert id="insertFedexImportDataB1" parameterType="hashmap">
+	INSERT INTO CUSDEC929B1
+		(BRANCH,
+		CUS_PRG,
+		SN,
+		SNA1,
+		Rpt_Seq,
+		Rpt_No,
+		Ran_No,	
+		Hs,	
+		ItemCd,	
+		ItemCdSend,	
+		
+		Std_GName1,	
+		Std_GName2,	
+		Exc_GName1,	
+		Exc_GName2,	
+		Std_Code,	
+		Model_GName1,	
+		Att_Yn,	
+		Tax_Krw,	
+		Tax_Usd,	
+		Sun_Wt,	
+		
+		Sun_Ut,	
+		Qty,	
+		Qty_Ut,	
+		Ref_Wt,	
+		Ref_Ut,	
+		Cs_Chk_Mark,	
+		Chk_Met_Mark,	
+		Ori_St_Mark1,	
+		Ori_St_Mark5,	
+		Ori_St_Mark2,	
+		
+		Ori_St_Exempt_CD,					
+		Ori_St_Stn,	
+		Ori_St_Name,	
+		Ori_St_Mark6,	
+		Ori_St_PartYn,			
+		Tax_Ki_Divi,	
+		Gs_Divi,	
+		Gs_Rate,			
+		Upi_Tax,	
+		Gs_Rmv_Rate,	
+		
+		Gs,	
+		Gs_Rmv,	
+		Gs_Rmv_Mark,	
+		Gs_Rmv_Divi,	
+		Send_Rate,	
+		Ng_Divi,	
+		Ng_Ki_Divi,	
+		Ng_Mark,	
+		Ng_Rate,	
+		Ng_Rmv_Amt,	
+		
+		Ng,	
+		Ts_Free_Mark,	
+		Ts_Cet_Sub,	
+		Sp_Tax_Basis,	
+		Ts,	
+		Gt,	
+		Hof,	
+		Ky_Divi,	
+		Ky_Ki_Divi,	
+		Ky_Rmv_Amt,	
+		
+		Ky_Rate,	
+		Ky,	
+		Nt_Divi,	
+		Nt_Ki_Divi,	
+		Nt,	
+		Nt_Rate,	
+		Vat_Rate,	
+		Vat_Divi,	
+		Vat_Ki_Divi,	
+		Vat,
+			
+		Roy_Divi,	
+		Roy_Rate,	
+		Roy_Amt,	
+		Sub_Cst,	
+		Vat_Rmv_Mark,	
+		Vat_Rmv,	
+		Vat_Rmv_Rate,	
+		Gs_Cet,	
+		Vat_Tax_Ct,	
+		Vat_Free_ct,
+			
+		YongDo_No,	
+		Tot_Size_Cnt,	
+		Vit_Chk_Cnt,		
+		Tot_C4_Cnt,	
+		REG_ID,
+		REG_DATE,
+		IF_REF2 
+		
+		)VALUES(
+		'iOOM',
+		'FEDEX',
+		#{resultCount2},
+		#{resultCount1},
+		CASE 
+		WHEN #{excel_1} = '1' THEN '01'
+		WHEN #{excel_1} = '2' THEN '02'
+		WHEN #{excel_1} = '3' THEN '03'
+		WHEN #{excel_1} = '4' THEN '04'
+		WHEN #{excel_1} IS NULL THEN '00'
+		ELSE  #{excel_1} END,
+		#{excel_0},
+		#{excel_136},
+		#{excel_137},
+		#{excel_138},
+		#{excel_139},
+		
+		#{excel_140},
+		#{excel_141},
+		#{excel_142},
+		#{excel_143},
+		#{excel_144},
+		#{excel_145},
+		#{excel_146},
+		(CASE 
+	        WHEN #{excel_148} = '-' OR #{excel_148} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_148}, ',', '') AS DECIMAL(20, 4))
+	     END),
+		(CASE 
+	        WHEN #{excel_149} = '-' OR #{excel_149} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_149}, ',', '') AS DECIMAL(20, 4))
+	     END),
+		(CASE 
+	        WHEN #{excel_150} = '-' OR #{excel_150} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_150}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     
+	     #{excel_151},
+		(CASE 
+	        WHEN #{excel_152} = '-' OR #{excel_152} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_152}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_153},
+		(CASE 
+	        WHEN #{excel_154} = '-' OR #{excel_154} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_154}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	      #{excel_155},
+	      #{excel_156},
+	      #{excel_157},
+	      #{excel_158},
+	      #{excel_159},
+	      #{excel_160},
+	      
+	      #{excel_162},
+	      #{excel_167},
+	      #{excel_168},
+	      #{excel_169},
+	      #{excel_170},
+	      #{excel_173},
+	      #{excel_174},
+	      (CASE 
+	        WHEN #{excel_175} = '-' OR #{excel_175} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_175}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_178} = '-' OR #{excel_178} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_178}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_179} = '-' OR #{excel_179} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_179}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     
+	      (CASE 
+	        WHEN #{excel_180} = '-' OR #{excel_180} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_180}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_181} = '-' OR #{excel_181} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_181}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_182},
+	     #{excel_183},
+	      (CASE 
+	        WHEN #{excel_184} = '-' OR #{excel_184} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_184}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_185},
+	     #{excel_186}, 
+	 	 #{excel_187},
+	     (CASE 
+	        WHEN #{excel_188} = '-' OR #{excel_188} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_188}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	      (CASE 
+	        WHEN #{excel_189} = '-' OR #{excel_189} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_189}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     
+	     (CASE 
+	        WHEN #{excel_190} = '-' OR #{excel_190} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_190}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_191},
+	     (CASE 
+	        WHEN #{excel_192} = '-' OR #{excel_192} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_192}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_193} = '-' OR #{excel_193} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_193}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_194} = '-' OR #{excel_194} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_194}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_195} = '-' OR #{excel_195} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_195}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_196} = '-' OR #{excel_196} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_196}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_197},
+	     #{excel_198},
+	      (CASE 
+	        WHEN #{excel_199} = '-' OR #{excel_199} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_199}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     
+	     (CASE 
+	        WHEN #{excel_200} = '-' OR #{excel_200} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_200}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_201} = '-' OR #{excel_201} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_201}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_202},
+	     #{excel_203},
+	     (CASE 
+	        WHEN #{excel_204} = '-' OR #{excel_204} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_204}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_205} = '-' OR #{excel_205} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_205}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_206} = '-' OR #{excel_206} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_206}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_207},
+	     #{excel_208},
+	     (CASE 
+	        WHEN #{excel_209} = '-' OR #{excel_209} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_209}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     
+	     #{excel_210},
+	     (CASE 
+	        WHEN #{excel_211} = '-' OR #{excel_211} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_211}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_212} = '-' OR #{excel_212} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_212}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_213} = '-' OR #{excel_213} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_213}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	      #{excel_214},
+	       (CASE 
+	        WHEN #{excel_215} = '-' OR #{excel_215} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_215}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_216} = '-' OR #{excel_216} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_216}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	      #{excel_217},
+	     (CASE 
+	        WHEN #{excel_218} = '-' OR #{excel_218} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_218}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	        WHEN #{excel_219} = '-' OR #{excel_219} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_219}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     
+	      #{excel_220},
+	     (CASE 
+	        WHEN #{excel_221} = '-' OR #{excel_221} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_221}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	      #{excel_222},
+	     (CASE 
+	        WHEN #{excel_224} = '-' OR #{excel_224} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_224}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{Id},
+		 NOW(),
+		 #{fileName}
+       )ON DUPLICATE KEY UPDATE
+        Rpt_Seq = CASE 
+					WHEN #{excel_1} = '1' THEN '01'
+					WHEN #{excel_1} = '2' THEN '02'
+					WHEN #{excel_1} = '3' THEN '03'
+					WHEN #{excel_1} = '4' THEN '04'
+					WHEN #{excel_1} IS NULL THEN '00'
+				 ELSE  #{excel_1} END
+		,Ran_No = #{excel_136}
+		,Hs = #{excel_137}
+		,ItemCd = #{excel_138}
+		,ItemCdSend = #{excel_139}
+	
+		,Std_GName1 = #{excel_140}
+		,Std_GName2 = #{excel_141}
+		,Exc_GName1 = #{excel_142}
+		,Exc_GName2 = #{excel_143}
+		,Std_Code = #{excel_144}
+		,Model_GName1 = #{excel_145}
+		,Att_Yn = #{excel_146}	
+		,Tax_Krw = (CASE WHEN #{excel_148} = '-' OR #{excel_148} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_148}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 
+		,Tax_Usd = (CASE WHEN #{excel_149} = '-' OR #{excel_149} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_149}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Sun_Wt = (CASE WHEN #{excel_150} = '-' OR #{excel_150} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_150}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		
+		,Sun_Ut = #{excel_151}	
+		,Qty = (CASE WHEN #{excel_152} = '-' OR #{excel_152} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_152}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Qty_Ut = #{excel_153}	
+		,Ref_Wt = (CASE WHEN #{excel_154} = '-' OR #{excel_154} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_154}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Ref_Ut = #{excel_155}
+		,Cs_Chk_Mark = #{excel_156}
+		,Chk_Met_Mark = #{excel_157}
+		,Ori_St_Mark1 = #{excel_158}
+		,Ori_St_Mark5 = #{excel_159}
+		,Ori_St_Mark2 = #{excel_160}
+		
+		,Ori_St_Exempt_CD = #{excel_162}			
+		,Ori_St_Stn = #{excel_167}
+		,Ori_St_Name = #{excel_168}
+		,Ori_St_Mark6 = #{excel_169}	
+		,Ori_St_PartYn = #{excel_170}		
+		,Tax_Ki_Divi = #{excel_173}
+		,Gs_Divi = #{excel_174}
+		,Gs_Rate = (CASE WHEN #{excel_175} = '-' OR #{excel_175} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_175}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)				
+		,Upi_Tax = (CASE WHEN #{excel_178} = '-' OR #{excel_178} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_178}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Gs_Rmv_Rate = (CASE WHEN #{excel_179} = '-' OR #{excel_179} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_179}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		
+		,Gs = (CASE WHEN #{excel_180} = '-' OR #{excel_180} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_180}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Gs_Rmv = (CASE WHEN #{excel_181} = '-' OR #{excel_181} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_181}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Gs_Rmv_Mark = #{excel_182}	
+		,Gs_Rmv_Divi = #{excel_183}	
+		,Send_Rate = (CASE WHEN #{excel_184} = '-' OR #{excel_184} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_184}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Ng_Divi = #{excel_185}		
+		,Ng_Ki_Divi = #{excel_186}		
+		,Ng_Mark = #{excel_187}		
+		,Ng_Rate = (CASE WHEN #{excel_188} = '-' OR #{excel_188} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_188}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Ng_Rmv_Amt = (CASE WHEN #{excel_189} = '-' OR #{excel_189} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_189}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		
+		,Ng = (CASE WHEN #{excel_190} = '-' OR #{excel_190} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_190}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Ts_Free_Mark = #{excel_191}		
+		,Ts_Cet_Sub = (CASE WHEN #{excel_192} = '-' OR #{excel_192} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_192}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Sp_Tax_Basis = (CASE WHEN #{excel_193} = '-' OR #{excel_193} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_193}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ts = (CASE WHEN #{excel_194} = '-' OR #{excel_194} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_194}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Gt = (CASE WHEN #{excel_195} = '-' OR #{excel_195} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_195}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Hof = (CASE WHEN #{excel_196} = '-' OR #{excel_196} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_196}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ky_Divi = #{excel_197}	
+		,Ky_Ki_Divi = #{excel_198}	
+		,Ky_Rmv_Amt = (CASE WHEN #{excel_199} = '-' OR #{excel_199} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_199}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		
+		,Ky_Rate = (CASE WHEN #{excel_200} = '-' OR #{excel_200} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_200}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ky = (CASE WHEN #{excel_201} = '-' OR #{excel_201} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_201}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Nt_Divi = #{excel_202}	
+		,Nt_Ki_Divi = #{excel_203}	
+		,Nt = (CASE WHEN #{excel_204} = '-' OR #{excel_204} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_204}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Nt_Rate =  (CASE WHEN #{excel_205} = '-' OR #{excel_205} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_205}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Vat_Rate = (CASE WHEN #{excel_206} = '-' OR #{excel_206} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_206}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Vat_Divi = #{excel_207}	
+		,Vat_Ki_Divi = #{excel_208}
+		,Vat = (CASE WHEN #{excel_209} = '-' OR #{excel_209} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_209}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+			
+		,Roy_Divi = #{excel_210}	
+		,Roy_Rate= (CASE WHEN #{excel_211} = '-' OR #{excel_211} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_211}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Roy_Amt= (CASE WHEN #{excel_212} = '-' OR #{excel_212} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_212}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Sub_Cst= (CASE WHEN #{excel_213} = '-' OR #{excel_213} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_213}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Vat_Rmv_Mark = #{excel_214}		
+		,Vat_Rmv= (CASE WHEN #{excel_215} = '-' OR #{excel_215} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_215}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Vat_Rmv_Rate= (CASE WHEN #{excel_216} = '-' OR #{excel_216} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_216}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Gs_Cet = #{excel_217}	
+		,Vat_Tax_Ct = (CASE WHEN #{excel_218} = '-' OR #{excel_218} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_218}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Vat_Free_ct = (CASE WHEN #{excel_219} = '-' OR #{excel_219} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_219}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+			
+		,YongDo_No = #{excel_220}	
+		,Tot_Size_Cnt = #{excel_221}
+		,Vit_Chk_Cnt = #{excel_222}	
+		,Tot_C4_Cnt = (CASE WHEN #{excel_224} = '-' OR #{excel_224} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_224}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+		,REG_ID =#{Id}
+		,REG_DATE =NOW()
+		,IF_REF2 = #{fileName}
+	</insert>
+	
+	<!-- [FEDEX / 수입신고서 규격내역 - CUSDEC929C1] INSERT -->
+	<insert id="insertFedexImportDataC1" parameterType="hashmap">
+		INSERT  INTO CUSDEC929C1
+			(BRANCH,
+			CUS_PRG,
+			SN,
+			SNA1,
+			SNB1,
+			Rpt_No,
+			RPT_SEQ,
+			RAN_NO,
+			Sil,	
+			Rg_Code,	
+			
+			IMP_GName1,	
+			IMP_GName2,	
+			IMP_GName3,	
+			Compoent1,	
+			Compoent2,	
+			Qty,	
+			Ut,	
+			Upi,	
+			Amt,
+			REG_ID,
+			
+			REG_DATE,
+			Ref_No
+			)VALUES(
+			'iOOM',
+			'FEDEX',
+			#{resultCount3},
+			#{resultCount1},
+			#{resultCount2},
+			#{excel_0},
+			CASE 
+			    WHEN #{excel_1} = '1' THEN '01'
+			    WHEN #{excel_1} = '2' THEN '02'
+			    WHEN #{excel_1} = '3' THEN '03'
+			    WHEN #{excel_1} = '4' THEN '04'
+			    WHEN #{excel_1} IS NULL THEN '00'
+			    ELSE #{excel_1} 
+			END,
+			#{excel_136},
+			#{excel_226},
+			IFNULL(#{excel_227},''),
+			
+			IFNULL(#{excel_228},''),
+			#{excel_229},
+			#{excel_230},
+			#{excel_231},
+			#{excel_232},
+			(CASE 
+	        WHEN #{excel_233} = '-' OR #{excel_233} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_233}, ',', '') AS DECIMAL(20, 4))
+	     	END),
+	     	#{excel_234},
+		     (CASE 
+		        WHEN #{excel_235} = '-' OR #{excel_235} = '-  0' THEN 0
+		        ELSE CAST(REPLACE(#{excel_235}, ',', '') AS DECIMAL(20, 4))
+		     END),
+		      (CASE 
+		        WHEN #{excel_236} = '-' OR #{excel_236} = '-  0' THEN 0
+		        ELSE CAST(REPLACE(#{excel_236}, ',', '') AS DECIMAL(20, 4))
+		     END),
+		     #{Id},
+			NOW(),
+			#{fileName}
+			)ON DUPLICATE KEY UPDATE
+			
+			RPT_SEQ = CASE 
+			    WHEN #{excel_1} = '1' THEN '01'
+			    WHEN #{excel_1} = '2' THEN '02'
+			    WHEN #{excel_1} = '3' THEN '03'
+			    WHEN #{excel_1} = '4' THEN '04'
+			    WHEN #{excel_1} IS NULL THEN '00'
+			    ELSE #{excel_1} 
+			END
+			,RAN_NO = #{excel_136}
+			,Sil = #{excel_226}
+			,Rg_Code = IFNULL(#{excel_227},'')
+			,IMP_GName1 = IFNULL(#{excel_228},'')	
+			,IMP_GName2 = #{excel_229}
+			,IMP_GName3 = #{excel_230}
+			,Compoent1 = #{excel_231}
+			,Compoent2 = #{excel_232}
+			,Qty = (CASE WHEN #{excel_233} = '-' OR #{excel_233} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_233}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+			,Ut = #{excel_234}	
+			,Upi = (CASE WHEN #{excel_235} = '-' OR #{excel_235} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_235}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+			,Amt = (CASE WHEN #{excel_236} = '-' OR #{excel_236} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_236}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+			,REG_ID = #{Id}
+			,REG_DATE = NOW()
+			,Ref_No = #{fileName}
+	</insert>
+	<!-- [DHL / 수입신고서 공통내역 - CUSDEC929A1] INSERT -->
+	<insert id="insertDHLImportDataA1" parameterType="hashmap">
+	INSERT INTO cusdec929a1
+	(BRANCH,
+	CUS_PRG,
+	SN,
+	Rpt_No,	
+	Rpt_Seq,	
+	Rpt_Day,	
+	Rc_Day,	
+	Lis_Day,		
+	SDateTime,	
+	Cus,
+		
+	Sec, 	
+	Mas_BlNo,	
+	BlNo,	
+	Bl_Yn,	
+	MRN,
+	MSN,
+	HSN,	
+	Arr_Day,	
+	Inc_Day,	
+	Lev_Form,
+		
+	Imp_Firm,	
+	Nab_Firm,	
+	Nab_Name,	
+	Nab_SdNo,	
+	Sup_Firm,	
+	Sup_Mark,	
+	Sup_St,				
+	Tg_Pln_Mark,	
+	Rpt_Divi_Mark,	
+	Exc_Divi_Mark,
+		
+	Imp_Ki_Mark,		
+	Ori_St_Prf_Yn,	
+	Amt_Rpt_Yn,	
+	Tot_Wt,			 
+	Tot_Pack_Cnt, 	 
+	Tot_Pack_Ut, 	 
+	Arr_Mark, 	 
+	Tra_Met, 	
+	Tra_Cta,	
+	Fod_Mark,
+		
+	Ship,	
+	Tra_Chf_Mark,
+	Tot_Ran_Cnt,	
+	Con_Cod,	
+	Con_Cur,	 
+	Con_Rate, 		
+	Con_Tot_Amt,	
+	Con_Ki, 	 
+	Con_Amt, 	 
+	Con_Gita_Amt,
+	
+	Tot_Tax_Usd,	 
+	Tot_Tax_Krw, 	 
+	Fre_Krw, 	 
+	Fre1_Ki, 	 
+	Fre1_Amt, 	 
+	Fre2_Ki, 	
+	Fre2_Amt,	 
+	Insu_Krw, 	
+	Insu1_Ki,	 
+	Insu1_Amt,
+	 	 
+	Ad_Cst_Krw, 	
+	Ad_Divi,	
+	Ad_Cur_Ki, 	 
+	Ad_Cst_Rate, 	
+	Ad_Cur_Ki2,	
+	Ad_Cst_Rate2,	 
+	Ad_Amt_Krw, 	
+	Sub_Cst_Krw,	 
+	Sub_Divi, 	 
+	Sub_Cur_Ki,
+	 	 
+	Sub_Cst_Rate, 	
+	Tot_Gs,	
+	Tot_Ts,	 
+	Tot_Hof, 	 
+	Tot_Gt, 	 
+	Tot_Ky, 	 
+	Tot_Nt, 	 
+	Tot_Vat, 	 
+	Tot_Dly_Tax, 	 
+	Tot_Tax_Sum, 	 
+	
+	Nab_No, 	 
+	Vat_Tax_Ct, 	 
+	Vat_Free_Ct, 	
+	Sp_Deli,	 
+	CB1, 	 
+	CB2, 	
+	CB3,	
+	CB4, 	 
+	CB5, 	
+	CB6,
+		 
+	CB7, 	 
+	CB8, 	
+	CB9,	
+	Ju_Name,	
+	Ju_Mark,	
+	File_No,	
+	Send,	
+	Rece,		
+	Md_Refe_No,	
+	Imp_Req_No,
+		
+	Rpt_Firm,	
+	BLYnCd,	
+	BLYnTxt,	
+	Rpt_Use_Divi_CD,	
+	Rpt_Use_Divi_NM,	
+	Rpt_Use_Day,	
+	FwdCode,	
+	FwdFirm,	
+	FwdMark,	
+	FwdName,	
+	
+	Cus1,
+	Cus2,
+	Cus3,
+	Cus4,
+	Cus5,
+	Cus6,
+	Cus7,
+	Cus8,
+	Cus9,
+	REG_ID,
+	REG_DATE
+	
+	)VALUES(
+	'iOOM',
+	'DHL',
+	#{resultCount1},
+	#{excel_0},
+	CASE 
+	    WHEN #{excel_1} = '1' THEN '01'
+	    WHEN #{excel_1} = '2' THEN '02'
+	    WHEN #{excel_1} = '3' THEN '03'
+	    WHEN #{excel_1} = '4' THEN '04'
+	    WHEN #{excel_1} IS NULL THEN '00'
+	    ELSE #{excel_1} 
+	END,
+	#{excel_2},
+	#{excel_3},
+	#{excel_4},
+	#{excel_6},
+	#{excel_7},
+	
+	#{excel_8},
+	#{excel_9},
+	#{excel_10},
+	#{excel_11},
+	#{mrn},
+	#{msn},
+	#{hsn},
+	#{excel_13},
+	#{excel_14},
+	#{excel_15},
+	
+	#{excel_16},
+	#{excel_17},
+	#{excel_18},
+	#{excel_19},
+	#{excel_20},
+	#{excel_21},
+	#{excel_22},
+	#{excel_26},
+	#{excel_27},
+	#{excel_28},
+	
+	#{excel_29},
+	#{excel_31},
+	#{excel_32},
+	(CASE 
+        WHEN #{excel_33} = '-' OR #{excel_33} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_33}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+        WHEN #{excel_36} = '-' OR #{excel_36} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_36}, ',', '') AS DECIMAL(20, 4))
+     END),
+     #{excel_37},
+	 #{excel_38},
+	 #{excel_39},
+	 #{excel_40},
+	 #{excel_41},
+	 
+	 #{excel_42},
+	 #{excel_43},
+	 #{excel_47},
+	 #{excel_48},
+	 #{excel_49},
+	 (CASE 
+        WHEN #{excel_50} = '-' OR #{excel_50} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_50}, ',', '') AS DECIMAL(20, 4))
+     END),
+	 (CASE 
+        WHEN #{excel_52} = '-' OR #{excel_52} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_52}, ',', '') AS DECIMAL(20, 4))
+     END),
+	 #{excel_53},
+	 (CASE 
+        WHEN #{excel_54} = '-' OR #{excel_54} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_54}, ',', '') AS DECIMAL(20, 4))
+     END),
+	 (CASE 
+        WHEN #{excel_55} = '-' OR #{excel_55} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_55}, ',', '') AS DECIMAL(20, 4))
+     END),
+     
+     (CASE 
+        WHEN #{excel_56} = '-' OR #{excel_56} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_56}, ',', '') AS DECIMAL(20, 4))
+     END),
+	 (CASE 
+        WHEN #{excel_57} = '-' OR #{excel_57} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_57}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+        WHEN #{excel_58} = '-' OR #{excel_58} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_58}, ',', '') AS DECIMAL(20, 4))
+     END),
+     #{excel_59},
+      (CASE 
+        WHEN #{excel_60} = '-' OR #{excel_60} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_60}, ',', '') AS DECIMAL(20, 4))
+     END),
+      #{excel_61},
+       (CASE 
+        WHEN #{excel_62} = '-' OR #{excel_62} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_62}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+        WHEN #{excel_63} = '-' OR #{excel_63} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_63}, ',', '') AS DECIMAL(20, 4))
+     END),
+     #{excel_64},
+      (CASE 
+        WHEN #{excel_65} = '-' OR #{excel_65} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_65}, ',', '') AS DECIMAL(20, 4))
+     END),
+     
+     (CASE 
+        WHEN #{excel_66} = '-' OR #{excel_66} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_66}, ',', '') AS DECIMAL(20, 4))
+     END),
+      #{excel_67},
+      #{excel_68},
+       (CASE 
+        WHEN #{excel_69} = '-' OR #{excel_69} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_69}, ',', '') AS DECIMAL(20, 4))
+     END),
+     #{excel_70},
+     (CASE 
+        WHEN #{excel_71} = '-' OR #{excel_71} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_71}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_72} = '-' OR #{excel_72} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_72}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_73} = '-' OR #{excel_73} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_73}, ',', '') AS DECIMAL(20, 4))
+     END),
+     #{excel_74},
+     #{excel_75},
+     
+      (CASE 
+        WHEN #{excel_76} = '-' OR #{excel_76} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_76}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_77} = '-' OR #{excel_77} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_77}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_78} = '-' OR #{excel_78} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_78}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_79} = '-' OR #{excel_79} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_79}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_80} = '-' OR #{excel_80} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_80}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_81} = '-' OR #{excel_81} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_81}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_82} = '-' OR #{excel_82} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_82}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_83} = '-' OR #{excel_83} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_83}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_84} = '-' OR #{excel_84} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_84}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+        WHEN #{excel_85} = '-' OR #{excel_85} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_85}, ',', '') AS DECIMAL(20, 4))
+     END),
+     
+     #{excel_86},
+     #{excel_87},
+     #{excel_88},
+     #{excel_89},
+     #{excel_90},
+     #{excel_91},
+     #{excel_92},
+     #{excel_93},
+     #{excel_94},
+     #{excel_95},
+     
+     #{excel_96},
+     #{excel_97},
+     #{excel_98},
+     #{excel_99},
+     #{excel_100},
+     #{excel_101},
+     #{excel_102},
+     #{excel_103},
+     #{excel_105},
+     #{excel_106},
+     
+     #{excel_107},
+     #{excel_108},
+     #{excel_109},
+     #{excel_110},
+     #{excel_111},
+     #{excel_112},
+     #{excel_113},
+     #{excel_114},
+     #{excel_115},
+     #{excel_116},
+     
+     #{cus1},
+     #{cus2},
+     #{cus3},
+     #{cus4},
+     #{cus5},
+     #{cus6},
+     #{cus7},
+     #{cus8},
+	 #{fileName},
+	 #{Id},
+	 NOW()
+	 )ON DUPLICATE KEY UPDATE
+	
+	Rpt_Seq = CASE 
+	    WHEN #{excel_1} = '1' THEN '01'
+	    WHEN #{excel_1} = '2' THEN '02'
+	    WHEN #{excel_1} = '3' THEN '03'
+	    WHEN #{excel_1} = '4' THEN '04'
+	    WHEN #{excel_1} IS NULL THEN '00'
+	    ELSE #{excel_1} 
+	END	
+	,Rpt_Day = #{excel_2}	
+	,Rc_Day = #{excel_3}	
+	,Lis_Day = #{excel_4}		
+	,SDateTime = #{excel_6}	
+	,Cus = #{excel_7}
+		
+	,Sec = #{excel_8}
+	,Mas_BlNo = #{excel_9}
+	,BlNo = #{excel_10}
+	,Bl_Yn = #{excel_11}
+	,MRN = #{mrn}
+	,MSN = #{msn}
+	,HSN = #{hsn}
+	,Arr_Day = #{excel_13}	
+	,Inc_Day = #{excel_14}	
+	,Lev_Form = #{excel_15}
+	
+	,Imp_Firm = #{excel_16}	
+	,Nab_Firm = #{excel_17}	
+	,Nab_Name = #{excel_18}	
+	,Nab_SdNo = #{excel_19}	
+	,Sup_Firm = #{excel_20}	
+	,Sup_Mark = #{excel_21}	
+	,Sup_St = #{excel_22}				
+	,Tg_Pln_Mark = #{excel_26}	
+	,Rpt_Divi_Mark = #{excel_27}	
+	,Exc_Divi_Mark = #{excel_28}
+		
+	,Imp_Ki_Mark = #{excel_29}		
+	,Ori_St_Prf_Yn = #{excel_31}	
+	,Amt_Rpt_Yn = #{excel_32}	
+	,Tot_Wt = (CASE WHEN #{excel_33} = '-' OR #{excel_33} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_33}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)			 
+	,Tot_Pack_Cnt = (CASE WHEN #{excel_36} = '-' OR #{excel_36} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_36}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Tot_Pack_Ut = #{excel_37} 	 
+	,Arr_Mark = #{excel_37}
+	,Tra_Met = #{excel_39} 	
+	,Tra_Cta = #{excel_40}	
+	,Fod_Mark = #{excel_41}
+		
+	,Ship = #{excel_42}
+	,Tra_Chf_Mark = #{excel_43}
+	,Tot_Ran_Cnt = #{excel_47}
+	,Con_Cod = #{excel_48}
+	,Con_Cur = #{excel_49} 
+	,Con_Rate = (CASE WHEN #{excel_50} = '-' OR #{excel_50} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_50}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		
+	,Con_Tot_Amt = (CASE WHEN #{excel_52} = '-' OR #{excel_52} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_52}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Con_Ki = #{excel_53} 	 
+	,Con_Amt = (CASE WHEN #{excel_54} = '-' OR #{excel_54} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_54}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Con_Gita_Amt = (CASE WHEN #{excel_55} = '-' OR #{excel_55} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_55}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+	
+	,Tot_Tax_Usd = (CASE WHEN #{excel_56} = '-' OR #{excel_56} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_56}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	 
+	,Tot_Tax_Krw = (CASE WHEN #{excel_57} = '-' OR #{excel_57} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_57}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Fre_Krw = (CASE WHEN #{excel_58} = '-' OR #{excel_58} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_58}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Fre1_Ki = #{excel_59}
+	,Fre1_Amt = (CASE WHEN #{excel_60} = '-' OR #{excel_60} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_60}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Fre2_Ki = #{excel_61}
+	,Fre2_Amt = (CASE WHEN #{excel_62} = '-' OR #{excel_62} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_62}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	 
+	,Insu_Krw = (CASE WHEN #{excel_63} = '-' OR #{excel_63} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_63}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+	,Insu1_Ki = #{excel_64}	 
+	,Insu1_Amt = (CASE WHEN #{excel_65} = '-' OR #{excel_65} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_65}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+	 	 
+	,Ad_Cst_Krw = (CASE WHEN #{excel_66} = '-' OR #{excel_66} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_66}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+	,Ad_Divi = #{excel_67}	
+	,Ad_Cur_Ki = #{excel_68} 	 
+	,Ad_Cst_Rate = (CASE WHEN #{excel_69} = '-' OR #{excel_69} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_69}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+	,Ad_Cur_Ki2 = #{excel_70}	
+	,Ad_Cst_Rate2 = (CASE WHEN #{excel_71} = '-' OR #{excel_71} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_71}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+	,Ad_Amt_Krw = (CASE WHEN #{excel_72} = '-' OR #{excel_72} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_72}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+	,Sub_Cst_Krw = (CASE WHEN #{excel_73} = '-' OR #{excel_73} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_73}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+	,Sub_Divi = #{excel_74} 	 
+	,Sub_Cur_Ki = #{excel_75}
+	 	 
+	,Sub_Cst_Rate = (CASE WHEN #{excel_76} = '-' OR #{excel_76} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_76}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+	,Tot_Gs = (CASE WHEN #{excel_77} = '-' OR #{excel_77} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_77}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+	,Tot_Ts = (CASE WHEN #{excel_78} = '-' OR #{excel_78} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_78}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	 
+	,Tot_Hof = (CASE WHEN #{excel_79} = '-' OR #{excel_79} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_79}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Tot_Gt = (CASE WHEN #{excel_80} = '-' OR #{excel_80} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_80}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Tot_Ky = (CASE WHEN #{excel_81} = '-' OR #{excel_81} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_81}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Tot_Nt = (CASE WHEN #{excel_82} = '-' OR #{excel_82} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_82}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Tot_Vat = (CASE WHEN #{excel_83} = '-' OR #{excel_83} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_83}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Tot_Dly_Tax = (CASE WHEN #{excel_84} = '-' OR #{excel_84} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_84}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	,Tot_Tax_Sum = (CASE WHEN #{excel_85} = '-' OR #{excel_85} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_85}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+	
+	,Nab_No = #{excel_86} 	 
+	,Vat_Tax_Ct = #{excel_87} 	 
+	,Vat_Free_Ct = #{excel_788} 	
+	,Sp_Deli = #{excel_89}	 
+	,CB1 = #{excel_90}
+	,CB2 = #{excel_91}
+	,CB3 = #{excel_92}
+	,CB4 = #{excel_93}	 
+	,CB5 = #{excel_94}
+	,CB6 = #{excel_95}
+		 
+	,CB7 = #{excel_96}
+	,CB8 = #{excel_97}
+	,CB9 = #{excel_98}	
+	,Ju_Name = #{excel_99}
+	,Ju_Mark = #{excel_100}
+	,File_No = #{excel_101}
+	,Send = #{excel_102}
+	,Rece = #{excel_103}
+	,Md_Refe_No = #{excel_105}
+	,Imp_Req_No = #{excel_106}
+		
+	,Rpt_Firm= #{excel_107}	
+	,BLYnCd= #{excel_108}		
+	,BLYnTxt= #{excel_109}		
+	,Rpt_Use_Divi_CD= #{excel_110}		
+	,Rpt_Use_Divi_NM= #{excel_111}		
+	,Rpt_Use_Day= #{excel_112}	
+	,FwdCode= #{excel_113}		
+	,FwdFirm= #{excel_114}		
+	,FwdMark= #{excel_115}		
+	,FwdName= #{excel_116}		
+	
+	,Cus1 = #{cus1}
+	,Cus2 = #{cus2}
+	,Cus3 = #{cus3}
+	,Cus4 = #{cus4}
+	,Cus5 = #{cus5}
+	,Cus6 = #{cus6}
+	,Cus7 = #{cus7}
+	,Cus8 = #{cus8}
+	,Cus9 =#{fileName}
+	,REG_ID = #{Id}
+	,REG_DATE =NOW()
+	</insert>
+	
+	<!-- [DHL / 수입신고서 란내역 - CUSDEC929B1] INSERT -->
+	<insert id="insertDHLImportDataB1" parameterType="hashmap">
+		INSERT INTO CUSDEC929B1
+		(BRANCH,
+		CUS_PRG,
+		SN,
+		SNA1,
+		Rpt_No,	
+		Rpt_Seq,
+		Ran_No,	
+		Hs,	
+		ItemCd,	
+		ItemCdSend,
+		
+		Std_GName1,	
+		Exc_GName1,	
+		Std_Code,	
+		Model_GName1,	
+		Att_Yn,		
+		Tax_Krw,	
+		Tax_Usd,	
+		Sun_Wt,	
+		Sun_Ut,	
+		Qty,
+			
+		Qty_Ut,	
+		Ref_Wt,	
+		Ref_Ut,	
+		Cs_Chk_Mark,	
+		Chk_Met_Mark,	 
+		Ori_St_Mark1, 	 
+		Ori_St_Mark5, 	 
+		Ori_St_Mark2, 		
+		Ori_St_Exempt_CD,
+		Ori_St_Name,
+			
+		Ori_St_Mark6,	
+		Ori_St_PartYn,			
+		Tax_Ki_Divi,	
+		Gs_Divi,	
+		Gs_Rate,			
+		Upi_Tax,	
+		Gs_Rmv_Rate,	
+		Gs,	
+		Gs_Rmv,	 
+		Gs_Rmv_Mark, 
+			 
+		Gs_Rmv_Divi, 	
+		Send_Rate,	
+		Ng_Divi,	
+		Ng_Ki_Divi, 	
+		Ng_Mark,	 
+		Ng_Rate, 	 
+		Ng_Rmv_Amt, 	 
+		Ng, 	 
+		Ts_Free_Mark, 	 
+		Ts_Cet_Sub, 
+			
+		Ts,	
+		Gt,	 
+		Hof, 	
+		Ky_Divi,	
+		Ky_Ki_Divi,	
+		Ky_Rmv_Amt,	 
+		Ky_Rate, 	 
+		Ky, 	 
+		Nt_Divi, 	
+		Nt_Ki_Divi,	 
+		
+		Nt, 	 
+		Nt_Rate, 	 
+		Vat_Rate, 	 
+		Vat_Divi, 	 
+		Vat_Ki_Divi, 	
+		Vat,
+		Roy_Divi,	 
+		Roy_Rate, 	 
+		Roy_Amt, 	 
+		Sub_Cst, 	
+		Vat_Rmv_Mark,
+			
+		Vat_Rmv,	 
+		Vat_Rmv_Rate, 	 
+		Gs_Cet, 	 
+		Vat_Tax_Ct, 	
+		Vat_Free_ct,	
+		YongDo_No,	 
+		Tot_Size_Cnt, 	
+		Vit_Chk_Cnt,
+		REG_ID,
+		
+		REG_DATE,
+		IF_REF2  
+		)VALUES(
+		'iOOM',
+		'DHL',
+		#{resultCount2},
+		#{resultCount1},
+		#{excel_0},
+		CASE 
+		WHEN #{excel_1} = '1' THEN '01'
+		WHEN #{excel_1} = '2' THEN '02'
+		WHEN #{excel_1} = '3' THEN '03'
+		WHEN #{excel_1} = '4' THEN '04'
+		WHEN #{excel_1} IS NULL THEN '00'
+		ELSE  #{excel_1} END,
+		#{excel_118},
+		#{excel_119},
+		#{excel_120},
+		#{excel_121},
+		
+		#{excel_122},
+		#{excel_123},
+		#{excel_124},
+		#{excel_125},
+		#{excel_126},
+	   (CASE 
+        WHEN #{excel_128} = '-' OR #{excel_128} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_128}, ',', '') AS DECIMAL(20, 4))
+       END),
+      (CASE 
+        WHEN #{excel_129} = '-' OR #{excel_129} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_129}, ',', '') AS DECIMAL(20, 4))
+       END),
+       (CASE 
+        WHEN #{excel_130} = '-' OR #{excel_130} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_130}, ',', '') AS DECIMAL(20, 4))
+       END),
+       #{excel_131},
+	   (CASE 
+        WHEN #{excel_132} = '-' OR #{excel_132} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_132}, ',', '') AS DECIMAL(20, 4))
+       END),
+       
+       #{excel_133},
+	   (CASE 
+        WHEN #{excel_134} = '-' OR #{excel_134} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_134}, ',', '') AS DECIMAL(20, 4))
+       END),
+       #{excel_135},
+       #{excel_136},
+       #{excel_137},
+       #{excel_138},
+       #{excel_139},
+       #{excel_140},
+       #{excel_142},
+       #{excel_148},
+       
+       #{excel_149},
+       #{excel_150},
+       #{excel_153},
+       #{excel_154},
+       (CASE 
+        WHEN #{excel_155} = '-' OR #{excel_155} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_155}, ',', '') AS DECIMAL(20, 4))
+       END),
+        (CASE 
+        WHEN #{excel_158} = '-' OR #{excel_158} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_158}, ',', '') AS DECIMAL(20, 4))
+       END),
+        (CASE 
+        WHEN #{excel_159} = '-' OR #{excel_159} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_159}, ',', '') AS DECIMAL(20, 4))
+       END),
+        (CASE 
+        WHEN #{excel_160} = '-' OR #{excel_160} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_160}, ',', '') AS DECIMAL(20, 4))
+       END),
+        (CASE 
+        WHEN #{excel_161} = '-' OR #{excel_161} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_161}, ',', '') AS DECIMAL(20, 4))
+       END),
+       #{excel_162},
+       
+       #{excel_163},
+        (CASE 
+        WHEN #{excel_164} = '-' OR #{excel_164} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_164}, ',', '') AS DECIMAL(20, 4))
+       END),
+       #{excel_165},
+       #{excel_166},
+       #{excel_167},
+        (CASE 
+        WHEN #{excel_168} = '-' OR #{excel_168} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_168}, ',', '') AS DECIMAL(20, 4))
+       END),
+        (CASE 
+        WHEN #{excel_169} = '-' OR #{excel_169} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_169}, ',', '') AS DECIMAL(20, 4))
+       END),
+        (CASE 
+        WHEN #{excel_170} = '-' OR #{excel_170} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_170}, ',', '') AS DECIMAL(20, 4))
+       END),
+        #{excel_171},
+        (CASE 
+        WHEN #{excel_172} = '-' OR #{excel_172} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_172}, ',', '') AS DECIMAL(20, 4))
+       END),
+       
+       (CASE 
+        WHEN #{excel_173} = '-' OR #{excel_173} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_173}, ',', '') AS DECIMAL(20, 4))
+       END),
+       (CASE 
+        WHEN #{excel_174} = '-' OR #{excel_174} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_174}, ',', '') AS DECIMAL(20, 4))
+       END),
+       (CASE 
+        WHEN #{excel_175} = '-' OR #{excel_175} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_175}, ',', '') AS DECIMAL(20, 4))
+       END),
+       #{excel_176},
+       #{excel_177},
+       (CASE 
+        WHEN #{excel_178} = '-' OR #{excel_178} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_178}, ',', '') AS DECIMAL(20, 4))
+       END),
+       (CASE 
+        WHEN #{excel_179} = '-' OR #{excel_179} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_179}, ',', '') AS DECIMAL(20, 4))
+       END),
+       (CASE 
+        WHEN #{excel_180} = '-' OR #{excel_180} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_180}, ',', '') AS DECIMAL(20, 4))
+       END),
+       #{excel_181},
+       #{excel_182},
+       
+       (CASE 
+        WHEN #{excel_183} = '-' OR #{excel_183} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_183}, ',', '') AS DECIMAL(20, 4))
+       END),
+       (CASE 
+        WHEN #{excel_184} = '-' OR #{excel_184} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_184}, ',', '') AS DECIMAL(20, 4))
+       END),
+       (CASE 
+        WHEN #{excel_185} = '-' OR #{excel_185} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_185}, ',', '') AS DECIMAL(20, 4))
+       END),
+        #{excel_186},
+        #{excel_187},
+        #{excel_188},
+        #{excel_189},
+       (CASE 
+        WHEN #{excel_190} = '-' OR #{excel_190} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_190}, ',', '') AS DECIMAL(20, 4))
+       END),
+       (CASE 
+        WHEN #{excel_191} = '-' OR #{excel_191} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_191}, ',', '') AS DECIMAL(20, 4))
+       END),
+       #{excel_192},
+       #{excel_193},
+       
+       (CASE 
+        WHEN #{excel_194} = '-' OR #{excel_194} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_194}, ',', '') AS DECIMAL(20, 4))
+       END),
+       (CASE 
+        WHEN #{excel_195} = '-' OR #{excel_195} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_195}, ',', '') AS DECIMAL(20, 4))
+       END),
+       #{excel_196},
+       #{excel_197},
+       #{excel_198},
+       #{excel_199},
+       #{excel_200},
+       #{excel_201},
+       #{Id},
+	   NOW(),
+	   #{fileName}
+        )ON DUPLICATE KEY UPDATE
+		
+		Rpt_Seq = CASE 
+				    WHEN #{excel_1} = '1' THEN '01'
+				    WHEN #{excel_1} = '2' THEN '02'
+				    WHEN #{excel_1} = '3' THEN '03'
+				    WHEN #{excel_1} = '4' THEN '04'
+				    WHEN #{excel_1} IS NULL THEN '00'
+				    ELSE #{excel_1} 
+				END	
+		,Ran_No = #{excel_118}	
+		,Hs = #{excel_119}	
+		,ItemCd = #{excel_120}	
+		,ItemCdSend = #{excel_121}
+		
+		,Std_GName1 = #{excel_122}	
+		,Exc_GName1 = #{excel_123}	
+		,Std_Code = #{excel_124}	
+		,Model_GName1 = #{excel_125}	
+		,Att_Yn = #{excel_126}		
+		,Tax_Krw = (CASE WHEN #{excel_128} = '-' OR #{excel_128} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_128}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		
+		,Tax_Usd = (CASE WHEN #{excel_129} = '-' OR #{excel_129} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_129}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		
+		,Sun_Wt = (CASE WHEN #{excel_130} = '-' OR #{excel_130} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_130}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		
+		,Sun_Ut = #{excel_131}	
+		,Qty = (CASE WHEN #{excel_132} = '-' OR #{excel_132} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_132}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	
+			
+		,Qty_Ut = #{excel_133}	
+		,Ref_Wt = (CASE WHEN #{excel_134} = '-' OR #{excel_134} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_134}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		
+		,Ref_Ut = #{excel_135}	
+		,Cs_Chk_Mark = #{excel_136}
+		,Chk_Met_Mark = #{excel_137}
+		,Ori_St_Mark1 = #{excel_138}
+		,Ori_St_Mark5 = #{excel_139}
+		,Ori_St_Mark2 = #{excel_140}
+		,Ori_St_Exempt_CD = #{excel_142}
+		,Ori_St_Name = #{excel_148}
+			
+		,Ori_St_Mark6 = #{excel_149}	
+		,Ori_St_PartYn = #{excel_150}			
+		,Tax_Ki_Divi = #{excel_153}	
+		,Gs_Divi = #{excel_154}
+		,Gs_Rate = (CASE WHEN #{excel_155} = '-' OR #{excel_155} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_155}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 				
+		,Upi_Tax = (CASE WHEN #{excel_158} = '-' OR #{excel_158} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_158}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		
+		,Gs_Rmv_Rate = (CASE WHEN #{excel_159} = '-' OR #{excel_159} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_159}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		
+		,Gs = (CASE WHEN #{excel_160} = '-' OR #{excel_160} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_160}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		
+		,Gs_Rmv = (CASE WHEN #{excel_161} = '-' OR #{excel_161} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_161}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 		 
+		,Gs_Rmv_Mark = #{excel_162} 
+			 
+		,Gs_Rmv_Divi = #{excel_163}  	
+		,Send_Rate = (CASE WHEN #{excel_164} = '-' OR #{excel_164} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_164}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ng_Divi = #{excel_165}	
+		,Ng_Ki_Divi = #{excel_166} 	
+		,Ng_Mark = #{excel_167}
+		,Ng_Rate = (CASE WHEN #{excel_168} = '-' OR #{excel_168} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_168}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+		,Ng_Rmv_Amt = (CASE WHEN #{excel_169} = '-' OR #{excel_169} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_169}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+		,Ng = (CASE WHEN #{excel_170} = '-' OR #{excel_170} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_170}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+		,Ts_Free_Mark = #{excel_171} 	 
+		,Ts_Cet_Sub = (CASE WHEN #{excel_172} = '-' OR #{excel_172} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_172}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 
+			
+		,Ts = (CASE WHEN #{excel_173} = '-' OR #{excel_173} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_173}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Gt = (CASE WHEN #{excel_174} = '-' OR #{excel_174} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_174}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	 
+		,Hof = (CASE WHEN #{excel_175} = '-' OR #{excel_175} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_175}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+		,Ky_Divi = #{excel_176}	
+		,Ky_Ki_Divi = #{excel_177}	
+		,Ky_Rmv_Amt = (CASE WHEN #{excel_178} = '-' OR #{excel_178} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_178}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	 
+		,Ky_Rate = (CASE WHEN #{excel_179} = '-' OR #{excel_179} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_179}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+		,Ky = (CASE WHEN #{excel_180} = '-' OR #{excel_180} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_180}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+		,Nt_Divi = #{excel_181} 	
+		,Nt_Ki_Divi = #{excel_182}	 
+		
+		,Nt = (CASE WHEN #{excel_183} = '-' OR #{excel_183} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_183}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	 
+		,Nt_Rate = (CASE WHEN #{excel_184} = '-' OR #{excel_184} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_184}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	 
+		,Vat_Rate = (CASE WHEN #{excel_185} = '-' OR #{excel_185} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_185}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	 
+		,Vat_Divi = #{excel_186}	 
+		,Vat_Ki_Divi = #{excel_187}	
+		,Vat = #{excel_188}
+		,Roy_Divi = #{excel_189}	 
+		,Roy_Rate = (CASE WHEN #{excel_190} = '-' OR #{excel_190} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_190}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	 
+		,Roy_Amt = (CASE WHEN #{excel_191} = '-' OR #{excel_191} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_191}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	 
+		,Sub_Cst = #{excel_192}	
+		,Vat_Rmv_Mark = #{excel_193}
+			
+		,Vat_Rmv = (CASE WHEN #{excel_194} = '-' OR #{excel_194} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_194}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	 
+		,Vat_Rmv_Rate = (CASE WHEN #{excel_195} = '-' OR #{excel_195} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_195}, ' ', ''), ',', '') AS DECIMAL(20, 4))END) 	 
+		,Gs_Cet = #{excel_196} 	 
+		,Vat_Tax_Ct = #{excel_197} 	
+		,Vat_Free_ct = #{excel_198}	
+		,YongDo_No = #{excel_199}	 
+		,Tot_Size_Cnt = #{excel_200} 	
+		,Vit_Chk_Cnt = #{excel_201} 			 
+		,REG_ID = #{Id}
+		,REG_DATE = NOW()
+		,IF_REF2 = #{fileName}
+	</insert>
+	
+	<!-- [DHL / 수입신고서 규격내역 - CUSDEC929C1] INSERT -->
+	<insert id="insertDHLImportDataC1" parameterType="hashmap">
+	INSERT  INTO CUSDEC929C1
+			(BRANCH,
+			CUS_PRG,
+			SN,
+			SNA1,
+			SNB1,
+			Rpt_No,
+			RPT_SEQ,
+			RAN_NO,
+			Sil,
+			Rg_Code,
+			 	 
+			IMP_GName1, 	
+			IMP_GName2,	 
+			IMP_GName3, 	 
+			Compoent1, 	
+			Compoent2,	 
+			Qty, 	
+			Ut,	 
+			Upi, 	 
+			Amt,
+			REG_ID,
+			
+			REG_DATE,
+			Ref_No
+			)VALUES(
+			'iOOM',
+			'DHL',
+			#{resultCount3},
+			#{resultCount1},
+			#{resultCount2},
+			#{excel_0},
+			CASE 
+			    WHEN #{excel_1} = '1' THEN '01'
+			    WHEN #{excel_1} = '2' THEN '02'
+			    WHEN #{excel_1} = '3' THEN '03'
+			    WHEN #{excel_1} = '4' THEN '04'
+			    WHEN #{excel_1} IS NULL THEN '00'
+			    ELSE #{excel_1} 
+			END,
+			#{excel_118},
+			#{excel_205},
+			IFNULL(#{excel_206},''),
+			
+			IFNULL(#{excel_207},''),
+			#{excel_208},
+			#{excel_209},
+			#{excel_210},
+			#{excel_211},
+			(CASE 
+	        WHEN #{excel_212} = '-' OR #{excel_212} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_212}, ',', '') AS DECIMAL(20, 4))
+	       END),
+	       #{excel_213},
+	       (CASE 
+	        WHEN #{excel_214} = '-' OR #{excel_214} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_214}, ',', '') AS DECIMAL(20, 4))
+	       END),
+	       (CASE 
+	        WHEN #{excel_215} = '-' OR #{excel_215} = '-  0' THEN 0
+	        ELSE CAST(REPLACE(#{excel_215}, ',', '') AS DECIMAL(20, 4))
+	       END),
+		   #{Id},
+		   
+		   NOW(),
+		  #{fileName}
+		  )ON DUPLICATE KEY UPDATE
+			RPT_SEQ = CASE 
+			    WHEN #{excel_1} = '1' THEN '01'
+			    WHEN #{excel_1} = '2' THEN '02'
+			    WHEN #{excel_1} = '3' THEN '03'
+			    WHEN #{excel_1} = '4' THEN '04'
+			    WHEN #{excel_1} IS NULL THEN '00'
+			    ELSE #{excel_1} 
+			END
+			,RAN_NO = #{excel_118}
+			,Sil = #{excel_205}
+			,Rg_Code = IFNULL(#{excel_206},'')
+			 	 
+			,IMP_GName1 = IFNULL(#{excel_207},'')	
+			,IMP_GName2 = #{excel_208}	 
+			,IMP_GName3 = #{excel_209} 	 
+			,Compoent1 = #{excel_210} 	
+			,Compoent2 = #{excel_211}	 
+			,Qty = (CASE WHEN #{excel_212} = '-' OR #{excel_212} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_212}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	
+			,Ut = #{excel_213}	 
+			,Upi= (CASE WHEN #{excel_214} = '-' OR #{excel_214} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_214}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)   	 
+			,Amt= (CASE WHEN #{excel_215} = '-' OR #{excel_215} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_215}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  
+			,REG_ID= #{Id}
+			
+			,REG_DATE =  NOW()
+			,Ref_No =  #{fileName}
+	</insert>
+	
+	<!-- [ups / 수입신고서 공통내역 - cusdec929a1] INSERT -->
+	<insert id="insertUPSImportDataA1" parameterType="hashmap">
+	INSERT INTO cusdec929a1
+	(BRANCH,
+	CUS_PRG,
+	SN,
+	RPT_SEQ,
+	Rpt_No,		
+	Rpt_Firm,	
+	Rpt_Name,	
+	Rpt_TelNo,	
+	Rpt_EMailID,	
+	Imp_Code,
+	
+	Imp_Firm,
+	Nab_TgNo,	
+	Imp_Divi,	
+	Nab_Code,	
+	Nab_Firm,	
+	Nab_Name,	
+	nab_pa_mark,	
+	nab_addr1,		
+	Nab_SdNo_Divi,
+	Nab_SdNo,
+	
+	Nab_TelNo,	
+	Nab_EMailID,	
+	FwdMark,	
+	FwdName,	
+	FOS_MARK,	
+	FOS_FIRM,	
+	FOS_ST,				
+	Cus,	
+	Sec,
+	Tg_Pln_Mark,
+	
+	Rpt_Divi_Mark,	
+	Rpt_Day,	
+	Exc_Divi_Mark,	
+	Imp_Ki_Mark,	
+	Ori_St_Prf_Yn,	
+	Amt_Rpt_Yn,	
+	Con_Ki,	
+	Arr_Day,
+	Arr_Mark,	
+	Arr_Name,
+	
+	Ship,	
+	Mas_BlNo,	
+	Tra_Chf_Mark,				
+	Tra_Met,	
+	Tra_Cta,	
+	Fod_Mark,	
+	Fod_Sht,	
+	BlNo,	
+	Bl_Yn,	
+	Inc_Day,
+						
+	Mrn,
+	Msn,
+	Hsn,	
+	Tot_Ran_Cnt,	
+	Lev_Form,				
+	Nab_No,			
+	Con_Cod,	
+	Con_Cur,	
+	Con_Amt,			
+	Fre1_Ki,
+			
+	Fre1_Amt,	
+	Fre_Krw,	
+	Insu1_Amt,	
+	Insu_Krw,	
+	Ad_Divi,	
+	Ad_Cst_Rate,	
+	Ad_Cur_Ki,	
+	Ad_Amt_Krw,	
+	Ad_Cst_Krw,	
+	Sub_Divi,
+		
+	Sub_Cst_Rate,	
+	Sub_Cur_Ki,				
+	Sub_Cst_Krw,					
+	Tot_Pack_Cnt,	
+	Tot_Pack_Ut,
+	Tot_Wt,	
+	Tot_Ut,
+	Tot_Gs,	
+	Tot_Ts,	
+	Tot_Gt,
+		
+	Tot_Hof,		
+	Tot_Ky,	
+	Tot_Nt,		
+	Vat_Tax_Ct,	
+	Vat_Free_Ct,	
+	Tot_Vat,	
+	Tot_Dly_Tax,
+	Cus1,
+	Cus2,
+	Cus3,
+	
+	Cus4,
+	Cus5,
+	Cus6,
+	Cus7,
+	Cus8,
+	Lis_Day,	
+	Rc_Day,	
+	SN_Divi,	
+	Res_Form,	
+	Send_Divi,
+				
+	Send,	
+	Rece,	
+	CbUser,		
+	FwdCode,	
+	FwdFirm,
+	CB1,	
+	CB2,	
+	CB3,
+	CB4,	
+	CB5,
+		
+	CB6,				
+	CB7,	
+	CB8,	
+	CB9,
+	Con_Gita_Amt,
+	Cus9,
+	REG_ID,
+	REG_DATE
+	
+	)VALUES(
+	'iOOM',
+	'UPS',
+	#{resultCount1},
+	'00',
+	#{excel_1},
+	#{excel_3},
+	#{excel_4},
+	#{excel_5},
+	#{excel_6},
+	#{excel_7},
+	
+	#{excel_8},
+	#{excel_9},
+	#{excel_10},
+	#{excel_11},
+	#{excel_12},
+	#{excel_13},
+	#{excel_14},
+	#{excel_15},
+	#{excel_18},
+	#{excel_19},
+	
+	#{excel_21},
+	#{excel_22},
+	#{excel_23},
+	#{excel_24},
+	#{excel_25},
+	#{excel_26},
+	#{excel_27},
+	#{excel_31},
+	#{excel_32},
+	#{excel_34},
+	
+	#{excel_35},
+	#{excel_36},
+	#{excel_37},
+	#{excel_38},
+	#{excel_39},
+	#{excel_40},
+	#{excel_41},
+	#{excel_42},
+	#{excel_43},
+	#{excel_44},
+	
+	
+	#{excel_46},
+	#{excel_47},
+	#{excel_48},
+	#{excel_52},
+	#{excel_53},
+	#{excel_54},
+	#{excel_55},
+	#{excel_56},
+	#{excel_57},
+	#{excel_58},
+	
+	#{mrn},
+	#{msn},
+	#{hsn},
+	#{excel_64},
+	#{excel_65},
+	#{excel_69},
+	#{excel_72},
+	#{excel_73},
+	#{excel_74},
+	#{excel_80},
+	
+	(CASE 
+        WHEN #{excel_82} = '-' OR #{excel_82} = '-  0' THEN 0
+        ELSE CAST(REPLACE(#{excel_82}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+      WHEN #{excel_83} = '-' OR #{excel_83} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_83}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+      WHEN #{excel_84} = '-' OR #{excel_84} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_84}, ',', '') AS DECIMAL(20, 4))
+     END),
+	#{excel_85},
+	 (CASE 
+      WHEN #{excel_86} = '-' OR #{excel_86} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_86}, ',', '') AS DECIMAL(20, 4))
+     END),
+      (CASE 
+      WHEN #{excel_87} = '-' OR #{excel_87} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_87}, ',', '') AS DECIMAL(20, 4))
+     END),
+     #{excel_88},
+     (CASE 
+      WHEN #{excel_91} = '-' OR #{excel_91} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_91}, ',', '') AS DECIMAL(20, 4))
+     END),
+     (CASE 
+      WHEN #{excel_92} = '-' OR #{excel_92} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_92}, ',', '') AS DECIMAL(20, 4))
+     END),
+	 #{excel_93},
+	 
+	 (CASE 
+      WHEN #{excel_94} = '-' OR #{excel_94} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_94}, ',', '') AS DECIMAL(20, 4))
+     END),
+      #{excel_95},
+	 (CASE 
+      WHEN #{excel_99} = '-' OR #{excel_99} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_99}, ',', '') AS DECIMAL(20, 4))
+     END),
+	(CASE 
+      WHEN #{excel_104} = '-' OR #{excel_104} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_104}, ',', '') AS DECIMAL(20, 4))
+     END),
+      #{excel_105},
+      (CASE 
+      WHEN #{excel_106} = '-' OR #{excel_106} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_106}, ',', '') AS DECIMAL(20, 4))
+     END),
+      #{excel_107},
+      #{excel_112},
+      #{excel_113},
+      #{excel_114},
+      
+      #{excel_115},
+      #{excel_117},
+      #{excel_118},
+      #{excel_120},
+      #{excel_121},
+      #{excel_122},
+      #{excel_123},
+      #{cus1},
+      #{cus2},
+      #{cus3},
+      
+      #{cus4},
+      #{cus5},
+      #{cus6},
+      #{cus7},
+      #{cus8},
+      #{excel_130},
+      #{excel_131},
+      #{excel_132},
+      #{excel_133},
+      #{excel_134},
+      
+      #{excel_137},
+      #{excel_138},
+      #{excel_139},
+      #{excel_141},
+      #{excel_142},
+      #{excel_180},
+      #{excel_181},
+      #{excel_182},
+      #{excel_183},
+      #{excel_184},
+      
+      #{excel_185},
+      #{excel_189},
+      #{excel_190},
+      #{excel_191},
+       (CASE 
+      WHEN #{excel_202} = '-' OR #{excel_202} = '-  0' THEN 0
+      ELSE CAST(REPLACE(#{excel_202}, ',', '') AS DECIMAL(20, 4))
+     END),
+      #{fileName},
+	  #{Id},
+	  NOW()
+	 )ON DUPLICATE KEY UPDATE
+		Rpt_Firm = #{excel_3}
+		,Rpt_Name = #{excel_4}	
+		,Rpt_TelNo = #{excel_5}	
+		,Rpt_EMailID = #{excel_6}	
+		,Imp_Code = #{excel_7}
+			
+		,Imp_Firm = #{excel_8}	
+		,Nab_TgNo = #{excel_9}	
+		,Imp_Divi = #{excel_10}	
+		,Nab_Code = #{excel_11}	
+		,Nab_Firm = #{excel_12}	
+		,Nab_Name = #{excel_13}	
+		,nab_pa_mark = #{excel_14}	
+		,nab_addr1 = #{excel_15}		
+		,Nab_SdNo_Divi = #{excel_18}
+		
+		,Nab_SdNo = #{excel_19}		
+		,Nab_TelNo = #{excel_21}	
+		,Nab_EMailID = #{excel_22}	
+		,FwdMark = #{excel_23}	
+		,FwdName = #{excel_24}	
+		,FOS_MARK = #{excel_25}	
+		,FOS_FIRM = #{excel_26}	
+		,FOS_ST = #{excel_27}				
+		,Cus = #{excel_31}	
+		,Sec = #{excel_32}
+			
+		,Tg_Pln_Mark = #{excel_34}	
+		,Rpt_Divi_Mark = #{excel_35}	
+		,Rpt_Day = #{excel_36}	
+		,Exc_Divi_Mark = #{excel_37}	
+		,Imp_Ki_Mark = #{excel_38}	
+		,Ori_St_Prf_Yn = #{excel_39}	
+		,Amt_Rpt_Yn = #{excel_40}	
+		,Con_Ki = #{excel_41}	
+		,Arr_Day = #{excel_42}
+			
+		,Arr_Mark = #{excel_43}
+		,Arr_Name = #{excel_44}
+		,Ship = #{excel_46}
+		,Mas_BlNo = #{excel_47}	
+		,Tra_Chf_Mark = #{excel_48}			
+		,Tra_Met = #{excel_52}
+		,Tra_Cta = #{excel_53}	
+		,Fod_Mark = #{excel_54}	
+		,Fod_Sht = #{excel_55}
+			
+		,BlNo = #{excel_56}	
+		,Bl_Yn = #{excel_57}	
+		,Inc_Day = #{excel_58}					
+		,MRN = #{mrn}
+		,MSN = #{msn}
+		,HSN = #{hsn}
+		,Tot_Ran_Cnt = #{excel_64}	
+		,Lev_Form = #{excel_65}				
+		,Nab_No = #{excel_69}			
+		,Con_Cod = #{excel_72}
+			
+		,Con_Cur = #{excel_73}	
+		,Con_Amt = #{excel_74}						
+		,Fre1_Ki = #{excel_80}	
+		,Fre1_Amt = (CASE WHEN #{excel_82} = '-' OR #{excel_82} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_82}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	 
+		,Fre_Krw  = (CASE WHEN #{excel_83} = '-' OR #{excel_83} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_83}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	 
+		,Insu1_Amt  = (CASE WHEN #{excel_84} = '-' OR #{excel_84} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_84}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	 
+		,Insu_Krw = #{excel_85}
+		,Ad_Divi  = (CASE WHEN #{excel_86} = '-' OR #{excel_86} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_86}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	 
+		,Ad_Cst_Rate  = (CASE WHEN #{excel_87} = '-' OR #{excel_87} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_87}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)  	 
+
+			
+		,Ad_Cur_Ki = #{excel_88}		
+		,Ad_Amt_Krw  = (CASE WHEN #{excel_91} = '-' OR #{excel_91} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_91}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ad_Cst_Krw  = (CASE WHEN #{excel_92} = '-' OR #{excel_92} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_92}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Sub_Divi = #{excel_93}	
+		,Sub_Cst_Rate  = (CASE WHEN #{excel_94} = '-' OR #{excel_94} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_94}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Sub_Cur_Ki = #{excel_95}				
+		,Sub_Cst_Krw  = (CASE WHEN #{excel_99} = '-' OR #{excel_99} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_99}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)					
+		,Tot_Pack_Cnt  = (CASE WHEN #{excel_104} = '-' OR #{excel_104} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_104}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Tot_Pack_Ut = #{excel_105}
+		
+		,Tot_Wt = (CASE WHEN #{excel_106} = '-' OR #{excel_106} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_106}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Tot_Ut = #{excel_107}					
+		,Tot_Gs = #{excel_112}	
+		,Tot_Ts = #{excel_113}	
+		,Tot_Gt = #{excel_114}	
+		,Tot_Hof = #{excel_115}		
+		,Tot_Ky = #{excel_117}	
+		,Tot_Nt = #{excel_118}		
+		,Vat_Tax_Ct = #{excel_120}	
+		,Vat_Free_Ct = #{excel_121}	
+		
+		,Tot_Vat = #{excel_122}	
+		,Tot_Dly_Tax = #{excel_123}						
+		,Cus1 = #{cus1}
+		,Cus2 = #{cus2}
+		,Cus3 = #{cus3}
+		,Cus4 = #{cus4}
+		,Cus5 = #{cus5}
+		,Cus6 = #{cus6}
+		,Cus7 = #{cus7}
+		,Cus8 = #{cus8}
+		
+		,Lis_Day = #{excel_130}	
+		,Rc_Day = #{excel_131}	
+		,SN_Divi = #{excel_132}	
+		,Res_Form = #{excel_133}	
+		,Send_Divi = #{excel_134}			
+		,Send = #{excel_137}	
+		,Rece = #{excel_138}	
+		,CbUser = #{excel_139}		
+		,FwdCode = #{excel_141}	
+		,FwdFirm = #{excel_142}
+			
+			
+		,CB1 = #{excel_180}		
+		,CB2 = #{excel_181}		
+		,CB3 = #{excel_182}		
+		,CB4 = #{excel_183}		
+		,CB5 = #{excel_184}		
+		,CB6 = #{excel_185}				
+		,CB7 = #{excel_189}	
+		,CB8 = #{excel_190}
+			
+		,CB9= #{excel_191}
+		,Con_Gita_Amt = (CASE WHEN #{excel_202} = '-' OR #{excel_202} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_202}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+		,Cus9 = #{fileName}
+		,REG_ID = #{Id}
+		,REG_DATE = NOW()
+	</insert>
+	
+	 	<!-- [ups / 수입신고서 란내역 - CUSDEC929B1] INSERT -->
+	<insert id="insertUPSImportDataB1" parameterType="hashmap">
+		INSERT INTO CUSDEC929B1
+		(BRANCH,
+		CUS_PRG,
+		SN,
+		SNA1,
+		Rpt_No,	
+		Rpt_Seq,
+		Tot_Size_Cnt,	
+		Vit_Chk_Cnt,	
+		Tax_Usg_Usd,	
+		fre_amt,
+		
+		Sp_Tax_Basis,
+		Ran_No,
+		Hs,
+		gs_divi,	
+		tax_ki_divi,
+		Gs_Rate,	
+		ItemCd,	
+		Exc_GName1,	
+		Std_Code,	
+		Model_GName1,	
+		
+		insu_amt,
+		ad_cur,	
+		Sub_Cst,	
+		Gs_Rmv_Divi,	
+		Gs_Rmv_Mark,		
+		Gs_Rmv_Rate,							
+		Ng_Divi,
+		Ng_Mark,	
+		
+		Ts_Free_Mark,
+		Ng_Rate,			
+		Ng,		
+		Ky_Divi,	
+		Ky_Rate,	
+		Ky,	
+		Nt_Divi,		
+		Nt_Rate,	
+		Nt,	
+		Vat_Divi,
+			
+		Vat_Rmv_Mark,					
+		Vat,				
+		Sun_Wt,	
+		Sun_Ut,	
+		Qty,	
+		Qty_Ut,	
+		Ref_Wt,	
+		Ref_Ut,	
+		Ori_St_Mark1,	
+		Ori_St_Sht,	
+				
+		Ori_St_Mark2,
+		Ori_St_Mark3,	
+		Ori_St_Mark4,	
+		Ori_St_Exempt_CD,
+		Ori_St_Day,	
+		Ori_St_iso,	
+		Ori_St_Chf,	
+		Ori_St_Mark6,	
+		Ori_St_Stn,	
+		Ori_St_Name,
+			
+		Ori_St_Mark5,		
+		Ori_St_TotQty,	
+		Ori_St_Qty,	
+		Ori_St_TotWt,	
+		Ori_St_Wt,		 
+		Hof_Free_Mark,
+		REG_ID,
+		REG_DATE,
+		IF_REF2
+		)VALUES(
+		'iOOM',
+		'UPS',
+		#{resultCount2},
+		#{resultCount1},
+		#{excel_1},
+		'00',
+		#{excel_195},
+		#{excel_196},
+		 (CASE 
+	      WHEN #{excel_197} = '-' OR #{excel_197} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_197}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	      (CASE 
+	      WHEN #{excel_198} = '-' OR #{excel_198} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_198}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     
+	     (CASE 
+	      WHEN #{excel_168} = '-' OR #{excel_168} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_168}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_169},
+	     #{excel_170},
+         #{excel_171},
+	     #{excel_172},
+	     #{excel_174},
+	     #{excel_175},
+	     #{excel_176},
+	     #{excel_178},
+	     #{excel_179},
+	     
+	      (CASE 
+	      WHEN #{excel_199} = '-' OR #{excel_199} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_199}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	      WHEN #{excel_200} = '-' OR #{excel_200} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_200}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	      WHEN #{excel_201} = '-' OR #{excel_201} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_201}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_203},
+		 #{excel_204},
+		 (CASE 
+	      WHEN #{excel_206} = '-' OR #{excel_206} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_206}, ',', '') AS DECIMAL(20, 4))
+	     END),
+		 #{excel_213},
+		 #{excel_214},
+		 
+		 #{excel_215},
+		 (CASE 
+	      WHEN #{excel_216} = '-' OR #{excel_216} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_216}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	      (CASE 
+	      WHEN #{excel_219} = '-' OR #{excel_219} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_219}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	      #{excel_221},
+	      (CASE 
+	      WHEN #{excel_222} = '-' OR #{excel_222} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_222}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	      WHEN #{excel_224} = '-' OR #{excel_224} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_224}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	      #{excel_225},
+	      (CASE 
+	      WHEN #{excel_227} = '-' OR #{excel_227} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_227}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	      WHEN #{excel_228} = '-' OR #{excel_228} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_228}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_229},
+	     
+	     #{excel_230},
+	     (CASE 
+	      WHEN #{excel_236} = '-' OR #{excel_236} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_236}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	      WHEN #{excel_240} = '-' OR #{excel_240} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_240}, ',', '') AS DECIMAL(20, 4))
+	     END),
+		 #{excel_241},
+		 (CASE 
+	      WHEN #{excel_242} = '-' OR #{excel_242} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_242}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_243},
+		 (CASE 
+	      WHEN #{excel_244} = '-' OR #{excel_244} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_244}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_245},
+	     #{excel_246},
+	     #{excel_247},
+	     
+	     #{excel_250},
+	     #{excel_251},
+	     #{excel_252},
+	     #{excel_253},
+	     #{excel_255},
+	     #{excel_256},
+	     #{excel_257},
+	     #{excel_258},
+	     #{excel_259},
+	     #{excel_260},
+	     
+	     #{excel_261},
+	     (CASE 
+	      WHEN #{excel_264} = '-' OR #{excel_264} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_264}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	      WHEN #{excel_265} = '-' OR #{excel_265} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_265}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	      WHEN #{excel_266} = '-' OR #{excel_266} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_266}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     (CASE 
+	      WHEN #{excel_267} = '-' OR #{excel_267} = '-  0' THEN 0
+	      ELSE CAST(REPLACE(#{excel_267}, ',', '') AS DECIMAL(20, 4))
+	     END),
+	     #{excel_269},
+		 #{Id},
+		 NOW(),
+		 #{fileName}
+		 )ON DUPLICATE KEY UPDATE
+		
+		Tot_Size_Cnt = #{excel_195}	
+		,Vit_Chk_Cnt = #{excel_196}	
+		,Tax_Usg_Usd  = (CASE WHEN #{excel_197} = '-' OR #{excel_197} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_197}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)			
+		,fre_amt  = (CASE WHEN #{excel_198} = '-' OR #{excel_198} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_198}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+	 	,Sp_Tax_Basis  = (CASE WHEN #{excel_168} = '-' OR #{excel_168} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_168}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Ran_No = #{excel_169} 
+		,HS = #{excel_170}
+		,gs_divi = #{excel_171}	
+		,tax_ki_divi = #{excel_172}	
+		,Gs_Divi = #{excel_173}	
+		,Gs_Rate = #{excel_174}	
+		,ItemCd = #{excel_175}	
+		,Exc_GName1 = #{excel_176}	
+		,ItemCd = #{excel_177}	
+		,Std_Code = #{excel_178}	
+		,Model_GName1 = #{excel_179}
+		
+			
+		,insu_amt  = (CASE WHEN #{excel_199} = '-' OR #{excel_199} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_199}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,ad_cur  = (CASE WHEN #{excel_200} = '-' OR #{excel_200} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_200}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Sub_Cst  = (CASE WHEN #{excel_201} = '-' OR #{excel_201} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_201}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Gs_Rmv_Divi = #{excel_203}	
+		,Gs_Rmv_Mark = #{excel_204}		
+		,Gs_Rmv_Rate  = (CASE WHEN #{excel_206} = '-' OR #{excel_206} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_206}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)							
+		,Ng_Divi = #{excel_213}	
+		,Ng_Mark = #{excel_214}	
+		,Ts_Free_Mark = #{excel_215}
+			
+		,Ng_Rate  = (CASE WHEN #{excel_216} = '-' OR #{excel_216} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_216}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)			
+		,Ng  = (CASE WHEN #{excel_219} = '-' OR #{excel_219} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_219}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Ky_Divi = #{excel_221}	
+		,Ky_Rate  = (CASE WHEN #{excel_222} = '-' OR #{excel_222} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_222}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ky  = (CASE WHEN #{excel_224} = '-' OR #{excel_224} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_224}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Nt_Divi = #{excel_225}		
+		,Nt_Rate  = (CASE WHEN #{excel_227} = '-' OR #{excel_227} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_227}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Nt  = (CASE WHEN #{excel_228} = '-' OR #{excel_228} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_228}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Vat_Divi = #{excel_229}
+		,Vat_Rmv_Mark = #{excel_230}
+							
+		,Vat  = (CASE WHEN #{excel_236} = '-' OR #{excel_236} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_236}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)				
+		,Sun_Wt  = (CASE WHEN #{excel_240} = '-' OR #{excel_240} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_240}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Sun_Ut = #{excel_241}	
+		,Qty  = (CASE WHEN #{excel_242} = '-' OR #{excel_242} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_242}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Qty_Ut = #{excel_243}	
+		,Ref_Wt  = (CASE WHEN #{excel_244} = '-' OR #{excel_244} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_244}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ref_Ut = #{excel_245}	
+		,Ori_St_Mark1 = #{excel_246}	
+		,Ori_St_Sht = #{excel_247}			
+		,Ori_St_Mark2 = #{excel_250}
+			
+		,Ori_St_Mark3 = #{excel_251}	
+		,Ori_St_Mark4 = #{excel_252}	
+		,Ori_St_Exempt_CD = #{excel_253}		
+		,Ori_St_Day = #{excel_255}	
+		,Ori_St_iso = #{excel_256}	
+		,Ori_St_Chf = #{excel_257}	
+		,Ori_St_Mark6 = #{excel_258}	
+		,Ori_St_Stn = #{excel_259}	
+		,Ori_St_Name = #{excel_260}	
+		,Ori_St_Mark5 = #{excel_261}
+					
+		,Ori_St_TotQty  = (CASE WHEN #{excel_264} = '-' OR #{excel_264} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_264}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+		,Ori_St_Qty  = (CASE WHEN #{excel_265} = '-' OR #{excel_265} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_265}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ori_St_TotWt  = (CASE WHEN #{excel_266} = '-' OR #{excel_266} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_266}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+		,Ori_St_Wt  = (CASE WHEN #{excel_267} = '-' OR #{excel_267} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_267}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)		
+		,Hof_Free_Mark = #{excel_269}
+		,REG_ID= #{Id}
+		,REG_DATE = NOW()
+		,IF_REF2 = #{fileName}
+	</insert> 
+	
+	<!-- [UPS / 수입신고서 규격내역 - CUSDEC929C1] INSERT -->
+	<insert id="insertUPSImportDataC1" parameterType="hashmap">
+	INSERT  INTO CUSDEC929C1
+			(BRANCH,
+			CUS_PRG,
+			SN,
+			SNA1,
+			SNB1,
+			Rpt_No,
+			RPT_SEQ,
+			RAN_NO,
+			SIL,
+			Rg_Code,	
+			
+			IMP_GName1,
+			IMP_GName2,	
+			IMP_GName3,	
+			Compoent1,	
+			Compoent2,		
+			Qty,	
+			Ut,	
+			Upi,	
+			Amt,
+			REG_ID,
+			
+			REG_DATE,
+			Ref_No
+			)VALUES(
+			'iOOM',
+			'UPS',
+			#{resultCount3},
+			#{resultCount1},
+			#{resultCount2},
+			#{excel_1},
+			'00',
+			#{excel_272},
+			#{excel_273},
+			IFNULL(#{excel_274},''),
+			
+			IFNULL(#{excel_275},''),
+			#{excel_276},
+			#{excel_277},
+			#{excel_278},
+			#{excel_279},
+			(CASE 
+		      WHEN #{excel_281} = '-' OR #{excel_281} = '-  0' THEN 0
+		      ELSE CAST(REPLACE(#{excel_281}, ',', '') AS DECIMAL(20, 4))
+		     END),
+		     #{excel_282},
+		     (CASE 
+		      WHEN #{excel_283} = '-' OR #{excel_283} = '-  0' THEN 0
+		      ELSE CAST(REPLACE(#{excel_283}, ',', '') AS DECIMAL(20, 4))
+		     END),
+		     (CASE 
+		      WHEN #{excel_284} = '-' OR #{excel_284} = '-  0' THEN 0
+		      ELSE CAST(REPLACE(#{excel_284}, ',', '') AS DECIMAL(20, 4))
+		     END),
+		     
+			#{Id},
+		    NOW(),
+		    #{fileName}
+		    
+			 )ON DUPLICATE KEY UPDATE
+			 RAN_NO = #{excel_272}
+			 ,SIL = #{excel_273}
+			 ,Rg_Code = IFNULL(#{excel_274},'')
+			 ,IMP_GName1 =IFNULL(#{excel_275},'')
+			 ,IMP_GName2 = #{excel_276}	
+			 ,IMP_GName3 = #{excel_277}	
+			 ,Compoent1 = #{excel_278}	
+			 ,Compoent2 = #{excel_279}		
+			 ,Qty  = (CASE WHEN #{excel_281} = '-' OR #{excel_281} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_281}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+			 ,Ut = #{excel_282}
+			 	
+			 ,Upi  = (CASE WHEN #{excel_283} = '-' OR #{excel_283} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_283}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)	
+			 ,Amt  = (CASE WHEN #{excel_284} = '-' OR #{excel_284} = '-  0' THEN 0
+			     ELSE CAST(REPLACE(REPLACE(#{excel_284}, ' ', ''), ',', '') AS DECIMAL(20, 4))END)
+			 ,REG_ID = #{Id}
+			 ,REG_DATE = NOW()
+			 ,Ref_No = #{fileName}
+	</insert>
+
+</mapper>

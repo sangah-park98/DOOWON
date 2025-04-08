@@ -1,0 +1,221 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ page import="java.util.Date" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%
+    Date today = new Date();
+    SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
+%>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>수입 신고 정정</title>
+<script src="/pf/js/function.js"></script>
+<script src="/pf/js/import/importUpdate.js?v=<%=fmt.format(today)%>" charset="UTF-8"></script>
+</head>
+<body class="flex flex-col max-h-fit">
+<main class="p-2 grow flex flex-col gap-2">
+  <form class="w-full shrink-0 grid grid-rows-4 grid-cols-[auto_repeat(5,1fr)_auto_repeat(5,1fr)]
+    	row-start-1 col-start-1 col-span-2 bg-white dark:bg-slate-800 shadow-sm rounded-lg
+    	border border-slate-200 dark:border-slate-700 px-4 py-3 gap-1 z-1 text-base *:text-base items-center">
+  <input type="hidden" id="grpCd" value="${grpCd}">
+    <div class="row-start-1 col-span-6 col-end-13 flex flex-row gap-2 items-end justify-end">
+      <button type="button" onclick="fn_searchImportUp()" class="text-white bg-primary-700 hover:bg-secondary-800 border border-primary-700 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300 row-start-1">
+        <i class="fa-regular fa-search mr-1"></i>
+        	검색
+      </button>
+      <button type="button" onclick="fn_clearImportUp()" class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300">
+        <i class="fa-regular fa-times mr-1"></i>
+       		초기화
+      </button>
+    </div>
+    <label class="col-start-1 row-start-1 col-span-1 row-span-1
+       flex items-center font-medium text-gray-900 pr-2">
+      	검색구분
+    </label>
+    <div class="flex flex-row flex-wrap gap-4 col-start-2 col-span-5 row-start-1 items-center *:flex *:flex-row *:items-center *:gap-2 font-medium text-gray-900">
+      <label for="default-radio-1">
+        <input id="default-radio-1" name="importUp_srch1" value="01" type="radio" checked
+          	   class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>전체</span>
+      </label>
+      <label for="default-radio-2">
+        <input id="default-radio-2" type="radio" name="importUp_srch1" value="02" 
+        	   class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>수리</span>
+      </label>
+      <label for="default-radio-3">
+        <input id="default-radio-3" type="radio" name="importUp_srch1" value="03" 
+          	   class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>미결</span>
+      </label>
+    </div>
+    
+    <label class="col-start-1 row-start-2 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+      	검색기간
+    </label>
+    <select id="importUpDateType" class="row-start-2 col-start-2 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+      <option value="01" selected>신고일자</option>
+      <option value="02">수리일자</option>
+    </select>
+    <div class="col-start-3 row-start-2 col-span-4 flex flex-wrap md:flex-nowrap items-center gap-1">
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        	<input type="text" class="form-control band-calendar text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+				id="importUp_srch2" name="importUp1_date"
+				onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" onkeyUp="fn_dateInputForm($(this))" 
+				placeholder="시작일자" autocomplete="off">      
+      </div>
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        	<input type="text" class="form-control band-calendar text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+				id="importUp_srch3" name="importUp2_date"
+				onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" 
+				onkeyUp="fn_dateInputForm($(this))"
+				placeholder="종료일자" autocomplete="off">
+      </div>
+    </div>
+    <div class="flex items-center gap-1 col-start-7 row-start-2 col-span-4" id="importUp_div1">
+      <button type="button" onclick="fn_chgUpDate1()"
+          	  class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border text-nowrap
+          			border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          			dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          			dark:hover:bg-gray-700">
+        	당일
+      </button>
+      <button type="button" onclick="fn_chgUpDate2()"
+          	  class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border text-nowrap
+          			border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          			dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          			dark:hover:bg-gray-700">
+        	이번주
+      </button>
+      <button type="button" onclick="fn_chgUpDate3()"
+          	  class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border text-nowrap
+          			border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          			dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          			dark:hover:bg-gray-700">
+        	당월
+      </button>
+      <button type="button" onclick="fn_chgUpDate4()"
+          	  class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border text-nowrap
+          			border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          			dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          			dark:hover:bg-gray-700">
+        	전월
+      </button>
+    </div>
+    
+    <label for="n0" class="row-start-3 col-start-1 flex items-center font-medium text-gray-900 pr-2">
+      	신고번호
+    </label>
+    <input type="text" id="importUp_srch4" onkeyup="enterkey()" placeholder="수입신고번호를 입력해주세요."
+      		class="row-start-3 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+    <label for="n2" class="row-start-3 col-start-7 flex items-center font-medium text-gray-900 px-2">B/L 번호</label>
+    <input type="text"  id="importUp_srch5" onkeyup="enterkey()" placeholder="B/L번호를 입력해주세요."
+            class="row-start-3 col-start-8 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1">
+    <select id="importUpSrchType1" style="width:100px;" class="row-start-4 col-start-1 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-1 py-1">
+    	<option value="" selected>조건선택</option>
+      	<option value="seq">정정차수</option>
+      	<option value="reqDay">신청일자</option>
+      	<option value="approveDay">승인일자</option>
+      	<option value="reasonDoc">정정구분</option>
+      	<option value="causeReason">귀책사유</option>
+      	<option value="reason_doc1">정정사유</option>
+      	<option value="Trans_Tax_Sum">세액증감내역</option>
+      	<option value="after_tax_sum">납부금액</option>
+      	<option value="ad_cst_krw">가산세</option>
+      	<option value="customs">세관</option>
+      	<option value="plnt_cd">부서코드</option>
+      	<option value="pr_ordr">PO</option>
+    </select>
+    <input type="text" id="importUpSrchText1" onkeyup="enterkey()" class="row-start-4 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1">
+    <select id="importUpSrchType2" style="width:100px;" class="row-start-4 col-start-7 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-1 py-1">
+      	<option value="" selected>조건선택</option>
+      	<option value="seq">정정차수</option>
+      	<option value="reqDay">신청일자</option>
+      	<option value="approveDay">승인일자</option>
+      	<option value="reasonDoc">정정구분</option>
+      	<option value="causeReason">귀책사유</option>
+      	<option value="reason_doc1">정정사유</option>
+      	<option value="Trans_Tax_Sum">세액증감내역</option>
+      	<option value="after_tax_sum">납부금액</option>
+      	<option value="ad_cst_krw">가산세</option>
+      	<option value="customs">세관</option>
+      	<option value="plnt_cd">부서코드</option>
+      	<option value="pr_ordr">PO</option>
+    </select>
+    <input type="text" id="importUpSrchText2" onkeyup="enterkey()" class="row-start-4 col-span-5 col-start-8 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1">
+  </form>
+
+
+<div id="transInfo-container" class="mx-auto p-3 border border-gray-300 w-full">
+  <div class="flex items-center justify-between mb-3">
+    <p class="card-title inline">
+    	<i class="fa-duotone fa-chart-network text-primary-900"></i>&nbsp;
+    	정정신고현황 결과: <span id="importUpCnt">0</span>
+    </p>
+    <div class="flex items-center gap-2">
+      	<button type="button" onclick="fn_impUpdExcelDownload()"
+	        class="text-white bg-primary-700 hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-2.5 py-1.5 focus:outline-noneduration-300 row-start-1 text-base">
+         <i class="fa-regular fa-download"></i>
+        	Excel 다운로드
+      	</button>	
+      	<select id="importUpPageCnt" name="importUpPageCnt" class="w-36 h-9 text-gray bg-primary-100 hover:bg-primary-200 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded text-base px-2.5 py-1.5 text-center inline-flex items-center border-primary-500 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+       		<option value="50" selected>Rows [50]</option>
+			<option value="100">Rows [100]</option>
+			<option value="200">Rows [200]</option>
+			<option value="500">Rows [500]</option>
+      </select>
+    </div>
+  </div>
+  <div id="importUpTable" class="grow bg-white shadow-sm min-h-[28rem] rounded-lg border border-slate-200 z-0"></div>
+</div>
+
+
+<div id="transInfo-container" class="mx-auto p-3 border border-gray-300 w-full">
+	<p class="card-title inline">정정 내역 </p>
+	<div id="impDetailUpdateTable" class="grow bg-white shadow-sm min-h-[7rem] rounded-lg border border-slate-200 z-0"></div>
+</div>
+<div style="height: 20px;" class="footer-placeholder"></div>
+
+
+  <!-- <div class="flex items-center justify-between w-full shrink-0">
+    <div class="flex items-center gap-4" id="importUp_div6">
+      <h2 id="impUpdateTextView" class="shrink-0 flex items-center gap-1"></h2>
+		<p class="card-title inline" style="line-height: 39px">정정신고현황 결과: <span id="importUpCnt">0</span>
+	  	</p>
+    </div>
+    <div class="flex items-center gap-2">
+      	<button type="button" onclick="fn_importUpdateExcelDownload()"
+	        class="text-white bg-primary-700 hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-2.5 py-1.5 focus:outline-noneduration-300 row-start-1 text-base">
+         <i class="fa-regular fa-download"></i>
+        	Excel 다운로드
+      	</button>	
+      	<select id="importUpPageCnt" name="importUpPageCnt" class="w-36 h-9 text-gray bg-primary-100 hover:bg-primary-200 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded text-base px-2.5 py-1.5 text-center inline-flex items-center border-primary-500 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+       		<option value="50" selected>Rows [50]</option>
+			<option value="100">Rows [100]</option>
+			<option value="200">Rows [200]</option>
+			<option value="500">Rows [500]</option>
+      </select>
+    </div>
+  </div> 
+  
+  <div id="importUpTable" class="grow bg-white shadow-sm min-h-[32rem] rounded-lg border border-slate-200 z-0"></div>
+  -->
+</main>
+
+<!-- <form id="importUpdateForm" action="" method="post"></form> -->
+
+</body>
+</html>

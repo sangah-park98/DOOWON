@@ -1,0 +1,66 @@
+package egovframework.pf.dashboard.service.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.dashboard.service.DashboardService;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+@Service("dashboardService")
+public class DashboardServiceImpl extends EgovAbstractServiceImpl implements DashboardService {
+
+	@Resource(name="dashboardMapper")
+	private DashboardMapper dashboardMapper;
+
+	//1-1.대시보드 공지사항정보 조회
+	@Override
+	public EgovMap selectDashNoticeInfo(SearchVO searchVO) throws Exception {
+		return dashboardMapper.selectDashNoticeInfo(searchVO);
+	}
+	@Override
+	public List<?> selectDashboardInfoImp1(SearchVO vo) throws Exception {
+		return dashboardMapper.selectDashboardInfoImp1(vo);
+	}
+	@Override
+	public List<?> selectDashboardInfoExp1(SearchVO vo) throws Exception {
+		return dashboardMapper.selectDashboardInfoExp1(vo);
+	}
+	@Override
+	public List<?> selectDashboardInfoImp2(SearchVO vo) throws Exception {
+		return dashboardMapper.selectDashboardInfoImp2(vo);
+	}
+	@Override
+	public List<?> selectDashboardInfoExp2(SearchVO vo) throws Exception {
+		return dashboardMapper.selectDashboardInfoExp2(vo);
+	}
+	@Override
+	public List<?> selectDashboardInfoImp3(SearchVO vo) throws Exception {
+		return dashboardMapper.selectDashboardInfoImp3(vo);
+	}
+	@Override
+	public List<?> selectDashboardInfoExp3(SearchVO vo) throws Exception {
+		return dashboardMapper.selectDashboardInfoExp3(vo);
+	}
+	@Override
+	public List<?> selectDashboardNoticeList(SearchVO vo) throws Exception {
+		return dashboardMapper.selectDashboardNoticeList(vo);
+	}
+	@Override
+	public List<?> selectDashboardNewsList(SearchVO vo) throws Exception {
+		return dashboardMapper.selectDashboardNewsList(vo);
+	}
+
+	@Override
+	public List<?> selectDashNoticeViewList(SearchVO vo) throws Exception {
+		return dashboardMapper.selectDashNoticeViewList(vo);
+	}
+	@Override
+	public List<?> selectDashManagerInfo(SearchVO vo) throws Exception {
+		return dashboardMapper.selectDashManagerInfo(vo);
+	}
+}

@@ -1,0 +1,207 @@
+package egovframework.pf.notice.web;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import egovframework.pf.cmmn.service.CmmnService;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.notice.service.pfNoticeService;
+import egovframework.pf.notice.service.saveNoticeVO;
+
+/**
+ * @Class Name : PurchaseController.java
+ * @Description : 구매원장 컨트롤러
+ * @Modification Information
+ * @
+ * @  수정일          수정자               수정내용
+ * @ ---------        ----------     -------------------------------
+ * @ 2020.01.10		심창무               최초생성
+ *
+ * @author 심창무
+ * @since 2020.01.10
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by MOPAS All right reserved.
+ */
+
+@Controller
+public class NoticeController {
+
+	@Resource(name = "pfNoticeService")
+	private pfNoticeService pfnoticeService;
+	
+	@Resource(name = "CmmnService")
+	private CmmnService CmmnService;
+
+	@RequestMapping(value = "/cmmn/mainNotice.do")
+	public String mainNotice(HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		SearchVO vo = new SearchVO();
+		vo.setLang(userVO.getLang());
+		
+		String grpCd = userVO.getGrpCd();
+		model.addAttribute("grpCd", grpCd);
+		
+		List<?> resultList = null;
+		int cnt = 0;
+		vo.setRecordCountPerPage(0);
+		resultList = pfnoticeService.selectMainNoticeViewList(vo);
+		cnt = pfnoticeService.selectMainNoticeViewCnt(vo);
+	    model.addAttribute("resultList", resultList);
+	    model.addAttribute("totCnt", cnt);
+	    model.addAttribute("userId", userVO.getId());
+
+	    return "cmmn/mainNotice";
+	}
+	
+	// 페이징 리오더
+	@RequestMapping(value = "/cmmn/selectMainNoticeViewList.do")
+	public ModelAndView selectMainNoticeViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		
+		List<?> resultList = null;
+		resultList = pfnoticeService.selectMainNoticeViewList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/cmmn/selectModalViewList.do")
+	public ModelAndView selectModalViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		
+		List<?> resultList = null;
+		resultList = pfnoticeService.selectModalViewList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	//파일 다운로드
+	@RequestMapping(value = "/cmmn/noticesFileDown.do")
+  	public void noticesFileDown(
+  			HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String fileOrgNm = request.getParameter("noticesFileDown");
+		System.out.println("파일명: " + fileOrgNm);
+  		String saveDir = "/home/files";
+  		File file = new File(saveDir + "/" + fileOrgNm);
+  		fileOrgNm = new String(fileOrgNm.getBytes("UTF-8"), "ISO-8859-1");
+  		response.setHeader("Content-Disposition","attachment;filename=\"" + fileOrgNm + "\";");
+
+  		FileInputStream fileInputStream = new FileInputStream(file);
+  		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+  		byte b [] = new byte[1024];
+  		int data = 0;
+
+  		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
+  		{
+  			servletOutputStream.write(b, 0, data);
+  		}
+  		servletOutputStream.flush();
+  		servletOutputStream.close();
+  		fileInputStream.close();
+  	}
+	
+	@RequestMapping(value = "/cmmn/insertNoticeInputList.do", method = RequestMethod.POST)
+	public ModelAndView insertNoticeInputList(
+					@ModelAttribute("saveNoticeVO") saveNoticeVO nvo,
+					@RequestParam("titleKr") String titleKr,
+					@RequestParam("cnKr") String cnKr,
+					@RequestParam("noticeType") String noticeType,
+					@RequestParam(value = "fileOrgNm", required = false) String fileOrgNm,
+					@RequestParam(value = "file", required = false) MultipartFile file,
+					 HttpServletRequest request, ModelMap model
+		) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		String cmpnyCd = userVO.getCmpnyCd();
+		String regId = userVO.getId();
+		String userName = userVO.getUsrNm();
+		
+		LocalDateTime currentDateTime = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
+        String noticeDt = currentDateTime.format(formatter);
+        String regDt = currentDateTime.format(formatter2);
+        
+        if (file != null && !file.isEmpty()) {
+            String fileName = file.getOriginalFilename();
+            String filePath = "/home/files/" + fileName; // 실제 저장 경로 설정 필요
+            File dest = new File(filePath);
+            file.transferTo(dest);
+            
+            // nvo에 파일 관련 정보 저장
+            nvo.setFileOrgNm(fileName);  // 원본 파일명 설정
+        }
+        
+        nvo.setUserName(userName);
+        nvo.setNoticeDt(noticeDt);
+        nvo.setRegDt(regDt);
+        nvo.setRegId(regId);
+        
+		pfnoticeService.insertNoticeInputList(nvo);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/cmmn/deleteNoticeViewList.do")
+	public ModelAndView deleteNoticeViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		String regId = userVO.getId();
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		
+		pfnoticeService.deleteNoticeViewList(vo);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/cmmn/updateNoticeViewList.do")
+	public ModelAndView updateNoticeViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		String id = userVO.getId();
+		vo.setId(id);
+		
+		LocalDateTime editDateTime = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        String srch6 = editDateTime.format(formatter);
+        vo.setSrch6(srch6);
+		pfnoticeService.updateNoticeViewList(vo);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+}
+

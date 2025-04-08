@@ -1,0 +1,2046 @@
+var loadPortData;
+var freightCurrencyData;
+var insuranceCurrencyData;
+var arrListHot;
+var arrListPopupSettings;
+var expLoadListHot;
+var expLoadListPopupSettings;
+var termsTradeData;
+var destinationData;
+var nationData;
+var uomData;
+var currencyData;
+var finalIndex = 9999;
+var finalScrollTp = true;
+
+$( document ).ready(function() {
+	
+	$('.band-calendar').each(function(){ regCal(this) ;})
+    $('.datepicker').datepicker("option","dateFormat",calFormat);
+      
+    const element = document.querySelector('#tabs-exportMakeIn2'); 
+    const parameterValue1 = element.dataset.parameter1; 
+    
+    if (parameterValue1 != null) {
+    	fn_callTempInvoiceData2(parameterValue1);
+    }
+    var arrListPopupElement = document.querySelector('#finalPopupTable');
+	var arrListPopupElementContainer = arrListPopupElement.parentNode;
+	arrListPopupSettings = fn_handsonGridarrListPopupOption();
+	arrListHot = new Handsontable(arrListPopupElement, arrListPopupSettings);
+	
+	var expLoadListPopupElement = document.querySelector('#expLoadListPopupTable');
+	var expLoadListPopupElementContainer = expLoadListPopupElement.parentNode;
+	expLoadListPopupSettings = fn_handsonGridExpLoadListPopupOption();
+	expLoadListHot = new Handsontable(expLoadListPopupElement, expLoadListPopupSettings);
+	  
+	fn_scroll();
+	
+    for (var i = 0; i < rowCount; i++) {
+        $("#quantity" + i).on('input', function() {
+            calculateAmount(rowCount);
+        });
+        
+        $("#unitPrice" + i).on('input', function() {
+            calculateAmount(rowCount);
+        });
+    }
+
+	  
+});
+
+$(document).mousedown(function(e){	
+	if(e.target.name == "exportInvoice_date" || e.target.name == "exportDeparture_date" || e.target.name == "exportLc_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}	
+	}
+});
+
+
+function fn_callTempInvoiceData2(parameterValue1) {
+	var sData = {};
+	sData["srch1"] = parameterValue1;
+	    
+	fn_loading(true);
+	$.ajax({
+		type : "POST",
+		url : "/export/selectTempInvoiceMainList2.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	
+        	$("#exporter").val(data.resultList[0].exporter);
+	    	$("#importer").val(data.resultList[0].importer);
+	    	$("#ciNo").val(data.resultList[0].ciNo);
+        	$("#consignee").val(data.resultList[0].consignee); 
+        	$("#invoiceDate").val(data.resultList[0].invoiceDate);
+            $("#otherReferences").val(data.resultList[0].otherReferences);
+            $("#lcNo").val(data.resultList[0].lcNo);
+            $("#lcDate").val(data.resultList[0].lcDate);
+            $("#originButton0").text(data.resultList[0].origin); 
+            $("#transport").val(data.resultList[0].transport);
+            $("#incoterms").text(data.resultList[0].incoterms); 
+            $("#loadingPort").text(data.resultList[0].loadingPort); 
+            $("#location").val(data.resultList[0].location);
+            $("#vessel").val(data.resultList[0].vessel);
+            $("#voyageNo").val(data.resultList[0].voyageNo); 
+            $("#conditions").text(data.resultList[0].conditions);
+            $("#discharge").val(data.resultList[0].discharge);
+            $("#delivery").val(data.resultList[0].delivery);
+            $("#transhipment").val(data.resultList[0].transhipment);
+            $("#freightMethod").val(data.resultList[0].freightMethod);
+            $("#departureDate").val(data.resultList[0].departureDate);
+            $("#grossWeight").val(data.resultList[0].grossWeight);
+            $("#netWeight").val(data.resultList[0].netWeight);
+            $("#currencyButton0").text(data.resultList[0].currency);
+            $("#totalAmount").val(data.resultList[0].totalAmount);
+            $("#freigh").val(data.resultList[0].freigh);
+            $("#insurance").val(data.resultList[0].insurance);
+            $("#packageCode").text(data.resultList[0].packageCode);
+            $("#packageName").val(data.resultList[0].packageName);
+            $("#totalPackages").val(data.resultList[0].totalPackages);
+            $("#comments").val(data.resultList[0].comments);
+        	
+           for (var i = 0; i < data.resultList2.length; i++) {
+              if(i >= 1){
+           		  addCIRow();
+           	  }
+              var unitOfQty = document.getElementById("unitOfQty" + i);
+           	  $("#itemCode"+i).val(data.resultList2[i].itemCode);
+           	  $("#lineNo"+i).val(data.resultList2[i].lineNo);
+           	  $("#hsCode"+i).val(data.resultList2[i].hsCode);
+           	  $("#specification"+i).val(data.resultList2[i].specification);
+           	  $("#packingNo"+i).val(data.resultList2[i].packingNo);
+           	  $("#quantity"+i).val(data.resultList2[i].quantity);
+           	  $("#unitPrice"+i).val(data.resultList2[i].unitPrice);
+           	  $("#amountOfPrice"+i).val(data.resultList2[i].amountOfPrice);
+           	  unitOfQty.innerText = data.resultList2[i].unitOfQty;
+			}
+            
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+
+function preventFormSubmit(event) {
+    if (event.keyCode === 13  && event.target.tagName !== 'TEXTAREA') {
+        event.preventDefault();
+        return false;
+    }
+}
+
+document.getElementById('loadPortSrch2').addEventListener('input', fn_loadingPort);
+function fn_loadingPort() {
+    var sData = {};
+    sData["srch1"] = $("#loadPortSrch2").val();
+
+    $.ajax({
+        type: "POST",
+        url: "/export/selectExportMkInLoadList.do",
+        data: sData,
+        dataType: "json",
+        success: function (data) {
+            const dropdownMenu = document.getElementById('loadingPortSearch2');
+            const ul = dropdownMenu.querySelector('ul');
+
+            ul.innerHTML = '';
+            currentFocus = -1;
+
+            const loadingPortClick = function(e) {
+                const loadPortData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+                const el = document.getElementById("loadingPort");
+                el.innerText = loadPortData;
+                e.preventDefault();
+                dropdownMenu.classList.add('hidden');
+            };
+
+            data.resultList.forEach(function(item) {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                const buttonText = item.cmmnCd + ' [' + item.cmmnNm + ']';
+
+                button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+                button.innerText = buttonText;
+
+                button.addEventListener('click', loadingPortClick);
+
+                li.appendChild(button);
+                ul.appendChild(li);
+            });
+
+            dropdownMenu.classList.remove('hidden');
+        },
+        error: function (e, textStatus, errorThrown) {
+            if (e.status == 400) {
+                alert("Your request is up. Please log back in if you wish to continue.");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert("An error occurred during the search. Please try again.");
+            }
+        }
+    });
+}
+
+function enterkeyLoadPort2(event) {
+	let currentFocus = -1; 
+	document.addEventListener('keydown', enterkeyLoadPort);
+	function enterkeyLoadPort(event) {
+	    const dropdownMenu = document.getElementById('loadingPortSearch2');
+	    const ul = dropdownMenu.querySelector('ul');
+	    const items = ul.getElementsByTagName('button');
+
+	    if (dropdownMenu.classList.contains('hidden')) return;
+
+	    if (event.key === 'ArrowDown') {
+	        currentFocus++;
+	        addActive(items);
+	        event.preventDefault();
+	    } else if (event.key === 'ArrowUp') {
+	        currentFocus--;
+	        addActive(items);
+	        event.preventDefault();
+	    } else if (event.key === 'Enter') {
+	        event.preventDefault();
+	        if (currentFocus > -1 && items[currentFocus]) {
+	            items[currentFocus].click();
+	        }
+	    }
+
+	    function addActive(items) {
+	        if (!items) return false;
+	        removeActive(items);
+	        if (currentFocus >= items.length) currentFocus = 0;
+	        if (currentFocus < 0) currentFocus = items.length - 1;
+	        items[currentFocus].classList.add('active');
+	        items[currentFocus].focus();
+	    }
+
+	    function removeActive(items) {
+	        for (let i = 0; i < items.length; i++) {
+	            items[i].classList.remove('active');
+	        }
+	    }
+	}
+}
+
+document.getElementById('conditionsSrch').addEventListener('input', fn_conditions);
+function fn_conditions() {
+    var sData = {};
+    sData["srch1"] = $("#conditionsSrch").val();
+
+    $.ajax({
+        type: "POST",
+        url: "/export/selectExportMkInConditionList.do",
+        data: sData,
+        dataType: "json",
+        success: function (data) {
+            const dropdownMenu = document.getElementById('conditionsSearch');
+            const ul = dropdownMenu.querySelector('ul');
+
+            ul.innerHTML = '';
+            currentFocus = -1;
+
+            const loadingPortClick = function(e) {
+                const loadPortData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+                const el = document.getElementById("conditions");
+                el.innerText = loadPortData;
+                e.preventDefault();
+                dropdownMenu.classList.add('hidden');
+            };
+
+            data.resultList.forEach(function(item) {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                const buttonText = item.cmmnCd + ' [' + item.cmmnNm + ']';
+
+                button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+                button.innerText = buttonText;
+
+                button.addEventListener('click', loadingPortClick);
+
+                li.appendChild(button);
+                ul.appendChild(li);
+            });
+
+            dropdownMenu.classList.remove('hidden');
+        },
+        error: function (e, textStatus, errorThrown) {
+            if (e.status == 400) {
+                alert("Your request is up. Please log back in if you wish to continue.");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert("An error occurred during the search. Please try again.");
+            }
+        }
+    });
+}
+
+function enterkeyConditions(event) {
+	let currentFocus = -1; 
+	document.addEventListener('keydown', enterkeyCondition);
+	function enterkeyCondition(event) {
+	    const dropdownMenu = document.getElementById('conditionsSearch');
+	    const ul = dropdownMenu.querySelector('ul');
+	    const items = ul.getElementsByTagName('button');
+
+	    if (dropdownMenu.classList.contains('hidden')) return;
+
+	    if (event.key === 'ArrowDown') {
+	        currentFocus++;
+	        addActive(items);
+	        event.preventDefault();
+	    } else if (event.key === 'ArrowUp') {
+	        currentFocus--;
+	        addActive(items);
+	        event.preventDefault();
+	    } else if (event.key === 'Enter') {
+	        event.preventDefault();
+	        if (currentFocus > -1 && items[currentFocus]) {
+	            items[currentFocus].click();
+	        }
+	    }
+
+	    function addActive(items) {
+	        if (!items) return false;
+	        removeActive(items);
+	        if (currentFocus >= items.length) currentFocus = 0;
+	        if (currentFocus < 0) currentFocus = items.length - 1;
+	        items[currentFocus].classList.add('active');
+	        items[currentFocus].focus();
+	    }
+
+	    function removeActive(items) {
+	        for (let i = 0; i < items.length; i++) {
+	            items[i].classList.remove('active');
+	        }
+	    }
+	}
+}
+/*
+document.getElementById('freightCurrencySrch1').addEventListener('input', fn_freightCurrency);
+function fn_freightCurrency() {
+    var sData = {};
+    sData["srch1"] = $("#freightCurrencySrch1").val();
+    
+    $.ajax({
+		type: "POST",
+		url: "/export/selectExportMkInCurrencyList.do",
+		data: sData,
+		dataType: "json",
+		success: function (data) {
+			const dropdownMenu = document.getElementById('freightCurrencySearch');
+            const ul = dropdownMenu.querySelector('ul');
+            
+            ul.innerHTML = '';
+            
+            const freightCurrencyButtonClick = function(e) {
+                freightCurrencyData = e.target.innerText.trim().replace(/,/g, '');
+                
+                const el = document.getElementById("freightCurrencyButton");
+                el.innerText = freightCurrencyData;
+                e.preventDefault();
+                dropdownMenu.classList.add('hidden');
+            };
+
+            for (var i = 0; i < data.resultList.length; i++) {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                const buttonText = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';
+                
+                button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+                button.innerText = buttonText;
+                
+                button.addEventListener('click', freightCurrencyButtonClick);
+
+                li.appendChild(button);
+                ul.appendChild(li);
+            }
+        },
+        error: function (e, textStatus, errorThrown) {
+            if (e.status == 400) {
+                alert("Your request is up. Please log back in if you wish continue");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert(msgSearchError);
+            }
+        }
+	});
+}
+
+function enterkeyFreightCurrency(event) {
+	let currentFocus = -1; 
+	document.addEventListener('keydown', enterkeyFreightCurrency);
+	function enterkeyFreightCurrency(event) {
+	    const dropdownMenu = document.getElementById('freightCurrencySearch');
+	    const ul = dropdownMenu.querySelector('ul');
+	    const items = ul.getElementsByTagName('button');
+
+	    if (dropdownMenu.classList.contains('hidden')) return;
+
+	    if (event.key === 'ArrowDown') {
+	        currentFocus++;
+	        addActive(items);
+	        event.preventDefault();
+	    } else if (event.key === 'ArrowUp') {
+	        currentFocus--;
+	        addActive(items);
+	        event.preventDefault();
+	    } else if (event.key === 'Enter') {
+	        event.preventDefault();
+	        if (currentFocus > -1 && items[currentFocus]) {
+	            items[currentFocus].click();
+	        }
+	    }
+
+	    function addActive(items) {
+	        if (!items) return false;
+	        removeActive(items);
+	        if (currentFocus >= items.length) currentFocus = 0;
+	        if (currentFocus < 0) currentFocus = items.length - 1;
+	        items[currentFocus].classList.add('active');
+	        items[currentFocus].focus();
+	    }
+
+	    function removeActive(items) {
+	        for (let i = 0; i < items.length; i++) {
+	            items[i].classList.remove('active');
+	        }
+	    }
+	}
+}
+*/
+
+/*function enterkeyinsuranceCurrency() {
+	fn_insuranceCurrency();
+}*/
+/*
+document.getElementById('insuranceCurrencySrch1').addEventListener('input', fn_insuranceCurrency);
+function fn_insuranceCurrency() {
+    var sData = {};
+    sData["srch1"] = $("#insuranceCurrencySrch1").val();
+    
+    $.ajax({
+		type: "POST",
+		url: "/export/selectExportMkInCurrencyList.do",
+		data: sData,
+		dataType: "json",
+		success: function (data) {
+			const dropdownMenu = document.getElementById('insuranceCurrencySearch');
+            const ul = dropdownMenu.querySelector('ul');
+            
+            ul.innerHTML = '';
+            
+            const insuranceCurrencyButtonClick = function(e) {
+                insuranceCurrencyData = e.target.innerText.trim().replace(/,/g, '');
+                
+                const el = document.getElementById("insuranceCurrencyButton");
+                el.innerText = insuranceCurrencyData;
+                e.preventDefault();
+                dropdownMenu.classList.add('hidden');
+            };
+
+            for (var i = 0; i < data.resultList.length; i++) {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                const buttonText = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';
+                
+                button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+                button.innerText = buttonText;
+                
+                button.addEventListener('click', insuranceCurrencyButtonClick);
+
+                li.appendChild(button);
+                ul.appendChild(li);
+            }
+        },
+        error: function (e, textStatus, errorThrown) {
+            if (e.status == 400) {
+                alert("Your request is up. Please log back in if you wish continue");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert(msgSearchError);
+            }
+        }
+	});
+}
+function enterkeyinsuranceCurrency(event) {
+
+	let currentFocus = -1; 
+	document.addEventListener('keydown', enterkeyinsuranceCurrency);
+	function enterkeyinsuranceCurrency(event) {
+	    const dropdownMenu = document.getElementById('insuranceCurrencySearch');
+	    const ul = dropdownMenu.querySelector('ul');
+	    const items = ul.getElementsByTagName('button');
+
+	    if (dropdownMenu.classList.contains('hidden')) return;
+
+	    if (event.key === 'ArrowDown') {
+	        currentFocus++;
+	        addActive(items);
+	        event.preventDefault();
+	    } else if (event.key === 'ArrowUp') {
+	        currentFocus--;
+	        addActive(items);
+	        event.preventDefault();
+	    } else if (event.key === 'Enter') {
+	        event.preventDefault();
+	        if (currentFocus > -1 && items[currentFocus]) {
+	            items[currentFocus].click();
+	        }
+	    }
+
+	    function addActive(items) {
+	        if (!items) return false;
+	        removeActive(items);
+	        if (currentFocus >= items.length) currentFocus = 0;
+	        if (currentFocus < 0) currentFocus = items.length - 1;
+	        items[currentFocus].classList.add('active');
+	        items[currentFocus].focus();
+	    }
+
+	    function removeActive(items) {
+	        for (let i = 0; i < items.length; i++) {
+	            items[i].classList.remove('active');
+	        }
+	    }
+	}
+}*/
+
+document.getElementById('incotermsSrch2').addEventListener('input', fn_incoterms);
+function fn_incoterms() {
+	var sData = {};
+	sData["srch1"] = $("#incotermsSrch2").val();
+	
+	$.ajax({
+		type: "POST",
+		url: "/export/selectExportMkInIncotermsList.do",
+		data: sData,
+		dataType: "json",
+		success: function (data) {
+			const dropdownMenu = document.getElementById('incotermsSearch2');
+			const ul = dropdownMenu.querySelector('ul');
+			
+			ul.innerHTML = '';
+			
+			const temrsTradeClick = function(e) {
+				termsTradeData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+                const el = document.getElementById("incoterms");
+                el.innerText = termsTradeData;
+                e.preventDefault();
+                dropdownMenu.classList.add('hidden');
+            };
+			
+			for (var i = 0; i < data.resultList.length; i++) {
+				const li = document.createElement('li');
+				const button = document.createElement('button');
+				button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+				button.innerHTML = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';
+				
+				button.addEventListener('click', temrsTradeClick);
+				
+				li.appendChild(button);
+				ul.appendChild(li);
+			}
+			
+		}
+	});
+}
+
+function enterkeyIncoterms(event) {
+
+	let currentFocus = -1; 
+	document.addEventListener('keydown', enterkeytermsTrade);
+	function enterkeytermsTrade(event) {
+	const dropdownMenu = document.getElementById('incotermsSearch2');
+	const ul = dropdownMenu.querySelector('ul');
+	const items = ul.getElementsByTagName('button');
+
+	if (dropdownMenu.classList.contains('hidden')) return;
+
+	    if (event.key === 'ArrowDown') {
+	        currentFocus++;
+	        addActive(items);
+	        event.preventDefault();
+	    } else if (event.key === 'ArrowUp') {
+	        currentFocus--;
+	        addActive(items);
+	        event.preventDefault();
+	    } else if (event.key === 'Enter') {
+	        event.preventDefault();
+	        if (currentFocus > -1 && items[currentFocus]) {
+	            items[currentFocus].click();
+	        }
+	    }
+	
+	    function addActive(items) {
+	        if (!items) return false;
+	        removeActive(items);
+	        if (currentFocus >= items.length) currentFocus = 0;
+	        if (currentFocus < 0) currentFocus = items.length - 1;
+	        items[currentFocus].classList.add('active');
+	        items[currentFocus].focus();
+	    }
+	
+	    function removeActive(items) {
+	        for (let i = 0; i < items.length; i++) {
+	            items[i].classList.remove('active');
+	        }
+	    }
+	}
+}
+
+function enterOrigin(i) {
+	fn_nation(i);
+}
+function fn_nation(i) {
+	var Seq = i;
+	var sData = {};
+	var originSearh = "";
+	originSearh = "originSrch" + Seq
+	sData["srch1"] = $("#" + originSearh).val();
+	
+	$.ajax({
+		type: "POST",
+		url: "/export/selectExportMkInNationList.do",
+		data: sData,
+		dataType: "json",
+		success: function (data) {
+			var originId = "";
+			originId = 'originSearch'+ Seq;
+			const dropdownMenu = document.getElementById(originId);
+			const ul = dropdownMenu.querySelector('ul');
+			
+			ul.innerHTML = '';
+
+			const nationClick = function(e) {
+				  var originBtn = "";
+				  originBtn = "originButton"+ Seq;
+				  nationData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+	              const el = document.getElementById(originBtn);
+	              el.innerText = nationData;
+	              e.preventDefault();
+	              dropdownMenu.classList.add('hidden');
+	          };
+			
+			for (var i = 0; i < data.resultList.length; i++) {
+				const li = document.createElement('li');
+				const button = document.createElement('button');
+				button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+				button.innerHTML = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';;
+				
+				button.addEventListener('click', nationClick);
+				
+				li.appendChild(button);
+				ul.appendChild(li);
+			}
+		}
+	});
+}
+
+function enterkeyUnitOfQty(i) {
+	fn_unitOfQty(i);
+}
+function fn_unitOfQty(i) {
+	var Seq = i;
+	var sData = {};
+	var uomSearh = "";
+	uomSearh = "unitOfQtySrch" + Seq;
+	sData["srch1"] = $("#" + uomSearh).val();
+	
+    $.ajax({
+        type: "POST",
+        url: "/export/selectExportMkInUOMList.do",
+        data: sData,
+        dataType: "json",
+        success: function (data) {
+        	var uomId = "";
+        	uomId = 'unitOfQtySearch' + Seq;
+            const dropdownMenu = document.getElementById(uomId);
+            const ul = dropdownMenu.querySelector('ul');
+
+            ul.innerHTML = '';
+            
+            const uomQuantityClick = function(e) {
+            	var uomBtn = "";
+            	uomBtn = "unitOfQty" + Seq;
+        	    uomData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+                const el = document.getElementById(uomBtn);
+                el.innerText = uomData;
+                e.preventDefault();
+                dropdownMenu.classList.add('hidden');
+	          };
+
+            for (var i = 0; i < data.resultList.length; i++) {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+                button.innerHTML = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';;
+
+                button.addEventListener('click', uomQuantityClick);
+
+                li.appendChild(button);
+                ul.appendChild(li);
+            }
+        }
+    });
+}
+
+function enterkeyCurrency(i) {
+	fn_currency(i);
+}
+function fn_currency(i) {
+	var Seq = i;
+	var sData = {};
+	var currencySearh = "";
+	currencySearh = "currencySrch" + Seq;
+	sData["srch1"] = $("#" + currencySearh).val();
+	
+	$.ajax({
+		type: "POST",
+		url: "/export/selectExportMkInCurrencyList.do",
+		data: sData,
+		dataType: "json",
+		success: function (data) {
+			var currencyId = "";
+			currencyId = 'currencySearch'+ Seq;
+			const dropdownMenu = document.getElementById(currencyId);
+			const ul = dropdownMenu.querySelector('ul');
+			
+			ul.innerHTML = '';
+			
+		    const currencyClick = function(e) {
+		    	  var currencyBtn = "";
+		    	  currencyBtn = "currencyButton"+ Seq;
+		    	  currencyData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+	              const el = document.getElementById(currencyBtn);
+	              el.innerText = currencyData;
+	              e.preventDefault();
+	              dropdownMenu.classList.add('hidden');
+	        };
+	        
+			for (var i = 0; i < data.resultList.length; i++) {
+				const li = document.createElement('li');
+				const button = document.createElement('button');
+				button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+				button.innerHTML = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';
+				
+				button.addEventListener('click', currencyClick);
+				
+				li.appendChild(button);
+				ul.appendChild(li);
+			}
+			
+		}
+	});
+}
+
+
+var rowCount = 1; // 각 행의 고유한 ID에 사용할 카운터 변수
+// + 버튼 누를 때 추가 Row 생성
+function addCIRow() {
+	  var newRow = document.createElement('div');
+	  var container = document.querySelector('.container-class');
+	  
+	  newRow.classList.add('col-span-11');
+	  newRow.classList.add('grid');
+	  newRow.classList.add('grid-cols-[3fr_1fr_1fr_3.5fr_1fr_4fr_1fr_1.6fr_1.6fr_1.6fr_0.4fr_1fr]');
+	  newRow.classList.add('auto-rows-auto');
+	  newRow.classList.add('gap-1');
+	  newRow.classList.add('pb-2');
+	  newRow.innerHTML = `
+	    <div class="px-1">
+	      <input
+	        type="text"
+	        id="lineNo${rowCount}"
+	        class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block text-center px-2.5 py-1"
+	        value="${rowCount+1}"
+            readonly
+	      >
+	    </div>
+	    <div class="px-1">
+	      <input
+	        type="text"
+	        id="itemCode${rowCount}"
+	        class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+	        style="text-align: center; placeholder-text-align: left"
+	        placeholder="Item Code"
+	      >
+	    </div>
+	    <div class="px-1">
+          <input
+            type="text"
+            id="hsCode${rowCount}"
+            oninput="formatPhoneNumber(this)"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            style="text-align: center; placeholder-text-align: left"
+            placeholder="HS Code"
+          >
+        </div>
+	    <div class="px-1">
+          <input
+            type="text"
+            id="specification${rowCount}"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Specification of commodities"
+          >
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="packingNo${rowCount}"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            style="text-align: center; placeholder-text-align: left"
+            placeholder="Packing No"
+          >
+        </div>
+        <div class="px-1">
+          <div class="relative w-full col-span-2">
+            <input
+            type="text"
+            id="quantity${rowCount}"
+            onkeyup="quantitySum()"
+            oninput="formatNumber(this)"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            style="text-align: right;"
+            placeholder="Quantity"
+          >
+          </div>
+        </div>
+        <div class="px-1">
+        <button
+              id="unitOfQty${rowCount}"
+              onclick="fn_unitOfQty(${rowCount})"
+              data-dropdown-toggle="unitOfQtySearch${rowCount}"
+              data-dropdown-placement="bottom"
+              class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              type="button">
+              Unit of Qty
+              <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+              </svg>
+            </button>
+            <div id="unitOfQtySearch${rowCount}" class="z-10 hidden bg-white border rounded-lg shadow-xl dark:bg-gray-700 overflow-auto">
+                <div class="p-3">
+                  <label for="uom-group-search" class="sr-only">Search</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                      <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                      </svg>
+                    </div>
+                    <input type="text" id="unitOfQtySrch${rowCount}" onkeyup="enterkeyUnitOfQty(0)" 
+                    	   class="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+                  </div>
+                </div>
+                <ul class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto" aria-labelledby="unitOfQtyButton">
+          			<li>
+            		  <button 
+              			class="block ps-2 hover:bg-gray-100 dark:hover:bg-gray-600 w-full py-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300 text-left">
+            		  </button>
+                    </li>
+      			</ul>
+            </div>
+          </div>
+          <div class="px-1">
+          <div class="relative w-full col-span-2">
+            <input
+            type="text"
+            id="unitPrice${rowCount}"
+            oninput="formatNumber(this)"
+            onkeyup="unitPriceSum()"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            style="text-align: right;"
+            placeholder="Unit price"
+          >
+          </div>
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="amountOfPrice${rowCount}"
+            onkeyup="amountOfPriceTotal()"
+            oninput="formatNumber(this)"
+            class="col-span-2 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            style="text-align: right;"
+            placeholder="Amount of Price">
+        </div>
+	    <div class="flex items-center justify-center">
+          <button type="button"
+		  		  onclick="removeCIRow(this)"
+                  class="p-1.5 text-white flex items-center justify-center bg-rose-600 rounded-lg hover:opacity-50 duration-200">
+          <i class="fa-solid fa-minus"></i>
+		  </button>
+        </div>
+	  `;
+	  
+	  var currentDiv = document.querySelector('.col-span-12.grid.add');
+	  currentDiv.appendChild(newRow);
+	  initDropdowns();
+	  rowCount++;
+}
+
+function removeCIRow(button) {
+    var row = button.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+    var amountsum = 0;
+    var pricesum = 0;
+    var qtysum = 0;
+    for (var i = 0; i < rowCount; i++) {
+    	var amount = Number($("#amountOfPrice" + i).val())
+		if(!isNaN(amount)){
+			amountsum += amount;
+		}
+		var price = Number($("#unitPrice" + i).val())
+		if(!isNaN(price)){
+			pricesum += price;
+		}
+		var quantity = Number($("#quantity" + i).val())
+		if(!isNaN(quantity)){
+			qtysum += quantity;
+		}
+	}
+	$("#totalAmount").val(amountsum);
+}
+function formatNumber(input) {
+    let value = input.value.replace(/[^0-9]/g, '');
+    let formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    input.value = formattedValue;
+  }
+
+function quantitySum(){
+	var sum = 0;
+	for (var i = 0; i < rowCount; i++) {
+		var quantityElement = $("#quantity" + i);
+		if (quantityElement.length > 0) {  // 요소가 존재하는지 확인
+			var quantity = Number(quantityElement.val().replace(/,/g, ''));
+			if (!isNaN(quantity)) {
+				sum += quantity;
+			}
+		}
+	}
+	calculateAmount(rowCount);
+}
+function unitPriceSum(){
+	var sum = 0;
+	for (var i = 0; i < rowCount; i++) {
+		var unitPrice = Number($("#unitPrice" + i).val().replace(/,/g, ''))
+		if(!isNaN(unitPrice)){
+			sum += unitPrice;
+		}
+	}
+	calculateAmount(rowCount);
+}
+function amountOfPriceTotal(){
+	var sum = 0;
+	for (var i = 0; i < rowCount; i++) {
+		var amountOfPrice = Number($("#amountOfPrice" + i).val().replace(/,/g, ''))
+		if(!isNaN(amountOfPrice)){
+		  sum += amount;
+		}
+	}
+	var formattedSum = sum.toLocaleString();
+	$("#totalAmount").val(formattedSum);
+	calculateAmount(rowCount);
+}
+function calculateAmount(rowCount) {
+    var totalAmount = 0;
+    for (var i = 0; i < rowCount; i++) {
+        var quantity = Number($("#quantity" + i).val().replace(/,/g, ''));
+        var unitPrice = Number($("#unitPrice" + i).val().replace(/,/g, ''));
+        var multiple = quantity * unitPrice;
+        
+        if (!isNaN(multiple)) {
+            var formattedMultiple = multiple.toLocaleString();
+            $("#amountOfPrice" + i).val(formattedMultiple);
+            $("#totalAmount" + i).val(formattedMultiple);
+            totalAmount += multiple;
+        }
+    }
+    var formattedTotalAmount = totalAmount.toLocaleString();
+    $("#totalAmount").val(formattedTotalAmount);
+}
+
+function blockKoreanInput(event) {
+    var input = event.key;
+    if (/^[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]*$/.test(input)) {
+        event.preventDefault();
+        return false;
+    }
+}
+
+// 검색조건 초기화
+function fn_clearMakeIn2(){
+	
+	for (var i = 1; i < rowCount; i++) {
+        var row = document.getElementById(`lineNo${i}`).parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
+	rowCount = 1;
+    
+	$("#exporter").val("");
+	$("#ciNo").val("");
+	$("#invoiceDate").val("");
+	$("#consignee").val("");
+	$("#otherReferences").val("");
+	$("#importer").val("");
+	$("#lcNo").val("");
+	$("#lcDate").val("");
+	$("#transport").val("");
+	$("#vessel").val("");
+	$("#voyageNo").val("");
+	$("#location").val("");
+	$("#departureDate").val("");
+	$("#discharge").val("");
+	$("#transhipment").val("");
+	$("#delivery").val("");
+	$("#freightMethod").val("");
+	$("#grossWeight").val("");
+	$("#netWeight").val("");
+	$("#grossWeight").val("");
+	$("#totalAmount").val("");
+	$("#freigh").val("");
+	$("#insurance").val("");
+	$("#packageName").val("");
+	$("#totalPackages").val("");
+	$("#comments").val("");
+	
+	const origin =  document.getElementById("originButton0");
+	const incoterms =  document.getElementById("incoterms");
+	const conditions =  document.getElementById("conditions");
+	const loadingPort =  document.getElementById("loadingPort");
+	//const finalDestination =  document.getElementById("finalDestination");
+	const currency =  document.getElementById("currencyButton0");
+	const packageCode =  document.getElementById("packageCode");
+	const unitOfQty =  document.getElementById("unitOfQty0");
+	origin.innerText = 'Origin';
+	incoterms.innerText = 'Incoterms value';
+	conditions.innerText = 'Payment conditions';
+	loadingPort.innerText = 'Loading port';
+	//finalDestination.innerText = 'Final destination';
+	currency.innerText = 'Currency';
+	packageCode.innerText = 'Package code';
+	unitOfQty.innerText = 'Unit of Qty';
+	
+	$("#itemCode0").val("");
+	$("#hsCode0").val("");
+	$("#specification0").val("");
+	$("#packingNo0").val("");
+	$("#quantity0").val("");
+	$("#unitOfQty0").val("");
+	$("#unitPrice0").val("");
+	$("#amountOfPrice0").val("");
+	
+};
+
+
+// 저장버튼 클릭
+function fn_saveExportInCheck(){
+	if(exportInHot.getData().length < 1){
+		alert(msgSaveEmpty);
+		return;
+	}
+	fn_validateExportIn();
+};
+
+
+// Invoice 생성 다음 시 저장
+function fn_saveMakeInvoice2() {
+	var mainCd =  $("#ciNo").val();
+	var stsCd = '10';
+    var importer = $("#importer").val();
+    var ciNo = $("#ciNo").val();
+    var consignee = $("#consignee").val();
+    var invoiceDate = $("#invoiceDate").val();
+    var exporter = $("#exporter").val();
+    var otherReferences = $("#otherReferences").val();
+    var lcNo = $("#lcNo").val();
+    var lcDate = $("#lcDate").val();
+    var origin = $("#originButton0").text().trim();
+    var transport = $("#transport").val();
+    var incoterms = $("#incoterms").text().trim() === "Incoterms value" ? "" : $("#incoterms").text().trim();
+    var loadingPort = $("#loadingPort").text().trim() === "Loading Port" ? "" : $("#loadingPort").text().trim();
+    var location = $("#location").val();
+    var vessel = $("#vessel").val();
+    var voyageNo = $("#voyageNo").val();
+    var conditions = $("#conditions").text().trim() === "Payment conditions" ? "" : $("#conditions").text().trim();
+    var discharge = $("#discharge").val();
+    var delivery = $("#delivery").val();
+    var transhipment = $("#transhipment").val();
+    var freightMethod = $("#freightMethod").val();
+    var departureDate = $("#departureDate").val();
+    var grossWeight = $("#grossWeight").val();
+    var netWeight = $("#netWeight").val();
+    var currency = $("#currencyButton0").text().trim() === "Currency" ? "" : $("#currencyButton0").text().trim();
+    var totalAmount = $("#totalAmount").val();
+    var freigh = $("#freigh").val();
+    var insurance = $("#insurance").val();
+    var packageCode = $("#packageCode").text().trim() === "Package code" ? "" : $("#packageCode").text().trim();
+    var packageName = $("#packageName").val();
+    var totalPackages = $("#totalPackages").val();
+    var comments = $("#comments").val();
+    
+    var firstEmptyFieldAlerted = false;
+    function validateField(selector, fieldName) {
+        if ($(selector).val() === "" && !firstEmptyFieldAlerted) {
+            $(selector).css("border", "3px solid red");
+            alert(fieldName + "를 입력해 주세요.");
+            firstEmptyFieldAlerted = true;
+            return false;
+        } else {
+            $(selector).css("border", "");
+            return true;
+        }
+    }
+
+    function validateDropdown(selector, defaultValue, fieldName) {
+        if ($(selector).text().trim() === defaultValue && !firstEmptyFieldAlerted) {
+            $(selector).css("border", "3px solid red");
+            alert(fieldName + "를 입력해 주세요.");
+            firstEmptyFieldAlerted = true;
+            return false;
+        } else {
+            $(selector).css("border", "");
+            return true;
+        }
+    }
+
+    var allFieldsValid = true;
+
+    if (!validateField("#exporter", "Shipper / Exporter")) allFieldsValid = false;
+    if (!validateField("#importer", "Buyer / Importer")) allFieldsValid = false;
+    if (!validateField("#ciNo", "Invoice No")) allFieldsValid = false;
+    if (!validateField("#consignee", "Consignee")) allFieldsValid = false;
+    if (!validateField("#invoiceDate", "Invoice Date")) allFieldsValid = false;
+    //if (!validateField("#otherReferences", "Other references")) allFieldsValid = false;
+    //if (!validateField("#lcNo", "L/C No")) allFieldsValid = false;
+    //if (!validateField("#lcDate", "L/C Date")) allFieldsValid = false;
+    //if (!validateField("#transport", "Mode of transport")) allFieldsValid = false;
+    //if (!validateField("#incoterms", "Incoterms value")) allFieldsValid = false;
+    if (!validateField("#location", "Location name")) allFieldsValid = false;
+    if (!validateField("#vessel", "Vessel name")) allFieldsValid = false;
+    //if (!validateField("#voyageNo", "Voyage No")) allFieldsValid = false;
+    //if (!validateField("#conditions", "Payment conditions")) allFieldsValid = false;
+    if (!validateField("#discharge", "Place of discharge")) allFieldsValid = false;
+    if (!validateField("#delivery", "Place of delivery")) allFieldsValid = false;
+    if (!validateField("#transhipment", "Place of transhipment")) allFieldsValid = false;
+    if (!validateField("#freightMethod", "Freight payment Method")) allFieldsValid = false;
+    if (!validateField("#departureDate", "Departure date")) allFieldsValid = false;
+    if (!validateField("#grossWeight", "Gross weight")) allFieldsValid = false;
+    if (!validateField("#netWeight", "Net weight")) allFieldsValid = false;
+    //if (!validateField("#totalAmount", "Total amount")) allFieldsValid = false;
+    //if (!validateField("#freigh", "Freight payment Method")) allFieldsValid = false;
+    //if (!validateField("#insurance", "Insurance")) allFieldsValid = false;
+    //if (!validateField("#packageName", "Package name")) allFieldsValid = false;
+    //if (!validateField("#totalPackages", "Total packages")) allFieldsValid = false;
+    //if (!validateField("#comments", "Comments")) allFieldsValid = false;
+    
+    if (!validateDropdown("#incoterms", "Incoterms value", "Incoterms value")) allFieldsValid = false;
+    if (!validateDropdown("#originButton0", "Country of origin", "Country of origin")) allFieldsValid = false;
+    if (!validateDropdown("#loadingPort", "Loading Port", "Loading port")) allFieldsValid = false;
+    if (!validateDropdown("#currencyButton0", "Currency", "Currency")) allFieldsValid = false;
+    //if (!validateDropdown("#packageCode", "Package code", "Package code")) allFieldsValid = false;
+
+
+    for (var i = 0; i < rowCount; i++) {
+        if (!validateField("#itemCode" + i, "Item Code")) allFieldsValid = false;
+        if (!validateField("#hsCode" + i, "HS Code")) allFieldsValid = false;
+        if (!validateField("#specification" + i, "Specification of commodities")) allFieldsValid = false;
+        if (!validateField("#packingNo" + i, "Packing No")) allFieldsValid = false;
+        if (!validateField("#quantity" + i, "Quantity")) allFieldsValid = false;
+        if (!validateDropdown("#unitOfQty" + i, "Unit of Qty", "Unit of Qty")) allFieldsValid = false;
+        if (!validateField("#unitPrice" + i, "Unit Price")) allFieldsValid = false;
+        if (!validateField("#amountOfPrice" + i, "Amount of price")) allFieldsValid = false;
+    }
+
+    if (!allFieldsValid) {
+        return;
+    }
+
+    if (incoterms.startsWith('C') || incoterms.startsWith('D')) {
+        if (freigh === "" || insurance === "") {
+            alert("해당 인코텀즈는 운임 및 보험료가 필수로 입력되어야 합니다.");
+            $("#freigh").css("border", "3px solid red");
+            $("#insurance").css("border", "3px solid red");
+            return;
+        }
+    }
+    var popData = [];
+  
+    popData.push({ mainCd, stsCd,
+    	importer, ciNo, consignee, invoiceDate, exporter, otherReferences, lcNo, lcDate, origin, transport,
+    	incoterms, loadingPort, location, vessel, voyageNo, conditions, discharge, delivery, transhipment,
+    	freightMethod, /*finalDestination,*/ departureDate, grossWeight, netWeight, currency, totalAmount,
+    	freigh, insurance, packageCode, packageName, totalPackages, comments, loadingPort
+    });
+
+    var rowData = [];
+    var currency = null;
+    
+    for (var i = 0; i < rowCount; i++) {
+        var unitOfQty = document.getElementById("unitOfQty" + i);
+        var invoice = {
+            itemCode: $("#itemCode" + i).val(),
+            lineNo: $("#lineNo" + i).val(),
+            hsCode: $("#hsCode" + i).val(),
+            specification: $("#specification" + i).val(),
+            packingNo: $("#packingNo" + i).val(),
+            quantity: $("#quantity" + i).val(),
+            unitOfQty: $("#unitOfQty" + i).text().trim().replace(/,/g, ''),
+            unitPrice: $("#unitPrice" + i).val(),
+            amountOfPrice: $("#amountOfPrice" + i).val()
+        };
+        
+        //console.log("Row Count:", rowCount);
+     
+        if (!invoice.hsCode || invoice.hsCode.length <= 6) {
+            alert("hsCode는 6자리 이상이어야 합니다.");
+            for (var j = 0; j < rowCount; j++) {
+                $("#hsCode" + j).css("border", "3px solid red");
+            }
+            return;
+        } 
+
+        popData.push(invoice);
+        rowData.push(invoice);
+    }
+    
+    $.ajax({
+        type: "POST",
+        url: "/export/exportSaveInvoice2.do",
+        data: JSON.stringify(popData),
+        beforeSend: function(xmlHttpRequest){
+            xmlHttpRequest.setRequestHeader("AJAX", "true");
+        },
+        contentType: "application/json; charset=utf-8",
+        success: function(data) {
+            if(data === "success"){
+                alert("INVOICE 생성이 완료되었습니다.");
+                CImakePdf(mainCd, stsCd);
+                $("#tabs-exportMakeIn2").remove();
+				var tabs = $("#tabs").tabs();
+				tabs.tabs("refresh");
+				$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+				var length = $("#myTab").find("li a").length;
+				if (length < 2) {
+					$("#tabs-dashboard").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+					tabs.tabs("option", "active", 0);
+				} else {
+					tabs.tabs("option", "active",length - 1);
+					var lastObj = $("#myTab").find("li a")[length - 1];
+					lastObj.className = "nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor";
+				}
+            } else if (data === "fail"){
+                alert("해당 INVOICE NO는 이미 존재합니다.");
+            }
+            fn_loading(false);
+        },
+        error: function(e, textStatus, errorThrown) {
+            if(e.status == 400){
+                alert("Your request is up. Please log back in if you wish continue");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert(msgSaveError);
+            }
+        }
+    });
+};
+
+
+// 임시저장
+function fn_saveTempExpMakeIn2(){
+	var importer = $("#importer").val();
+	var ciNo = $("#ciNo").val();
+	var consignee = $("#consignee").val();
+	var invoiceDate = $("#invoiceDate").val();
+	var exporter = $("#exporter").val();
+	var otherReferences = $("#otherReferences").val();
+	var lcNo = $("#lcNo").val();
+	var lcDate = $("#lcDate").val();
+	var origin = $("#originButton0").text().trim();
+	var transport = $("#transport").val();
+	var incoterms = $("#incoterms").text().trim();
+	var loadingPort = $("#loadingPort").text().trim();
+	var location = $("#location").val();
+	var vessel = $("#vessel").val();
+	var voyageNo = $("#voyageNo").val();
+	var conditions = $("#conditions").text().trim();
+	var discharge = $("#discharge").val();
+	var delivery = $("#delivery").val();
+	var transhipment = $("#transhipment").val();
+	var freightMethod = $("#freightMethod").val();
+	//var finalDestination = $("#finalDestination").text().trim();
+	var departureDate = $("#departureDate").val();
+	var grossWeight = $("#grossWeight").val();
+	var netWeight = $("#netWeight").val();
+	var currency = $("#currencyButton0").text().trim();
+	var totalAmount = $("#totalAmount").val();
+	var freigh = $("#freigh").val();
+	var insurance = $("#insurance").val();
+	var packageCode = $("#packageCode").text().trim();
+	var packageName = $("#packageName").val();
+	var totalPackages = $("#totalPackages").val();
+	var comments = $("#comments").val();
+    var rowData = [];
+    
+    if (ciNo == "") {
+        alert("INVOICE NO를 입력해주세요.");
+        return;
+    }
+    
+    var popData = [];
+  
+    popData.push({
+        importer: $("#importer").val(),
+        ciNo: $("#ciNo").val(),
+        consignee: $("#consignee").val(),
+        invoiceDate: $("#invoiceDate").val(),
+        exporter: $("#exporter").val(),
+        otherReferences: $("#otherReferences").val(),
+        lcNo: $("#lcNo").val(),
+        lcDate: $("#lcDate").val(),
+        origin: $("#originButton0").text().trim(),
+        transport: $("#transport").val(),
+        incoterms: $("#incoterms").text().trim() === "Incoterms value" ? "" : $("#incoterms").text().trim(),
+        loadingPort: $("#loadingPort").text().trim() === "Loading Port" ? "" : $("#loadingPort").text().trim(),
+        location: $("#location").val(),
+        vessel: $("#vessel").val(),
+        voyageNo: $("#voyageNo").val(),
+        incoterms: $("#conditions").text().trim() === "Payment conditions" ? "" : $("#conditions").text().trim(),
+        discharge: $("#discharge").val(),
+        delivery: $("#delivery").val(),
+        transhipment: $("#transhipment").val(),
+        freightMethod: $("#freightMethod").val(),
+        //finalDestination: $("#finalDestination").text().trim(),
+        departureDate: $("#departureDate").val(),
+        grossWeight: $("#grossWeight").val(),
+        netWeight: $("#netWeight").val(),
+        currency: $("#currencyButton0").text().trim() === "Currency" ? "" : $("#currencyButton0").text().trim(),
+        totalAmount: $("#totalAmount").val(),
+        freigh: $("#freigh").val(),
+        insurance: $("#insurance").val(),
+        packageCode: $("#packageCode").text().trim() === "Package code" ? "" : $("#packageCode").text().trim(),
+        packageName: $("#packageName").val(),
+        totalPackages: $("#totalPackages").val(),
+        comments: $("#comments").val()
+    });
+
+   
+   for (var i = 0; i < rowCount; i++) {
+	   var unitOfQty = document.getElementById("unitOfQty"+i);
+       var invoice = {
+    		   lineNo: $("#lineNo" + i).val(),
+    		   itemCode: $("#itemCode" + i).val(),
+               hsCode: $("#hsCode" + i).val(),
+               specification: $("#specification" + i).val(),
+               packingNo: $("#packingNo" + i).val(),
+               quantity: $("#quantity" + i).val(),
+               unitOfQty: document.getElementById("unitOfQty" + i).innerText.trim().replace(/,/g, ''),
+               unitPrice: $("#unitPrice" + i).val(),
+               amountOfPrice: $("#amountOfPrice" + i).val(),
+       };
+       popData.push(invoice);
+       rowData.push(invoice); 
+   }
+   
+   $.ajax({
+	   type: "POST",
+	   url: "/export/saveTempExpMakeInList2.do",
+	   data: JSON.stringify(popData),
+	   beforeSend: function(xmlHttpRequest){
+	       xmlHttpRequest.setRequestHeader("AJAX", "true");
+	   },
+	   contentType: "application/json; charset=utf-8",
+	   success: function(data) {
+	       if(data === "success"){
+		           alert("INVOICE 임시저장이 완료되었습니다.");
+				$("#tabs-exportMakeIn2").remove();
+				var tabs = $("#tabs").tabs();
+				tabs.tabs("refresh");
+				$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+				var length = $("#myTab").find("li a").length;
+				if (length < 2) {
+					$("#tabs-dashboard").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+					tabs.tabs("option", "active", 0);
+				} else {
+					tabs.tabs("option", "active",length - 1);
+					var lastObj = $("#myTab").find("li a")[length - 1];
+					lastObj.className = "nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor";
+				}
+		       fn_loading(false);
+	       } else if (data === "fail"){ // 덧붙이기
+	    	   alert("INVOICE 임시저장이 완료되었습니다.");
+	    	   $("#tabs-exportMakeIn2").remove();
+				var tabs = $("#tabs").tabs();
+				tabs.tabs("refresh");
+				$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+				var length = $("#myTab").find("li a").length;
+				if (length < 2) {
+					$("#tabs-dashboard").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+					tabs.tabs("option", "active", 0);
+				} else {
+					tabs.tabs("option", "active",length - 1);
+					var lastObj = $("#myTab").find("li a")[length - 1];
+					lastObj.className = "nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor";
+				}
+	    	   //fn_openPacking(shipper, address, invoiceNo, invoiceDate, consignee, loadingPort, flight, final, departureDate, rowData, consigneeAddress, comments);
+	       }
+	       fn_loading(false);
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	       if(e.status == 400){
+	           alert("Your request is up. Please log back in if you wish continue");
+	           location.href = document.referrer;
+	       } else {
+	           console.log(errorThrown);
+	           alert(msgSaveError);
+	       }
+	    }
+	});
+};
+
+
+function enterkeyFinal2() {
+	fn_searchCiFinalPopup2();
+}
+function fn_finalPopup2(){
+	$("#ciFinalDestinationPopUp").modal("show");
+    fn_searchCiFinalPopup2();
+};
+function fn_searchCiFinalPopup2(){
+	finalIndex = 0;
+	var sData = {};
+	sData["srch1"] = $("#finalSrch2").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/export/selectExportMkInAprPortList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	arrListHot.loadData([]);
+        	arrListHot.loadData(data.resultList);
+			setTimeout(function() {arrListHot.render()}, 200);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+
+
+function fn_handsonGridarrListPopupOption() {
+	
+    arrListPopupSettings = {
+        columns: [
+        	{ data: 'cmmnCd', type: 'text', className: "htCenter", readOnly: true },
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["코드"],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [] },
+        
+        afterOnCellMouseDown : function(event, coords, td) {
+			var now = new Date().getTime();
+
+			fn_selectFinalPop(coords);
+		}
+    };
+
+    return arrListPopupSettings;
+}
+
+
+function fn_selectFinalPop(coords) {
+
+	const row = coords.row; 
+    const col = coords.col; 
+    const cmmnCd = arrListHot.getDataAtCell(row, col);
+
+    const el = document.getElementById("finalDestination");
+    el.innerText = cmmnCd;
+    
+    destinationData = cmmnCd;
+    
+    $("#ciFinalDestinationPopUp").modal("hide");
+};
+
+
+function finalPopupClose2(){
+	$("#ciFinalDestinationPopUp").modal("hide");
+}
+
+
+// 스크롤
+function fn_scroll(){
+
+	$("#finalPopupTable .wtHolder").scroll(function(){
+		var scrollTop = $("#finalPopupTable .wtHolder").scrollTop();
+		var countPerPage = 50;
+		var rowHeight = arrListHot.getRowHeight();
+		var addCnt = 1020;
+		  
+		if(finalScrollTp && finalIndex != 9999 && scrollTop >= (countPerPage * finalIndex * rowHeight) + addCnt){
+			  fn_finalScroll();
+		}
+	});
+}
+
+
+function fn_finalScroll(){
+
+	var sData = {};
+	finalScrollTp = false;
+	finalIndex++;
+	sData["pageIndex"] = finalIndex;
+	
+	$.ajax({
+		type : "POST",
+		url : "/export/selectExportMkInAprPortList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	var getData = arrListHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	arrListHot.loadData(meargeJson);
+			setTimeout(function() {arrListHot.render()}, 200);
+			finalScrollTp = true;
+         },
+         error : function(e, textStatus, errorThrown) { 
+        	if(e.status == 400){
+        		alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+         }
+	});
+}
+
+function expLoadListClose2(){
+	$("#expLoadListPopUp2").modal("hide");
+}
+
+function fn_loadDataList2(){
+	$("#expLoadListPopUp2").modal("show");
+	var sData = {};
+	fn_loading(true);
+
+	$.ajax({
+	type : "POST",
+	url : "/export/selectLoadDataList2.do",
+	data : sData,
+	beforeSend : function(xmlHttpRequest){
+		xmlHttpRequest.setRequestHeader("AJAX", "true");
+	},
+	dataType : 'json',
+	async: false,
+    success : function(data) {
+    	expLoadListHot.loadData([]);
+    	expLoadListHot.loadData(data.resultList);
+		setTimeout(function() {expLoadListHot.render()}, 10);
+		fn_loading(false);
+    },
+    error : function(e, textStatus, errorThrown) {
+    	if(e.status == 400){
+    		alert("에러 발생");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+}
+
+function fn_handsonGridExpLoadListPopupOption() {
+    expLoadListPopupSettings = {
+        columns: [
+            { data: 'checkBox', type: 'checkbox', className: "htCenter", checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly: false },
+            { data: 'mainCd', type: 'text', className: "htCenter", readOnly: true }, 
+            { data: 'invoiceDate', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'exporter', type: 'text', className: "htCenter", readOnly: true },
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["", "INVOICE NO", "INVOICE DATE", "SHIPPER"],
+        colWidths: [30, 100, 60, 100],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+    };
+
+    return expLoadListPopupSettings;
+}
+
+function fn_loadDataView2() {
+	var selected = expLoadListHot.getSourceData();
+	var sData = {};
+	var cnt = 0;
+	
+    for (let i = 0; i < selected.length; i++) {
+        if (selected[i].checkBox === "yes") {
+        	sData.ciNo = selected[i].ciNo;
+        	cnt++;
+        }
+    }
+    if (cnt >= 2) {
+    	alert("INVOICE는 한 개만 선택할 수 있습니다.");
+    	return;
+    }
+    if (cnt == 0){
+    	alert("선택된 INVOICE가 없습니다.");
+    	return;
+    }
+	$.ajax({
+		type : "POST",
+		url : "/export/selectLoadDataView2.do",
+		data : sData, 
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+	    success : function(data) {
+	    	console.log(data.resultList[0]);
+	    	$("#expLoadListPopUp2").modal("hide");
+	    	
+	    	$("#exporter").val(data.resultList[0].exporter);
+	    	$("#importer").val(data.resultList[0].importer);
+	    	$("#ciNo").val(data.resultList[0].ciNo);
+        	$("#consignee").val(data.resultList[0].consignee); 
+        	$("#invoiceDate").val(data.resultList[0].invoiceDate);
+            $("#otherReferences").val(data.resultList[0].otherReferences);
+            $("#lcNo").val(data.resultList[0].lcNo);
+            $("#lcDate").val(data.resultList[0].lcDate);
+            $("#originButton0").text(data.resultList[0].origin); 
+            $("#transport").val(data.resultList[0].transport);
+            $("#incoterms").text(data.resultList[0].incoterms); 
+            $("#loadingPort").text(data.resultList[0].loadingPort); 
+            $("#location").val(data.resultList[0].location);
+            $("#vessel").val(data.resultList[0].vessel);
+            $("#voyageNo").val(data.resultList[0].voyageNo); 
+            $("#conditions").text(data.resultList[0].conditions);
+            $("#discharge").val(data.resultList[0].discharge);
+            $("#delivery").val(data.resultList[0].delivery);
+            $("#transhipment").val(data.resultList[0].transhipment);
+            $("#freightMethod").val(data.resultList[0].freightMethod);
+            //$("#finalDestination").text(data.resultList[0].finalDestination);
+            $("#departureDate").val(data.resultList[0].departureDate);
+            $("#grossWeight").val(data.resultList[0].grossWeight);
+            $("#netWeight").val(data.resultList[0].netWeight);
+            $("#currencyButton0").text(data.resultList[0].currency);
+            $("#totalAmount").val(data.resultList[0].totalAmount);
+            $("#freigh").val(data.resultList[0].freigh);
+            $("#insurance").val(data.resultList[0].insurance);
+            $("#packageCode").text(data.resultList[0].packageCode);
+            $("#packageName").val(data.resultList[0].packageName);
+            $("#totalPackages").val(data.resultList[0].totalPackages);
+            $("#comments").val(data.resultList[0].comments);
+        	
+           for (var i = 0; i < data.resultList2.length; i++) {
+              if(i >= 1){
+           		  addCIRow();
+           	  }
+              var unitOfQty = document.getElementById("unitOfQty" + i);
+           	  $("#itemCode"+i).val(data.resultList2[i].itemCode);
+           	  $("#lineNo"+i).val(data.resultList2[i].lineNo);
+           	  $("#hsCode"+i).val(data.resultList2[i].hsCode);
+           	  $("#specification"+i).val(data.resultList2[i].specification);
+           	  $("#packingNo"+i).val(data.resultList2[i].packingNo);
+           	  $("#quantity"+i).val(data.resultList2[i].quantity);
+           	  $("#unitPrice"+i).val(data.resultList2[i].unitPrice);
+           	  $("#amountOfPrice"+i).val(data.resultList2[i].amountOfPrice);
+           	  unitOfQty.innerText = data.resultList2[i].unitOfQty;
+			}
+            
+        	fn_loading(false);
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("에러 발생");
+		    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+		}
+	});
+}
+
+function fn_loadDataDelete2() {
+	var rowData = expLoadListHot.getSourceData();
+	let delList = [];
+    var cnt = 0;
+    
+    for (let i = 0; i < rowData.length; i++) {
+        if (rowData[i].checkBox === "yes") {
+        	delList.push(rowData[i]);
+        	cnt++;
+        }
+    }
+    if (cnt == 0){
+    	alert("선택된 INVOICE가 없습니다.");
+    	return;
+    }
+    if (confirm("임시저장된 INVOICE를 삭제하시겠습니까?")) {
+        $.ajax({
+        	type: "POST",
+            url: "/export/loadDataDelete2.do",
+            data: JSON.stringify(delList), 
+            contentType: 'application/json', 
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("AJAX", "true");
+            },
+            success: function(data) {
+            	var indexesToDelete = [];
+                for (let i = 0; i < rowData.length; i++) {
+                    if (rowData[i].checkBox === "yes") {
+                        indexesToDelete.push(i);
+                    }
+                }
+                indexesToDelete.sort((a, b) => b - a);
+                for (let index of indexesToDelete) {
+                    expLoadListHot.alter('remove_row', index);
+                }
+
+                alert('임시저장된 INVOICE가 삭제되었습니다.');
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                if (xhr.status == 400) {
+                    alert("에러 발생");
+                    location.href = document.referrer;
+                } else {
+                    console.log(errorThrown);
+                    alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+                }
+            }
+        });
+    }
+}
+
+
+function CImakePdf(mainCd, stsCd){
+	/*fn_beforePreview();*/
+	var ciNo = mainCd;
+	var stsCd = stsCd;
+	$.ajax({
+		type : "POST",
+		url : "/export/makeCIPdf2.do",
+		data : JSON.stringify({
+			ciNo: ciNo,
+			stsCd: stsCd
+		}),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		contentType: "application/json; charset=utf-8",
+		async : false,
+		success : function(data) {
+			if(data === "success"){
+				if(stsCd == '20'){
+					var url = "/home/files/CI_" + ciNo + ".pdf";
+					var iframe = document.createElement('iframe');
+					iframe.className = 'pdfIframe';
+					document.body.appendChild(iframe);
+					iframe.style.display = 'none';
+					
+					iframe.onload = function () {
+						setTimeout(function () {
+							iframe.focus();
+							iframe.contentWindow.print();
+							URL.revokeObjectURL(url);
+						}, 1);
+					};
+					iframe.src = url;
+				} else {
+					$("#downCINo").val(ciNo);
+					document.fileDownForm.action = "/export/downloadAnnex.do";
+					document.fileDownForm.submit();
+				}
+			} else {
+				alert(msgExcelDownVer);
+			}
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+				location.href = document.referrer;
+			} else { 
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+}
+
+
+
+function enterkeyUom(i) {
+	fn_uomQuantity(i);
+}
+function fn_uomQuantity(i) {
+	var Seq = i;
+	var sData = {};
+	var uomSearh = "";
+	uomSearh = "uomSrch" + Seq;
+	sData["srch1"] = $("#" + uomSearh).val();
+	
+    $.ajax({
+        type: "POST",
+        url: "/export/selectExportMkInUOMList.do",
+        data: sData,
+        dataType: "json",
+        success: function (data) {
+        	var uomId = "";
+        	uomId = 'uomSearch' + Seq;
+            const dropdownMenu = document.getElementById(uomId);
+            const ul = dropdownMenu.querySelector('ul');
+
+            ul.innerHTML = '';
+            
+            const uomQuantityClick = function(e) {
+            	var uomBtn = "";
+            	uomBtn = "uomButton" + Seq;
+        	    uomData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+                const el = document.getElementById(uomBtn);
+                el.innerText = uomData;
+                e.preventDefault();
+                dropdownMenu.classList.add('hidden');
+	          };
+
+            for (var i = 0; i < data.resultList.length; i++) {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+                button.innerHTML = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';
+
+                button.addEventListener('click', uomQuantityClick);
+
+                li.appendChild(button);
+                ul.appendChild(li);
+            }
+        }
+    });
+}
+
+
+function enterkeytotCnt() {
+	fn_totCnt();
+}
+
+function fn_totCnt() {
+	var sData = {};
+	sData["srch1"] = $("#packSrch1").val();
+	
+	$.ajax({
+		type: "POST",
+		url: "/export/selectExportMkPLtotCntList.do",
+		data: sData,
+		dataType: "json",
+		success: function (data) {
+			var totCntId = "";
+			totCntId = 'packSearch';
+			const dropdownMenu = document.getElementById(totCntId);
+			const ul = dropdownMenu.querySelector('ul');
+			
+			ul.innerHTML = '';
+			
+			const totCntClick = function(e) {
+				var totCntBtn = "";
+				totCntBtn = "packageCode";
+				plTotCntData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+				const el = document.getElementById(totCntBtn);
+				el.innerText = plTotCntData;
+				e.preventDefault();
+				dropdownMenu.classList.add('hidden');
+			};
+			
+			for (var i = 0; i < data.resultList.length; i++) {
+				const li = document.createElement('li');
+				const button = document.createElement('button');
+				button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+				button.innerHTML = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';
+				button.addEventListener('click', totCntClick);
+				
+				li.appendChild(button);
+				ul.appendChild(li);
+			}
+		}
+	});
+}
+
+function randomString(length) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+    let result = '';
+    
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        result += characters[randomIndex];
+    }
+    
+    return result;
+}
+
+
+function fn_makeCIpreview2() {
+	var mainCd = randomString(8);
+	var stsCd = '20';
+	var importer = $("#importer").val();
+    var ciNo = $("#ciNo").val();
+    var consignee = $("#consignee").val();
+    var invoiceDate = $("#invoiceDate").val();
+    var exporter = $("#exporter").val();
+    var otherReferences = $("#otherReferences").val();
+    var lcNo = $("#lcNo").val();
+    var lcDate = $("#lcDate").val();
+    var origin = $("#originButton0").text().trim();
+    var transport = $("#transport").val();
+    var incoterms = $("#incoterms").text().trim();
+    var loadingPort = $("#loadingPort").text().trim();
+    var location = $("#location").val();
+    var vessel = $("#vessel").val();
+    var voyageNo = $("#voyageNo").val();
+    var conditions = $("#conditions").text().trim();
+    var discharge = $("#discharge").val();
+    var delivery = $("#delivery").val();
+    var transhipment = $("#transhipment").val();
+    var freightMethod = $("#freightMethod").val();
+    var departureDate = $("#departureDate").val();
+    var grossWeight = $("#grossWeight").val();
+    var netWeight = $("#netWeight").val();
+    var currency = $("#currencyButton0").text().trim();
+    var totalAmount = $("#totalAmount").val();
+    var freigh = $("#freigh").val();
+    var insurance = $("#insurance").val();
+    var packageCode = $("#packageCode").text().trim();
+    var packageName = $("#packageName").val();
+    var totalPackages = $("#totalPackages").val();
+    var comments = $("#comments").val();
+    
+    var firstEmptyFieldAlerted = false;
+    var popData = [];
+  
+    popData.push({ mainCd, stsCd,
+    	importer, ciNo, consignee, invoiceDate, exporter, otherReferences, lcNo, lcDate, origin, transport,
+    	incoterms, loadingPort, location, vessel, voyageNo, conditions, discharge, delivery, transhipment,
+    	freightMethod, /*finalDestination,*/ departureDate, grossWeight, netWeight, currency, totalAmount,
+    	freigh, insurance, packageCode, packageName, totalPackages, comments, loadingPort
+    });
+
+    // 각 행의 데이터를 배열에 저장
+    var rowData = [];
+    var currency = null;
+    
+    for (var i = 0; i < rowCount; i++) {
+        var unitOfQty = document.getElementById("unitOfQty" + i);
+        var invoice = {
+            itemCode: $("#itemCode" + i).val(),
+            lineNo: $("#lineNo" + i).val(),
+            hsCode: $("#hsCode" + i).val(),
+            specification: $("#specification" + i).val(),
+            packingNo: $("#packingNo" + i).val(),
+            quantity: $("#quantity" + i).val(),
+            unitOfQty: $("#unitOfQty" + i).text().trim().replace(/,/g, ''),
+            unitPrice: $("#unitPrice" + i).val(),
+            amountOfPrice: $("#amountOfPrice" + i).val()
+        };
+        popData.push(invoice);
+        rowData.push(invoice);
+    }
+    
+    $.ajax({
+        type: "POST",
+        url: "/export/exportSaveInvoice2.do",
+        data: JSON.stringify(popData),
+        beforeSend: function(xmlHttpRequest){
+            xmlHttpRequest.setRequestHeader("AJAX", "true");
+        },
+        contentType: "application/json; charset=utf-8",
+        success: function(data) {
+            fn_loading(false);
+            CImakePdf(mainCd, stsCd);
+        },
+        error: function(e, textStatus, errorThrown) {
+            if(e.status == 400){
+                alert("Your request is up. Please log back in if you wish continue");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert(msgSaveError);
+            }
+        }
+    });
+}

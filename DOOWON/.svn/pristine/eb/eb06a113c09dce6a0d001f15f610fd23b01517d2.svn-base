@@ -1,0 +1,981 @@
+var kpiImportTable;
+var kpiImportViewSettings;
+var kpiImportPopupSettings;
+var kpiImportViewIndex = 0;
+var kpiImportViewScrollTp = true;
+var kpiImportViewCol = [
+	{data : 'nabFirm', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data : 'blNo', className : "htLeft", width: 130, wordWrap: false, readOnly:true},
+	{data : 'rptNo', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data : 'impRptDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'rptDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'rptdivi1cont', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data : 'appDiviCont', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data : 'reaseonDoc', className : "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data : 'transTaxSum', className : "htRight", width: 200, wordWrap: false, readOnly:true},
+	{data : 'afterTaxSum', className : "htRight", width: 250, wordWrap: false, readOnly:true},
+	{data : 'addAmt', className : "htRight", width: 200, wordWrap: false, readOnly:true},
+	{data : 'cusNm', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'petDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'plant', className : "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data : 'po', className : "htLeft", width: 200, wordWrap: false, readOnly:true},];	
+var kpiImportViewHead = [
+	"납세의무자", "B/L", "신고번호", "신청일자", "승인일자", "정정구분", 
+	"귀책사유", "정정사유", "세액증감내역", "납부금액", "가산세", "세관", "수리일자", "부서코드", "PO"];
+
+var kpiExportTable;
+var kpiExportViewSettings;
+var kpiExportPopupSettings;
+var kpiExportViewIndex = 0;
+var kpiExportViewScrollTp = true;
+var kpiExportViewCol = [
+	{data : 'expFirm', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data : 'invoice', className : "htLeft", width: 300, wordWrap: false, readOnly:true},
+	{data : 'rptNo', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data : 'rptDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'dptDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'sendDiviCont', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data : 'modiCot1', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data : 'rece', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'rptCusCont', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'lisDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'plant', className : "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data : 'so', className : "htLeft", width: 200, wordWrap: false, readOnly:true}];
+	
+	
+var kpiExportViewHead = [
+	"수출자", "Invoice", "신고번호", "신청일자", "승인일자",
+	"귀책사유", "정정사유","수신상태", "세관", "수리일자", "부서코드", "SO"];
+
+var kpiLeadtimeTable;
+var kpiLeadtimeViewSettings;
+var kpiLeadtimePopupSettings;
+var kpiLeadtimeViewIndex = 0;
+var kpiLeadtimeViewScrollTp = true;
+var kpiLeadtimeViewCol = [
+	{data : 'nabFirm', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data : 'blNo', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data : 'rptNo', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data : 'rptDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'lisDay1', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'receResult', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'tgCont', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data : 'levForm', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data : 'arrDay', className : "htCenter", width: 130, wordWrap: false, readOnly:true},
+	{data : 'incDay', className : "htCenter", width: 130, wordWrap: false, readOnly:true},
+	{data : 'rcDay', className : "htCenter", width: 130, wordWrap: false, readOnly:true},
+	{data : 'lisDay2', className : "htCenter", width: 130, wordWrap: false, readOnly:true},
+	{data : 'banChulDay', className : "htCenter", width: 130, wordWrap: false, readOnly:true},
+	{data : 'diff1', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
+	{data : 'diff7', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
+	{data : 'diff5', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
+	{data : 'diff6', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
+	{data : 'plant', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data : 'po', className : "htCenter", width: 150, wordWrap: false, readOnly:true}];
+	
+var kpiLeadtimeViewHead = [
+	"납세자상호", "B/L", "신고번호", "신고일자", "수리일자", "선별결과", "통관계획", "징수형태", "입항일시", 
+	"반입일시", "신고일시", "수리일시", "반출일시", "입항-반입","반입-신고", "신고-수리", "수리-반출", "부서코드", "PO"];
+
+var checkBox = false;
+
+(function (){
+	
+	
+})
+
+// ajax global option
+/*$(document).ajaxStart(function () {
+	fn_loading(true);
+});
+	   
+$(document).ajaxStop(function () {
+	fn_loading(false);
+});*/
+	   
+$( document ).ready(function() {
+	  //달력 사용시 반드시 넣어주세요.
+      $('.band-calendar').each(function(){ regCal(this) ;})
+	  //캘린더 포맷
+      $('.datepicker').datepicker("option","dateFormat",calFormat);
+      // default 1달
+      fn_kpiChgDate1();
+	  
+      // 수출 정확성 관리 table
+      var kpiImportViewElement = document.querySelector('#kpiImportTable');
+      var kpiImportViewElementContainer = kpiImportViewElement.parentNode;
+      kpiImportViewSettings = fn_handsonGridKpiImportOption(kpiImportViewCol, kpiImportViewHead, false);
+      kpiImportTable = new Handsontable(kpiImportViewElement, kpiImportViewSettings);
+      
+      // 수입 정확성 관리 table
+	  var kpiExportViewElement = document.querySelector('#kpiExportTable');
+	  var kpiExportViewElementContainer = kpiExportViewElement.parentNode;
+	  kpiExportViewSettings = fn_handsonGridKpiExportOption(kpiExportViewCol, kpiExportViewHead, false);
+	  kpiExportTable = new Handsontable(kpiExportViewElement, kpiExportViewSettings);
+	  
+	  // 수입 Lead time
+	  var kpiLeadtimeViewElement = document.querySelector('#kpiLeadtimeTable');
+	  var kpiLeadtimeViewElementContainer = kpiLeadtimeViewElement.parentNode;
+	  kpiLeadtimeViewSettings = fn_handsonGridKpiLeadtimeOption(kpiLeadtimeViewCol, kpiLeadtimeViewHead, false);
+      kpiLeadtimeTable = new Handsontable(kpiLeadtimeViewElement, kpiLeadtimeViewSettings);
+	  
+      fn_kpiClearTableData();
+      
+	  $("#importTableDiv").show();
+	  $("#exportTableDiv").hide();
+	  $("#leadTimeTableDiv").hide();
+	  
+	  //scroll 이벤트
+	  fn_kpiScrollEventReg();
+//	  
+//	  
+//
+//	  $(document).on("click", '.itemCdClass', function(){
+//		  alert($(this).index());
+//	  });
+	  fn_searchImport(function(){
+		  fn_setSummary(kpiImportTable, kpiImportViewCol, null, [7, 8, 9, 10]);
+	  });
+	  
+	  
+	$("#kpiViewSrchType1 option").remove();
+	$("#kpiViewSrchType1").append('<option value="">조건선택</option>');
+	$("#kpiViewSrchType1").append('<option value="nabFirm">납세의무자</option>');
+	$("#kpiViewSrchType1").append('<option value="rptdivi1cont">정정구분</option>');
+	$("#kpiViewSrchType1").append('<option value="appDiviCont">귀책사유</option>');
+	$("#kpiViewSrchType1").append('<option value="reaseonDoc">정정사유</option>');
+	$("#kpiViewSrchType1").append('<option value="cusNm">세관</option>');
+	$("#kpiViewSrchType1").append('<option value="plant">부서코드</option>');
+	$("#kpiViewSrchType1").append('<option value="po">PO</option>');
+	
+	$("#kpiViewSrchType2 option").remove();
+	$("#kpiViewSrchType2").append('<option value="">조건선택</option>');
+	$("#kpiViewSrchType2").append('<option value="nabFirm">납세의무자</option>');
+	$("#kpiViewSrchType2").append('<option value="rptdivi1cont">정정구분</option>');
+	$("#kpiViewSrchType2").append('<option value="appDiviCont">귀책사유</option>');
+	$("#kpiViewSrchType2").append('<option value="reaseonDoc">정정사유</option>');
+	$("#kpiViewSrchType2").append('<option value="cusNm">세관</option>');
+	$("#kpiViewSrchType2").append('<option value="plant">부서코드</option>');
+	$("#kpiViewSrchType2").append('<option value="po">PO</option>');
+		
+	  
+});
+
+/** 이벤트 Start **/
+$(document).mousedown(function(e){
+	if(e.target.name == "kpiView1_date" || e.target.name == "kpiView2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}
+	}
+});
+
+//row 수 변경시 이벤트
+$("#kpiImportViewPageCnt, #kpiExportViewPageCnt, #kpiLeadtimeViewPageCnt").change(function(){
+	fn_searchKpi();
+});
+
+function kpiEnterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchKpi();
+    }
+}
+
+function fn_kpiScrollEventReg(){
+	
+	$("#kpiImportTable .wtHolder").scroll(function(){
+		var scrollTop = $("#kpiImportTable .wtHolder").scrollTop();
+		var countPerPage = Number($("#kpiImportViewPageCnt option:selected").val());
+		var rowHeight = kpiImportTable.getRowHeight();
+		var addCnt = 795;
+		
+		if(countPerPage == "50"){
+		  addCnt = 795;
+		}else if(countPerPage == "100"){
+		  addCnt = 2045;
+		}else if(countPerPage == "200"){
+		  addCnt = 5045;
+		}else if(countPerPage == "500"){
+		  addCnt = 11295;
+		}
+		
+		if(kpiImportViewScrollTp && kpiImportViewIndex != 9999 && scrollTop >= (countPerPage * kpiImportViewIndex * rowHeight) + addCnt){
+			kpiImportViewIndex++;
+			fn_searchImport(function(){
+				fn_setSummary(kpiImportTable, kpiImportViewCol, null, [7, 8, 9, 10]);
+			});
+		}
+	});
+	
+	$("#kpiExportTable .wtHolder").scroll(function(){
+		var scrollTop = $("#kpiExportTable .wtHolder").scrollTop();
+		var countPerPage = Number($("#kpiExportViewPageCnt option:selected").val());
+		var rowHeight = kpiExportTable.getRowHeight();
+		var addCnt = 745;
+		
+		if(countPerPage == "50"){
+		  addCnt = 795;
+		}else if(countPerPage == "100"){
+		  addCnt = 2045;
+		}else if(countPerPage == "200"){
+		  addCnt = 5045;
+		}else if(countPerPage == "500"){
+		  addCnt = 11295;
+		}
+		
+		if(kpiExportViewScrollTp && kpiExportViewIndex != 9999 && scrollTop >= (countPerPage * kpiExportViewIndex * rowHeight) + addCnt){
+			kpiExportViewIndex++;
+			fn_searchExport();
+		}
+	});
+	
+	$("#kpiLeadtimeTable .wtHolder").scroll(function(){
+		var scrollTop = $("#kpiLeadtimeTable .wtHolder").scrollTop();
+		var countPerPage = Number($("#kpiLeadtimeViewPageCnt option:selected").val());
+		var rowHeight = kpiLeadtimeTable.getRowHeight();
+		var addCnt = 745;
+		
+		if(countPerPage == "50"){
+		  addCnt = 795;
+		}else if(countPerPage == "100"){
+		  addCnt = 2045;
+		}else if(countPerPage == "200"){
+		  addCnt = 5045;
+		}else if(countPerPage == "500"){
+		  addCnt = 11295;
+		}
+		
+		if(kpiLeadtimeViewScrollTp && kpiLeadtimeViewIndex != 9999 && scrollTop >= (countPerPage * kpiLeadtimeViewIndex * rowHeight) + addCnt){
+			kpiLeadtimeViewIndex++;
+			fn_searchLeadtime();
+		}
+	});
+};
+
+
+// check All event
+function fn_purchaseAllClick(obj, table) {
+	checkBox = !checkBox;
+	if (checkBox) {
+		check = "true" ;
+	} else {
+		check = "false" ;
+	}
+	var data = table.getData();
+	   for (var i = 0; i < data.length; i++) {
+		   table.setDataAtCell(i, 0, checkBox);
+	   }
+};
+
+
+/* 검색 조건 */
+// 검색구분 변경
+//검색구분 변경
+$("input[name=kpiView_srch1]").change(function(){
+	var type = $("input:radio[name=kpiView_srch1]:checked").val();
+	
+	if(type == "01") {
+		fn_kpiShowSearchOption("import");	
+	} else if(type == "02") {
+		fn_kpiShowSearchOption("export");		
+	} else if(type == "03") {
+		fn_kpiShowSearchOption("leadtime");		
+	}
+	
+});
+
+
+function handleKpiSearchTypeChange(){
+	var type = $("input:radio[name=kpiView_srch1]:checked").val();
+	
+	if(type == "01") {
+		//fn_kpiShowSearchOption("import");	
+		fn_kpiShowTable("#importTableDiv");
+	} else if(type == "02") {
+		//fn_kpiShowSearchOption("export");		
+		fn_kpiShowTable("#exportTableDiv");
+	} else if(type == "03") {
+		//fn_kpiShowSearchOption("leadtime");	
+		fn_kpiShowTable("#leadTimeTableDiv");
+	}
+	
+	// 테이블 데이터 초기화
+	fn_kpiClearTableData();
+	
+	// 페이지 인덱스 초기화
+	kpiImportViewIndex = 0;
+	kpiExportViewIndex = 0;
+	kpiLeadtimeViewIndex = 0;
+	
+	checkbox = false;
+}
+
+// 검색구분에 따른 테이블 노출/비노출
+function fn_kpiShowTable(selector) {
+	var selectors = ["#importTableDiv", "#exportTableDiv", "#leadTimeTableDiv"];
+	
+	for(var i = 0 ; i <= selectors.length ; i++) {
+		if(selectors[i] == selector) {
+			$(selector).show();
+		} else {
+			$(selectors[i]).hide();
+		};
+	};
+}
+
+// 검색구분에 따른 검색조건 노출/비노출
+function fn_kpiShowSearchOption(option) {
+	if("import" == option) {
+		$("#kpiView_srch2 > option:eq(0)").show();
+		$("#kpiView_srch2 > option:eq(0)").prop("selected", true);
+		$("#kpiView_srch6").removeClass("hidden");
+		$("#kpiView_srch6").prev().removeClass("hidden");
+		$("#kpiView_srch7").addClass("hidden");
+		$("#kpiView_srch7").prev().addClass("hidden");
+		
+		$("#kpiViewSrchType1 option").remove();
+		$("#kpiViewSrchType1").append('<option value="">조건선택</option>');
+		$("#kpiViewSrchType1").append('<option value="nabFirm">납세의무자</option>');
+		$("#kpiViewSrchType1").append('<option value="rptdivi1cont">정정구분</option>');
+		$("#kpiViewSrchType1").append('<option value="appDiviCont">귀책사유</option>');
+		$("#kpiViewSrchType1").append('<option value="reaseonDoc">정정사유</option>');
+		$("#kpiViewSrchType1").append('<option value="cusNm">세관</option>');
+		$("#kpiViewSrchType1").append('<option value="plant">부서코드</option>');
+		$("#kpiViewSrchType1").append('<option value="po">PO</option>');
+		
+		$("#kpiViewSrchType2 option").remove();
+		$("#kpiViewSrchType2").append('<option value="">조건선택</option>');
+		$("#kpiViewSrchType2").append('<option value="nabFirm">납세의무자</option>');
+		$("#kpiViewSrchType2").append('<option value="rptdivi1cont">정정구분</option>');
+		$("#kpiViewSrchType2").append('<option value="appDiviCont">귀책사유</option>');
+		$("#kpiViewSrchType2").append('<option value="reaseonDoc">정정사유</option>');
+		$("#kpiViewSrchType2").append('<option value="cusNm">세관</option>');
+		$("#kpiViewSrchType2").append('<option value="plant">부서코드</option>');
+		$("#kpiViewSrchType2").append('<option value="po">PO</option>');
+		
+	} else if("export" == option) {
+		$("#kpiView_srch2 > option:eq(0)").show();
+		$("#kpiView_srch2 > option:eq(0)").prop("selected", true);
+		$("#kpiView_srch7").removeClass("hidden");
+		$("#kpiView_srch7").prev().removeClass("hidden");
+		$("#kpiView_srch6").addClass("hidden");
+		$("#kpiView_srch6").prev().addClass("hidden");
+		
+		$("#kpiViewSrchType1 option").remove();
+		$("#kpiViewSrchType1").append('<option value="">조건선택</option>');
+		$("#kpiViewSrchType1").append('<option value="expFirm">수출자</option>');
+		$("#kpiViewSrchType1").append('<option value="sendDiviCont">귀책사유</option>');
+		$("#kpiViewSrchType1").append('<option value="modiCot1">정정사유</option>');
+		$("#kpiViewSrchType1").append('<option value="rece">수신상태</option>');
+		$("#kpiViewSrchType1").append('<option value="rptCusCont">세관</option>');
+		$("#kpiViewSrchType1").append('<option value="plant">부서코드</option>');
+		$("#kpiViewSrchType1").append('<option value="so">SO</option>');
+		
+		$("#kpiViewSrchType2 option").remove();
+		$("#kpiViewSrchType2").append('<option value="">조건선택</option>');
+		$("#kpiViewSrchType2").append('<option value="expFirm">수출자</option>');
+		$("#kpiViewSrchType2").append('<option value="sendDiviCont">귀책사유</option>');
+		$("#kpiViewSrchType2").append('<option value="modiCot1">정정사유</option>');
+		$("#kpiViewSrchType2").append('<option value="rece">수신상태</option>');
+		$("#kpiViewSrchType2").append('<option value="rptCusCont">세관</option>');
+		$("#kpiViewSrchType2").append('<option value="plant">부서코드</option>');
+		$("#kpiViewSrchType2").append('<option value="so">SO</option>');
+		
+		
+	} else if("leadtime" == option) {
+		$("#kpiView_srch2 > option:eq(0)").hide();
+		$("#kpiView_srch2 > option:eq(1)").prop("selected", true);
+		$("#kpiView_srch6").removeClass("hidden");
+		$("#kpiView_srch6").prev().removeClass("hidden");
+		$("#kpiView_srch7").addClass("hidden");
+		$("#kpiView_srch7").prev().addClass("hidden");
+		
+		$("#kpiViewSrchType1 option").remove();
+		$("#kpiViewSrchType1").append('<option value="">조건선택</option>');
+		$("#kpiViewSrchType1").append('<option value="nabFirm">납세자상호</option>');
+		$("#kpiViewSrchType1").append('<option value="receResult">선별결과</option>');
+		$("#kpiViewSrchType1").append('<option value="tgCont">통관계획</option>');
+		$("#kpiViewSrchType1").append('<option value="levForm">징수형태</option>');
+		$("#kpiViewSrchType1").append('<option value="plant">부서코드</option>');
+		$("#kpiViewSrchType1").append('<option value="po">PO</option>');
+		
+		$("#kpiViewSrchType2 option").remove();
+		$("#kpiViewSrchType2").append('<option value="">조건선택</option>');
+		$("#kpiViewSrchType2").append('<option value="nabFirm">납세자상호</option>');
+		$("#kpiViewSrchType2").append('<option value="receResult">선별결과</option>');
+		$("#kpiViewSrchType2").append('<option value="tgCont">통관계획</option>');
+		$("#kpiViewSrchType2").append('<option value="levForm">징수형태</option>');
+		$("#kpiViewSrchType2").append('<option value="plant">부서코드</option>');
+		$("#kpiViewSrchType2").append('<option value="po">PO</option>');
+	}
+	
+}
+
+//검색조건 생성
+function fn_kpiGetSearchForm(){
+	var sData = {};
+	var type = $("input:radio[name=kpiView_srch1]:checked").val();
+	
+	sData["srch2"] = $("#kpiView_srch2").val();   // 신고일자 or 수리일자
+	sData["srch3"] = $("#kpiView_srch3").val();   // 시작일자
+	sData["srch4"] = $("#kpiView_srch4").val();   // 종료일자
+	sData["srch5"] = $("#kpiView_srch5").val();   // 신고번호
+	
+	sData["srchType1"] = $("#kpiViewSrchType1 option:selected").val();
+	sData["srchText1"] = $("#kpiViewSrchText1").val();
+	
+	sData["srchType2"] = $("#kpiViewSrchType2 option:selected").val();
+	sData["srchText2"] = $("#kpiViewSrchText2").val();
+	
+	if(type == '01') {
+		sData["srch6"] = $("#kpiView_srch6").val();   // BL번호
+		sData["recordCountPerPage"] = $("#kpiImportViewPageCnt").val();
+		sData["pageIndex"] = kpiImportViewIndex;
+	} else if(type == '02') {
+		sData["srch7"] = $("#kpiView_srch7").val();   // Invoice 번호
+		sData["recordCountPerPage"] = $("#kpiExportViewPageCnt").val();
+		sData["pageIndex"] = kpiExportViewIndex;
+	} else if(type == '03') {
+		sData["srch6"] = $("#kpiView_srch6").val();   // BL번호
+		sData["recordCountPerPage"] = $("#kpiLeadtimeViewPageCnt").val();
+		sData["pageIndex"] = kpiLeadtimeViewIndex;
+	};
+	
+	return sData;
+};
+
+// 테이블 데이터 초기화
+function fn_kpiClearTableData() {
+	kpiImportTable.loadData([]);
+	kpiExportTable.loadData([]);
+	kpiLeadtimeTable.loadData([]);
+}
+
+// 초기화
+function fn_kpiClearSerachOption(){
+	var type = $("input:radio[name=kpiView_srch1]:checked").val();
+	
+	if(type == "01" || type == "02") {
+		$("#kpiView_srch2").val("petDay");
+	} else if(type == "03") {
+		$("#kpiView_srch2").val("rptDay");
+	}
+	
+	$("#kpiView_srch5").val("");
+	$("#kpiView_srch6").val("");
+	$("#kpiView_srch7").val("");
+	
+	
+	$("#kpiViewSrchType1").val("");
+	$("#kpiViewSrchType2").val("");
+	
+	$("#kpiViewSrchText1").val("");
+	$("#kpiViewSrchText2").val("");
+	
+	fn_kpiChgDate1();
+};
+
+//날짜 설정
+function fn_kpiChgDate1() {
+    var date = new Date();
+    var sixMonthsAgo = new Date(date);
+    sixMonthsAgo.setMonth(date.getMonth() - 6);
+    sixMonthsAgo.setDate(sixMonthsAgo.getDate() +1)
+
+    var today = date.toISOString().substring(0, 10);
+    var sixMonthsAgoFormatted = sixMonthsAgo.toISOString().substring(0, 10);
+
+    $("#kpiView_srch3").val(sixMonthsAgoFormatted);
+    $("#kpiView_srch4").val(today);
+}
+
+function fn_kpiChgDate2() {
+    var date = new Date();
+    var oneYearAgo = new Date(date);
+    oneYearAgo.setFullYear(date.getFullYear() - 1);
+    oneYearAgo.setDate(oneYearAgo.getDate() +1)
+
+    var today = date.toISOString().substring(0, 10);
+    var oneYearAgoFormatted = oneYearAgo.toISOString().substring(0, 10);
+
+    $("#kpiView_srch3").val(oneYearAgoFormatted);
+    $("#kpiView_srch4").val(today);
+}
+
+function fn_kpiChgDate3() {
+    var date = new Date();
+    var threeYearAgo = new Date(date);
+    threeYearAgo.setFullYear(date.getFullYear() - 3);
+    threeYearAgo.setDate(threeYearAgo.getDate() +1)
+
+    var today = date.toISOString().substring(0, 10);
+    var threeYearAgoFormatted = threeYearAgo.toISOString().substring(0, 10);
+
+    $("#kpiView_srch3").val(threeYearAgoFormatted);
+    $("#kpiView_srch4").val(today);
+}
+
+function fn_kpiChgDate4() {
+    var date = new Date();
+    var fiveYearAgo = new Date(date);
+    fiveYearAgo.setFullYear(date.getFullYear() - 5);
+    fiveYearAgo.setDate(fiveYearAgo.getDate() +1)
+
+    var today = date.toISOString().substring(0, 10);
+    var fiveYearAgoFormatted = fiveYearAgo.toISOString().substring(0, 10);
+
+    $("#kpiView_srch3").val(fiveYearAgoFormatted);
+    $("#kpiView_srch4").val(today);
+}
+
+//table
+function fn_handsonGridKpiImportOption(col, header, hidden){
+	
+	kpiImportViewSettings = {
+			columns : col,
+			  colHeaders : header,
+			  columnSorting : true,
+			  hiddenColumns : {
+		    	  copyPasteEnabled : false,
+		    	  indicators : false,
+		    	  columns : hidden
+		      },
+			  stretchH : 'all',
+			  width : '100%',
+			  autoWrapRow : true,
+			  height : 500,
+			  rowHeights : 25,
+			  rowHeaders : true,
+			  columnHeaderHeight : 25,
+			  manualRowResize : true,
+			  manualColumnResize : true,
+			  manualRowMove : true,
+			  manualColumnMove : false,
+			  dropdownMenu : true,
+
+			  contextMenu : false,
+			  filters : true,
+			  readOnly : true,
+			  allowInsertRow : true,
+			  allowRemoveRow : true,
+			 // columnSorting : {indicator : true},
+		      autoColumnSize : {samplingRatio : 23},
+		      mergeCells : false,
+		      wordWrap : true,
+		      afterGetColHeader: function(col, TH){
+		    	  
+		      }
+	};
+	
+	return kpiImportViewSettings;
+}
+
+function fn_handsonGridKpiExportOption(col, header, hidden){
+	
+	kpiExportViewSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  columnSorting : true,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 500,
+	  rowHeights : 25,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualColumnResize : true,
+	  manualRowMove : true,
+	  manualColumnMove : false,
+	  dropdownMenu : true,
+
+	  contextMenu : false,
+	  filters : true,
+	  readOnly : true,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+      autoColumnSize : {samplingRatio : 23},
+      mergeCells : false,
+      wordWrap : true,
+      afterGetColHeader: function(col, TH){
+    	  
+      }
+      
+	};
+	
+	return kpiExportViewSettings;
+}
+
+function fn_handsonGridKpiLeadtimeOption(col, header, hidden){
+	kpiLeadtimeViewSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  columnSorting : true,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 500,
+	  rowHeights : 25,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualColumnResize : true,
+	  manualRowMove : true,
+	  manualColumnMove : false,
+	  dropdownMenu : true,
+
+	  contextMenu : false,
+	  filters : true,
+	  readOnly : true,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+      autoColumnSize : {samplingRatio : 23},
+      mergeCells : false,
+      wordWrap : true,
+      afterGetColHeader: function(col, TH){
+      },
+      afterRenderer: function(td, row, col, prop, value, cellProperties) {
+    	  if(kpiLeadtimeTable && prop == 'tgPlnMark') {
+    		  td.innerHTML = '<div title="' + kpiLeadtimeTable.getSourceData()[row]["tgPlnCot"] + '">' + td.innerHTML + '</div>';
+    	  }
+      }
+	}
+	
+	return kpiLeadtimeViewSettings;
+}
+
+// 검색 - 데이터조회
+function fn_searchKpi() {
+	handleKpiSearchTypeChange();
+	
+	var type = $("input:radio[name=kpiView_srch1]:checked").val();
+	
+	if(type == "01") {
+		fn_searchImport(function(){
+			fn_setSummary(kpiImportTable, kpiImportViewCol, null, [7, 8, 9, 10]);
+		});
+	} else if(type == "02") {
+		fn_searchExport();
+	} else if(type == "03") {
+		fn_searchLeadtime();
+	}
+}
+
+function fn_searchImport(callback) {
+	fn_loading(true);
+	kpiImportViewScrollTp = false;
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/kpiImport.do",
+		data : fn_kpiGetSearchForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+	    success : function(data) {
+	    	var getData = kpiImportTable.getSourceData();
+	    	var meargeJson = getData.concat(data.resultList);
+	    	kpiImportTable.loadData(meargeJson);
+	    	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+	    	$("#kpiImportViewCnt").html(fn_setComma(totCnt));
+	    	
+	    	kpiImportViewScrollTp = true;
+	    	
+	    	if(typeof(callback) == 'function') {
+	    		callback();
+	    	}
+	    	fn_loading(false);
+	    	
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    	fn_loading(false);
+	    }
+	});
+	
+}
+
+function fn_searchExport() {
+	fn_loading(true);
+	kpiExportViewScrollTp = false;
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/kpiExport.do",
+		data : fn_kpiGetSearchForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+	    success : function(data) {
+	    	var getData = kpiExportTable.getSourceData();
+	    	var meargeJson = getData.concat(data.resultList);
+	    	kpiExportTable.loadData(meargeJson);
+	    	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+	    	$("#kpiExportViewCnt").html(fn_setComma(totCnt));
+	    	kpiExportViewScrollTp = true;
+	    	fn_loading(false);
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    	fn_loading(false);
+	    }
+	});
+}
+
+function fn_searchLeadtime() {
+	fn_loading(true);
+	kpiLeadtimeViewScrollTp = false;
+	$.ajax({
+		type : "POST",
+		url : "/rpt/kpiLeadtime.do",
+		data : fn_kpiGetSearchForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+	    success : function(data) {
+	    	var getData = kpiLeadtimeTable.getSourceData();
+	    	var meargeJson = getData.concat(data.resultList);
+	    	kpiLeadtimeTable.loadData(meargeJson);
+	    	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+	    	$("#leadtimeViewCnt").html(fn_setComma(totCnt));
+	    	kpiLeadtimeViewScrollTp = true;
+	    	fn_loading(false);
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	//alert(msgSearchError);
+	    	}
+	    	fn_loading(false);
+	    },
+	    timeout: 200000
+	});
+}
+
+function fn_setSummary(table, col, scroll, index) {
+	var configArray = [];
+	
+	if(index){
+		for (let i = 1; i < index.length; i++) {
+	    	configArray.push({sourceColumn: index[i],
+	    					  reversedRowCoords: true,
+	    					  destinationRow: 0,
+	    					  destinationColumn: index[i],
+	    					  type: 'custom',
+	    				      customFunction: function(endpoint){
+	    				    		var col = endpoint.sourceColumn;
+	    				    		var row = endpoint.ranges[0];
+	    				    		var sum = 0;
+	    				    		
+	    				    		for(var i=row[0]; i < row[1]; i++) {
+	    				    			sum += fn_removeComma(table.getDataAtCell(i, col));
+	    				    		}
+	    				    		
+	    				    		return fn_setComma(sum);
+	    				      }
+	    	});
+	    }
+	} else {
+		for (let i = 1; i < table.countCols(); i++) {
+	    	configArray.push({sourceColumn: i,
+	    					  reversedRowCoords: true,
+	    					  destinationRow: 0,
+	    					  destinationColumn: i,
+	    					  type: 'custom',
+	    				      customFunction: function(endpoint){
+	    				    		var col = endpoint.sourceColumn;
+	    				    		var row = endpoint.ranges[0];
+	    				    		var sum = 0;
+	    				    		
+	    				    		for(var i=row[0]; i < row[1]; i++) {
+	    				    			sum += fn_removeComma(table.getDataAtCell(i, col));
+	    				    		}
+	    				    		
+	    				    		return fn_setComma(sum);
+	    				      }
+	    	});
+	    }
+	}
+	
+    var tempObj = {"summary": true}
+    	tempObj[col[0]["data"]] = "합계";
+    var getData = table.getSourceData();
+    
+    // 스크롤 이벤트로 추가 로드시 마지막 row 삭제후 summary 재생성
+    if(scroll) {
+    	getData = getData.filter(function(item, idx){
+    		return !item["summary"];
+    	});
+    }
+    
+	var meargeJson = getData.concat([tempObj]);
+	
+	table.loadData(meargeJson);
+    table.updateSettings({
+    	columns: col,
+    	columnSummary: configArray,
+    	fixedRowsBottom: 1
+    });
+    table.loadData(meargeJson);
+}
+
+function fn_kpiExcleDownload(option){
+	if(!confirm('Excel 다운로드 작업을 시작하시겠습니까?\n수집량에 따라 시간이 다소 소요될 수 있습니다.\n작업이 완료되면 다운로드 창에서 확인하실 수 있습니다.')) return;
+	fn_loading(true);
+	 var parameters = {exCol : "", exTit: "", exType: ""};
+	
+	 $.each(fn_kpiGetSearchForm(), function(attrName, attrValue){
+		 parameters[attrName] = attrValue;
+	 });
+	 
+	 // 엑셀 옵션
+	 var exTit = "";
+	 var exCol = "";
+   
+	 if(option == "import"){
+		 exCol = fn_getExcelCol(kpiImportViewCol);
+		 exTit = fn_getExcelHead(kpiImportViewHead);
+	 }else if(option == "export"){
+		 exCol = fn_getExcelCol(kpiExportViewCol)
+		 exTit = fn_getExcelHead(kpiExportViewHead);
+	 }else if(option == "leadtime"){
+		 exCol = fn_getExcelCol(kpiLeadtimeViewCol);
+		 exTit = fn_getExcelHead(kpiLeadtimeViewHead);
+	 }
+	 
+	 parameters.exCol = exCol.replace(/ /g,"_");
+	 parameters.exTit = exTit.replace(/ /g,"_");
+	 parameters.exType = option.replace(/ /g,"_");
+		
+	 $.ajax({
+		 url: "/kpi/downloadExcel.do",
+		 data: parameters,
+		 type: 'POST',
+		 cache: false,
+		 timeout: 20000000,
+		 xhrFields: {
+			 responseType: "blob",
+		 },
+	 }).done(function (blob, status, xhr) {
+		 // check for a filename
+		 var fileName = "";
+		 var disposition = xhr.getResponseHeader("Content-Disposition");
+
+         if (disposition && disposition.indexOf("attachment") !== -1) {
+        	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+             var matches = filenameRegex.exec(disposition);
+
+             if (matches != null && matches[1]) {
+                 fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+             }
+         }
+
+         // for IE
+         if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+             window.navigator.msSaveOrOpenBlob(blob, fileName);
+         } else {
+             var URL = window.URL || window.webkitURL;
+             var downloadUrl = URL.createObjectURL(blob);
+
+             if (fileName) {
+                 var a = document.createElement("a");
+
+                 // for safari
+                 if (a.download === undefined) {
+                     window.location.href = downloadUrl;
+                 } else {
+                     a.href = downloadUrl;
+                     a.download = fileName;
+                     document.body.appendChild(a);
+                     a.click();
+                 }
+             } else {
+                 window.location.href = downloadUrl;
+                 fn_loading(false);
+             }
+         }
+         fn_loading(false);
+	 });
+}
+
+function fn_getExcelCol(viewCol) {
+	return viewCol.map(item => item['data'] + '|' + item['className'] + '|' + item['width']).join("||");
+}
+
+function fn_getExcelHead(viewHead){
+	var result = [];
+	
+	if(viewHead.length > 1 && typeof(viewHead[0][0]) == 'object') {
+		for(var i=0; i < viewHead.length; i++) {
+			if(i == viewHead.length -1){
+				result.push(viewHead[i].join("|null||") + "|null");
+			}else {
+				result.push(viewHead[i].map(item => (item['label'] ? item['label'] : 'null') + '|' + (item['colspan'] ? item['colspan'] : 'null')).join("||"));
+			}
+		}
+		return result.join("|||");
+	}else{
+		return viewHead.join("|null||") + "|null";
+	};
+}
+
+function fn_setComma(num) {
+	return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function fn_removeComma(num) {
+	return parseInt(num.replace(/,/g, ""));
+}
+
+var numberValidator = function (value, callback) {
+	var tmpStr='';
+	var valueStr = (''+value).replace(/\s/g, '');
+	for(var i = 0 ; i<valueStr.length; i++){
+		tmpStr =valueStr.substring(i, i+1);
+		if(    tmpStr == '0' || tmpStr == '1' || tmpStr == '2'
+                        || tmpStr == '3' || tmpStr == '4' || tmpStr == '5'
+                        || tmpStr == '6' || tmpStr == '7' || tmpStr == '8'
+                        || tmpStr == '9' || tmpStr == ',' || tmpStr == '.'){
+
+		}else{
+			callback(false);
+			break;
+		}
+		callback(true);
+	}
+
+};

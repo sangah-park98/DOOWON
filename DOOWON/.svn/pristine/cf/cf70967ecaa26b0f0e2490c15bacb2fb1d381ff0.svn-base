@@ -1,0 +1,62 @@
+package egovframework.pf.trade.service.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.trade.service.TradeService;
+import egovframework.rte.psl.dataaccess.EgovAbstractMapper;
+
+/**
+ * @Class Name : ExportService.java
+ * @Description : ExportService Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2024.01.10          	서인석         			최초 생성
+ *
+ * @author 서인석
+ * @since 2024.01.10
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KordSystems All right reserved.
+ */
+
+@Service("TradeService")
+public class TradeServiceImpl extends EgovAbstractMapper implements TradeService {
+
+	@Resource(name="TradeMapper")
+	private TradeMapper tradeMapper;
+
+	@Override
+	public List<?> selectTradeViewList(SearchVO vo) throws Exception {
+		if(vo.getSrch1().equals("01")) {
+			return tradeMapper.selectTradeViewList(vo);
+		} else if (vo.getSrch1().equals("02")) {
+			return tradeMapper.selectTradeViewList2(vo);
+		} else {
+			return tradeMapper.selectTradeViewList3(vo);
+		}
+	}
+
+	@Override
+	public void saveTradeInfo(SearchVO vo) throws Exception {
+		tradeMapper.saveTradeInfo(vo);
+	}
+
+	@Override
+	public List<?> selectTradeGapList(SearchVO vo) throws Exception {
+		return tradeMapper.selectTradeGapList1(vo);
+	}
+
+	@Override
+	public List<?> selectTradeGapLanList(SearchVO vo) throws Exception {
+		return tradeMapper.selectTradeGapLanList(vo);
+	}
+
+}

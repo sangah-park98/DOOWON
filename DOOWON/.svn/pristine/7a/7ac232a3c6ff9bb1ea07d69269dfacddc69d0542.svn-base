@@ -1,0 +1,1084 @@
+var plLoadPortData;
+var plDestinationData;
+var plNationData;
+var plUomData;
+var plTotCntData;
+var totalPlCnt;
+var plArrListHot;
+var plArrListPopupSettings;
+var plCurrencyData;
+var plFinalIndex = 9999;
+var plFinalScrollTp = true;
+
+$( document ).ready(function() {
+	
+      $('.band-calendar').each(function(){ regCal(this) ;})
+      $('.datepicker').datepicker("option","dateFormat",calFormat);
+      
+      const element = document.querySelector('#tabs-exportMakePk'); 
+      const parameterValue1 = element.dataset.parameter1; 
+      const parameterValue2 = element.dataset.parameter2; 
+      const parameterValue3 = element.dataset.parameter3; 
+      const parameterValue4 = element.dataset.parameter4; 
+      const parameterValue5 = element.dataset.parameter5; 
+      const parameterValue6 = element.dataset.parameter6; 
+      const parameterValue7 = element.dataset.parameter7; 
+      const parameterValue8 = element.dataset.parameter8;
+      const parameterValue9 = JSON.parse(element.dataset.parameter9);
+      const parameterValue10 = element.dataset.parameter10;
+      const parameterValue11 = element.dataset.parameter11;
+      const parameterValue12 = element.dataset.parameter12;
+      const plFinalButton =  document.getElementById("plFinalButton");
+      const plLoadingPortButton =  document.getElementById("plLoadingPortButton");
+      var totQty = 0;
+      for (var i = 0; i < parameterValue9.length; i++) {
+    	  if(i >= 1){
+    		  addPLRow();
+    	  }
+    	  var nationData2 = document.getElementById("plOriginButton"+i);
+    	  var uomData2 = document.getElementById("plUomButton"+i);
+    	  $("#plHscode"+i).val(parameterValue9[i].hsCode);
+    	  $("#plItemName"+i).val(parameterValue9[i].itemName);
+    	  $("#plGoodDes"+i).val(parameterValue9[i].goodDes);
+    	  $("#plQuantity"+i).val(parameterValue9[i].quantity);
+    	  nationData2.innerText = parameterValue9[i].nation;
+    	  uomData2.innerText = parameterValue9[i].uom;
+    	  totQty += Number(parameterValue9[i].quantity);
+	  }
+      
+      
+      $("#plShipper").val(parameterValue1);
+      $("#plInvoice-no").val(parameterValue2);
+      $("#plInvoiceDate").val(parameterValue3);
+      $("#plConsignee").val(parameterValue4);
+      $("#plAddress").val(parameterValue10);
+      $("#plConsigneeAddress").val(parameterValue11);
+      $("#plComments").val(parameterValue12);
+      $("#total-quantity").val(totQty);
+      
+      plLoadingPortButton.innerText = parameterValue5;
+      $("#plVessel").val(parameterValue6);
+      plFinalButton.innerText = parameterValue7;
+      $("#plDepDate").val(parameterValue8);
+      var plArrListPopupElement = document.querySelector('#plArrListPopupTable');
+	  var plArrListPopupElementContainer = plArrListPopupElement.parentNode;
+	  plArrListPopupSettings = fn_handsonGridPlarrListPopupOption();
+	  plArrListHot = new Handsontable(plArrListPopupElement, plArrListPopupSettings);
+	  
+	  fn_plScroll();
+});
+
+
+/** 이벤트 Start **/
+$(document).mousedown(function(e){
+	if(e.target.name == "exportIn1_date" || e.target.name == "exportIn2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	} else {
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}
+	}
+});
+
+
+function enterkeyPlLoadPort() {
+	fn_plLoadPort();
+}
+
+function fn_plLoadPort() {
+    var sData = {};
+    sData["srch1"] = $("#plloadPortsrch1").val();
+    
+    $.ajax({
+        type: "POST",
+        url: "/export/selectExportMkInLoadList.do",
+        data: sData,
+        dataType: "json",
+        success: function (data) {
+            const dropdownMenu = document.getElementById('plLoadingPortSearch');
+            const ul = dropdownMenu.querySelector('ul');
+            
+            ul.innerHTML = '';
+            
+            const plLoadingPortClick = function(e) {
+                plLoadPortData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+                
+                const el = document.getElementById("plLoadingPortButton");
+                el.innerText = plLoadPortData;
+                e.preventDefault();
+                dropdownMenu.classList.add('hidden');
+            };
+
+            for (var i = 0; i < data.resultList.length; i++) {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                const buttonText = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';
+                
+                button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+                button.innerText = buttonText;
+                button.addEventListener('click', plLoadingPortClick);
+
+                li.appendChild(button);
+                ul.appendChild(li);
+            }
+         },
+         error: function (e, textStatus, errorThrown) {
+            if (e.status == 400) {
+                alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert(msgSearchError);
+            }
+         }
+    });
+}
+
+function enterkeyPlFinal() {
+	fn_searchPlFinalPopup();
+}
+
+// Final Destination 드롭 다운 팝업
+function fn_plFinalPopup(){
+
+	$("#plFinalDestinationPopUp").modal("show");
+    fn_searchPlFinalPopup();
+};
+
+function fn_searchPlFinalPopup(){
+	plFinalIndex = 0;
+	var sData = {};
+	sData["srch1"] = $("#plFinalSrch1").val();
+	console.log("sData: " + sData);
+	
+	fn_loading(true);
+	$.ajax({
+		type : "POST",
+		url : "/export/selectExportMkInAprPortList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	plArrListHot.loadData([]);
+        	plArrListHot.loadData(data.resultList);
+			setTimeout(function() {plArrListHot.render()}, 200);
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+function fn_handsonGridPlarrListPopupOption() {
+	plArrListPopupSettings = {
+        columns: [
+        	{ data: 'cmmnCd', type: 'text', className: "htCenter", readOnly: true },
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["코드"],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [] },
+        
+        afterOnCellMouseDown : function(event, coords, td) {
+			var now = new Date().getTime();
+			fn_selectPlFinalPop(coords);
+		}
+    };
+
+    return plArrListPopupSettings;
+}
+
+
+function fn_selectPlFinalPop(coords) {
+
+	const row = coords.row; 
+    const col = coords.col; 
+    const cmmnCd = plArrListHot.getDataAtCell(row, col);
+    const el = document.getElementById("plFinalButton");
+    el.innerText = cmmnCd;
+    
+    $("#plFinalDestinationPopUp").modal("hide");
+};
+
+
+function plFinalPopupClose(){
+	$("#plFinalDestinationPopUp").modal("hide");
+}
+
+// 스크롤
+function fn_plScroll(){
+
+	$("#plArrListPopupTable .wtHolder").scroll(function(){
+		
+		var plFinalScrollTp = $("#plArrListPopupTable .wtHolder").scrollTop();
+		console.log("pl_scrollTop: " + plFinalScrollTp);
+		var countPerPage = 50;
+		var rowHeight = plArrListHot.getRowHeight();
+	  
+		var addCnt = 1020;
+
+		if(plFinalScrollTp && plFinalIndex != 9999 && plFinalScrollTp >= (countPerPage * plFinalIndex * rowHeight) + addCnt){
+		  fn_plFinalScroll();
+		}
+    });
+}
+
+// 스크롤 내리고 내리고
+function fn_plFinalScroll(){
+	
+	var sData = {};
+	plFinalScrollTp = false;
+	plFinalIndex++;
+	sData["pageIndex"] = plFinalIndex;
+	fn_loading(true);
+	
+	$.ajax({
+		type : "POST",
+		url : "/export/selectExportMkInAprPortList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	var getData = plArrListHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	plArrListHot.loadData(meargeJson);
+			setTimeout(function() {plArrListHot.render()}, 200);
+			plFinalScrollTp = true;
+        	fn_loading(false);
+        	
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+
+function enterkeyPlOrigin(i) {
+	fn_plNation(i);
+}
+
+function fn_plNation(i) {
+	var Seq = i;
+	var sData = {};
+	var plOriginSearh = "";
+	plOriginSearh = "plOriginSrch" + Seq
+	sData["srch1"] = $("#" + plOriginSearh).val();
+	
+	$.ajax({
+		type: "POST",
+		url: "/export/selectExportMkInNationList.do",
+		data: sData,
+		dataType: "json",
+		success: function (data) {
+			var plOriginId = "";
+			plOriginId = 'plOriginSearch'+ Seq;
+			const dropdownMenu = document.getElementById(plOriginId);
+			const ul = dropdownMenu.querySelector('ul');
+			
+			ul.innerHTML = '';
+
+			const plNationClick = function(e) {
+				  var plOriginBtn = "";
+				  plOriginBtn = "plOriginButton"+ Seq;
+				  plNationData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+	              const el = document.getElementById(plOriginBtn);
+	              el.innerText = plNationData;
+	              e.preventDefault();
+	              dropdownMenu.classList.add('hidden');
+	          };
+			
+			for (var i = 0; i < data.resultList.length; i++) {
+				const li = document.createElement('li');
+				const button = document.createElement('button');
+				button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+				button.innerHTML = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';;
+				
+				button.addEventListener('click', plNationClick);
+				
+				li.appendChild(button);
+				ul.appendChild(li);
+			}
+		}
+	});
+}
+
+
+function enterkeyUom(i) {
+	fn_plUomQuantity(i);
+}
+
+function fn_plUomQuantity(i) {
+	var Seq = i;
+	var sData = {};
+	var uomSearh = "";
+	uomSearh = "plUomSrch" + Seq;
+	sData["srch1"] = $("#" + uomSearh).val();
+
+    $.ajax({
+        type: "POST",
+        url: "/export/selectExportMkInUOMList.do",
+        data: sData,
+        dataType: "json",
+        success: function (data) {
+        	var plUomId = "";
+        	plUomId = 'plUomSearch' + Seq;
+            const dropdownMenu = document.getElementById(plUomId);
+            const ul = dropdownMenu.querySelector('ul');
+
+            ul.innerHTML = '';
+            
+            const plUomQuantityClick = function(e) {
+            	var plUomBtn = "";
+            	plUomBtn = "plUomButton" + Seq;
+            	plUomData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+                const el = document.getElementById(plUomBtn);
+                el.innerText = plUomData;
+                e.preventDefault();
+                dropdownMenu.classList.add('hidden');
+	          };
+
+            for (var i = 0; i < data.resultList.length; i++) {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+                button.innerHTML = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';;
+
+                button.addEventListener('click', plUomQuantityClick);
+
+                li.appendChild(button);
+                ul.appendChild(li);
+            }
+
+        }
+    });
+}
+
+
+function enterkeytotCnt() {
+	fn_totCnt();
+}
+
+function fn_totCnt() {
+	console.log($("#totCntSrch1").val());
+	console.log($("#totCntSrch1").val());
+	console.log($("#totCntSrch1").text());
+	var sData = {};
+	sData["srch1"] = $("#totCntSrch1").val();
+	
+	$.ajax({
+		type: "POST",
+		url: "/export/selectExportMkPLtotCntList.do",
+		data: sData,
+		dataType: "json",
+		success: function (data) {
+			var totCntId = "";
+			totCntId = 'totCntSearch';
+			const dropdownMenu = document.getElementById(totCntId);
+			const ul = dropdownMenu.querySelector('ul');
+			
+			ul.innerHTML = '';
+			
+			const totCntClick = function(e) {
+				var totCntBtn = "";
+				totCntBtn = "totCntButton";
+				plTotCntData = e.target.innerText.trim().replace(/\[.*?\]/g, '');
+				const el = document.getElementById(totCntBtn);
+				el.innerText = plTotCntData;
+				e.preventDefault();
+				dropdownMenu.classList.add('hidden');
+			};
+			
+			for (var i = 0; i < data.resultList.length; i++) {
+				const li = document.createElement('li');
+				const button = document.createElement('button');
+				button.classList.add('block', 'ps-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'w-full', 'py-2', 'text-sm', 'font-medium', 'text-gray-900', 'rounded', 'dark:text-gray-300', 'text-left');
+				button.innerHTML = data.resultList[i].cmmnCd + ' [' + data.resultList[i].cmmnNm + ']';
+				button.addEventListener('click', totCntClick);
+				
+				li.appendChild(button);
+				ul.appendChild(li);
+			}
+		}
+	});
+}
+
+// + 버튼 누를 때 추가 Row 생성
+var rowCount = 1;
+function addPLRow() {
+    var newPLRow = document.createElement('div');
+    var container = document.querySelector('.container-class');
+    
+    newPLRow.classList.add('col-span-11');
+    newPLRow.classList.add('grid');
+    newPLRow.classList.add('grid-cols-[3fr_1fr_1fr_3.5fr_1fr_4fr_1fr_1.6fr_1.6fr_1.6fr_0.4fr]');
+    newPLRow.classList.add('auto-rows-auto');
+    newPLRow.classList.add('gap-1');
+    newPLRow.classList.add('pb-2');
+    
+    newPLRow.innerHTML = `
+        <div class="px-1">
+          <input
+            type="text"
+            id="ctno${rowCount}"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="CT No."
+          >
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="plHscode${rowCount}"
+            oninput="formatPhoneNumber2(this)"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="HS Code"
+          >
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="plItemName${rowCount}"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="일반품목명"
+          >
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="plGoodDes${rowCount}"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Goods Description"
+          >
+        </div>
+         <div class="px-1">
+	      <div class="relative w-full">
+	        <button
+	          id="plOriginButton${rowCount}"
+	          data-dropdown-toggle="plOriginSearch${rowCount}"
+	          data-dropdown-placement="bottom"
+	          onclick="fn_plNation(${rowCount})"
+	          class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+	          type="button"
+	        >
+	          Origin
+	          <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+	            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+	          </svg>
+	        </button>
+	        <div id="plOriginSearch${rowCount}" class="z-10 hidden bg-white border rounded-lg shadow-xl dark:bg-gray-700 overflow-auto">
+         	 <div class="p-3">
+              <label for="origin-group-search" class="sr-only">Search</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                  <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                  </svg>
+                </div>
+                <input type="text" id="plOriginSrch${rowCount}" onkeyup="enterkeyPlOrigin(${rowCount})" class="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+              </div>
+            </div>
+            <ul class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto" aria-labelledby="termsOfTradeButton">
+      		  <li>
+        	    <button 
+          		   class="block ps-2 hover:bg-gray-100 dark:hover:bg-gray-600 py-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300 text-left">
+        	    </button>
+      		  </li>
+  			</ul>
+	        </div>
+	      </div>
+	    </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="plQuantity${rowCount}"
+            onkeyup="plQuantityTotal(${rowCount})"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1 input-required"
+            placeholder="Quantity"
+          >
+        </div>
+        
+       <div class="px-1">
+	      <div class="relative w-full col-span-2">
+	        <button
+	          id="plUomButton${rowCount}"
+	          onclick="fn_plUomQuantity(${rowCount})"
+	          data-dropdown-toggle="plUomSearch${rowCount}"
+	          data-dropdown-placement="bottom"
+	          class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+	          type="button"
+	        >
+	          UOM
+	          <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+	            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+	          </svg>
+	        </button>
+	        <div id="plUomSearch${rowCount}" class="z-10 hidden bg-white border rounded-lg shadow-xl dark:bg-gray-700 overflow-auto">
+	           <div class="p-3">
+              <label for="origin-group-search" class="sr-only">Search</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                  <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                  </svg>
+                </div>
+                <input type="text" id="plUomSrch${rowCount}" onkeyup="enterkeyUom(${rowCount})" class="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+              </div>
+            </div>
+            <ul class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto" aria-labelledby="termsOfTradeButton">
+      		  <li>
+        	    <button 
+          		   class="block ps-2 hover:bg-gray-100 dark:hover:bg-gray-600 py-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300 text-left">
+        	    </button>
+      		  </li>
+  			</ul>
+	        </div>
+	      </div>
+	    </div>
+       
+        <div class="px-1">
+          <input
+            type="text"
+            id="net-weight${rowCount}"
+            onkeyup="netTotal(${rowCount})"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1 input-required"
+            placeholder="Net Weight"
+          >
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="gross-weight${rowCount}"
+            onkeyup="grossTotal(${rowCount})"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1 input-required"
+            placeholder="Gross Weight"
+          >
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="kg${rowCount}"
+            onkeyup="kgTotal(${rowCount})"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1 input-required"
+            placeholder="KG"
+          >
+        </div>
+        <div class="flex items-center justify-center">
+          <button type="button"
+		  		  onclick="removePLRow(this)"
+                  class="p-1.5 text-white flex items-center justify-center bg-rose-600 rounded-lg hover:opacity-50 duration-200">
+          <i class="fa-solid fa-minus"></i>
+		  </button>
+        </div>
+      `;
+
+    	var currentDiv = document.querySelector('#addPLRow');
+		currentDiv.parentNode.insertBefore(newPLRow, currentDiv.nextSibling);
+		initDropdowns();
+		rowCount++;
+}
+
+
+function removePLRow(button) {
+    var row = button.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+    var quantitySum = 0;
+    var netSum = 0;
+    var grossSum = 0;
+    var kgSum = 0;
+    for (var i = 0; i < rowCount; i++) {
+		  var quantity = Number($("#plQuantity" + i).val())
+		  if(!isNaN(quantity)){
+			  quantitySum += quantity;
+		  }
+		  var netWeight = Number($("#net-weight" + i).val())
+			if(!isNaN(netWeight)){
+				netSum += netWeight;
+			}
+		  var grossWeight = Number($("#gross-weight" + i).val())
+			if(!isNaN(grossWeight)){
+				grossSum += grossWeight;
+			}
+		  var kg = Number($("#kg" + i).val())
+		  if(!isNaN(kg)){
+			  kgSum += kg;
+		  }
+	   }
+	$("#total-quantity").val(quantitySum);
+	$("#total-net-weight").val(netSum);
+	$("#total-gross-weight").val(grossSum);
+	$("#total-kg").val(kgSum);
+}
+
+
+function plQuantityTotal(){
+	var sum = 0;
+	for (var i = 0; i < rowCount; i++) {
+		  var quantity = Number($("#plQuantity" + i).val())
+		  if(!isNaN(quantity)){
+			  sum += quantity;
+		  }
+	   }
+	var formattedSum = sum.toLocaleString(); 
+	$("#total-quantity").val(formattedSum);
+}
+function netTotal(){
+	var sum = 0;
+	for (var i = 0; i < rowCount; i++) {
+		var netWeight = Number($("#net-weight" + i).val())
+		if(!isNaN(netWeight)){
+			sum += netWeight;
+		}
+	}
+	var formattedSum = sum.toLocaleString(); 
+	$("#total-net-weight").val(formattedSum);
+}
+function grossTotal(){
+	var sum = 0;
+	for (var i = 0; i < rowCount; i++) {
+		var grossWeight = Number($("#gross-weight" + i).val())
+		if(!isNaN(grossWeight)){
+			sum += grossWeight;
+		}
+	}
+	var formattedSum = sum.toLocaleString(); 
+    $("#total-gross-weight").val(formattedSum);
+}
+/*function kgTotal(){
+	var sum = 0;
+	for (var i = 0; i < rowCount; i++) {
+		var kg = Number($("#kg" + i).val())
+		if(!isNaN(kg)){
+			sum += kg;
+		}
+	}
+	var formattedSum = sum.toLocaleString(); 
+	$("#total-kg").val(formattedSum);
+}*/
+
+
+function preventFormSubmit2(event) {
+    // 엔터 키가 눌렸을 때 폼의 기본 제출 동작 막기
+    if (event.keyCode === 13) {
+        event.preventDefault();
+        return false;
+    }
+}
+
+
+//검색조건 초기화
+function fn_clearExpMakePk(){
+	
+	for (var i = 1; i < rowCount; i++) {
+        var row = document.getElementById(`plHscode${i}`).parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
+	rowCount = 1;
+	
+	
+	const loadingPort =  document.getElementById("plLoadingPortButton");
+	const final =  document.getElementById("plFinalButton");
+	const origin =  document.getElementById("plOriginButton0");
+	const uom =  document.getElementById("plUomButton0");
+	const totCntBtn =  document.getElementById("totCntButton");
+	
+	loadingPort.innerText = 'Loading Port';
+	final.innerText = 'Final Destination';
+	origin.innerText = 'Origin';
+	uom.innerText = 'UOM';
+	totCntButton.innerText = '총 포장 수';
+	
+	$("#manufacturer").val("");
+	$("#plDepDate").val("");
+	$("#plVessel").val("");
+	
+	$("#ctno0").val("");
+	$("#plHscode0").val("");
+	$("#quantity0").val('');
+	$("#plItemName0").val("");
+	$("#plGoodDes0").val("");
+	$("#plQuantity0").val("");
+	$("#net-weight0").val("");
+	$("#gross-weight0").val("");
+	$("#kg0").val("");
+	$("#total-quantity").val("");
+	$("#total-net-weight").val("");
+	$("#total-gross-weight").val("");
+	$("#total-kg").val("");
+};
+
+// 임시저장
+function fn_saveTempExpMakePl(){
+	
+	var invoiceNo = $("#plInvoice-no").val();
+	var manufacturer = $("#manufacturer").val();
+	var plLoadingPort = $("#plLoadingPortButton").text().trim();
+	var plFlight = $("#plVessel").val();
+	var plDestination = $("#plFinalButton").text().trim();
+	var plDepDate = $("#plDepDate").val();
+	var totalPlCnt = $("#totCntButton").text().trim();
+	
+	var popData = []; 
+	  
+    popData.push({
+       shipper: $("#plShipper").val(),
+       address: $("#plAddress").val(),
+       plConsigneeAddress: $("#plConsigneeAddress").val(),
+       invoiceNo: $("#plInvoice-no").val(),
+       invoiceDate: $("#plInvoiceDate").val(),
+       consignee: $("#plConsignee").val(),
+       manufact: $("#manufacturer").val(),
+       plLoadPort: $("#plLoadingPortButton").text().trim(),
+       plFlight: $("#plVessel").val(),
+       plDestination: $("#plFinalButton").text().trim(),
+       plDepDate: $("#plDepDate").val(),
+       totalQuantity: $("#total-quantity").val(),
+       totalNet: $("#total-net-weight").val(),
+       totalGross: $("#total-gross-weight").val(),
+       totalKg: $("#total-kg").val(),
+       plComments: $("#plComments").val(),
+       totalPlCnt: plTotCntData,
+       
+    });
+
+    for (var i = 0; i < rowCount; i++) {
+	   var nationData2 = document.getElementById("plOriginButton"+i);
+  	   var uomData2 =  document.getElementById("plUomButton"+i);
+       var invoice = {
+           ctNo: $("#ctno" + i).val(),
+           plHsCode: $("#plHscode" + i).val(),
+           plItemName: $("#plItemName" + i).val(),
+           plGoodDes: $("#plGoodDes" + i).val(),
+           plNation: nationData2.innerText.trim().replace(/\[.*?\]/g, ''),
+           plQuantity: $("#plQuantity"+ i).val(),
+           plUom: uomData2.innerText.trim().replace(/\[.*?\]/g, ''),
+           net: $("#net-weight" + i).val(),
+           gross: $("#gross-weight" + i).val(),
+           kg: $("#kg" + i).val()
+       };
+       popData.push(invoice); // 배열에 행 데이터 추가
+    }
+   
+    popData.forEach(function(obj, index) {
+       console.log("Row " + (index + 1) + ":");
+       Object.keys(obj).forEach(function(key) {
+    	   console.log("-----------------PL-----------------");
+           console.log(key + ": " + obj[key]);
+       });
+   });
+    
+    $.ajax({
+	   type: "POST",
+	   url: "/export/saveTempExpMakePlList.do",
+	   data: JSON.stringify(popData),
+	   beforeSend: function(xmlHttpRequest){
+	       xmlHttpRequest.setRequestHeader("AJAX", "true");
+	   },
+	   contentType: "application/json; charset=utf-8",
+	   success: function(data) {
+	       console.log("data"+data);
+	       if(data === "success"){
+	           alert("P/L 임시저장이 완료되었습니다.");
+			$("#tabs-exportMakePk").remove();
+			$("#tabs-exportMakeIn").remove();
+			var tabs = $("#tabs").tabs();
+			tabs.tabs("refresh");
+			$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+			var length = $("#myTab").find("li a").length;
+			if (length < 2) {
+				$("#tabs-dashboard").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+				tabs.tabs("option", "active", 0);
+			} else {
+				tabs.tabs("option", "active",length - 1);
+				var lastObj = $("#myTab").find("li a")[length - 1];
+				lastObj.className = "nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor";
+			}
+	       } else {
+	    	   alert("INVOICE NO를 확인해 주세요.");
+	    	   return;
+	       }
+	       fn_loading(false);
+	   },
+	     error: function(e, textStatus, errorThrown) {
+	       if(e.status == 400){
+	           alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+		           location.href = document.referrer;
+		       } else {
+		           console.log(errorThrown);
+		           alert(msgSaveError);
+		       }
+	    }
+    });
+};
+
+function fn_exportMakePL(){
+	
+	var invoiceNo = $("#plInvoice-no").val();
+	var manufacturer = $("#manufacturer").val();
+	var plLoadingPort = $("#plLoadingPortButton").text().trim();
+	var plFlight = $("#plVessel").val();
+	var plDestination = $("#plFinalButton").text().trim();
+	var plDepDate = $("#plDepDate").val();
+	var totalPlCnt = $("#totCntButton").text().trim();
+	
+	for (var i = 0; i < rowCount; i++) {
+        var ctnoVal = $("#ctno" + i).val();
+        console.log(ctnoVal);
+        if (ctnoVal=="") {
+            alert("CT NO를 입력해 주세요.");
+            return; 
+        }
+    }
+	for (var i = 0; i < rowCount; i++) {
+		var plHscodeVal = $("#plHscode" + i).val();
+		console.log(plHscodeVal);
+		if (plHscodeVal=="") {
+			alert("HS CODE를 입력해 주세요.");
+			return; 
+		}
+	}
+	for (var i = 0; i < rowCount; i++) {
+		var plItemNameVal = $("#plItemName" + i).val();
+		console.log(plItemNameVal);
+		if (plItemNameVal=="") {
+			alert("일반품목명을 입력해 주세요.");
+			return; 
+		}
+	}
+	for (var i = 0; i < rowCount; i++) {
+		var plGoodDesVal = $("#plGoodDes" + i).val();
+		console.log(plGoodDesVal);
+		if (plGoodDesVal=="") {
+			alert("GOODS DESCRIPTION을 입력해 주세요.");
+			return; 
+		}
+	}
+	for (var i = 0; i < rowCount; i++) {
+		var plOriginButtonVal = $("#plOriginButton" + i).text().trim();
+		console.log(plOriginButtonVal);
+		if (plOriginButtonVal=="Origin") {
+			alert("원산지를 입력해 주세요.");
+			return; 
+		}
+	}
+	for (var i = 0; i < rowCount; i++) {
+		var plQuantityVal = $("#plQuantity" + i).val();
+		console.log(plQuantityVal);
+		if (ctnoVal=="") {
+			alert("QUANTITY를 입력해 주세요.");
+			return; 
+		}
+	}
+	for (var i = 0; i < rowCount; i++) {
+		var plUomButtonVal = $("#plUomButton" + i).text().trim();
+		console.log(plUomButtonVal);
+		if (plUomButtonVal=="UOM") {
+			alert("UOM을 입력해 주세요.");
+			return; 
+		}
+	}
+	for (var i = 0; i < rowCount; i++) {
+		var netWeightVal = $("#net-weight" + i).val();
+		console.log(netWeightVal);
+		if (netWeightVal=="") {
+			alert("NET WEIGHT를 입력해 주세요.");
+			return; 
+		}
+	}
+	for (var i = 0; i < rowCount; i++) {
+		var grossWeightVal = $("#gross-weight" + i).val();
+		console.log(grossWeightVal);
+		if (grossWeightVal=="") {
+			alert("GROSS WEIGHT를 입력해 주세요.");
+			return; 
+		}
+	}
+	
+	if (plLoadingPort=="Loading Port") {
+        alert("LOADING PORT를 입력해 주세요.");
+        return;
+    } else if (plFlight=="") {
+        alert("VESSEL / FLIGHT를 입력해 주세요.");
+        return;
+    } else if (plDestination=="Final Destination") {
+        alert("FINAL DESTINATION를 입력해 주세요.");
+        return;
+    } else if (plDepDate=="") {
+        alert("DEPARTURE DATE를 입력해 주세요.");
+        return;
+    } else if (totalPlCnt=="총 포장 수") {
+        alert("총 포장 수를 입력해 주세요.");
+        return;
+    } 
+	
+	var popData = []; 
+	  
+    popData.push({
+       shipper: $("#plShipper").val(),
+       address: $("#plAddress").val(),
+       plConsigneeAddress: $("#plConsigneeAddress").val(),
+       invoiceNo: $("#plInvoice-no").val(),
+       invoiceDate: $("#plInvoiceDate").val(),
+       consignee: $("#plConsignee").val(),
+       manufact: $("#manufacturer").val(),
+       plLoadPort: plLoadPortData,
+       plFlight: $("#plVessel").val(),
+       plDestination: $("#plFinalButton").text().trim(),
+       plDepDate: $("#plDepDate").val(),
+       
+       totalQuantity: $("#total-quantity").val(),
+       totalNet: $("#total-net-weight").val(),
+       totalGross: $("#total-gross-weight").val(),
+       totalKg: $("#total-kg").val(),
+       plComments: $("#plComments").val(),
+       totalPlCnt: plTotCntData,
+       
+    });
+
+    for (var i = 0; i < rowCount; i++) {
+	   var nationData2 = document.getElementById("plOriginButton"+i);
+  	   var uomData2 =  document.getElementById("plUomButton"+i);
+       var invoice = {
+           ctNo: $("#ctno" + i).val(),
+           plHsCode: $("#plHscode" + i).val(),
+           plItemName: $("#plItemName" + i).val(),
+           plGoodDes: $("#plGoodDes" + i).val(),
+           plNation: nationData2.innerText.trim().replace(/\[.*?\]/g, ''),
+           plQuantity: $("#plQuantity"+ i).val(),
+           plUom: uomData2.innerText.trim().replace(/\[.*?\]/g, ''),
+           net: $("#net-weight" + i).val(),
+           gross: $("#gross-weight" + i).val(),
+           kg: $("#kg" + i).val()
+       };
+       popData.push(invoice); 
+    }
+   
+    popData.forEach(function(obj, index) {
+       console.log("Row " + (index + 1) + ":");
+       Object.keys(obj).forEach(function(key) {
+    	   console.log("-----------------PL-----------------");
+           console.log(key + ": " + obj[key]);
+       });
+   });
+    
+    $.ajax({
+	   type: "POST",
+	   url: "/export/savePackingList.do",
+	   data: JSON.stringify(popData),
+	   beforeSend: function(xmlHttpRequest){
+	       xmlHttpRequest.setRequestHeader("AJAX", "true");
+	   },
+	   contentType: "application/json; charset=utf-8",
+	   success: function(data) {
+	       if(data === "success"){
+	            alert("P/L 생성이 완료되었습니다.");
+	            // invoice 등록 tab 이동   
+				$("#tabs-exportMakePk").remove();
+				$("#tabs-exportMakeIn").remove();
+				var tabs = $("#tabs").tabs();
+				tabs.tabs("refresh");
+				$("#myTab").find("a").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 ui-tabs-anchor");
+				var length = $("#myTab").find("li a").length;
+				if (length < 2) {
+					$("#tabs-dashboard").prop("class","nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor");
+					tabs.tabs("option", "active", 0);
+				} else {
+					tabs.tabs("option", "active",length - 1);
+					var lastObj = $("#myTab").find("li a")[length - 1];
+					lastObj.className = "nav-link tab-button inline-flex w-44 bg-gray-200 border-gray-300 rounded-t-lg border-t border-l border-r items-center justify-center p-2 t-lg hover:text-gray-600 hover:border-primary-800 group gap-2 active ui-tabs-anchor";
+				}
+	       } else {
+	    	   alert("INVOICE NO를 확인해 주세요.");
+	    	   return;
+	       }
+	       fn_COAnnexPrintExcel(invoiceNo);
+	       fn_loading(false);
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	       if(e.status == 400){
+	           alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+		       location.href = document.referrer;
+		   } else {
+	           console.log(errorThrown);
+	           alert(msgSaveError);
+		   }
+	    }
+    });
+};
+
+function fn_COAnnexPrintExcel(invoiceNo){
+	
+	$.ajax({
+		type : "POST",
+		url : "/export/makePdfExcel.do",
+		data : invoiceNo,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		contentType: "application/json; charset=utf-8",
+		async : false,
+		success : function(data, textStatus, jqXHR) {
+			if(data == "success"){
+				fn_downloadAnnex();
+			} else {
+				alert(msgExcelDownVer);
+			}
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+				location.href = document.referrer;
+			} else { 
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+}
+	
+function fn_downloadAnnex(){
+	
+	document.fileDownForm.action = "/docu/downloadAnnex.do";
+	document.fileDownForm.submit();
+};
+
+

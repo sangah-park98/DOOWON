@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.cmmn.service.impl.CmmnMapper">
+
+	<!-- 로그인체크 -->
+	<select id="selectCmpnyIdCheck" parameterType="searchVO" resultType="egovMap">
+		  SELECT    b.TAX_NO as CMPNY_CD
+				  , b.CMPNY_NM
+			     , a.GRP_CD
+			     , a.USR_NM  
+			  FROM USER_INFO a
+			  LEFT join user_cmpny_info b
+			  ON a.USR_ID = b.USR_ID
+			 WHERE a.USR_ID = #{id}
+			   AND a.USR_PW = #{pwd}
+			   AND a.DEL_YN = 'N'
+			   AND a.APPR_YN = 'Y'
+			   AND b.MANER_YN ='Y'
+			 LIMIT 1
+	</select>
+
+	<!-- 회사목록 조회 -->
+	<select id="selectUsrCmpnyList" parameterType="searchVO" resultType="egovMap">
+		SELECT A.TAX_NO, A.CMPNY_NM FROM user_cmpny_info A
+		WHERE 1=1 
+		AND A.USR_ID = #{id}
+		AND A.MANER_YN ='Y'
+		AND (A.tax_no LIKE CONCAT('%',UPPER(#{srch1}),'%') OR A.cmpny_nm LIKE CONCAT('%',UPPER(#{srch1}),'%'))
+		ORDER BY A.CMPNY_NM, A.TAX_NO
+<!-- 		 SELECT tax_no, cmpny_nm
+		    	  from cmpny_info
+				  WHERE 1=1
+				  AND del_yn = 'N'
+				  AND (tax_no LIKE CONCAT('%',UPPER(#{srch1}),'%') OR cmpny_nm LIKE CONCAT('%',UPPER(#{srch1}),'%'))
+		 ORDER BY cmpny_nm -->
+	</select>
+	
+	<select id="selectAllCmpnyList" parameterType="searchVO" resultType="egovMap">
+		  SELECT DISTINCT tax_no, cmpny_nm FROM user_cmpny_info
+		  WHERE 1=1
+		  AND (tax_no LIKE CONCAT('%',UPPER(#{srch1}),'%') OR cmpny_nm LIKE CONCAT('%',UPPER(#{srch1}),'%'))
+		  ORDER BY CMPNY_NM, TAX_NO
+	</select>
+
+	<!-- 대메뉴 조회 -->
+	<select id="selectLargeMenuList" parameterType="searchVO" resultType="egovMap">
+		SELECT a.URL
+		     , CASE #{lang} WHEN 'en' THEN a.MENU_NM_EN
+					        ELSE a.MENU_NM_KR
+			   END AS MENU_NM
+			 , a.MENU_ID
+		  FROM MENU_INFO a
+		 WHERE a.UPPR_MENU_ID = 'super'
+		   AND a.DISP_YN = 'Y'
+		   AND a.DEL_YN = 'N'
+		 ORDER BY a.ORDR_SN
+	</select>
+
+	<!-- 소메뉴 조회 -->
+	<select id="selectSmallMenuList" parameterType="searchVO" resultType="egovMap">
+		SELECT x.MENU_ID
+		     , x.URL
+ 			 , x.MENU_NM
+             , (CASE @vjob WHEN x.UPPR_MENU_ID THEN @rownum:=@rownum+1 ELSE @rownum:=1 END) ORDR_SN
+             , (@vjob:=x.UPPR_MENU_ID) vjob
+             , (@rownum2:=@rownum2+1) UPPR_SN
+  		  FROM (
+				 SELECT a.MENU_ID
+		 		      , a.UPPR_MENU_ID
+		 		      , a.URL
+		 		      , CASE #{lang} WHEN 'en' THEN a.MENU_NM_EN
+				             		 ELSE a.MENU_NM_KR
+ 					 	END MENU_NM
+		  		   FROM MENU_INFO a
+				 		JOIN MENU_INFO b ON a.UPPR_MENU_ID = b.MENU_ID
+		 		  WHERE a.DISP_YN = 'Y'
+					AND a.DEL_YN = 'N'
+					AND b.DISP_YN = 'Y'
+					AND b.DEL_YN = 'N'
+				  ORDER BY b.ORDR_SN, a.ORDR_SN LIMIT 1000000000
+ 			    ) x
+ 			  , (SELECT @vjob:='', @rownum:=0 FROM DUAL) y
+ 			  , (SELECT @rownum2:=0 FROM DUAL) z
+	</select>
+
+	<!-- 특정메뉴정보 조회 -->
+	<select id="selectDashboardInfo" parameterType="searchVO" resultType="egovMap">
+		SELECT a.MENU_ID
+		     , a.UPPR_MENU_ID
+		     , a.URL
+		     , CASE #{lang} WHEN 'en' THEN a.MENU_NM_EN
+	             		    ELSE a.MENU_NM_KR
+			   END MENU_NM
+ 		  FROM MENU_INFO a
+ 		 WHERE a.MENU_ID = #{srch1}
+	</select>
+
+	<!-- 메시지 조회 -->
+	<select id="selectMsgList" parameterType="searchVO" resultType="egovMap">
+		SELECT b.MSG_ID
+  			 , CASE WHEN #{lang} = 'en' THEN b.MSG_NM_EN
+					ELSE b.MSG_NM_KR
+  			   END AS MSG_NM
+		  FROM MENU_MSG_INFO a
+          	   JOIN MSG_INFO b ON a.MSG_ID = b.MSG_ID
+		 WHERE a.MENU_ID = #{srch2}
+		   AND a.DEL_YN = 'N'
+		   AND b.DEL_YN = 'N'
+	</select>
+
+	<!-- 공통코드 조회(팝업) -->
+	<select id="selectCmmnCdPop" parameterType="searchVO" resultType="egovMap">
+		SELECT CMMN_CD AS CD
+  			 , CASE WHEN #{lang} = 'en' THEN CMMN_NM_EN
+					ELSE CMMN_NM_KR
+  			   END AS CD_NM
+		  FROM CMMN_CD
+		 WHERE GRP_CD = #{srch3}
+		   AND DEL_YN = 'N'
+		   AND DISP_YN = 'Y'
+           <if test="srch20 != null and srch20 != ''">
+              AND CMMN_CD LIKE CONCAT('%',UPPER(#{srch20}),'%')
+           </if>
+           <if test="srch21 != null and srch21 != ''">
+		        <choose>
+		        	<when test="lang == 'en'">
+		        		AND CMMN_NM_EN LIKE CONCAT('%',UPPER(#{srch21}),'%')
+		        	</when>
+		        	<otherwise>
+		        		AND CMMN_NM_KR LIKE CONCAT('%',UPPER(#{srch21}),'%')
+		        	</otherwise>
+		        </choose>
+           </if>
+		 ORDER BY ORDR_SN, CMMN_CD
+	</select>
+
+	<!-- 공통코드 갯수 조회(팝업) -->
+	<select id="selectCmmnCdPopCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM CMMN_CD
+		 WHERE GRP_CD = #{srch3}
+		   AND DEL_YN = 'N'
+		   AND DISP_YN = 'Y'
+           <if test="srch20 != null and srch20 != ''">
+              AND CMMN_CD LIKE CONCAT('%',UPPER(#{srch20}),'%')
+           </if>
+           <if test="srch21 != null and srch21 != ''">
+		        <choose>
+		        	<when test="lang == 'en'">
+		        		AND CMMN_NM_EN LIKE CONCAT('%',UPPER(#{srch21}),'%')
+		        	</when>
+		        	<otherwise>
+		        		AND CMMN_NM_KR LIKE CONCAT('%',UPPER(#{srch21}),'%')
+		        	</otherwise>
+		        </choose>
+           </if>
+	</select>
+
+	<!-- 공통팝업 테이블 정보 조회(팝업) -->
+	<select id="selectCmmnTableInfoList" parameterType="searchVO" resultType="egovMap">
+		SELECT ${strSelect}
+		  FROM ${strFrom}
+		 WHERE ${strWhere}
+		   <if test="srch20 != null and srch20 != ''">
+		      AND ${if1} LIKE CONCAT('%',UPPER(#{srch20}),'%')
+		   </if>
+		   <if test="srch21 != null and srch21 != ''">
+		      AND ${if2} LIKE CONCAT('%',UPPER(#{srch21}),'%')
+		   </if>
+		 ORDER BY ${strOrderBy}
+	</select>
+
+	<!-- 공통팝업 테이블 정보 갯수 조회(팝업) -->
+	<select id="selectCmmnTableInfoListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM ${strFrom}
+		 WHERE ${strWhere}
+		   <if test="srch20 != null and srch20 != ''">
+		      AND ${if1} LIKE CONCAT('%',UPPER(#{srch20}),'%')
+		   </if>
+		   <if test="srch21 != null and srch21 != ''">
+		      AND ${if2} LIKE CONCAT('%',UPPER(#{srch21}),'%')
+		   </if>
+	</select>
+
+	<!-- 공통코드 조회 -->
+	<select id="selectCmmnCdList" parameterType="searchVO" resultType="egovMap">
+		SELECT a.CMMN_CD
+			 , a.CMMN_NM_VN
+			 , a.CMMN_NM_EN
+			 , a.CMMN_NM_KR
+			 , CASE WHEN #{lang} = 'en' THEN a.CMMN_NM_EN
+					ELSE a.CMMN_NM_KR
+			   END AS CMMN_NM
+			 , CASE WHEN #{lang} = 'en' THEN CONCAT('[',A.CMMN_CD,'] ', A.CMMN_NM_EN)
+					ELSE CONCAT('[',A.CMMN_CD,'] ', A.CMMN_NM_KR)
+			   END AS CMMN_NM_KEY
+			 , (@rownum:=@rownum+1) AS SN
+		  FROM cmmn_cd a
+		     , (SELECT @rownum:=0 FROM DUAL) b
+		 WHERE a.GRP_CD = #{srch10}
+		   AND a.DEL_YN = 'N'
+		   AND a.DISP_YN = 'Y'
+		 ORDER BY a.ORDR_SN, a.CMMN_CD
+	</select>
+	
+	<!-- 협정별 국가코드 조회 -->
+	<select id="selectFtaCmmnCdList" parameterType="searchVO" resultType="egovMap">
+		SELECT a.CMMN_CD
+			 , a.CMMN_NM_EN
+			 , a.CMMN_NM_KR
+			 , CASE WHEN #{lang} = 'en' THEN a.CMMN_NM_EN
+					ELSE a.CMMN_NM_KR
+			   END AS CMMN_NM
+			 , (@rownum:=@rownum+1) AS SN
+		  FROM fta_nation_info b left Join cmmn_cd a on b.nat_cd = a.CMMN_CD
+		     , (SELECT @rownum:=0 FROM DUAL) b
+		 WHERE a.GRP_CD = #{srch10}
+		   AND a.DEL_YN = 'N'
+		   AND a.DISP_YN = 'Y'
+		 ORDER BY a.ORDR_SN, a.CMMN_CD
+	</select>
+	
+	<!-- 협정코드 조회 -->
+	<select id="selectFtaList" parameterType="searchVO" resultType="egovMap">
+		SELECT FTA_CD AS CMMN_CD
+			   , CASE #{lang} WHEN 'EN' THEN FTA_NM_EN
+			   				  WHEN 'VT' THEN FTA_NM
+			   				  WHEN 'jp' THEN FTA_NM_JP
+			   				  ELSE FTA_NM_KR END AS CMMN_NM
+		  FROM FTA_INFO
+		 WHERE DEL_YN = 'N'
+		 ORDER BY ORDR
+	</select>
+	
+	<!-- HSVer 조회 -->
+	<select id="selectHsVerList" parameterType="searchVO" resultType="egovMap">
+		SELECT HS_VER AS CMMN_CD
+		  FROM ITEM_HS_INFO
+		 WHERE DEL_YN = 'N'
+		 GROUP BY HS_VER
+	</select>
+
+	<!-- 작성권한 체크 -->
+	<select id="selectWriteCheck" parameterType="searchVO" resultType="String">
+		SELECT IF(COUNT(*)>0,'Y','N')
+		  FROM MENU_INFO a
+		       JOIN MENU_AUTHOR_INFO b ON a.MENU_ID = b.MENU_ID AND b.DEL_YN = 'N' AND b.GRP_CD = #{grpCd} AND b.AUTHOR_CD = 'W'
+		 WHERE a.URL = #{srch1}
+	</select>
+</mapper>

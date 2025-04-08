@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.ms.docu.service.impl.DocumentMapper">
+
+	<!-- <select id="selectDocumentViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+	    CASE WHEN tradeType = 'exp' THEN '수출' ELSE '수입' END AS tradeType,
+	    factoryCode1,
+	    factoryCode2,
+	    pr_ordr,
+	    CONCAT_WS('-', 
+            SUBSTRING(rpt_No, 1, 5),
+            SUBSTRING(rpt_No, 6, 2),
+            SUBSTRING(rpt_No, 8)) AS rpt_no, 
+            DATE_FORMAT(rpt_Day, '%Y-%m-%d') AS rpt_Day, 
+            DATE_FORMAT(lis_day, '%Y-%m-%d') AS lis_day,
+	    'exp' AS tradeType,
+		'' AS factoryCode1,
+		'' AS factoryCode2,
+		'' AS pr_ordr,
+		'' AS invoiceNo,
+		 rpt_No,
+		 rpt_Day,
+		 Exp_Lis_Day AS lis_day
+			    
+		FROM CUSDEC929A1
+			
+		<if test="srch6 != null and srch6 != ''">
+            AND rpt_No LIKE CONCAT('%', UPPER(#{srch6}), '%')
+        </if>
+        <if test="srch33 == '01'">
+            AND rpt_day BETWEEN REPLACE(#{srch7}, '/', '') AND REPLACE(#{srch8}, '/', '')
+        </if>
+        <if test="srch33 == '02'"> 
+            AND lis_day BETWEEN REPLACE(#{srch7}, '/', '') AND REPLACE(#{srch8}, '/', '')
+        </if> 
+        <choose>
+            <when test="srch1 =='02'">
+                AND tradeType = 'imp'
+            </when>
+            <when test="srch1 =='03'">
+                AND tradeType = 'exp'
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+	   </select>
+ -->
+	
+	
+</mapper>

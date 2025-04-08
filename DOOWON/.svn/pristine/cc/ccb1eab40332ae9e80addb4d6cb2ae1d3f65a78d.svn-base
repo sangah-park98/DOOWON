@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.cmmn.service.impl.MenuMapper">
+
+	<!-- 대메뉴 조회 -->
+	<select id="selectMenuList" parameterType="searchVO" resultType="egovMap">
+	SELECT a.MENU_ID
+			     , a.MENU_TYPE
+			     , a.MENU_NM_EN
+			     , a.MENU_NM_KR
+			     , a.URL
+			     , a.UPPR_MENU_ID
+			     , a.ORDR_SN
+			     , a.DISP_YN
+			  FROM MENU_INFO a
+			  	   LEFT OUTER JOIN MENU_INFO b ON a.UPPR_MENU_ID = b.MENU_ID AND b.DEL_YN = 'N'
+			 WHERE a.DEL_YN = 'N'
+           <if test="srch2 != null and srch2 != ''">
+              AND a.MENU_NM_EN LIKE CONCAT('%',UPPER(#{srch2}),'%')
+           </if>
+           <if test="srch1 != null and srch1 != ''">
+              AND a.MENU_NM_KR LIKE CONCAT('%',UPPER(#{srch1}),'%')
+           </if>
+           <if test="srch4 != null and srch4 != ''">
+              AND a.MENU_TYPE = #{srch4}
+           </if>
+           <!-- <if test="srch5 != null and srch5 != ''">
+              AND a.DISP_YN = #{srch5}
+           </if> -->
+           <if test="srch6 != null and srch6 != ''">
+              AND a.UPPR_MENU_ID = #{srch6}
+           </if>
+        <choose>
+        	<when test="alignItem == 'MENU_ID'">
+        		ORDER BY a.MENU_ID
+        	</when>
+        	<when test="alignItem == 'MENU_ID_DESC'">
+        		ORDER BY a.MENU_ID DESC
+        	</when>
+        	<when test="alignItem == 'ORDR_SN'">
+        		ORDER BY a.ORDR_SN
+        	</when>
+        	<when test="alignItem == 'ORDR_SN_DESC'">
+        		ORDER BY a.ORDR_SN DESC
+        	</when>
+        	<otherwise>
+        		ORDER BY ORDR_SN
+        	</otherwise>
+        </choose>
+          LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+	
+	<!-- 대메뉴 조회 -->
+	<select id="selectMenuListCnt" parameterType="searchVO" resultType="int">
+			  SELECT 		
+				  COUNT(*)
+			  FROM MENU_INFO a
+				  	   LEFT OUTER JOIN MENU_INFO b ON a.UPPR_MENU_ID = b.MENU_ID AND b.DEL_YN = 'N'
+			  WHERE a.DEL_YN = 'N'
+	           <if test="srch2 != null and srch2 != ''">
+	              AND a.MENU_NM_EN LIKE CONCAT('%',UPPER(#{srch2}),'%')
+	           </if>
+	           <if test="srch1 != null and srch1 != ''">
+	              AND a.MENU_NM_KR LIKE CONCAT('%',UPPER(#{srch1}),'%')
+	           </if>
+	           <if test="srch4 != null and srch4 != ''">
+	              AND a.MENU_TYPE = #{srch4}
+	           </if>
+	           <!-- <if test="srch5 != null and srch5 != ''">
+	              AND a.DISP_YN = #{srch5}
+	           </if> -->
+	           <if test="srch6 != null and srch6 != ''">
+	              AND a.UPPR_MENU_ID = #{srch6}
+	           </if>
+	</select>
+	
+	<select id="selectUpprMenuDropdown" resultType="egovMap">
+	SELECT MENU_ID
+		  FROM MENU_INFO
+		 WHERE MENU_TYPE = '01'
+		   AND DEL_YN = 'N'
+		 ORDER BY ORDR_SN
+	</select>
+	
+	<insert id="insertPfMenuInfo" parameterType="egovframework.pf.cmmn.service.SaveMenuVO">
+		INSERT
+		   INTO MENU_INFO (
+						  MENU_ID
+						, MENU_TYPE
+						, UPPR_MENU_ID
+						, URL
+						, MENU_NM_EN
+						, MENU_NM_KR
+						, ORDR_SN
+						, DISP_YN
+						, DEL_YN
+						, REG_DT
+						, REG_ID
+        		 ) VALUES (
+						  #{menuId}
+						, #{menuType}
+						, #{upprMenuId}
+						, #{url}
+						, #{menuNmEn}
+						, #{menuNmKr}
+						, #{ordrSn}
+						, #{dispYn}
+						, 'N'
+						, DATE_FORMAT(NOW(), '%Y%m%d')
+						, #{regId}
+        ) ON DUPLICATE KEY
+             UPDATE UPPR_MENU_ID = #{upprMenuId}
+						, URL = #{url}
+						, MENU_NM_EN = #{menuNmEn}
+						, MENU_NM_KR = #{menuNmKr}
+						, ORDR_SN = #{ordrSn}
+						, DISP_YN = #{dispYn}
+						, EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+						, EDT_ID = #{edtId}
+	</insert>
+	
+	
+		<!-- 대메뉴 menu_id 채번 -->
+	<select id="selectPfMenuId" resultType="String">
+		SELECT CONCAT('LM',REPLACE(IFNULL(MAX(MENU_ID),0),'LM','') + 1)
+		  FROM MENU_INFO
+		 WHERE MENU_TYPE = '01'
+	</select>
+	
+
+	
+</mapper>

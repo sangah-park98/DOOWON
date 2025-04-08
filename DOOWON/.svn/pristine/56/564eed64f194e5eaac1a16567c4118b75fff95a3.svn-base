@@ -1,0 +1,54 @@
+package egovframework.pf.imp.service;
+
+import java.util.List;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.exp.service.SaveExpFileVO;
+/**
+ * @Class Name : ImportService.java
+ * @Description : ImportService Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2024.01.10          	서인석         			최초 생성
+ *
+ * @author 서인석
+ * @since 2024.01.10
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KordSystems All right reserved.
+ */
+
+public interface ImportService {
+
+	List<?> selectImportBlList(SearchVO vo) throws Exception;
+	
+	List<?> selectBlFilesList(SearchVO vo) throws Exception;
+	
+	void insertImportFilesInfo(SaveExpFileVO vo) throws Exception;
+	
+	void saveImpMemo(SearchVO vo) throws Exception;
+	
+	List<?> selectImportViewList(SearchVO vo) throws Exception;
+	
+	List<?> selectImportViewLanList(SearchVO vo) throws Exception;
+	
+	List<?> selectImportViewSpecList(SearchVO vo) throws Exception;
+	
+	List<?> selectImportViewLanListExcel(SearchVO vo) throws Exception;
+	
+	List<?> selectImportViewSpecListExcel(SearchVO vo) throws Exception;
+	
+	List<?> selectImportUpdateList(SearchVO vo) throws Exception;
+
+	List<?> selectImpViewFilesList(SearchVO vo) throws Exception;
+
+	void deleteImpBlFile(SearchVO vo) throws Exception;
+	
+	void impRequestBl(SearchVO vo) throws Exception;
+	
+	String impSendEmail(SearchVO vo) throws Exception;
+
+}

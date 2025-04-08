@@ -1,0 +1,366 @@
+package egovframework.pf.shipping.service;
+
+import java.util.List;
+
+public class ShippingOrderVO {
+
+	private String orderId;
+	private String rptType;
+	private String ctNo;
+	private String fromSpecifics;
+	private String fromDt;
+	private String fromTime;
+	private String fromAddr;
+	private String toDt;
+	private String toTime;
+	private String goodsWeights;
+	private String mixYn;
+	private String fromReq;
+	private String toStaff;
+	private String toPhnNo;
+	private String toAddr;
+	private String cmpnyNm;
+	private String corpNo;
+	private String managerNm;
+	private String billEmail;
+	private String shipperManager;
+	private String shipperMail;
+	private String transDetails;
+	private String taxInvoice;
+	
+	private String orderState;
+	private String rptNo;
+	private String blNo;
+	private int orderSeq;
+	private String shippingNm;
+	private String shippingPhnNo;
+	private String carNo;
+	private String carNm;
+	private String carPhnNo;
+	private String dispatchDt;
+	private String arriveReqDt;
+	private String arriveEstDt;
+	private String arriveDt;
+	private String arriveAddr;
+	private String recvNm;
+	private String recvPhnNo;
+	
+	private int estCharge;
+	private int estChargeAdd;
+	
+	private int fixedCharge;
+	private int fixedChargeAdd;
+	
+	private String regDt;
+	private String regId;
+	private String edtDt;
+	private String edtId;
+	
+	private List<String> list;
+	private List<String> list2;
+	private String fileName;
+	
+	
+	
+	public int getEstChargeAdd() {
+		return estChargeAdd;
+	}
+	public void setEstChargeAdd(int estChargeAdd) {
+		this.estChargeAdd = estChargeAdd;
+	}
+	public int getFixedChargeAdd() {
+		return fixedChargeAdd;
+	}
+	public void setFixedChargeAdd(int fixedChargeAdd) {
+		this.fixedChargeAdd = fixedChargeAdd;
+	}
+	public String getOrderId() {
+		return orderId;
+	}
+	public void setOrderId(String orderId) {
+		this.orderId = orderId;
+	}
+	public String getRptType() {
+		return rptType;
+	}
+	public void setRptType(String rptType) {
+		this.rptType = rptType;
+	}
+	public String getCtNo() {
+		return ctNo;
+	}
+	public void setCtNo(String ctNo) {
+		this.ctNo = ctNo;
+	}
+	public String getFromSpecifics() {
+		return fromSpecifics;
+	}
+	public void setFromSpecifics(String fromSpecifics) {
+		this.fromSpecifics = fromSpecifics;
+	}
+	public String getFromDt() {
+		return fromDt;
+	}
+	public void setFromDt(String fromDt) {
+		this.fromDt = fromDt;
+	}
+	public String getFromTime() {
+		return fromTime;
+	}
+	public void setFromTime(String fromTime) {
+		this.fromTime = fromTime;
+	}
+	public String getFromAddr() {
+		return fromAddr;
+	}
+	public void setFromAddr(String fromAddr) {
+		this.fromAddr = fromAddr;
+	}
+	public String getToDt() {
+		return toDt;
+	}
+	public void setToDt(String toDt) {
+		this.toDt = toDt;
+	}
+	public String getToTime() {
+		return toTime;
+	}
+	public void setToTime(String toTime) {
+		this.toTime = toTime;
+	}
+	public String getMixYn() {
+		return mixYn;
+	}
+	public void setMixYn(String mixYn) {
+		this.mixYn = mixYn;
+	}
+	public String getFromReq() {
+		return fromReq;
+	}
+	public void setFromReq(String fromReq) {
+		this.fromReq = fromReq;
+	}
+	public String getToStaff() {
+		return toStaff;
+	}
+	public void setToStaff(String toStaff) {
+		this.toStaff = toStaff;
+	}
+	public String getToPhnNo() {
+		return toPhnNo;
+	}
+	public void setToPhnNo(String toPhnNo) {
+		this.toPhnNo = toPhnNo;
+	}
+	public String getToAddr() {
+		return toAddr;
+	}
+	public void setToAddr(String toAddr) {
+		this.toAddr = toAddr;
+	}
+	public String getCmpnyNm() {
+		return cmpnyNm;
+	}
+	public void setCmpnyNm(String cmpnyNm) {
+		this.cmpnyNm = cmpnyNm;
+	}
+	public String getCorpNo() {
+		return corpNo;
+	}
+	public void setCorpNo(String corpNo) {
+		this.corpNo = corpNo;
+	}
+	public String getManagerNm() {
+		return managerNm;
+	}
+	public void setManagerNm(String managerNm) {
+		this.managerNm = managerNm;
+	}
+	public String getBillEmail() {
+		return billEmail;
+	}
+	public void setBillEmail(String billEmail) {
+		this.billEmail = billEmail;
+	}
+	public String getShipperManager() {
+		return shipperManager;
+	}
+	public void setShipperManager(String shipperManager) {
+		this.shipperManager = shipperManager;
+	}
+	public String getShipperMail() {
+		return shipperMail;
+	}
+	public void setShipperMail(String shipperMail) {
+		this.shipperMail = shipperMail;
+	}
+	public String getTransDetails() {
+		return transDetails;
+	}
+	public void setTransDetails(String transDetails) {
+		this.transDetails = transDetails;
+	}
+	public String getTaxInvoice() {
+		return taxInvoice;
+	}
+	public void setTaxInvoice(String taxInvoice) {
+		this.taxInvoice = taxInvoice;
+	}
+	public String getFileName() {
+		return fileName;
+	}
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+	public String getOrderState() {
+		return orderState;
+	}
+	public void setOrderState(String orderState) {
+		this.orderState = orderState;
+	}
+	public String getRptNo() {
+		return rptNo;
+	}
+	public void setRptNo(String rptNo) {
+		this.rptNo = rptNo;
+	}
+	public String getBlNo() {
+		return blNo;
+	}
+	public void setBlNo(String blNo) {
+		this.blNo = blNo;
+	}
+	public int getOrderSeq() {
+		return orderSeq;
+	}
+	public void setOrderSeq(int orderSeq) {
+		this.orderSeq = orderSeq;
+	}
+	public String getShippingNm() {
+		return shippingNm;
+	}
+	public void setShippingNm(String shippingNm) {
+		this.shippingNm = shippingNm;
+	}
+	public String getShippingPhnNo() {
+		return shippingPhnNo;
+	}
+	public void setShippingPhnNo(String shippingPhnNo) {
+		this.shippingPhnNo = shippingPhnNo;
+	}
+	public String getCarNo() {
+		return carNo;
+	}
+	public void setCarNo(String carNo) {
+		this.carNo = carNo;
+	}
+	public String getCarNm() {
+		return carNm;
+	}
+	public void setCarNm(String carNm) {
+		this.carNm = carNm;
+	}
+	public String getCarPhnNo() {
+		return carPhnNo;
+	}
+	public void setCarPhnNo(String carPhnNo) {
+		this.carPhnNo = carPhnNo;
+	}
+	public String getDispatchDt() {
+		return dispatchDt;
+	}
+	public void setDispatchDt(String dispatchDt) {
+		this.dispatchDt = dispatchDt;
+	}
+	public String getArriveReqDt() {
+		return arriveReqDt;
+	}
+	public void setArriveReqDt(String arriveReqDt) {
+		this.arriveReqDt = arriveReqDt;
+	}
+	public String getArriveEstDt() {
+		return arriveEstDt;
+	}
+	public void setArriveEstDt(String arriveEstDt) {
+		this.arriveEstDt = arriveEstDt;
+	}
+	public String getArriveDt() {
+		return arriveDt;
+	}
+	public void setArriveDt(String arriveDt) {
+		this.arriveDt = arriveDt;
+	}
+	public String getArriveAddr() {
+		return arriveAddr;
+	}
+	public void setArriveAddr(String arriveAddr) {
+		this.arriveAddr = arriveAddr;
+	}
+	public String getRecvNm() {
+		return recvNm;
+	}
+	public void setRecvNm(String recvNm) {
+		this.recvNm = recvNm;
+	}
+	public String getRecvPhnNo() {
+		return recvPhnNo;
+	}
+	public void setRecvPhnNo(String recvPhnNo) {
+		this.recvPhnNo = recvPhnNo;
+	}
+	public int getEstCharge() {
+		return estCharge;
+	}
+	public void setEstCharge(int estCharge) {
+		this.estCharge = estCharge;
+	}
+	public int getFixedCharge() {
+		return fixedCharge;
+	}
+	public void setFixedCharge(int fixedCharge) {
+		this.fixedCharge = fixedCharge;
+	}
+	public String getRegDt() {
+		return regDt;
+	}
+	public void setRegDt(String regDt) {
+		this.regDt = regDt;
+	}
+	public String getRegId() {
+		return regId;
+	}
+	public void setRegId(String regId) {
+		this.regId = regId;
+	}
+	public String getEdtDt() {
+		return edtDt;
+	}
+	public void setEdtDt(String edtDt) {
+		this.edtDt = edtDt;
+	}
+	public String getEdtId() {
+		return edtId;
+	}
+	public void setEdtId(String edtId) {
+		this.edtId = edtId;
+	}
+	public List<String> getList() {
+		return list;
+	}
+	public void setList(List<String> list) {
+		this.list = list;
+	}
+	public List<String> getList2() {
+		return list2;
+	}
+	public void setList2(List<String> list2) {
+		this.list2 = list2;
+	}
+	public String getGoodsWeights() {
+		return goodsWeights;
+	}
+	public void setGoodsWeights(String goodsWeights) {
+		this.goodsWeights = goodsWeights;
+	}
+	
+}

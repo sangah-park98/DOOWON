@@ -1,0 +1,364 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>서류관리</title>
+  <script src="/pf/js/function.js"></script>
+  <script src="/pf/js/docu/documentView.js" charset="UTF-8"></script>
+  <script src="/pf/js/docu/documentCalendar.js" charset="UTF-8"></script>
+  <script src="https://gcore.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="flex flex-col max-h-fit">
+<main class="p-2 grow flex flex-col gap-2">
+  <form class="w-full shrink-0 grid grid-rows-3 grid-cols-[auto_repeat(5,1fr)_auto_repeat(5,1fr)]
+    row-start-1 col-start-1 col-span-2 bg-white dark:bg-slate-800 shadow-sm rounded-lg
+    border border-slate-200 dark:border-slate-700 px-4 py-3 gap-1 z-1 text-base *:text-base
+    items-center">
+    <div class="row-start-1 col-span-6 col-end-13 flex flex-row gap-2 items-end justify-end">
+      <button 
+      	type="button"
+        onclick="fn_searchDocuView()"
+        class="text-white bg-primary-700 hover:bg-secondary-800 border border-primary-700
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none
+        duration-300 row-start-1">
+        <i class="fa-regular fa-search mr-1"></i>
+       	 검색
+      </button>
+      <button
+      	type="button"
+      	onclick="fn_clearDocuView()"
+        class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300">
+        <i class="fa-regular fa-times mr-1"></i>
+                 초기화
+      </button>
+    </div>
+    <!-- 검색구분 -->
+    <label class="col-start-1 row-start-1 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+             검색구분
+    </label>
+    <div
+      id="item-radio"
+      class="flex flex-row flex-wrap gap-4 col-start-2 col-span-5 row-start-1
+      items-center *:flex *:flex-row *:items-center *:gap-2 font-medium text-gray-900">
+      <label for="default-radio-2">
+        <input
+          id="default-radio-2"
+          type="radio"
+          value="02"
+          name="documentView_srch1"
+          checked
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>수입</span>
+      </label>
+      <label for="default-radio-3">
+        <input
+          id="default-radio-3"
+          type="radio"
+          value="03"
+          name="documentView_srch1"
+          onclick="handleRadioChange()"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>수출</span>
+      </label>
+    </div>
+    <!-- 검색기간 -->
+    <label class="col-start-1 row-start-2 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+      	등록일자
+    </label>
+    <select
+      id="documentView_day"
+      name="documentView_day"
+      class="row-start-2 col-start-2 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+      <option value="01" selected>신고일자</option>
+      <option value="02">수리일자</option>
+    </select>
+    <!-- Calendar -->
+    <div
+      date-rangepicker51
+      id="documentView_div1"
+      class="col-start-3 row-start-2 col-span-4 flex flex-wrap md:flex-nowrap items-center gap-1">
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input name="documentView1_date" type="text" id="documentView_srch2"
+               class="text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 "
+               onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" onkeyUp="fn_dateInputForm($(this))" 
+			   placeholder="yyyy-mm-dd" autocomplete="off" readonly>
+      </div>
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input name="documentView2_date" type="text" id="documentView_srch3"
+               class="text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 "
+               onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" 
+			   onkeyUp="fn_dateInputForm($(this))"
+			   placeholder="yyyy-mm-dd" autocomplete="off" readonly>
+      </div>
+      <!-- Range Button -->
+    </div>
+    <div id="documentView_div1" class="col-start-7 row-start-2 col-span-4 flex items-center gap-1">
+      <button
+          type="button"
+          id="today-button"
+          onclick="fn_chgDate1()"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+      	6개월
+      </button>
+      <button
+          type="button"
+          id="week-button"
+          onclick="fn_chgDate2()"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+        1년
+      </button>
+      <button
+          type="button"
+          id="last-month-button"
+          onclick="fn_chgDate3()"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+        3년
+      </button>
+      <button
+          type="button"
+          id="this-month-button"
+          onclick="fn_chgDate4()"
+          class="py-2 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+        5년
+      </button>
+    </div>
+    <!-- 신고번호 -->
+    <label for="n2" class="row-start-3 col-start-1 flex items-center font-medium text-gray-900 pr-2">
+      	신고번호
+    </label>
+    <input
+      type="text"
+      id="documentView_srch6"
+      onkeyup="enterkey()"
+      class="row-start-3 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="신고번호를 입력해주세요.">
+    <!-- B/L 번호 -->
+    <label for="n3" id="blNoLabel" class="row-start-3 col-start-7 flex items-center font-medium text-gray-900 px-2">
+      B/L 번호
+    </label>
+    <input
+      type="text"
+      id="documentView_srch7"
+      onkeyup="enterkey()"
+      class="row-start-3 col-start-8 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="B/L번호를 입력해주세요.">
+    <!-- 공장코드 -->
+    <label for="n1" class="col-start-1 row-start-4 flex items-center font-medium text-gray-900 pr-2">공장코드 </label>
+    <input type="text" id="documentView_srch8"
+           class="row-start-4 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+      	   onkeyup="enterkey()" placeholder="공장코드를 입력해주세요.">
+    <!-- PO 번호 -->
+    <label for="n5" id="poNoLabel" class="row-start-4 col-start-7 flex items-center font-medium text-gray-900 px-2">
+      PO 번호
+    </label>
+    <input
+      type="text"
+      id="documentView_srch9"
+      onkeyup="enterkey()"
+      class="row-start-4 col-start-8 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="PO번호를 입력해주세요.">
+  </form>
+
+  <div class="flex items-center justify-between w-full shrink-0">
+    <div class="flex items-center gap-4">
+      <h2 class="shrink-0 flex items-center gap-1">
+        <i class="fa-duotone fa-feather text-primary-900"></i>
+        결과: <span id="documentViewCnt">${totCnt}</span>
+      </h2>
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="download-button-docu h-9 text-white bg-primary-700 hover:bg-secondary-800 font-medium rounded px-2.5 py-2 text-base border border-primary-700 hover:border-secondary-400"
+      	onclick="fn_docuDownloadPopUp()">
+        <i class="fa-regular fa-download"></i>
+                 다운로드
+      </button>
+   <!--<button
+        type="button"
+        class="upload-button-docu h-9 text-white bg-primary-700 hover:bg-secondary-800 font-medium rounded px-2.5 py-2 text-base border border-primary-700 hover:border-secondary-400">
+        <i class="fa-regular fa-upload"></i>
+	        업로드
+      </button> -->
+      <select 
+        id="documentViewPageCnt"
+      	name="documentViewPageCnt"
+      	class="w-36 h-9 text-gray bg-primary-100 hover:bg-primary-200 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded text-base px-2.5 py-1.5 text-center inline-flex items-center border-primary-500 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+        <option value="50" selected>ROWS [50]</option>
+        <option value="100">ROWS [100]</option>
+        <option value="200">ROWS [200]</option>
+        <option value="500">ROWS [500]</option>
+      </select>
+    </div>
+  </div>
+  <!-- MainTable -->
+  <div id="documentViewTable" class="grow bg-white shadow-sm h-full max-h-[100rem] rounded-lg border border-slate-200 z-0"></div>
+  <!-- MainTable -->
+</main>
+
+<!-- Modal -->
+ <div class="modal-popup-docu fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center duration-300 hidden">
+  <div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+  Uploader Modal content
+  <div class="uploader-modal-docu hidden modal-content bg-white shadow-xl relative rounded min-w-96 overflow-hidden">
+    <div class="pl-7 pr-5 py-4 text-white bg-primary-900 flex items-center justify-between">
+      <h2 class="font-bold text-xl">서류 업로드</h2>
+      <button type="button" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+    </div>
+    <form id="fileDocuUpload" method="post" enctype=”multipart/form-data”>
+    <div>
+      <ul class="file-list-docu px-4 py-6"> </ul>
+    </div>
+    </form>
+	<div class="flex items-center justify-center w-full px-4 pb-6">
+	  <div class="relative w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+	    <input id="dropzone-file-docu" type="file" multiple class="absolute top-0 left-0 opacity-0 w-full h-full">
+	    <div class="flex flex-col items-center justify-center pt-5 pb-6" style="width: 100%; height: 100%;"> 
+	     <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+	       <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+	     </svg>
+	     <div class="flex flex-col items-center justify-center gap-1 items-center"> 
+	       <p class="mb-0 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+	       <p class="mt-0 mb-0 text-xs text-gray-500 dark:text-gray-400">JPG, PNG, HWP or PDF (MAX. 5mb)</p>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+    <div class="mx-5 py-4 border-t-2 flex justify-end gap-2 border-t" style="z-index: 1;">
+      <button type="button" onclick="fn_fileDocuSave()" class="so-upload-button px-3 py-2 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700">
+        <i class="fa-regular fa-floppy-disk"></i>
+        	저장
+      </button>
+    </div>
+  </div>
+</div> 
+<div id="docuFileListPopUp" class="modal fade fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center duration-300" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" style="display: none; ">
+	<div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+		<div class="modal-dialog modal-xl" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width:800px;" >
+			<div class="modal-content bg-white shadow-lg relative rounded min-w-80 overflow-hidden">
+				<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center justify-between">
+					<h1 class="docuModal-title">
+						<span></span> <!-- invoice번호 -->
+					</h1>
+					<button type="button" onclick="fileDocuListClose()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+				</div>
+				<div class="pl-7 pr-5 py-2 flex items-center justify-end">
+					<!-- <button type="button" onclick="fn_docuDownloadZip()" class="px-3 py-2 rounded-lg text-white hover:opacity-50 border-2 border-transparent duration-150 bg-primary-700 ">
+				        <i class="fa-regular fa-download"></i>
+				        	다운로드
+				    </button>&nbsp;  -->
+					<button type="button" onclick="fn_docuPopupDelete()" class="px-3 py-2 rounded-lg text-white hover:opacity-50 border-2 border-transparent duration-150 bg-primary-700 ">
+				        <i class="fa-regular fa-xmark"></i>
+				        	삭제
+				    </button>
+			    </div>
+				 <div class="modal-body">
+					 <div id="docuListPopupTable" class="grow bg-white shadow-sm h-full max-h-[100rem] rounded-lg border border-slate-200 z-0"></div>
+					<form id="fileDocuUpload" method="post" enctype=”multipart/form-data”>
+				    <div>
+				      <ul class="file-list-docuUpload px-4 py-6"></ul>
+				    </div>
+			    </form>
+				<div class="flex items-center justify-center w-full px-4 pb-6">
+				  <div class="relative w-full h-42 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+				    <input id="dropzone-file-docuUpload" type="file" multiple class="absolute top-0 left-0 opacity-0 w-full h-full">
+				    <div class="flex flex-col items-center justify-center pt-5 pb-6" style="width: 100%; height: 100%;"> 
+				     <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+				       <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+				     </svg>
+				     <div class="flex flex-col items-center justify-center gap-1 items-center"> <!-- 각 요소 사이의 여백을 조정하기 위해 gap 클래스 추가 -->
+				       <p class="mb-0 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+				       <p class="mt-0 mb-0 text-xs text-gray-500 dark:text-gray-400">JPG, PNG, HWP or PDF (MAX. 5mb)</p> <!-- 위 아래 여백을 조정하기 위해 mt-0 클래스 추가 -->
+				      </div>
+				    </div>
+				  </div>
+				</div>
+			    <div class="mx-5 py-4 border-t-2 flex justify-end gap-2 border-t" style="z-index: 1;">
+			      <input type="hidden" name="invoiceNo" id="invoiceNo" />
+			      <input type="hidden" name="rptNo" id="rptNo" />
+			      <button type="button" onclick="fn_fileDocuModalSave()" class="so-upload-button px-3 py-2 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700">
+			        <i class="fa-regular fa-floppy-disk"></i>
+			        	저장
+			      </button>
+			    </div> 
+					<form name="zipDownForm" method="post" action="/base/downloadFile.do">
+						<input type="hidden" name="zipName" id="zipName" />
+					</form>
+				</div> 
+			</div>
+		</div>
+</div>
+<!-- /Modal -->
+
+<!-- /Modal -->
+<div id="docuFileListPopUp" class="modal fade fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center duration-300" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" style="display: none; ">
+	<div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+		<div class="modal-dialog modal-xl" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width:800px;" >
+			<div class="modal-content bg-white shadow-lg relative rounded min-w-80 overflow-hidden">
+			<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center justify-between">
+				<h1 class="modal-title">
+					<span>업로드 파일 목록</span>
+				</h1>
+				<button type="button" onclick="fileDocuListClose()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+			</div>
+			<div class="modal-body">
+				<div class="grow bg-white shadow-sm h-full max-h-[100rem] rounded-lg border border-slate-200 z-0" id="docuListPopupTable"></div>
+				<form name="docuZipDownForm" method="post" action="/docu/downloadFile.do">
+					<input type="hidden" name="docuZipDown" id="docuZipDown"/>
+				</form>
+			</div> 
+		</div>
+	</div>
+</div>
+<!-- /Modal -->
+
+<!-- Download Modal -->
+<div id="docuDownloadPopUp" class="modal fade fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center duration-300" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" style="display: none;">
+	<div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+		<div class="modal-dialog modal-xl" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width:1220px;" >
+			<div class="modal-content bg-white shadow-lg relative rounded min-w-80 overflow-hidden">
+			<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center justify-between">
+				<button type="button" onclick="fn_docuDownload()" class="so-upload-button px-3 py-2 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700">
+	      				<i class="fa-regular fa-download"></i>
+	      				다운로드
+	    				</button>
+				<button type="button" onclick="fileDownloadClose()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+			</div>
+			<div class="modal-body">
+				<div class="grow bg-white shadow-sm h-full max-h-[100rem] rounded-lg border border-slate-200 z-0" id="docuDownloadPopupTable"></div>
+				<form name="zipDownloadForm" method="post" action="/docu/downloadDocuFile.do">
+					<input type="hidden" name="zipDownloadName" id="zipDownloadName" />
+				</form>
+			</div> 
+		</div>
+	</div>
+</div>
+<!-- Download Modal -->
+</body>
+</html>

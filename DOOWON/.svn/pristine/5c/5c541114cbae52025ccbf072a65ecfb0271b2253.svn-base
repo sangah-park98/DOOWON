@@ -1,0 +1,629 @@
+package egovframework.pf.rpt.service.web;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.sql.DataSource;
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.xml.XmlBeanFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
+
+import egovframework.pf.cmmn.service.CmmnService;
+import egovframework.pf.rpt.service.fundSettleService;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.rpt.service.SaveFundSettleVO;
+import egovframework.pf.rpt.service.SaveFundSettledetailVO;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.export.JRXlsExporter;
+import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
+import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
+import net.sf.jasperreports.export.SimpleXlsReportConfiguration;
+import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
+
+import com.fasterxml.jackson.databind.ObjectMapper; 
+
+
+
+@Controller
+public class fundSettleController {
+	private static final Logger log = LoggerFactory.getLogger(deadLineController.class);
+	
+	@Resource(name = "CmmnService")
+	private CmmnService CmmnService;
+	
+	@Resource(name = "fundSettleService")
+	private  fundSettleService fundSettleService;
+	
+	private Connection conn;
+	//화면호출
+	@RequestMapping(value = "/rpt/fundSettle.do")
+	public String fundSettle(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		SearchVO vo = new SearchVO();
+		String lang = userVO.getLang();
+		vo.setLang(lang);
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		//세관
+		List<?> customsList = fundSettleService.selectCustomsList();
+		Map<String, String> customsMap = new HashMap<>();
+
+		for (Object obj : customsList) {  
+		    EgovMap map = (EgovMap) obj; 
+		    customsMap.put((String) map.get("cmmnNm"), (String) map.get("cmmnCd"));
+		}
+		ObjectMapper objectMapper = new ObjectMapper();
+		String customsJson = objectMapper.writeValueAsString(customsMap);// JSON 변환
+		model.addAttribute("customsList", customsJson);
+		//System.out.println("customsList JSON: " + customsJson);
+		
+		//포워더
+		List<?> forwordList = fundSettleService.selectforwordList();
+		Map<String, String> forwordMap = new HashMap<>();
+		
+		for (Object obj : forwordList) {  
+		    EgovMap map = (EgovMap) obj; 
+		    forwordMap.put((String) map.get("cmmnNm"), (String) map.get("cmmnCd"));
+		}
+		ObjectMapper objectMapper1 = new ObjectMapper();
+		String forwordJson = objectMapper1.writeValueAsString(forwordMap);// JSON 변환
+		model.addAttribute("forwordList", forwordJson);
+		//System.out.println("forwordList JSON: " + forwordJson);
+		
+		//운송료 
+		List<?> transportationList = fundSettleService.selectTransportationList();
+		Map<String, String> transportationMap = new HashMap<>();
+
+		for (Object obj : transportationList) {  
+		    EgovMap map = (EgovMap) obj; 
+		    transportationMap.put((String) map.get("cmmnNm"), (String) map.get("cmmnCd"));
+		}
+		ObjectMapper objectMapper2 = new ObjectMapper();
+		String transportationJson = objectMapper2.writeValueAsString(transportationMap);// JSON 변환
+		model.addAttribute("transportationList", transportationJson);
+		//System.out.println("transportationList JSON: " + transportationJson);
+		
+		//창고료
+		List<?> warehouseList = fundSettleService.selectWarehouseList();
+		Map<String, String> warehouseMap = new HashMap<>();
+
+		for (Object obj : warehouseList) {  
+		    EgovMap map = (EgovMap) obj; 
+		    warehouseMap.put((String) map.get("cmmnNm"), (String) map.get("cmmnCd"));
+		}
+		ObjectMapper objectMapper3 = new ObjectMapper();
+		String warehouseJson = objectMapper3.writeValueAsString(warehouseMap);// JSON 변환
+		model.addAttribute("warehouseList", warehouseJson);
+		//System.out.println("warehouseJson JSON: " + warehouseJson);
+		// 보험료 
+		List<?> premiumList = fundSettleService.selectPremiumList();
+		Map<String, String> premiumMap = new HashMap<>();
+		for (Object obj : premiumList) {  
+		    EgovMap map = (EgovMap) obj; 
+		    premiumMap.put((String) map.get("cmmnNm"), (String) map.get("cmmnCd"));
+		}
+		ObjectMapper objectMapper4 = new ObjectMapper();
+		String premiumMapJson = objectMapper4.writeValueAsString(premiumMap);// JSON 변환
+		model.addAttribute("premiumList", premiumMapJson);
+		//System.out.println("premiumMapJson JSON: " + premiumMapJson);
+		
+		//통관수수료 
+		List<?> feeList = fundSettleService.selectfeeList();
+		Map<String, String> feeMap = new HashMap<>();
+		for (Object obj : feeList) {  
+		    EgovMap map = (EgovMap) obj; 
+		    feeMap.put((String) map.get("cmmnNm"), (String) map.get("cmmnCd"));
+		}
+		ObjectMapper objectMapper5 = new ObjectMapper();
+		String feeMapJson = objectMapper5.writeValueAsString(feeMap);// JSON 변환
+		model.addAttribute("feeList", feeMapJson);
+		//System.out.println("feeListMapJson JSON: " + feeMapJson);
+		
+		//전체 select
+		List<?>	masterList = fundSettleService.selectMasterList();
+		Map<String, String> masterMap = new HashMap<>();
+		for (Object obj : masterList) {  
+		    EgovMap map = (EgovMap) obj; 
+		    masterMap.put((String) map.get("cmmnNm"), (String) map.get("cmmnCd"));
+		}
+		ObjectMapper objectMapper6 = new ObjectMapper();
+		String masterMapJson = objectMapper6.writeValueAsString(masterMap);// JSON 변환
+		model.addAttribute("masterList", masterMapJson);
+		//System.out.println("masterListMapJson JSON: " + masterMapJson);
+		
+		model.addAttribute("lang", lang);
+		model.addAttribute("userCmpnyCd", userVO.getCmpnyCd());
+			
+		return "rpt/fundSettle";
+	}
+	
+	//마스터 관리 select 
+	@RequestMapping(value = "/rpt/selectMasterInfo.do")
+	public ModelAndView selectMasterInfo(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		vo.setCorpNo(userVO.getCorpNo());
+
+		List<?> resultList = fundSettleService.selectMasterInfo(vo);
+		model.addAttribute("resultList", resultList);
+
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	//마스터 관리 저장 
+	@ResponseBody
+	@RequestMapping(value = "/rpt/savefundSettle.do",method = RequestMethod.POST)
+	public String savefundSettle(@RequestBody List<SaveFundSettleVO> voList,HttpServletRequest request,HttpServletResponse response)throws Exception{
+		
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		
+		fundSettleService.savefundSettle(voList, userVO);
+		
+		return "success";
+	}
+	//기타사항,마감 저장
+		@ResponseBody
+		@RequestMapping(value = "/rpt/savefundSettleEtc.do",method = RequestMethod.POST)
+		public String savefundSettleEtc(@RequestBody List<SaveFundSettledetailVO> voList,HttpServletRequest request,HttpServletResponse response)throws Exception{
+			
+			HttpSession httpSession = request.getSession(true);
+			UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+			
+			fundSettleService.savefundSettleEtc(voList, userVO);
+			
+			return "success";
+		}
+		
+	//자금정산 select 
+	@RequestMapping(value = "/rpt/selectfundSettle.do")
+	public ModelAndView selectfundSettle(@ModelAttribute("searchVO")SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+	
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setList(userVO.getCorpNos());
+		}
+		
+		List<?> resultList = fundSettleService.selectfundSettle(vo);
+		model.addAttribute("resultList", resultList);
+		
+		ModelAndView mav = new ModelAndView("jsonView",model);
+		return mav;
+	}
+	//자금정산 detail select
+	@RequestMapping(value = "/rpt/fundSettleDetailList.do")
+	public ModelAndView fundSettleDetailList(@ModelAttribute("searchVO")SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setList(userVO.getCorpNos());
+		}
+		/*String frKey = fundSettleService.selectfrKey(vo);*/
+		String frKey = vo.getSrch9();
+		String mrnNo = fundSettleService.selectmrnNo(frKey);
+		String frwrSgn = "";
+		System.out.println("frKey"+frKey);
+		System.out.println("mrnNo"+mrnNo);
+		
+		
+	    // Unipass API를 이용한 포워더 부호
+	    JsonNode callApiResponse = callApi(mrnNo);  
+
+	    if (callApiResponse != null && callApiResponse.has("cargCsclPrgsInfoQryVo")) {
+	         frwrSgn = callApiResponse.get("cargCsclPrgsInfoQryVo").has("frwrSgn") ?
+	        		 // cargCsclPrgsInfoQryVo 이 객체 내부에 frwrSgn있나 확인
+	                callApiResponse.get("cargCsclPrgsInfoQryVo").get("frwrSgn").asText() : "";
+	        System.out.println("frwrSgn"+frwrSgn);
+	        
+	    }
+	    //vo.setSrch3(frKey);
+	    vo.setSrch4(mrnNo);
+	    vo.setSrch8(frwrSgn);
+		List<?> resultList = fundSettleService.selectfundSettleDetail(vo);
+		//System.out.println(resultList);
+		model.addAttribute("resultList", resultList);
+		
+		ModelAndView mav = new ModelAndView("jsonView",model);
+		return mav;
+	}
+	
+	private JsonNode callApi(String cargMtNo) {
+	    if (cargMtNo == null || "".equals(cargMtNo)) {
+	        return null;  // cargMtNo가 없으면 null 반환
+	    }
+		
+		try {
+			// 헤더설정
+			HttpHeaders headers = new HttpHeaders();
+			headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE + ";charset=UTF-8");
+			// API 요청 URL 설정
+			URI uri = UriComponentsBuilder.fromHttpUrl("https://unipass.customs.go.kr:38010/ext/rest/cargCsclPrgsInfoQry/retrieveCargCsclPrgsInfo")
+					.queryParam("crkyCn", "p240e234w064g101l050r050p0")
+					.queryParam("cargMtNo", cargMtNo)
+					.build()
+					.encode("UTF-8")
+					.toUri();	
+			// HTTP 요청 타임아웃 설정
+			HttpComponentsClientHttpRequestFactory httpRequestFactory = new HttpComponentsClientHttpRequestFactory();
+	        httpRequestFactory.setConnectTimeout(5000);
+	        httpRequestFactory.setReadTimeout(5000);
+	        
+	        HttpClient httpClient = HttpClientBuilder.create()
+	                .setMaxConnTotal(200)
+	                .setMaxConnPerRoute(20)
+	                .build();
+	        
+	        // HTTP 클라이언트 설정
+	        RestTemplate restTpl = new RestTemplate(httpRequestFactory);
+	        HttpEntity entity = new HttpEntity<>(headers); // http entity에 header 담아줌
+			
+	        // UTF-8 인코딩 설정
+	        restTpl.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+	        // API 호출 (GET 요청)
+	        log.info("call api :: {}", uri.toString()) ;
+	        ResponseEntity<String>  responseEntity = restTpl.exchange(uri.toString(), HttpMethod.GET, entity, String.class);
+	        // 응답이 200(성공)일 경우, XML 데이터를 JSON으로 변환하여 반환
+	        if(responseEntity.getStatusCodeValue() == 200) {
+	        	XmlMapper xmlMapper = new XmlMapper();
+	        	String str = responseEntity.getBody().toString();
+	        	JsonNode node = xmlMapper.readValue(str, new TypeReference<JsonNode>() { });
+	        	
+	        	 // ✅ `frwrSgn` 값 바로 로그 찍기
+	            if (node.has("cargCsclPrgsInfoQryVo") && node.get("cargCsclPrgsInfoQryVo").has("frwrSgn")) {
+	                String frwrSgn = node.get("cargCsclPrgsInfoQryVo").get("frwrSgn").asText();
+	                log.info("frwrSgn: {}", frwrSgn);
+	            }
+	            
+	        	return node;
+	        } else {
+	        	log.debug("StatusCodeValue :: {}", responseEntity.getBody().toString());
+	        	return null;
+	        }
+		} catch (Exception e) {
+			log.debug(e.getMessage());
+			return null;
+		}
+	}
+	//마스터 관리 저장 
+	@ResponseBody
+	@RequestMapping(value = "/rpt/savefundSettleDetail.do",method = RequestMethod.POST)
+	public String savefundSettleDetail(@RequestBody List<SaveFundSettledetailVO> voList,HttpServletRequest request,HttpServletResponse response)throws Exception{
+		
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		
+		fundSettleService.savefundSettleDetail(voList, userVO);
+		
+		return "success";
+	}
+	//정산서 EXCEL 다운로드
+	@RequestMapping(value = "/rpt/excelFundSettle.do")
+	@ResponseBody
+	public String printExcelFundSettle(@RequestBody List<SaveFundSettledetailVO> setVoList,HttpServletRequest request, HttpServletResponse response, HttpSession session) throws Exception{
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		Map parameters = new HashMap();
+		String cmpny = userVO.getCmpnyCd();
+		SearchVO vo = new SearchVO();
+		String reportName = "";
+		String sheetName = "";
+		List<String> sheetNames = new ArrayList<>();
+		List annexList = new ArrayList();
+		String frKey = "";
+		   for(int i=0; i<setVoList.size(); i++) {
+			   frKey =   setVoList.get(i).getFrKey();
+		   }
+		   System.out.println("frKey2"+frKey);
+		String mrnNo = fundSettleService.selectmrnNo(frKey);
+		
+		String frwrSgn = "";
+		System.out.println("mrnNo2"+mrnNo);
+		
+		
+	    // Unipass API를 이용한 포워더 부호
+	    JsonNode callApiResponse = callApi(mrnNo);  
+
+	    if (callApiResponse != null && callApiResponse.has("cargCsclPrgsInfoQryVo")) {
+	         frwrSgn = callApiResponse.get("cargCsclPrgsInfoQryVo").has("frwrSgn") ?
+	        		 // cargCsclPrgsInfoQryVo 이 객체 내부에 frwrSgn있나 확인
+	                callApiResponse.get("cargCsclPrgsInfoQryVo").get("frwrSgn").asText() : "";
+	        System.out.println("frwrSgn"+frwrSgn);
+	        
+	    }
+	    vo.setSrch8(frwrSgn);
+		java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("HHmmss");
+
+	    String ul = request.getServletContext().getRealPath("");
+	    System.out.println("======================================================================== start");
+	    
+	    for(int i=0; i<setVoList.size(); i++) {
+	    	
+	    	fundSettleService.insertDeadlineYn(setVoList,userVO);
+	    	
+	    	parameters.put("i_prm1", setVoList.get(i).getFrKey());
+		    parameters.put("i_prm2", setVoList.get(i).getHawb());
+			parameters.put("i_prm3", ul);
+			parameters.put("i_prm4", setVoList.get(i).getRptNo().replace("-", ""));
+			parameters.put("i_prm5", setVoList.get(i).getTradeComNm());
+			parameters.put("i_prm6", frwrSgn);
+		
+			System.out.println(parameters);
+			try {
+				
+				BeanFactory factory = new XmlBeanFactory(new ClassPathResource("egovframework/spring/context-datasource.xml"));
+				DataSource ds = (DataSource) factory.getBean("dataSource");
+				conn = ds.getConnection();
+				
+				vo.setCmpnyCd(cmpny);
+				
+				
+				List<JasperPrint> jasperPrintList = new ArrayList<JasperPrint>();
+				
+				sheetName =  setVoList.get(i).getHawb();
+				reportName = setVoList.get(i).getHawb().toString() + "_EXCEL";
+				
+				 sheetNames.add(sheetName);
+				
+
+				 /*String jasperFile = request.getServletContext().getRealPath("/templet/FUNDSETTLE_EXCEL.jasper"); 
+				 System.out.println("Jasper 파일 경로: " + jasperFile); // 경로 확인 로그 추가
+
+				 // 파일 존재 여부 확인
+				 File jasperFileCheck = new File(jasperFile);
+				 if (!jasperFileCheck.exists()) {
+				     throw new FileNotFoundException("Jasper 파일이 존재하지 않습니다: " + jasperFile);
+				 }*/
+				 
+				 
+				 String jrprintFile = "/home/files/" + setVoList.get(i).getHawb().toString() + "_FUNDSETTLE_EXCEL.jrprint";  // 저장될 jrprint 파일
+
+				 JasperFillManager.fillReportToFile(ul + "/templet/FUNDSETTLE_EXCEL.jasper", "/home/files/"+ setVoList.get(i).getHawb().toString() + "_" + "FUNDSETTLE_EXCEL" + ".jrprint", parameters, conn);	
+					
+					File sourceFile = new File("/home/files/"+ setVoList.get(i).getHawb().toString() + "_" +"FUNDSETTLE_EXCEL"+".jrprint");
+					
+					JasperPrint jasperPrint = (JasperPrint)JRLoader.loadObject(sourceFile);
+					
+					jasperPrintList.add(jasperPrint);
+				
+				
+				File destFile = new File("/home/files/", setVoList.get(i).getHawb().toString() + ".xlsx");
+				
+				
+				Map<String, String> formatPatterns = new HashMap<>();
+				
+				JRXlsxExporter exporter = new JRXlsxExporter();
+				exporter.setExporterInput(SimpleExporterInput.getInstance(jasperPrintList));
+				exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(destFile));
+				SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+				
+
+				configuration.setDetectCellType(true);  // 셀 형식 자동 감지 설정
+				// ❗ 한 페이지에 모든 데이터 출력
+				configuration.setOnePagePerSheet(false);  // 페이지 분할 방지
+				configuration.setIgnorePageMargins(true); // 마진 제거
+				configuration.setFitWidth(1);          // 너비 맞춤
+				configuration.setFitHeight(1);         // 높이 맞춤
+				
+				configuration.setWhitePageBackground(Boolean.FALSE);
+				configuration.setRemoveEmptySpaceBetweenColumns(Boolean.TRUE);
+				configuration.setRemoveEmptySpaceBetweenRows(Boolean.TRUE);
+				configuration.setSheetNames(sheetNames.toArray(new String[0]));
+				exporter.setConfiguration(configuration);
+				
+				exporter.exportReport();
+				long start = System.currentTimeMillis();
+				System.err.println("XLS creation time : " + (System.currentTimeMillis() - start));
+			
+		} catch (Exception e) {
+				System.err.println(e.getMessage());
+			} finally {
+				
+			}
+			System.out.println("======================================================================== end");
+			
+	    }
+		
+			return "success";
+	}
+	
+	
+	@RequestMapping(value = "/rpt/downloadSettle.do", method = RequestMethod.GET)
+	@ResponseBody
+	public void downloadSettle(@RequestParam("blno") String blno, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+
+	    System.out.println("📌 서버에서 받은 blno: " + blno);
+
+	    // ✅ 운영체제에 맞는 경로 설정
+	    String os = System.getProperty("os.name").toLowerCase();
+	    String saveDir = os.contains("win") ? "C:/home/files" : "/home/files";
+	    
+	    String filePath = saveDir + "/" + blno + ".xlsx";
+	    File file = new File(filePath);
+
+	    System.out.println("📂 다운로드할 파일 경로: " + file.getAbsolutePath());
+
+	    // ✅ 파일 존재 여부 확인
+	    if (!file.exists() || file.length() == 0) {
+	        System.out.println("❌ 파일이 존재하지 않거나 크기가 0입니다: " + file.getAbsolutePath());
+	        response.sendError(HttpServletResponse.SC_NOT_FOUND, "파일이 존재하지 않거나 비어 있습니다.");
+	        return;
+	    }
+
+	    // ✅ 올바른 MIME 타입 및 파일 크기 설정
+	    response.setContentType("application/octet-stream"); 
+	    response.setHeader("Content-Disposition", "attachment; filename=\"" + blno + ".xlsx\"");
+	    response.setHeader("Content-Length", String.valueOf(file.length()));
+
+	    FileInputStream fileInputStream = null;
+	    ServletOutputStream servletOutputStream = null;
+
+	    try {
+	        fileInputStream = new FileInputStream(file);
+	        servletOutputStream = response.getOutputStream();
+
+	        byte[] buffer = new byte[1024];
+	        int bytesRead;
+	        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+	            servletOutputStream.write(buffer, 0, bytesRead);
+	        }
+
+	        servletOutputStream.flush();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "파일 전송 중 오류 발생");
+	    } finally {
+	        if (fileInputStream != null) try { fileInputStream.close(); } catch (IOException ignored) {}
+	        if (servletOutputStream != null) try { servletOutputStream.close(); } catch (IOException ignored) {}
+	    }
+	}
+	
+	
+	@RequestMapping(value = "/rpt/downloadSettleZip.do", method = RequestMethod.POST)
+	public void downloadSettleZip(@RequestBody List<String> blnoList, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    String cmpny = userVO.getCmpnyCd();
+
+	    System.out.println("📌 서버에서 받은 blnoList: " + blnoList);
+
+	    // ✅ 운영체제에 맞는 경로 설정
+	    String os = System.getProperty("os.name").toLowerCase();
+	    String saveDir = os.contains("win") ? "C:/home/files" : "/home/files";
+
+	    SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
+	    String currentDate = sdf.format(new Date());
+	    
+	    // 압축할 ZIP 파일 이름 설정
+	    String zipFileName = cmpny + "_자금정산(" + currentDate + ").zip";
+	    System.out.println("zipFileName1: " + zipFileName);
+	    File zipFile = new File(saveDir, zipFileName);
+
+	    // ZIP 파일 생성
+	    try (FileOutputStream fos = new FileOutputStream(zipFile);
+	         ZipOutputStream zos = new ZipOutputStream(fos)) {
+
+	        for (String blno : blnoList) {
+	            String fileName = blno + ".xlsx";
+	            File file = new File(saveDir, fileName);
+
+	            // 파일 존재 여부 확인 후 압축
+	            if (file.exists() && file.length() > 0) {
+	                try (FileInputStream fis = new FileInputStream(file)) {
+	                    ZipEntry zipEntry = new ZipEntry(file.getName());
+	                    zos.putNextEntry(zipEntry);
+
+	                    byte[] buffer = new byte[1024];
+	                    int bytesRead;
+	                    while ((bytesRead = fis.read(buffer)) != -1) {
+	                        zos.write(buffer, 0, bytesRead);
+	                    }
+	                    zos.closeEntry();
+	                    System.out.println("✅ 파일 압축 완료: " + file.getName());
+	                }
+	            } else {
+	                System.out.println("❌ 파일이 존재하지 않음: " + file.getAbsolutePath());
+	            }
+	        }
+	    }
+
+	    // ✅ 파일 다운로드 전에 캐시 방지 헤더 추가
+	    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+	    response.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+	    response.setDateHeader("Expires", 0); // Proxies.
+
+	    // ✅ 한글 파일명 깨짐 방지 (ISO-8859-1 인코딩)
+	    String encodedFileName = URLEncoder.encode(zipFileName, "UTF-8").replaceAll("\\+", "%20"); 
+
+	    // ✅ 응답 헤더 추가 (프론트에서 가져갈 수 있도록 설정)
+	    response.setContentType("application/zip");
+	    response.setHeader("Content-Disposition", "attachment; filename=\"" + encodedFileName + "\"");
+	    response.setHeader("Content-Length", String.valueOf(zipFile.length()));
+	    response.setHeader("Zip-File-Name", encodedFileName);
+	    response.setHeader("Access-Control-Expose-Headers", "Zip-File-Name");
+
+	    try (FileInputStream fileInputStream = new FileInputStream(zipFile);
+	         ServletOutputStream servletOutputStream = response.getOutputStream()) {
+
+	        byte[] buffer = new byte[1024];
+	        int bytesRead;
+	        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+	            servletOutputStream.write(buffer, 0, bytesRead);
+	        }
+	        servletOutputStream.flush();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "ZIP 파일 전송 중 오류 발생");
+	    } finally {
+	        // ZIP 파일 삭제 (필요시 주석 처리)
+	        zipFile.delete();
+	    }
+
+	    // ✅ 강제적으로 응답 완료
+	    response.flushBuffer();
+
+	}
+}

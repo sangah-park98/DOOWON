@@ -1,0 +1,45 @@
+package egovframework.pf.shipping.service.impl;
+
+import java.util.List;
+
+import egovframework.pf.api.service.ApiOrderCancelVO;
+import egovframework.pf.api.service.ApiOrderDetailVO;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.shipping.service.ShippingAddressVO;
+import egovframework.pf.shipping.service.ShippingOrderVO;
+import egovframework.rte.psl.dataaccess.mapper.Mapper;
+
+@Mapper("shippingMapper")
+public interface ShippingMapper {
+
+	List<?> selectShippingViewList(SearchVO vo) throws Exception;
+
+	List<?> selectShippingDstnList(ShippingAddressVO svo) throws Exception;
+
+	void insertAddr(ShippingAddressVO svo) throws Exception;
+
+	void deleteAddr(ShippingAddressVO svo) throws Exception;
+
+	void insertShippingTempList(ShippingOrderVO vo) throws Exception;
+
+	List<?> selectShippingTempList(SearchVO vo) throws Exception;
+	
+	List<?> selectShippingReqList(SearchVO vo) throws Exception;
+
+	List<?> selectShippingOrderSeqList(SearchVO vo) throws Exception;
+
+	List<?> selectCtNoList(SearchVO vo) throws Exception;
+
+	void insertShippingReqList(ShippingOrderVO svo) throws Exception;
+
+	void updateOrderId(ShippingOrderVO svo) throws Exception;
+	
+	void orderCancel(ApiOrderCancelVO vo) throws Exception;
+
+	List<?> orderDetailChk(ApiOrderDetailVO dvo) throws Exception;
+
+	List<?> selectShippingOrderDetailChk(SearchVO vo) throws Exception;
+
+	void updateShippingReqList(ShippingOrderVO svo) throws Exception;
+	
+}

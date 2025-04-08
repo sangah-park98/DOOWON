@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.docu.service.impl.pfDocumentMapper">
+	
+	<select id="selectDocumentViewListByRptNo" parameterType="searchVO" resultType="egovMap">
+		SELECT
+		RPT_NO,			
+		CASE COUNT(CASE WHEN docu_type = 'DC' THEN 1 END)	
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'DC',			
+		CASE COUNT(CASE WHEN docu_type = 'CI' THEN 1 END)	
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'CI',			
+		CASE COUNT(CASE WHEN docu_type = 'PL' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'PL',
+		CASE COUNT(CASE WHEN docu_type = 'BL' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'BL',
+		CASE COUNT(CASE WHEN docu_type = 'CO' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'CO',
+		CASE COUNT(CASE WHEN docu_type = 'RQ' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'RQ',
+		CASE COUNT(CASE WHEN docu_type = 'CB' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'CB',
+		CASE COUNT(CASE WHEN docu_type = 'OT' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'OT',
+		CASE COUNT(CASE WHEN docu_type = 'AC' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'AC'
+		FROM file_info	
+		WHERE RPT_NO = #{rptNo}
+		GROUP BY RPT_NO
+	</select>
+	
+	<select id="selectDocumentImpViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    factoryCode1,
+		    pr_ordr,
+		    blno,
+		    CONCAT_WS('-', 
+		        SUBSTRING(rpt_No, 1, 5),
+		        SUBSTRING(rpt_No, 6, 2),
+		        SUBSTRING(rpt_No, 8)) AS rpt_no, 
+		    DATE_FORMAT(rpt_Day, '%Y-%m-%d') AS rpt_Day, 
+		    DATE_FORMAT(lis_day, '%Y-%m-%d') AS lis_day,
+		    DC,
+		    CI,
+		    PL,
+		    BL,
+		    CO,
+		    RQ,
+		    CB,
+		    OT,
+		    AC
+		FROM (
+		  	SELECT
+	        SUBSTRING_INDEX(a.user_memo, '\n', 1) AS factoryCode1,
+		    CASE WHEN STR_CNT(a.user_memo, '\n') >= 1 THEN
+			SUBSTRING_INDEX(SUBSTRING_INDEX(a.user_memo, '\n', 2), '\n', -1)
+			ELSE '' END AS pr_ordr,
+	        A.blno,
+	        A.rpt_No,
+	        rpt_Day,
+	        lis_day,
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'DC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'DC',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'CI' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CI',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'PL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'PL',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'BL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'BL',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'CO' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CO',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'RQ' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'RQ',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'CB' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CB',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'OT' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'OT',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'AC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'AC'	  			      
+		    FROM cusdec929a1 A
+		   	LEFT JOIN file_info B
+		   	ON A.rpt_No = B.rpt_No
+		   	AND B.FILE_TYPE = 'imp'
+		    WHERE 1=1
+			AND A.Rpt_Seq = '00'
+			<if test="corpNo != null and corpNo !=''">
+			AND A.nab_sdno = #{corpNo}
+			</if>
+			<if test="srch6 != '' and srch6 != null">
+		    AND a.rpt_No LIKE CONCAT('%', UPPER(REPLACE(#{srch6}, '-', '')), '%')
+		    </if>
+		    <if test="srch5 != null and srch5 != ''">
+        	AND A.blno LIKE CONCAT(UPPER(#{srch5}),'%')
+        	</if>
+		    <if test="srch33 == '01'">
+			AND rpt_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    <if test="srch33 == '02'">
+		    AND lis_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    GROUP BY A.blno, A.rpt_No, rpt_Day, lis_day
+		) AS A
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+
+	<select id="selectDocuViewImpTotCnt" parameterType="searchVO" resultType="int">
+	    SELECT 
+		    COUNT(*)
+		FROM (
+		  	SELECT
+	        '' AS factoryCode1,
+	        '' AS pr_ordr,
+	        A.blno,
+	        A.rpt_No,
+	        rpt_Day,
+	        lis_day,
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'DC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'DC',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'CI' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CI',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'PL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'PL',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'BL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'BL',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'CO' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CO',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'RQ' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'RQ',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'CB' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CB',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'OT' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'OT',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'AC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'AC'	  			      
+		    FROM cusdec929a1 A
+		   	LEFT JOIN file_info B
+		   	ON A.BlNo = B.BLNO
+		   	AND B.FILE_TYPE = 'imp'
+		    WHERE 1=1
+			AND A.Rpt_Seq = '00'
+			<if test="corpNo != null and corpNo !=''">
+			AND A.nab_sdno = #{corpNo}
+			</if>
+			<if test="srch6 != '' and srch6 != null">
+		    AND A.rpt_No LIKE CONCAT('%', UPPER(REPLACE(#{srch6}, '-', '')), '%')
+		    </if>
+        	<if test="srch5 != null and srch5 != ''">
+        	AND A.blno LIKE CONCAT(UPPER(#{srch5}),'%')
+        	</if>
+        	<if test="srch33 == '01'">
+			AND rpt_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    <if test="srch33 == '02'">
+		    AND lis_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    GROUP BY A.blno, A.rpt_No, rpt_Day, lis_day
+		) AS A;
+	</select>
+	
+	<select id="selectDocumentExpViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    factoryCode1,
+		    pr_ordr,
+		    Mg_Code ,
+		    CONCAT_WS('-', 
+		        SUBSTRING(A.rpt_No, 1, 5),
+		        SUBSTRING(A.rpt_No, 6, 2),
+		        SUBSTRING(A.rpt_No, 8)) AS rpt_no,
+		    DATE_FORMAT(rpt_Day, '%Y-%m-%d') AS rpt_Day, 
+		    DATE_FORMAT(exp_lis_day, '%Y-%m-%d') AS exp_lis_day,
+		    DC,
+		    CI,
+		    PL,
+		    BL,
+		    CO,
+		    RQ,
+		    CB,
+		    OT,
+		    AC
+		FROM (
+		     SELECT
+		        SUBSTRING_INDEX(a.user_memo, '\n', 1) AS factoryCode1,
+		    	CASE WHEN STR_CNT(a.user_memo, '\n') >= 1 THEN
+				SUBSTRING_INDEX(SUBSTRING_INDEX(a.user_memo, '\n', 2), '\n', -1)
+				ELSE '' END AS pr_ordr,
+		        b.mg_code,
+		        A.rpt_No,
+		        rpt_Day,
+		        exp_lis_day,
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'DC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'DC',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'CI' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CI',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'PL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'PL',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'BL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'BL',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'CO' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CO',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'RQ' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'RQ',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'CB' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CB',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'OT' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'OT',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'AC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'AC'
+		    FROM
+		        cusdec830a1 A
+		    INNER JOIN (
+				 SELECT sna1, rpt_no, mg_code FROM cusdec830b1
+				 GROUP BY sna1, rpt_no)  B
+				 ON A.sn = B.sna1
+				 AND A.rpt_no = B.rpt_no
+		    LEFT JOIN file_info C
+		    ON b.mg_code = C.invoice_no
+		    AND C.FILE_TYPE = 'exp'
+		    WHERE 1=1
+		    AND A.Rpt_Seq = '00'
+		    <if test="corpNo != null and corpNo !=''">
+		    AND A.Exp_sdno = #{corpNo}
+		    </if>
+		    <if test="srch6 != '' and srch6 != null">
+		    AND  A.rpt_No LIKE CONCAT('%', UPPER(REPLACE(#{srch6}, '-', '')), '%')
+		    </if>
+		    <if test="srch5 != '' and srch5 != null">
+		    AND  B.MG_CODE LIKE CONCAT('%', UPPER(#{srch5}), '%')
+		    </if>
+		    <if test="srch33 == '01'">
+			AND rpt_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    <if test="srch33 == '02'">
+		    AND lis_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    GROUP BY b.mg_code, A.rpt_No, rpt_Day, exp_lis_day
+		) AS A
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+	
+	<select id="selectDocuViewExpTotCnt" parameterType="searchVO" resultType="int">
+	    SELECT 
+		    COUNT(*)
+		FROM (
+		     SELECT
+		        '' AS factoryCode1,
+		        '' AS pr_ordr,
+		        b.mg_code,
+		        A.rpt_No,
+		        rpt_Day,
+		        exp_lis_day,
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'DC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'DC',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'CI' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CI',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'PL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'PL',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'BL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'BL',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'CO' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CO',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'RQ' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'RQ',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'CB' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CB',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'OT' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'OT',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'AC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'AC'
+		    FROM
+		        cusdec830a1 A
+		    INNER JOIN (
+				 SELECT sna1, rpt_no, mg_code FROM cusdec830b1
+				 GROUP BY sna1, rpt_no)  B
+				 ON A.sn = B.sna1
+				 AND A.rpt_no = B.rpt_no
+		    LEFT JOIN file_info C
+		    ON b.mg_code = C.invoice_no
+		    AND C.FILE_TYPE = 'exp'
+		    WHERE 1=1
+		    AND A.Rpt_Seq = '00'
+		    <if test="corpNo != null and corpNo !=''">
+		    AND A.Exp_sdno = #{corpNo}
+		    </if>
+		     <if test="srch6 != '' and srch6 != null">
+		    AND  A.rpt_No LIKE CONCAT('%', UPPER(REPLACE(#{srch6}, '-', '')), '%')
+		    </if>
+		    <if test="srch5 != '' and srch5 != null">
+		    AND  B.MG_CODE LIKE CONCAT('%', UPPER(#{srch5}), '%')
+		    </if>
+	        <if test="srch33 == '01'">
+			AND rpt_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    <if test="srch33 == '02'">
+		    AND lis_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    GROUP BY b.mg_code, A.rpt_No, rpt_Day, exp_lis_day
+		) AS A
+	</select>
+	
+	<insert id="insertExpDocuFilesInfo" parameterType="egovframework.pf.docu.service.SaveDocuFileVO">
+		INSERT INTO file_info
+		(	FILE_TYPE
+		  ,	RPT_NO
+		  ,	BLNO
+		  , INVOICE_NO
+		  , UPLOAD_DT
+		  , DOCU_TYPE
+		  , DOCU_PATH
+		  , DOCU_FILE
+		  , DOCU_ORG_FILE
+		  , CMPNY_CD
+		  , DEL_YN
+		  , REG_DT
+		  , REG_ID
+		) VALUES (
+		    'exp'
+		  ,	replace(#{rptNo},'-','')
+		  ,	''
+		  , #{invoiceNo}
+		  , #{uploadDt}
+		  , #{docuType}
+		  , '/home/files'
+		  , #{fileName}
+		  , #{orgFileName}
+		  , #{cmpnyCd}
+		  , 'N'
+		  , #{regDt}
+		  , #{regId}
+		);
+	</insert>
+	
+	<insert id="insertImpDocuFilesInfo" parameterType="egovframework.pf.docu.service.SaveDocuFileVO">
+		INSERT INTO file_info
+		(	FILE_TYPE
+		  ,	RPT_NO
+		  ,	BLNO
+		  , INVOICE_NO
+		  , UPLOAD_DT
+		  , DOCU_TYPE
+		  , DOCU_PATH
+		  , DOCU_FILE
+		  , DOCU_ORG_FILE
+		  , CMPNY_CD
+		  , DEL_YN
+		  , REG_DT
+		  , REG_ID
+		) VALUES (
+		    'imp'
+		  ,	replace(#{rptNo},'-','')
+		  ,	#{blNo}
+		  , ''
+		  , #{uploadDt}
+		  , #{docuType}
+		  , '/home/files'
+		  , #{fileName}
+		  , #{orgFileName}
+		  , #{cmpnyCd}
+		  , 'N'
+		  , #{regDt}
+		  , #{regId}
+		);
+	</insert>
+	
+	<select id="selectDownloadFileList" parameterType="java.lang.Object" resultType="egovMap">
+		SELECT *
+		  FROM file_info
+	     WHERE 1=1
+	      	AND RPT_NO IN
+		      <foreach collection="zipFiles" item="zipFile" open="(" separator="," close=")">
+	      		REPLACE(#{zipFile.rptNo},'-','')
+	      	</foreach>
+	      AND DOCU_TYPE IN
+	      <foreach collection="zipFiles" item="zipFiles" open="(" separator="," close=")">
+		      ''
+		      <if test="zipFiles.dc == 'true'">, 'dc' </if>
+		      <if test="zipFiles.ci == 'true'">, 'ci' </if>
+    		  <if test="zipFiles.pl == 'true'">, 'pl' </if>	        
+    		  <if test="zipFiles.bl == 'true'">, 'bl' </if>	        
+    		  <if test="zipFiles.co == 'true'">, 'co' </if>	        
+    		  <if test="zipFiles.rq == 'true'">, 'rq' </if>	        
+    		  <if test="zipFiles.ac == 'true'">, 'ac' </if>	        
+    		  <if test="zipFiles.cb == 'true'">, 'cb' </if>	        
+    		  <if test="zipFiles.ot == 'true'">, 'ot' </if>	        
+	      </foreach>
+	</select>
+	
+	<select id="selectDocuImpModalUpdateList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		RPT_NO,
+		BLNO,
+		docu_type,
+		DATE_FORMAT(upload_dt, '%Y-%m-%d') AS upload_dt,
+		docu_file
+		FROM file_info
+		WHERE rpt_no = REPLACE(#{srch1},'-','')
+		AND BLNO = #{srch2}
+		AND DOCU_TYPE != 'DC'
+		
+		UNION
+
+		SELECT 
+		RPT_NO,
+		BLNO,
+		docu_type,
+		DATE_FORMAT(upload_dt, '%Y-%m-%d') AS upload_dt,
+		docu_file
+		FROM file_info
+		WHERE rpt_no = REPLACE(#{srch1},'-','')
+		AND DOCU_TYPE = 'DC'
+	</select>
+
+	<delete id="dropDocuImpModalFile" parameterType="searchVO">
+		DELETE FROM FILE_INFO
+		WHERE 1=1
+		AND FILE_TYPE = 'imp'
+		AND RPT_NO = REPLACE(#{srch1},'-','')
+		AND BLNO = #{srch2}
+		AND DOCU_FILE = #{srch3}	
+	</delete>
+	
+	<select id="selectDocuExpModalUpdateList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		RPT_NO,
+		INVOICE_NO,
+		docu_type,
+		DATE_FORMAT(upload_dt, '%Y-%m-%d') AS upload_dt,
+		docu_file
+		FROM file_info
+		WHERE rpt_no = REPLACE(#{srch1},'-','')
+		AND INVOICE_NO = #{srch4}
+		AND DOCU_TYPE != 'DC'
+		
+		UNION
+		
+		SELECT 
+		RPT_NO,
+		INVOICE_NO,
+		docu_type,
+		DATE_FORMAT(upload_dt, '%Y-%m-%d') AS upload_dt,
+		docu_file
+		FROM file_info
+		WHERE rpt_no = REPLACE(#{srch1},'-','')
+		AND DOCU_TYPE = 'DC'
+	</select>
+
+	<delete id="dropDocuExpModalFile" parameterType="searchVO">
+		DELETE FROM FILE_INFO
+		WHERE 1=1
+		AND FILE_TYPE = 'exp'
+		AND RPT_NO = REPLACE(#{srch1},'-','')
+		AND INVOICE_NO = #{srch2}
+		AND DOCU_FILE = #{srch3}	
+	</delete> 
+
+ 	<delete id="deleteDocuFile" parameterType="searchVO">
+		DELETE FROM FILE_INFO
+		WHERE 1=1
+		AND FILE_TYPE = #{srch1}
+		<if test="srch2 != null and srch2 != ''">
+		AND BLNO = #{srch2}
+		</if>
+		AND DOCU_FILE = #{srch3}
+		AND UPLOAD_DT = REPLACE(#{srch4},'-','')
+		<if test="srch5 != null and srch5 != ''">
+		AND INVOICE_NO = #{srch5}
+		</if>
+		<if test="srch6 != null and srch6 != ''">
+		AND RPT_NO = #{srch6}
+		</if>
+	</delete>
+	  
+	<delete id="docuPopupDeleteList" parameterType="searchVO">
+		DELETE FROM file_info
+		WHERE 1=1
+		AND FILE_TYPE = #{srch1}
+	  	AND RPT_NO = #{srch6};
+	</delete>
+
+
+</mapper>

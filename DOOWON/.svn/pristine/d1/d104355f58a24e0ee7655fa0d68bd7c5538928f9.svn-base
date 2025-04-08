@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.11.0.final using JasperReports Library version 6.11.0-0c4056ccaa4d25a5a8c45672d2f764ea3498bebb  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="subReport" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="853c858e-f1c8-4e44-932b-a6418d38191f">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="VCS"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<queryString>
+		<![CDATA[SELECT MENU_ID,
+	MENU_NM_VN,
+	MENU_NM_EN,
+	MENU_NM_KR
+FROM menu_info]]>
+	</queryString>
+	<field name="MENU_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MENU_ID"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="MENU_NM_VN" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MENU_NM_VN"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="MENU_NM_EN" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MENU_NM_EN"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="MENU_NM_KR" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MENU_NM_KR"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<columnHeader>
+		<band height="27" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="100" height="20" uuid="12a210a4-32a8-4ff3-9d07-0be7ce668d34">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="3fcaa441-0f9b-4bee-a5b6-3a8732b76c66"/>
+				</reportElement>
+				<text><![CDATA[MENU_ID]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="100" y="0" width="140" height="20" uuid="2aa6702b-be40-4440-9ed1-d010a0bb3559">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="fdaf4d67-e09c-4b1a-b42b-a3ab2cdc7cd7"/>
+				</reportElement>
+				<text><![CDATA[MENU_NM_VN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="240" y="0" width="160" height="20" uuid="7d75de6f-5a15-4e29-ae25-c7423bd35d14">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="21235408-f1ba-493e-81a4-b5344c367fdd"/>
+				</reportElement>
+				<text><![CDATA[MENU_NM_EN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="400" y="0" width="140" height="20" uuid="1b1e4c89-b825-49eb-9d08-08727caebba6">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="019a25cb-2928-428d-b9e8-a9b0e2d3ba22"/>
+				</reportElement>
+				<text><![CDATA[MENU_NM_KR]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="33" splitType="Stretch">
+			<textField>
+				<reportElement x="240" y="0" width="160" height="30" uuid="57635a7e-2d88-4a98-aeec-1d0c9f7296ff">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="21235408-f1ba-493e-81a4-b5344c367fdd"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{MENU_NM_EN}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="400" y="0" width="140" height="30" uuid="e9506ac7-7d17-48b4-889b-59ba21296189">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="019a25cb-2928-428d-b9e8-a9b0e2d3ba22"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{MENU_NM_KR}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="100" height="30" uuid="a4d898c2-6a2e-4955-b256-4bbf75206d4d">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="3fcaa441-0f9b-4bee-a5b6-3a8732b76c66"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{MENU_ID}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="100" y="0" width="140" height="30" uuid="374fce0c-2a7d-4fe5-8778-b3a37c9b08d9">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="fdaf4d67-e09c-4b1a-b42b-a3ab2cdc7cd7"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{MENU_NM_VN}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="45" splitType="Stretch"/>
+	</columnFooter>
+</jasperReport>

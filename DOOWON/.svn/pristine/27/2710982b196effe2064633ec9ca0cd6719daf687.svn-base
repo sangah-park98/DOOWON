@@ -1,0 +1,26 @@
+package egovframework.pf.shipping.service.impl;
+
+import egovframework.rte.psl.dataaccess.mapper.Mapper;
+
+/**
+ * 판매처 매퍼 클래스
+ *
+ * @author  심창무
+ * @since 2020.01.15
+ * @version 1.0
+ * @see <pre>
+ *  == 개정이력(Modification Information) ==
+ *
+ *          수정일            수정자           수정내용
+ *     ----------------    ------------    ---------------------------
+ *       2020.01.15          심창무          최초 생성
+ *
+ * </pre>
+ */
+@Mapper("apiShippingMapper")
+public interface ApiShippingMapper {
+
+	String stateChange(String param) throws Exception;
+	
+	
+}

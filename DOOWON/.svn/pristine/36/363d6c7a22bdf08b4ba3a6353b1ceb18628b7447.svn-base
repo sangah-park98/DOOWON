@@ -1,0 +1,1029 @@
+package egovframework.pf.rpt.service.impl;
+
+
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Service;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.rpt.service.AnalysisExcelService;
+import egovframework.pf.util.ExcelUtil;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+/**
+ * @Class Name : AnalysisExcelServiceImpl.java
+ * @Description : AnalysisExcelServiceImpl Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2024.05.13          	이재성         			최초 생성
+ *
+ * @author 이재성
+ * @since 2024.05.13
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KordSystems All right reserved.
+ */
+
+@Service("analysisExcelService")
+public class AnalysisExcelServiceImpl extends EgovAbstractServiceImpl implements AnalysisExcelService {
+
+	@Override
+	public XSSFSheet analysis1TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		String format1_1 = "%s까지의 수입신고는 총 %s건이며, 총신고금액은 %s원입니다.";
+		String format1_2 = "%s년의 수입신고는 총 %s건이며, 총신고금액은 %s원입니다. %s년 대비 수입신고는 %s건, 총신고금액은 %s원입니다.";
+		String format2_1 = "%s년의 수입신고 건 중 %s은 %s건으로 전체 수입신고의 %s이며 %s년의 %s에 비해 %s입니다.";
+		String format2_2 = "%s년의 수입신고 건 중 %s은 %s건으로 전체 수입신고의 %s이며 %s년의 %s과 %s합니다.";
+		String format2_3 = "%s까지의 수입신고 건 중 %s은 %s건입니다.";
+		String title1 = "연간 신고 건 비교";
+		String title2 = "수입유형 비교";
+		String cont1 = "";
+		String cont2_1 = "";
+		String cont2_2 = "";
+		String cont2_3 = "";
+		String[] cont1Param = null;
+		String[] cont2_1Param = null;
+		String[] cont2_2Param = null;
+		String[] cont2_3Param = null;
+		XSSFRichTextString richStr = null;
+		EgovMap map = null;
+		XSSFWorkbook wb = sheet.getWorkbook();
+		XSSFCellStyle style = wb.createCellStyle();
+		XSSFFont font = wb.createFont();
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		int diffCnt = 0;
+		double diffSum = 0;
+		float per = 0;
+		float beforePer = 0;
+		String h = "높은 편";
+		String l = "낮은 편";
+		
+		int[] cntNomalArr = new int[5];  
+		int[] cntEtcArr = new int[5];
+		double[] sumNomalArr = new double[5];
+		double[] sumEtcArr = new double[5];
+		String[] yearArr = new String[5]; 
+		
+		NumberFormat f = NumberFormat.getInstance();
+		f.setGroupingUsed(false);
+		
+		try {
+			for(Object obj : resultList) {
+				map = (EgovMap) obj;
+				
+				if("일반수입(11)".equals(map.get("markCont"))) {
+					cntNomalArr[0] = Integer.parseInt(((String)map.get("cnt1")).replace(",", ""));
+					sumNomalArr[0] = Double.parseDouble(((String)map.get("sum1")).replace(",", ""));
+					cntNomalArr[1]  = Integer.parseInt(((String)map.get("cnt2")).replace(",", ""));
+					sumNomalArr[1] = Double.parseDouble(((String)map.get("sum2")).replace(",", ""));
+					cntNomalArr[2]  = Integer.parseInt(((String)map.get("cnt3")).replace(",", ""));
+					sumNomalArr[2] = Double.parseDouble(((String)map.get("sum3")).replace(",", ""));
+					cntNomalArr[3]  = Integer.parseInt(((String)map.get("cnt4")).replace(",", ""));
+					sumNomalArr[3] = Double.parseDouble(((String)map.get("sum4")).replace(",", ""));
+					cntNomalArr[4]  = Integer.parseInt(((String)map.get("cnt5")).replace(",", ""));
+					sumNomalArr[4] = Double.parseDouble(((String)map.get("sum5")).replace(",", ""));
+				} else {
+					cntEtcArr[0] += Integer.parseInt(((String)map.get("cnt1")).replace(",", ""));
+					sumEtcArr[0] += Double.parseDouble(((String)map.get("sum1")).replace(",", ""));
+					cntEtcArr[1] += Integer.parseInt(((String)map.get("cnt2")).replace(",", ""));
+					sumEtcArr[1] += Double.parseDouble(((String)map.get("sum2")).replace(",", ""));
+					cntEtcArr[2] += Integer.parseInt(((String)map.get("cnt3")).replace(",", ""));
+					sumEtcArr[2] += Double.parseDouble(((String)map.get("sum3")).replace(",", ""));
+					cntEtcArr[3] += Integer.parseInt(((String)map.get("cnt4")).replace(",", ""));
+					sumEtcArr[3] += Double.parseDouble(((String)map.get("sum4")).replace(",", ""));
+					cntEtcArr[4] += Integer.parseInt(((String)map.get("cnt5")).replace(",", ""));
+					sumEtcArr[4] += Double.parseDouble(((String)map.get("sum5")).replace(",", ""));
+				}
+			}
+			
+			
+			String date = serarchVo.getSrch3().substring(0, 4);
+			yearArr[0] = Integer.toString(Integer.parseInt(date) -4);
+			yearArr[1] = Integer.toString(Integer.parseInt(date) -3);
+			yearArr[2] = Integer.toString(Integer.parseInt(date) -2);
+			yearArr[3] = Integer.toString(Integer.parseInt(date) -1);
+			yearArr[4] = serarchVo.getSrch3();
+			
+			
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			
+			// title1
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			font = wb.createFont();
+			font.setFontHeightInPoints((short)10);
+			font.setFontName("맑은 고딕");
+			font.setBold(true);
+			style = wb.createCellStyle();
+			style.setFont(font);
+			cell = row.createCell(0);
+			cell.setCellStyle(style);
+			cell.setCellValue(title1);
+			
+			for(int i=4; i >= 1; i--) {
+				diffCnt = (cntNomalArr[i] + cntEtcArr[i]) - (cntNomalArr[i-1] + cntEtcArr[i-1]);
+				diffSum = (sumNomalArr[i] + sumEtcArr[i]) - (sumNomalArr[i-1] + sumEtcArr[i-1]);
+				row = sheet.createRow(sheet.getLastRowNum() +1);
+				
+				if(i==4) {
+					cont1Param = new String[]{yearArr[i],  Integer.toString(cntNomalArr[i] + cntEtcArr[i]), f.format(sumNomalArr[i] + sumEtcArr[i]).replaceAll("\\B(?=(\\d{3})+(?!\\d))", ",")};
+					cont1 = String.format(format1_1, cont1Param);
+				} else {
+					cont1Param = new String[]{yearArr[i],  Integer.toString(cntNomalArr[i] + cntEtcArr[i]), f.format(sumNomalArr[i] + sumEtcArr[i]).replaceAll("\\B(?=(\\d{3})+(?!\\d))", ","),
+							  				  yearArr[i-1],  Integer.toString(diffCnt), f.format(diffSum).replaceAll("\\B(?=(\\d{3})+(?!\\d))", ",")};
+					cont1 = String.format(format1_2, cont1Param);
+				}
+				
+				richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+				
+				cell = row.createCell(0);
+				cell.setCellValue(richStr);
+			}
+			
+			// title2
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			font = wb.createFont();
+			font.setFontHeightInPoints((short)10);
+			font.setFontName("맑은 고딕");
+			font.setBold(true);
+			style = wb.createCellStyle();
+			style.setFont(font);
+			cell = row.createCell(0);
+			cell.setCellStyle(style);
+			cell.setCellValue(title2);
+			
+			for(int i=4; i >= 1; i--) {
+				
+				row = sheet.createRow(sheet.getLastRowNum() +1);
+				if(i == 4) {
+					cont2_3Param = new String[]{yearArr[i],  "일반수입", Integer.toString(cntNomalArr[i])};
+					cont2_3 = String.format(format2_3, cont2_3Param);
+					richStr = ExcelUtil.getRichTextString(sheet, cont2_3, cont2_3Param, IndexedColors.RED.getIndex());
+				}else {
+					per = (cntNomalArr[i] + cntEtcArr[i]) == 0 ? 0 : new Float(cntNomalArr[i]) / new Float(cntNomalArr[i] + cntEtcArr[i]) * 100;
+					beforePer = (cntNomalArr[i-1] + cntEtcArr[i-1]) == 0 ? 0 : new Float(cntNomalArr[i-1]) / new Float(cntNomalArr[i-1] + cntEtcArr[i-1]) * 100;
+					
+					if(per == beforePer) {
+						cont2_2Param = new String[]{yearArr[i],  "일반수입", Integer.toString(cntNomalArr[i]),  String.format("%.2f", per).concat("%"),
+								  yearArr[i-1],  String.format("%.2f", beforePer).concat("%"), "동일"};
+						cont2_2 = String.format(format2_2, cont2_2Param);
+						richStr = ExcelUtil.getRichTextString(sheet, cont2_2, cont2_2Param, IndexedColors.RED.getIndex());
+					} else {
+						cont2_1Param = new String[]{yearArr[i],  "일반수입", Integer.toString(cntNomalArr[i]),  String.format("%.2f", per).concat("%"),
+								  yearArr[i-1],  String.format("%.2f", beforePer).concat("%"), per > beforePer ? h : l};
+						cont2_1 = String.format(format2_1, cont2_1Param);
+						richStr = ExcelUtil.getRichTextString(sheet, cont2_1, cont2_1Param, IndexedColors.RED.getIndex());
+					}
+				}
+				
+				
+				cell = row.createCell(0);
+				cell.setCellValue(richStr);
+				
+				row = sheet.createRow(sheet.getLastRowNum() +1);
+				if(i == 4) {
+					cont2_3Param = new String[]{yearArr[i],  "기타수입", Integer.toString(cntEtcArr[i])};
+					cont2_3 = String.format(format2_3, cont2_3Param);
+					richStr = ExcelUtil.getRichTextString(sheet, cont2_3, cont2_3Param, IndexedColors.RED.getIndex());
+				} else {
+					per = (cntNomalArr[i] + cntEtcArr[i]) == 0 ? 0 : new Float(cntEtcArr[i]) / new Float(cntNomalArr[i] + cntEtcArr[i]) * 100;
+					beforePer = (cntNomalArr[i-1] + cntEtcArr[i-1]) == 0 ? 0 : new Float(cntEtcArr[i-1]) / new Float(cntNomalArr[i-1] + cntEtcArr[i-1]) * 100;
+					
+					if(per == beforePer) {
+						cont2_2Param = new String[]{yearArr[i],  "기타수입", Integer.toString(cntEtcArr[i]),  String.format("%.2f", per).concat("%"),
+								yearArr[i-1],  String.format("%.2f", beforePer).concat("%"), "동일"};
+						cont2_2 = String.format(format2_2, cont2_2Param);
+						richStr = ExcelUtil.getRichTextString(sheet, cont2_2, cont2_2Param, IndexedColors.RED.getIndex());
+					} else {
+						cont2_1Param = new String[]{yearArr[i],  "기타수입", Integer.toString(cntEtcArr[i]),  String.format("%.2f", per).concat("%"),
+								yearArr[i-1],  String.format("%.2f", beforePer).concat("%"), per > beforePer ? h : l};
+						cont2_1 = String.format(format2_1, cont2_1Param);
+						richStr = ExcelUtil.getRichTextString(sheet, cont2_1, cont2_1Param, IndexedColors.RED.getIndex());
+					}
+				}
+				
+				cell = row.createCell(0);
+				cell.setCellValue(richStr);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet analysis2TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		String format1_1 = "%s까지의 수출신고 총 %s건이며, 총신고금액은 %s원입니다.";
+		String format1_2 = "%s년의 수출신고는 총 %s건이며, 총신고금액은 %s원입니다. %s년 대비 수입신고는 %s건, 총신고금액은 %s원입니다.";
+		String format2_1 = "%s년의 수출신고 건 중 %s은 %s건으로 전체 수출신고의 %s이며 %s년의 %s에 비해 %s입니다.";
+		String format2_2 = "%s년의 수출신고 건 중 %s은 %s건으로 전체 수출신고의 %s이며 %s년의 %s과 %s합니다.";
+		String format2_3 = "%s까지의 수출신고 건 중 %s은 %s건입니다.";
+		String title1 = "연간 신고 건 비교";
+		String title2 = "수출유형 비교";
+		String cont1 = "";
+		String cont2_1 = "";
+		String cont2_2 = "";
+		String cont2_3 = "";
+		String[] cont1Param = null;
+		String[] cont2_1Param = null;
+		String[] cont2_2Param = null;
+		String[] cont2_3Param = null;
+		XSSFRichTextString richStr = null;
+		EgovMap map = null;
+		XSSFWorkbook wb = sheet.getWorkbook();
+		XSSFCellStyle style = wb.createCellStyle();
+		XSSFFont font = wb.createFont();
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		int diffCnt = 0;
+		double diffSum = 0;
+		float per = 0;
+		float beforePer = 0;
+		String h = "높은 편";
+		String l = "낮은 편";
+		
+		int[] cntNomalArr = new int[5];  
+		int[] cntEtcArr = new int[5];
+		double[] sumNomalArr = new double[5];
+		double[] sumEtcArr = new double[5];
+		String[] yearArr = new String[5]; 
+		
+		NumberFormat f = NumberFormat.getInstance();
+		f.setGroupingUsed(false);
+		
+		try {
+			for(Object obj : resultList) {
+				map = (EgovMap) obj;
+				
+				if("일반수출(11)".equals(map.get("markCont"))) {
+					cntNomalArr[0] = Integer.parseInt(((String)map.get("cnt1")).replace(",", ""));
+					sumNomalArr[0] = Double.parseDouble(((String)map.get("sum1")).replace(",", ""));
+					cntNomalArr[1]  = Integer.parseInt(((String)map.get("cnt2")).replace(",", ""));
+					sumNomalArr[1] = Double.parseDouble(((String)map.get("sum2")).replace(",", ""));
+					cntNomalArr[2]  = Integer.parseInt(((String)map.get("cnt3")).replace(",", ""));
+					sumNomalArr[2] = Double.parseDouble(((String)map.get("sum3")).replace(",", ""));
+					cntNomalArr[3]  = Integer.parseInt(((String)map.get("cnt4")).replace(",", ""));
+					sumNomalArr[3] = Double.parseDouble(((String)map.get("sum4")).replace(",", ""));
+					cntNomalArr[4]  = Integer.parseInt(((String)map.get("cnt5")).replace(",", ""));
+					sumNomalArr[4] = Double.parseDouble(((String)map.get("sum5")).replace(",", ""));
+				} else {
+					cntEtcArr[0] += Integer.parseInt(((String)map.get("cnt1")).replace(",", ""));
+					sumEtcArr[0] += Double.parseDouble(((String)map.get("sum1")).replace(",", ""));
+					cntEtcArr[1] += Integer.parseInt(((String)map.get("cnt2")).replace(",", ""));
+					sumEtcArr[1] += Double.parseDouble(((String)map.get("sum2")).replace(",", ""));
+					cntEtcArr[2] += Integer.parseInt(((String)map.get("cnt3")).replace(",", ""));
+					sumEtcArr[2] += Double.parseDouble(((String)map.get("sum3")).replace(",", ""));
+					cntEtcArr[3] += Integer.parseInt(((String)map.get("cnt4")).replace(",", ""));
+					sumEtcArr[3] += Double.parseDouble(((String)map.get("sum4")).replace(",", ""));
+					cntEtcArr[4] += Integer.parseInt(((String)map.get("cnt5")).replace(",", ""));
+					sumEtcArr[4] += Double.parseDouble(((String)map.get("sum5")).replace(",", ""));
+				}
+			}
+			
+			
+			String date = serarchVo.getSrch3().substring(0, 4);
+			yearArr[0] = Integer.toString(Integer.parseInt(date) -4);
+			yearArr[1] = Integer.toString(Integer.parseInt(date) -3);
+			yearArr[2] = Integer.toString(Integer.parseInt(date) -2);
+			yearArr[3] = Integer.toString(Integer.parseInt(date) -1);
+			yearArr[4] = serarchVo.getSrch3();
+			
+			
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			
+			// title1
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			font = wb.createFont();
+			font.setFontHeightInPoints((short)10);
+			font.setFontName("맑은 고딕");
+			font.setBold(true);
+			style = wb.createCellStyle();
+			style.setFont(font);
+			cell = row.createCell(0);
+			cell.setCellStyle(style);
+			cell.setCellValue(title1);
+			
+			for(int i=4; i >= 1; i--) {
+				diffCnt = (cntNomalArr[i] + cntEtcArr[i]) - (cntNomalArr[i-1] + cntEtcArr[i-1]);
+				diffSum = (sumNomalArr[i] + sumEtcArr[i]) - (sumNomalArr[i-1] + sumEtcArr[i-1]);
+				row = sheet.createRow(sheet.getLastRowNum() +1);
+				if(i==4) {
+					cont1Param = new String[]{yearArr[i],  Integer.toString(cntNomalArr[i] + cntEtcArr[i]), f.format(sumNomalArr[i] + sumEtcArr[i]).replaceAll("\\B(?=(\\d{3})+(?!\\d))", ",")};
+					cont1 = String.format(format1_1, cont1Param);
+				} else {
+					cont1Param = new String[]{yearArr[i],  Integer.toString(cntNomalArr[i] + cntEtcArr[i]), f.format(sumNomalArr[i] + sumEtcArr[i]).replaceAll("\\B(?=(\\d{3})+(?!\\d))", ","),
+							  				  yearArr[i-1],  Integer.toString(diffCnt), f.format(diffSum).replaceAll("\\B(?=(\\d{3})+(?!\\d))", ",")};
+					cont1 = String.format(format1_2, cont1Param);
+				}
+				richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+				
+				cell = row.createCell(0);
+				cell.setCellValue(richStr);
+			}
+			
+			// title2
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			font = wb.createFont();
+			font.setFontHeightInPoints((short)10);
+			font.setFontName("맑은 고딕");
+			font.setBold(true);
+			style = wb.createCellStyle();
+			style.setFont(font);
+			cell = row.createCell(0);
+			cell.setCellStyle(style);
+			cell.setCellValue(title2);
+			
+			for(int i=4; i >= 1; i--) {
+				row = sheet.createRow(sheet.getLastRowNum() +1);
+				if(i==4) {
+					cont2_3Param = new String[]{yearArr[i],  "일반수출", Integer.toString(cntNomalArr[i])};
+					cont2_3 = String.format(format2_3, cont2_3Param);
+					richStr = ExcelUtil.getRichTextString(sheet, cont2_3, cont2_3Param, IndexedColors.RED.getIndex());
+				} else {
+					per = (cntNomalArr[i] + cntEtcArr[i]) == 0 ? 0 : new Float(cntNomalArr[i]) / new Float(cntNomalArr[i] + cntEtcArr[i]) * 100;
+					beforePer = (cntNomalArr[i-1] + cntEtcArr[i-1]) == 0 ? 0 : new Float(cntNomalArr[i-1]) / new Float(cntNomalArr[i-1] + cntEtcArr[i-1]) * 100;
+					
+					if(per == beforePer) {
+						cont2_2Param = new String[]{yearArr[i],  "일반수출", Integer.toString(cntNomalArr[i]),  String.format("%.2f", per).concat("%"),
+								yearArr[i-1],  String.format("%.2f", beforePer).concat("%"), "동일"};
+						cont2_2 = String.format(format2_2, cont2_2Param);
+						richStr = ExcelUtil.getRichTextString(sheet, cont2_2, cont2_2Param, IndexedColors.RED.getIndex());
+					} else {
+						cont2_1Param = new String[]{yearArr[i],  "일반수출", Integer.toString(cntNomalArr[i]),  String.format("%.2f", per).concat("%"),
+								yearArr[i-1],  String.format("%.2f", beforePer).concat("%"), per > beforePer ? h : l};
+						cont2_1 = String.format(format2_1, cont2_1Param);
+						richStr = ExcelUtil.getRichTextString(sheet, cont2_1, cont2_1Param, IndexedColors.RED.getIndex());
+					}
+				}
+				
+				cell = row.createCell(0);
+				cell.setCellValue(richStr);
+				
+				row = sheet.createRow(sheet.getLastRowNum() +1);
+				if(i==4) {
+					cont2_3Param = new String[]{yearArr[i],  "기타수출", Integer.toString(cntEtcArr[i])};
+					cont2_3 = String.format(format2_3, cont2_3Param);
+					richStr = ExcelUtil.getRichTextString(sheet, cont2_3, cont2_3Param, IndexedColors.RED.getIndex());
+				} else {
+					per = (cntNomalArr[i] + cntEtcArr[i]) == 0 ? 0 : new Float(cntEtcArr[i]) / new Float(cntNomalArr[i] + cntEtcArr[i]) * 100;
+					beforePer = (cntNomalArr[i-1] + cntEtcArr[i-1]) == 0 ? 0 : new Float(cntEtcArr[i-1]) / new Float(cntNomalArr[i-1] + cntEtcArr[i-1]) * 100;
+					
+					if(per == beforePer) {
+						cont2_2Param = new String[]{yearArr[i],  "기타수출", Integer.toString(cntEtcArr[i]),  String.format("%.2f", per).concat("%"),
+								yearArr[i-1],  String.format("%.2f", beforePer).concat("%"), "동일"};
+						cont2_2 = String.format(format2_2, cont2_2Param);
+						richStr = ExcelUtil.getRichTextString(sheet, cont2_2, cont2_2Param, IndexedColors.RED.getIndex());
+					} else {
+						cont2_1Param = new String[]{yearArr[i],  "기타수출", Integer.toString(cntEtcArr[i]),  String.format("%.2f", per).concat("%"),
+								yearArr[i-1],  String.format("%.2f", beforePer).concat("%"), per > beforePer ? h : l};
+						cont2_1 = String.format(format2_1, cont2_1Param);
+						richStr = ExcelUtil.getRichTextString(sheet, cont2_1, cont2_1Param, IndexedColors.RED.getIndex());
+					}
+				}
+				
+				cell = row.createCell(0);
+				cell.setCellValue(richStr);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet analysis3TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		if(resultList.size() < 1) {
+			return sheet;
+		}
+		
+		String format1 = "%s의 %s ~ %s 기간의 수입내역 중 거래내역이 가장 많은 해외거래처는 %s로 총 %s건, 수입금액은 %s원입니다.";
+		String format2 = "그 밖의 주요 거래처로는 %s, %s 등이 있습니다.";
+		String cont1 = "";
+		String cont2 = "";
+		String[] cont1Param = null;
+		String[] cont2Param = null;
+		EgovMap map = null;
+		XSSFRichTextString richStr = null;
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		
+		try {
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			
+			
+			map = (EgovMap) resultList.get(0);
+			cont1Param = new String[]{userVO.getCmpnyCd(), serarchVo.getSrch2(), serarchVo.getSrch3(),
+									 (String) map.get("supFirm"), (String) map.get("cnt3"), (String) map.get("sum3")};
+			cont1 = String.format(format1, cont1Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+			
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+			
+			if(resultList.size() == 2) {
+				format2 = "그 밖의 주요 거래처로는 %s이 있습니다.";
+				map = (EgovMap) resultList.get(1);
+				cont2 = String.format(format2, map.get("supFirm"));
+				cont2Param = new String[]{(String) map.get("supFirm")};
+			} else if(resultList.size() > 2) {
+				map = (EgovMap) resultList.get(1);
+				String firm1 = (String) map.get("supFirm");
+				
+				map = (EgovMap) resultList.get(2);
+				String firm2 = (String) map.get("supFirm");		
+				
+				cont2 = String.format(format2, firm1, firm2);
+				cont2Param = new String[]{firm1, firm2};
+			}
+			
+			if(resultList.size() > 1) {
+				row = sheet.createRow(sheet.getLastRowNum() +1);
+				richStr = ExcelUtil.getRichTextString(sheet, cont2, cont2Param, IndexedColors.RED.getIndex());
+				cell = row.createCell(0);
+				cell.setCellValue(richStr);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet analysis4TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		if(resultList.size() < 1) {
+			return sheet;
+		}
+		
+		String format1 = "%s의 %s ~ %s 기간의 수출내역 중 거래내역이 가장 많은 해외거래처는 %s로 총 %s건, 수출금액은 %s원입니다.";
+		String format2 = "그 밖의 주요 거래처로는 %s, %s 등이 있습니다.";
+		String cont1 = "";
+		String cont2 = "";
+		String[] cont1Param = null;
+		String[] cont2Param = null;
+		EgovMap map = null;
+		XSSFRichTextString richStr = null;
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		
+		try {
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			
+			
+			map = (EgovMap) resultList.get(0);
+			cont1Param = new String[]{userVO.getCmpnyCd(), serarchVo.getSrch2(), serarchVo.getSrch3(),
+									 (String) map.get("buyFirm"), (String) map.get("cnt3"), (String) map.get("sum3")};
+			cont1 = String.format(format1, cont1Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+			
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+			
+			if(resultList.size() == 2) {
+				format2 = "그 밖의 주요 거래처로는 %s이 있습니다.";
+				map = (EgovMap) resultList.get(1);
+				cont2 = String.format(format2, map.get("buyFirm"));
+				cont2Param = new String[]{(String) map.get("buyFirm")};
+			} else if(resultList.size() > 2) {
+				map = (EgovMap) resultList.get(1);
+				String firm1 = (String) map.get("buyFirm");
+				
+				map = (EgovMap) resultList.get(2);
+				String firm2 = (String) map.get("buyFirm");		
+				
+				cont2 = String.format(format2, firm1, firm2);
+				cont2Param = new String[]{firm1, firm2};
+			}
+			
+			if(resultList.size() > 1) {
+				row = sheet.createRow(sheet.getLastRowNum() +1);
+				richStr = ExcelUtil.getRichTextString(sheet, cont2, cont2Param, IndexedColors.RED.getIndex());
+				cell = row.createCell(0);
+				cell.setCellValue(richStr);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet analysis7TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		if(resultList.size() < 1) {
+			return sheet;
+		}
+		
+		String format1 = "%s의 %s ~ %s 기간의 수출내역 중 외국환신고대상 수출신고는 총 %s건, 수출금액은 %s원입니다.";
+		String format2 = "그 밖의 주요 사유로는 %s건, %s건, %s건입니다.";
+		String cont1 = "";
+		String cont2 = "";
+		String[] cont1Param = null;
+		String[] cont2Param = new String[] {"", "", ""};
+		EgovMap map = null;
+		XSSFRichTextString richStr = null;
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		double totalKrw = 0;
+		int cnt33 = 0;
+		int cnt39 = 0;
+		int cnt100 = 0;
+		
+		NumberFormat f = NumberFormat.getInstance();
+		f.setGroupingUsed(false);
+		
+		try {
+			for(Object result : resultList) {
+				map = (EgovMap) result;
+				String krwStr = (String) map.get("totRptKrw");
+				krwStr = krwStr.replaceAll("\\,", "");
+				totalKrw += Double.parseDouble(krwStr);
+				
+				if("33".equals(map.get("excDivi"))) {
+					cnt33++;
+				} else if("39".equals(map.get("excDivi"))) {
+					cnt39++;
+				} else if("100".equals(map.get("excDivi"))) {
+					cnt100++;
+				}
+			}
+				
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont1Param = new String[]{userVO.getCmpnyCd(), serarchVo.getSrch2(), serarchVo.getSrch3(),
+									  Integer.toString(resultList.size()), f.format(totalKrw).replaceAll("\\B(?=(\\d{3})+(?!\\d))", ",")};
+			cont1 = String.format(format1, cont1Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+			
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+			
+			// 정렬
+			HashMap<String, Integer> sortMap = new HashMap<String, Integer>();
+			sortMap.put("33", cnt33);
+			sortMap.put("39", cnt39);
+			sortMap.put("100", cnt100);
+			
+
+			List<Entry<String, Integer>> list = new ArrayList<Entry<String, Integer>>(sortMap.entrySet());
+
+			Collections.sort(list, new Comparator<Entry<String, Integer>>() {
+				public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+					return o2.getValue().compareTo(o1.getValue());
+				}
+			});
+			
+			for(int i=0; i < list.size(); i++) {
+				Entry<String, Integer> entry = list.get(i);
+				cont2Param[i] = entry.getKey().concat(" ").concat(Integer.toString(entry.getValue()));
+			}
+
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont2 = String.format(format2, cont2Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont2, cont2Param, IndexedColors.RED.getIndex());
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet cost1TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		if(resultList.size() < 1) {
+			return sheet;
+		}
+		
+		String format1 = "%s의 %s ~ %s 기간의 수입신고내역 중 단가변동이 %s 이상인 건인 물품은 자재코드 기준 %s건, 수입신고 기준 %s건입니다.";
+		String format3 = "개별 건에 대한 담당관세사의 추가 자문 또는 컨설팅을 희망하시는 경우 %s를 통해 문의해주시기 바랍니다.";
+		String cont1 = "";
+		String cont2 = "해당 차이의 발생원인은 수입신고 건에 대해서 상이 규격 제품 간 동일 자재코드 사용 또는 무상신고 건과 유상신고 건 간의 단가차이에 의한 것일 수 있습니다.";
+		String cont3 = "";
+		String[] cont1Param = null;
+		String[] cont3Param = null;
+		EgovMap map = null;
+		XSSFRichTextString richStr = null;
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		
+		List<String> rgList = new ArrayList<String>();
+		
+		try {
+			for(Object result : resultList) {
+				map = (EgovMap) result;
+				String rgCode = (String) map.get("rgCode");
+				rgList.add(rgCode);
+			}
+			
+			// 중복제거
+			Set<String> set = new HashSet<String>(rgList);         
+			rgList = new ArrayList<String>(set);
+				
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont1Param = new String[]{userVO.getCmpnyCd(), serarchVo.getSrch2(), serarchVo.getSrch3(), serarchVo.getSrch4().concat("%"),
+									  Integer.toString(rgList.size()), Integer.toString(resultList.size())};
+			cont1 = String.format(format1, cont1Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+			
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cell = row.createCell(0);
+			cell.setCellValue(cont2);
+
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont3Param = new String[]{"담당관세사 연락처"};
+			cont3 = String.format(format3, cont3Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont3, cont3Param, IndexedColors.BLACK.getIndex());
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet cost2TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		if(resultList.size() < 1) {
+			return sheet;
+		}
+		
+		String format1 = "%s의 %s ~ %s 기간의 수입신고내역 중 유상, 무상 결제방식이 혼용된 자재코드는 총 %s종으로 수입신고기준 %s건입니다.";
+		String format3 = "개별 건에 대한 담당관세사의 추가 자문 또는 컨설팅을 희망하시는 경우 %s를 통해 문의해주시기 바랍니다.";
+		String cont1 = "";
+		String cont2 = "무상거래의 단가가 유상거래의 단가보다 낮은 경우, 세관심사 시 소명 필요성이 발생할 수 있습니다.";
+		String cont3 = "";
+		String[] cont1Param = null;
+		String[] cont3Param = null;
+		EgovMap map = null;
+		XSSFRichTextString richStr = null;
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		
+		List<String> rgList = new ArrayList<String>();
+		
+		try {
+			for(Object result : resultList) {
+				map = (EgovMap) result;
+				String rgCode = (String) map.get("rgCode");
+				rgList.add(rgCode);
+			}
+			
+			// 중복제거
+			Set<String> set = new HashSet<String>(rgList);         
+			rgList = new ArrayList<String>(set);
+				
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont1Param = new String[]{userVO.getCmpnyCd(), serarchVo.getSrch2(), serarchVo.getSrch3(),
+									  Integer.toString(rgList.size()), Integer.toString(resultList.size())};
+			cont1 = String.format(format1, cont1Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+			
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cell = row.createCell(0);
+			cell.setCellValue(cont2);
+
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont3Param = new String[]{"담당관세사 연락처"};
+			cont3 = String.format(format3, cont3Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont3, cont3Param, IndexedColors.BLACK.getIndex());
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet cost3TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		if(resultList.size() < 1) {
+			return sheet;
+		}
+		
+		String format1 = "%s의 %s ~ %s 기간의 수입신고내역 중 결재통화가 혼용된 자재코드는 총 %s종으로 수입신고기준 %s건입니다.";
+		String format3 = "개별 건에 대한 담당관세사의 추가 자문 또는 컨설팅을 희망하시는 경우 %s를 통해 문의해주시기 바랍니다.";
+		String cont1 = "";
+		String cont2 = "무상거래의 단가가 유상거래의 단가보다 낮은 경우, 세관심사 시 소명 필요성이 발생할 수 있습니다.";
+		String cont3 = "";
+		String[] cont1Param = null;
+		String[] cont3Param = null;
+		EgovMap map = null;
+		XSSFRichTextString richStr = null;
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		
+		List<String> rgList = new ArrayList<String>();
+		
+		try {
+			for(Object result : resultList) {
+				map = (EgovMap) result;
+				String rgCode = (String) map.get("rgCode");
+				rgList.add(rgCode);
+			}
+			
+			// 중복제거
+			Set<String> set = new HashSet<String>(rgList);         
+			rgList = new ArrayList<String>(set);
+				
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont1Param = new String[]{userVO.getCmpnyCd(), serarchVo.getSrch2(), serarchVo.getSrch3(),
+									  Integer.toString(rgList.size()), Integer.toString(resultList.size())};
+			cont1 = String.format(format1, cont1Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+			
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cell = row.createCell(0);
+			cell.setCellValue(cont2);
+
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont3Param = new String[]{"담당관세사 연락처"};
+			cont3 = String.format(format3, cont3Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont3, cont3Param, IndexedColors.BLACK.getIndex());
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet etc1TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		if(resultList.size() < 1) {
+			return sheet;
+		}
+		
+		String format1 = "%s의 %s ~ %s 기간의 동일 자재코드 중 상이한 세번으로 신고된 자재코드는 %s종이며, 수입신고 기준 %s건입니다.";
+		String format3 = "해당 건에 대한 담당관세사의 추가 자문 또는 컨설팅을 희망하시는 경우 %s를 통해 문의해주시기 바랍니다.";
+		String cont1 = "";
+		String cont2 = "해당 차이의 발생원인은 소매품에 대한 자재코드를 활용하거나, 해외거래처의 차이 등에 의한 것일 수 있습니다.";
+		String cont3 = "";
+		String[] cont1Param = null;
+		String[] cont3Param = null;
+		EgovMap map = null;
+		XSSFRichTextString richStr = null;
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		
+		List<String> rgList = new ArrayList<String>();
+		
+		try {
+			for(Object result : resultList) {
+				map = (EgovMap) result;
+				String rgCode = (String) map.get("rgCode");
+				rgList.add(rgCode);
+			}
+			
+			// 중복제거
+			Set<String> set = new HashSet<String>(rgList);         
+			rgList = new ArrayList<String>(set);
+				
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont1Param = new String[]{userVO.getCmpnyCd(), serarchVo.getSrch2(), serarchVo.getSrch3(),
+									  Integer.toString(rgList.size()), Integer.toString(resultList.size())};
+			cont1 = String.format(format1, cont1Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+			
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cell = row.createCell(0);
+			cell.setCellValue(cont2);
+
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont3Param = new String[]{"담당관세사 연락처"};
+			cont3 = String.format(format3, cont3Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont3, cont3Param, IndexedColors.BLACK.getIndex());
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet etc2TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		if(resultList.size() < 1) {
+			return sheet;
+		}
+		
+		String format1 = "%s의 %s ~ %s 기간의 동일 자재코드 중 상이한 관세율을 사용한 건은 %s종이며, 수입신고 기준 %s건입니다.";
+		String format3 = "해당 건에 대한 담당관세사의 추가 자문 또는 컨설팅을 희망하시는 경우 %s를 통해 문의해주시기 바랍니다.";
+		String cont1 = "";
+		String cont2 = "해당 차이의 발생원인은 FTA세율 누락 또는 해외거래처의 차이 등에 의한 것일 수 있습니다.";
+		String cont3 = "";
+		String[] cont1Param = null;
+		String[] cont3Param = null;
+		EgovMap map = null;
+		XSSFRichTextString richStr = null;
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		
+		List<String> rgList = new ArrayList<String>();
+		
+		try {
+			for(Object result : resultList) {
+				map = (EgovMap) result;
+				String rgCode = (String) map.get("rgCode");
+				rgList.add(rgCode);
+			}
+			
+			// 중복제거
+			Set<String> set = new HashSet<String>(rgList);         
+			rgList = new ArrayList<String>(set);
+				
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont1Param = new String[]{userVO.getCmpnyCd(), serarchVo.getSrch2(), serarchVo.getSrch3(),
+									  Integer.toString(rgList.size()), Integer.toString(resultList.size())};
+			cont1 = String.format(format1, cont1Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+			
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cell = row.createCell(0);
+			cell.setCellValue(cont2);
+
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont3Param = new String[]{"담당관세사 연락처"};
+			cont3 = String.format(format3, cont3Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont3, cont3Param, IndexedColors.BLACK.getIndex());
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet etc3TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		if(resultList.size() < 1) {
+			return sheet;
+		}
+		
+		String format1 = "%s의 %s ~ %s 기간의 동일 해외거래처 중 관세감면의 적용 여부가 상이한 건은 %s종이며, 수입신고 기준 %s건입니다.";
+		String format3 = "해당 건에 대한 담당관세사의 추가 자문 또는 컨설팅을 희망하시는 경우 %s를 통해 문의해주시기 바랍니다.";
+		String cont1 = "";
+		String cont2 = "해당 차이의 발생원인은 일회성 감면적용 건 또는 감면신고 누락에 의한 것일 수 있습니다.";
+		String cont3 = "";
+		String[] cont1Param = null;
+		String[] cont3Param = null;
+		EgovMap map = null;
+		XSSFRichTextString richStr = null;
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		
+		List<String> firmList = new ArrayList<String>();
+		
+		try {
+			for(Object result : resultList) {
+				map = (EgovMap) result;
+				String supFirm = (String) map.get("supFirm");
+				firmList.add(supFirm);
+			}
+			
+			// 중복제거
+			Set<String> set = new HashSet<String>(firmList);         
+			firmList = new ArrayList<String>(set);
+				
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont1Param = new String[]{userVO.getCmpnyCd(), serarchVo.getSrch2(), serarchVo.getSrch3(),
+									  Integer.toString(firmList.size()), Integer.toString(resultList.size())};
+			cont1 = String.format(format1, cont1Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+			
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cell = row.createCell(0);
+			cell.setCellValue(cont2);
+
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont3Param = new String[]{"담당관세사 연락처"};
+			cont3 = String.format(format3, cont3Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont3, cont3Param, IndexedColors.BLACK.getIndex());
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+
+	@Override
+	public XSSFSheet etc4TopSummary(List<?> resultList, XSSFSheet sheet, SearchVO serarchVo, UserSessionVO userVO) throws Exception {
+		if(resultList.size() < 1) {
+			return sheet;
+		}
+		
+		String format1 = "%s의 %s ~ %s 기간의 수입신고 건 중 FTA직접운송원칙 불충족 우려 신고 건은 %s건입니다.";
+		String format3 = "해당 건에 대한 담당관세사의 추가 자문 또는 컨설팅을 희망하시는 경우 %s를 통해 문의해주시기 바랍니다.";
+		String cont1 = "";
+		String cont2 = "해당 차이의 발생원인은 운송과정 중 환적에 의한 것일 수 있습니다. BL 등 운송서류 또는 경유국의 비가공증명서 보유여부를 확인해야합니다.";
+		String cont3 = "";
+		String[] cont1Param = null;
+		String[] cont3Param = null;
+		EgovMap map = null;
+		XSSFRichTextString richStr = null;
+		XSSFRow row = null;
+		XSSFCell cell = null;
+		
+		
+		try {
+			sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont1Param = new String[]{userVO.getCmpnyCd(), serarchVo.getSrch2(), serarchVo.getSrch3(), Integer.toString(resultList.size())};
+			cont1 = String.format(format1, cont1Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont1, cont1Param, IndexedColors.RED.getIndex());
+			
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+			
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cell = row.createCell(0);
+			cell.setCellValue(cont2);
+
+			row = sheet.createRow(sheet.getLastRowNum() +1);
+			cont3Param = new String[]{"담당관세사 연락처"};
+			cont3 = String.format(format3, cont3Param);
+			richStr = ExcelUtil.getRichTextString(sheet, cont3, cont3Param, IndexedColors.BLACK.getIndex());
+			cell = row.createCell(0);
+			cell.setCellValue(richStr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sheet;
+		}
+		
+		return sheet;
+	}
+}

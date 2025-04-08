@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.rpt.service.impl.deadLineMapper">
+
+	<select id="selectImportdeadLineList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    blno AS blNo, 
+		    CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8)) AS rptNo, 
+		    a.nab_firm, 
+		    CASE 
+		        WHEN a.lev_form = '43' THEN CONCAT('월별 납부 (', a.lev_form, ')') 
+		        WHEN a.lev_form = '11' THEN CONCAT('사전 납부 (', a.lev_form, ')') 
+		        WHEN a.lev_form = '13' THEN CONCAT('사후 납부 (', a.lev_form, ')') 
+		        WHEN a.lev_form = '14' THEN CONCAT('사후 납부 (', a.lev_form, ')') 
+		        ELSE CONCAT('(', a.lev_form, ')') 
+		    END AS levForm, 
+		    CASE 
+		        WHEN a.lev_form = '43'
+		        THEN LAST_DAY(DATE_ADD(a.lis_day, INTERVAL 15 DAY))
+		            <!-- CASE 
+		                WHEN DAY(a.lis_day)  <![CDATA[>=]]> 15 OR DAY(LAST_DAY(a.lis_day)) - 14 &lt; DAY(a.lis_day) OR MONTH(DATE_SUB(LAST_DAY(a.lis_day), INTERVAL 14 DAY)) != MONTH(a.lis_day) THEN DATE_FORMAT(DATE_SUB(LAST_DAY(DATE_ADD(a.lis_day, INTERVAL 1 MONTH)), INTERVAL 14 DAY), '%Y-%m-%d') 
+		                ELSE DATE_FORMAT(DATE_SUB(LAST_DAY(a.lis_day), INTERVAL 14 DAY), '%Y-%m-%d') 
+		            END --> 
+		         WHEN a.lev_form IN ('13','14') THEN DATE_FORMAT(F.NAB_DAY,'%Y-%m-%d') 
+		        ELSE DATE_FORMAT(DATE_ADD(a.lis_day, INTERVAL 15 DAY), '%Y-%m-%d') 
+		    END AS date1, -- 납부기한 
+			CASE 
+			    WHEN a.lev_form = '11' THEN  IFNULL(DATE_FORMAT(STR_TO_DATE(c.nabday, '%y%m%d'), '%Y-%m-%d'), '-')
+			    WHEN a.lev_form IN ('13','14') THEN IFNULL(DATE_FORMAT(STR_TO_DATE(c.nabday, '%y%m%d'), '%Y-%m-%d'), '-')
+			    WHEN a.lev_form = '43' THEN IFNULL(DATE_FORMAT(z.nabday, '%Y-%m-%d'), '-')
+			ELSE IFNULL(DATE_FORMAT(STR_TO_DATE(c.nabday, '%y%m%d'), '%Y-%m-%d'), '-')
+				END AS date2, -- 납부일자
+		    CASE 
+		        WHEN a.Fod_Mark IN (SELECT cmmn_cd FROM cmmn_cd WHERE GRP_CD = 'FTANATION') AND IFNULL(b.FTACNT, 0) > 0 AND a.lis_day != '' THEN DATE_FORMAT(DATE_ADD(DATE_ADD(a.lis_day, INTERVAL 1 YEAR), INTERVAL -1 DAY), '%Y-%m-%d') 
+		        ELSE '-' 
+		    END AS FTA, 
+		    CASE 
+		        WHEN LOCATE('재수출이행', cus_notice) = 0 THEN '-' 
+		        ELSE CONCAT(SUBSTRING(cus_notice, LOCATE('재수출이행', cus_notice) + 14, 4), '-', SUBSTRING(cus_notice, LOCATE('재수출이행', cus_notice) + 18, 2), '-', SUBSTRING(cus_notice, LOCATE('재수출이행', cus_notice) + 20, 2)) 
+		    END AS date3, 
+		    IFNULL(DATE_FORMAT(a.rpt_day, '%Y-%m-%d'), '-') AS rptDay, -- '신고일자' 
+		    IFNULL(DATE_FORMAT(a.lis_day, '%Y-%m-%d'), '-') AS lisDay, -- '수리일자' 
+		    '-' AS banIpDay, <!-- 반입일자 -->
+		    '-' AS date4, <!--수입신고기한  -->
+		    CASE 
+		        WHEN a.lis_day = '' THEN '-' 
+		        ELSE DATE_FORMAT(DATE_ADD(a.lis_day, INTERVAL 30 DAY), '%Y-%m-%d') 
+		    END AS date5, 
+		    CASE 
+		        WHEN a.lis_day = '' THEN '-' 
+		        ELSE DATE_FORMAT(DATE_ADD(a.lis_day, INTERVAL 6 MONTH), '%Y-%m-%d') 
+		    END AS date6, 
+		    CASE 
+		        WHEN a.lis_day = '' THEN '-' 
+		        ELSE DATE_FORMAT(DATE_ADD(a.lis_day, INTERVAL 30 DAY), '%Y-%m-%d') 
+		    END AS date7, 
+		    IFNULL(c9_4, '-') AS date8,
+		    CASE 
+		    WHEN SUBSTRING(a.Rpt_No,1,5) IN ('40084', '42836', '44648', '44013', '44804') THEN '신한관세법인'
+		    ELSE '타관세법인' END AS reporter,
+		    po_no AS po,
+		    CONCAT(a.Mrn,a.Msn,a.Hsn) AS cargMtNo, <!-- 화물관리번호 -->
+		    A.Tg_Pln_Mark AS tgPlnMark, <!-- 통관계획 부호 --> 
+		    A.Tg_Pln_Cot AS tgPlnCot <!-- 통관계획 설명 -->
+		FROM 
+		    cusdec929a1 a 
+		LEFT OUTER JOIN ( 
+		    SELECT SNA1, Rpt_No, COUNT(*) FTACNT 
+		    FROM cusdec929b1 bb 
+		    WHERE bb.ori_st_mark1 IN (SELECT cmmn_cd FROM cmmn_cd WHERE GRP_CD = 'FTANATION') 
+		        AND bb.gs_rate != 0 
+		        AND bb.gs_divi NOT LIKE 'F%' 
+		    GROUP BY SNA1, Rpt_No 
+		) b ON a.SN = b.SNA1 AND a.Rpt_No = b.Rpt_No 
+		LEFT OUTER JOIN vatbil5fv c ON a.rpt_no = c.impno 
+		LEFT OUTER JOIN cusval934 d ON a.rpt_no = d.rpt_no 
+		LEFT JOIN cusdec929nb f ON a.branch = f.branch AND a.cus_prg = f.cus_prg AND a.rpt_no = f.cd
+		LEFT JOIN vatbil5fzb1 Z ON a.branch = z.branch AND a.cus_prg = z.cus_prg AND a.RPT_NO = z.IMPCD 
+		WHERE
+			1 = 1
+			AND a.rpt_seq = '00'
+		 	AND a.nab_sdno = #{srch40}
+			<!--  AND a.nab_sdno = '1018672913' -->
+			<!-- AND LEFT(a.Rpt_No, 5) IN ('40084', '42836', '44648', '44013', '44804') -->
+		    <if test="srch4 != null and srch4 != ''">
+              AND a.rpt_no LIKE CONCAT('%', UPPER(REPLACE(REPLACE(#{srch4}, '.', ''), '-', '')), '%')
+           </if>
+           <if test="srch5 != null and srch5 != ''">
+              AND blno LIKE CONCAT('%', UPPER(REPLACE(REPLACE(#{srch5}, '.', ''), '-', '')), '%')
+           </if>
+           <if test="srch7 != null and srch7 != ''">
+              AND  po_no LIKE CONCAT(UPPER(REPLACE(REPLACE(#{srch7}, '.', ''), '-', '')),'%')
+           </if> 
+		 <choose>
+		        <when test="srch10 == 'LisDay'">
+		        <!-- 신고일자 -->
+		            AND a.rpt_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		        </when>
+		        <otherwise>
+		          <!--수리일자  -->
+		           AND a.lis_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		        </otherwise>
+	    </choose> 
+	   	 ORDER BY a.rpt_day DESC, a.rpt_no DESC 
+		
+	
+	</select>
+	
+	<select id="selectImportdeadLineListCnt" parameterType="searchVO" resultType="int">
+		SELECT 
+		    COUNT(*)
+		FROM 
+		    cusdec929a1 a 
+		LEFT OUTER JOIN ( 
+		    SELECT SNA1, Rpt_No, COUNT(*) FTACNT 
+		    FROM cusdec929b1 bb 
+		    WHERE bb.ori_st_mark1 IN (SELECT cmmn_cd FROM cmmn_cd WHERE GRP_CD = 'FTANATION') 
+		        AND bb.gs_rate != 0 
+		        AND bb.gs_divi NOT LIKE 'F%' 
+		    GROUP BY SNA1, Rpt_No 
+		) b ON a.SN = b.SNA1 AND a.Rpt_No = b.Rpt_No 
+		LEFT OUTER JOIN vatbil5fv c ON a.rpt_no = c.impno 
+		LEFT OUTER JOIN cusval934 d ON a.rpt_no = d.rpt_no 
+		LEFT JOIN cusdec929nb f ON a.branch = f.branch AND a.cus_prg = f.cus_prg AND a.rpt_no = f.cd
+		LEFT JOIN vatbil5fzb1 Z ON a.branch = z.branch AND a.cus_prg = z.cus_prg AND a.RPT_NO = z.IMPCD 
+		WHERE
+			1 = 1
+			AND a.rpt_seq = '00'
+		 	AND a.nab_sdno = #{srch40}
+			<!--  AND a.nab_sdno = '1018672913' -->
+			<!-- AND LEFT(a.Rpt_No, 5) IN ('40084', '42836', '44648', '44013', '44804') -->
+		    <if test="srch4 != null and srch4 != ''">
+              AND a.rpt_no LIKE CONCAT('%', UPPER(REPLACE(REPLACE(#{srch4}, '.', ''), '-', '')), '%')
+           </if>
+           <if test="srch5 != null and srch5 != ''">
+              AND blno LIKE CONCAT('%', UPPER(REPLACE(REPLACE(#{srch5}, '.', ''), '-', '')), '%')
+           </if>
+          <!--  <if test="srch7 != null and srch7 != ''">
+              AND po번호 작성예정 LIKE CONCAT(UPPER(REPLACE(REPLACE(#{srch7}, '.', ''), '-', '')),'%')
+           </if> -->
+		 <choose>
+		        <when test="srch10 == 'LisDay'">
+		        <!-- 신고일자 -->
+		            AND a.rpt_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		        </when>
+		        <otherwise>
+		          <!--수리일자  -->
+		           AND a.lis_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		        </otherwise>
+	    </choose> 
+	</select>
+	
+	<select id="selectExportdeadLineList" parameterType="searchVO" resultType="egovMap">
+		SELECT *
+          FROM(
+             SELECT 
+                   CONCAT(
+				        SUBSTRING(A.rpt_no, 1, 5), '-', 
+				        SUBSTRING(A.rpt_no, 6, 2), '-', 
+				        SUBSTRING(A.rpt_no, 8)
+				    ) AS rptNo, -- '신고번호',                   
+                 (SELECT  B.mg_code FROM cusdec830b1 B WHERE  A.sn = B.sna1 LIMIT 1) as mg_code, -- 송품장번호
+                  CONCAT('[', ta_st_iso, ']', ta_st_isonm) AS nation,  -- 목적국
+                  IFNULL(DATE_FORMAT(a.rpt_day, '%Y-%m-%d'), '-') AS rptDay, -- '신고일자' 
+                  IFNULL(DATE_FORMAT(exp_lis_day, '%Y-%m-%d'), '-') AS explisDay, -- '수리일자' 
+                  IFNULL(DATE_FORMAT(ship_day, '%Y-%m-%d'), '-') AS shipDay, -- '선적일자' 
+                  IFNULL(DATE_FORMAT(Juk_Day, '%Y-%m-%d'), '-') AS jukDay, -- '선적일자기한' 
+                  CASE 
+				  WHEN SUBSTRING(a.Rpt_No,1,5) IN ('40084', '42836', '44648', '44013', '44804') THEN '신한관세법인'
+				  ELSE '타관세법인' END AS reporter
+             FROM cusdec830a1 A
+             LEFT OUTER JOIN cusdec830b1 f ON A.sn = f.sna1
+              WHERE A.rpt_seq = '00'
+              AND a.Exp_sdno = #{srch40} 
+              <if test="srch6 != null and srch6 != ''">
+              AND  f.mg_code LIKE CONCAT('%', UPPER(#{srch6}), '%')
+             </if>
+              <!-- AND a.Exp_sdno = '1018672913' -->
+              <!-- AND LEFT(a.Rpt_No, 5) in ('40084','42836','44648','44013','44804') -->
+              and LENGTH(a.Exp_Lis_Day) = 8
+              <if test="srch4 != null and srch4 != ''">
+              AND A.rpt_no LIKE CONCAT('%', UPPER(REPLACE(REPLACE(#{srch4}, '.', ''), '-', '')), '%')
+             </if>
+              
+             <!-- so 번호  
+             <if test="srch8 != null and srch8 != ''">
+              AND  B.mg_code LIKE CONCAT('%', UPPER(REPLACE(REPLACE(#{srch6}, '.', ''), '-', '')), '%')
+             </if> -->
+          ) B
+          WHERE 1 =1
+          
+          <!--  <if test="srch7 != null and srch7 != ''">
+              AND po번호 작성예정 LIKE CONCAT(UPPER(REPLACE(REPLACE(#{srch7}, '.', ''), '-', '')),'%')
+           </if> -->
+		 <choose>
+		        <when test="srch10 == 'LisDay'">
+		        <!-- 신고일자 -->
+		           AND rptDay BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		        </when>
+		        <otherwise>
+		          <!--수리일자  -->
+		           AND explisDay BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		        </otherwise>
+	    </choose> 
+	   	 ORDER BY rptDay DESC
+	</select>
+	
+	<select id="selectExportdeadLineListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+          FROM(
+             SELECT 
+                   CONCAT(
+				        SUBSTRING(A.rpt_no, 1, 5), '-', 
+				        SUBSTRING(A.rpt_no, 6, 2), '-', 
+				        SUBSTRING(A.rpt_no, 8)
+				    ) AS rptNo, -- '신고번호',                   
+                 (SELECT  B.mg_code FROM cusdec830b1 B WHERE  A.sn = B.sna1 LIMIT 1) as mg_code, -- 송품장번호
+                  CONCAT('[', ta_st_iso, ']', ta_st_isonm) AS nation,  -- 목적국
+                  DATE_FORMAT(IFNULL(A.rpt_day, ''), '%Y-%m-%d') AS rptDay,  -- 신고일자
+					   DATE_FORMAT(IFNULL(exp_lis_day, ''), '%Y-%m-%d') AS explisDay,  -- 수리일자             
+                  DATE_FORMAT(IFNULL(ship_day, ''), '%Y-%m-%d') AS shipDay,   -- 선적일자              
+                 DATE_FORMAT(IFNULL(Juk_Day, ''), '%Y-%m-%d') AS jukDay --  선적일자기한
+             FROM cusdec830a1 A
+             LEFT OUTER JOIN cusdec830b1 f ON A.sn = f.sna1
+              WHERE A.rpt_seq = '00'
+              AND a.Exp_sdno = #{srch40} 
+              <if test="srch6 != null and srch6 != ''">
+              AND  f.mg_code LIKE CONCAT('%', UPPER(#{srch6}), '%')
+             </if>
+              <!-- AND a.Exp_sdno = '1018672913' -->
+              <!-- AND LEFT(a.Rpt_No, 5) in ('40084','42836','44648','44013','44804') -->
+              and LENGTH(a.Exp_Lis_Day) = 8
+              <if test="srch4 != null and srch4 != ''">
+              AND A.rpt_no LIKE CONCAT('%', UPPER(REPLACE(REPLACE(#{srch4}, '.', ''), '-', '')), '%')
+             </if>
+              
+             <!-- so 번호  
+             <if test="srch8 != null and srch8 != ''">
+              AND  B.mg_code LIKE CONCAT('%', UPPER(REPLACE(REPLACE(#{srch6}, '.', ''), '-', '')), '%')
+             </if> -->
+          ) B
+          WHERE 1 =1
+          
+          <!--  <if test="srch7 != null and srch7 != ''">
+              AND po번호 작성예정 LIKE CONCAT(UPPER(REPLACE(REPLACE(#{srch7}, '.', ''), '-', '')),'%')
+           </if> -->
+		 <choose>
+		        <when test="srch10 == 'LisDay'">
+		        <!-- 신고일자 -->
+		           AND rptDay BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		        </when>
+		        <otherwise>
+		          <!--수리일자  -->
+		           AND explisDay BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		        </otherwise>
+	    </choose> 
+	   	 ORDER BY rptDay DESC
+	</select>
+</mapper>

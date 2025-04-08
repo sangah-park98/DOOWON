@@ -1,0 +1,330 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ page import="java.util.Date" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%
+    Date today = new Date();
+    SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
+%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<script src="/pf/js/dash/dashboard.js?v=<%=fmt.format(today)%>"  charset="UTF-8"></script>
+<script src="/pf/js/function.js"></script>
+<style>
+	<meta charset="UTF-8" />
+	
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+
+
+	
+	<script src="/pf/js/dash/dashboard.js?v=<%=fmt.format(today)%>"  charset="UTF-8"></script>
+	<script src="/pf/js/function.js"></script>
+	
+	
+	
+	
+		<!-- 메인 대시보트 차트 js -->
+<!-- 	<script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.0/jspdf.plugin.autotable.min.js"></script>
+	<script type="text/javascript" src="/pf/js/pdfReport/jspdf.js"></script>
+	<script type="text/javascript" src="/pf/js/pdfReport/auto_table.js"></script>
+	<script type="text/javascript" src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+	<script type="text/javascript" src="/pf/js/pdfReport/fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js" integrity="sha512-VKjwFVu/mmKGk0Z0BxgDzmn10e590qk3ou/jkmRugAkSTMSIRkd4nEnk+n7r5WBbJquusQEQjBidrBD3IQQISQ==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.14/jspdf.plugin.autotable.min.js" integrity="sha512-m4dz/cB+GDbGitRXh/Ppt8vsDpD2nqhviX1eoD7wgu3xSO2B9EUKjZKsZLbmyUS0d43vLzakJcPFzxi7eHlmBw==" crossorigin="anonymous"></script>
+	<script type="text/javascript" src="/pf/js/pdfReport/reportPdfList.js"></script> -->
+	<!-- <script type="text/javascript" src="/pf/js/pdfReport/reportPdfHtml.js"></script> -->
+	
+	<style>
+	
+	#sumDate {
+		text-align:center;
+	}
+	#monthSelect{
+		height:20px;
+		width:90px;
+	   	padding: 1px; /* 셀렉트 박스의 안쪽 여백을 설정합니다. */
+	   	font-size: 14px; /* 텍스트 크기를 설정합니다. */
+	}
+ 	body {
+    	margin: 0;
+  		padding: 0;
+  		height : 100%;
+    }
+    #myChart{
+    	width: 100%;
+    }
+    #dashHead1 th {
+   		border: 1px solid white;
+	}
+</style>
+</head>
+
+<body class="text-left" id="dashboard">
+	  <main class="w-full h-full flex flex-col items-center justify-between relative overflow-hidden">
+    <!-- Income & Outcome Dashboard Section -->
+<section class="p-2 text-lg w-full h-full flex flex-col justify-between shrink overflow-hidden z-0">
+ 	<div class="flex items-center justify-between mb-2 px-2 gap-4 w-full shrink-0">
+      	<div class="flex items-center gap-1 w-full justify-start">
+        	<h2 class="font-semibold text-slate-800 truncate flex items-center justify-start gap-2 text-xl shrink-0"><i
+            	class="fa-duotone fa-chart-network text-primary-900">
+            </i>${view}</h2>
+        </div>
+       	<div class="flex items-center gap-1 w-full justify-end">
+	       	<select id="dashbordDate" name ="dashbordDate" class="form-control text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-40 ps-10 py-1 px-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"></select>
+       		<!-- <input type="text" class="form-control band-calendar text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-40 ps-10 py-1 px-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+				id="dashbordDate" namjavascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" 
+				onkeyUp="fn_dateInputForm($(this))"
+				placeholder="기준일자" autocomplete="off" readonly> -->
+			<button type="button" onclick="fn_dashSrch()"
+        			class="text-white bg-primary-700 hover:bg-secondary-800 border border-primary-700 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1 focus:outline-none duration-300 row-start-1">
+        		<i class="fa-regular fa-search mr-1"></i>
+        		${srch}
+      		</button>
+      		<button type="button" id = "reportAnalysis"
+        			class="text-white bg-primary-700 hover:bg-secondary-800 border border-primary-700 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1 focus:outline-none duration-300 row-start-1">
+        		<i class="fa-duotone fa-display-chart-up-circle-currency"></i>
+        	 	 ${reportAnalysis}
+      		</button>
+       </div>
+     </div>
+      <!-- Contents -->
+     <div class="w-full h-full grid grid-rows-[minmax(16rem,auto)_12rem] grid-cols-12 gap-x-2 gap-y-2 justify-between p-2 border rounded-xl text-slate-800 overflow-hidden">
+        <!-- Status 1 -->
+        <div class="row-span-2 col-span-6 flex flex-col items-start justify-start">
+       	<div class="flex items-center gap-1 w-full justify-between">
+          <h3 class="font-semibold my-2 truncate flex items-center gap-1 shrink-0 w-50">
+            <i class="fa-regular fa-diagram-project"></i>${declarationView}</h3>
+        </div>
+            <div class="w-full overflow-auto">
+            <table class="dashboard-table w-full">
+              <thead id="dashHead1" style=" position: sticky; top: 0;">
+				<tr>
+					<th rowspan="2">${yrMonth}</th>    
+					<th colspan="3">${imp}</th>    
+					<th colspan="2">${exp}</th>
+				</tr>
+				<tr>
+					<th>${cnt}</th> <!-- 건수 -->
+					<th>${taxPaid}</th> <!-- 납부세액(KRW) -->
+					<th>${dutiableVal}</th> <!-- 과세가격(KRW) -->
+					<th>${cnt}</th>    
+					<th>${expVal}</th> <!-- 수출가격(KRW) -->
+				</tr>
+              </thead>
+              <tbody id="dashInfo1"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- KPI Report -->
+        <div class="row-start-1 col-span-6 col-start-7 flex flex-col items-start justify-start">
+         <div class="flex items-center gap-1 w-full justify-between">
+          <h3 class="font-semibold my-2 truncate flex items-center gap-1 shrink-0">
+            <i class="fa-regular fa-chart-line-up"></i>${impExpGrape}</h3>
+         <ul id="chartType" class="relative flex flex-wrap -m-1 gap-1" style="text-align:center;">
+          <li onclick="fn_rptType('02');" class="status-tab-imp active relative inline-flex items-center justify-center gap-1 font-medium leading-5 rounded-full px-3 py-1 border border-slate-200 hover:border-slate-300 shadow-sm bg-primary-50 text-slate-500 duration-150 ease-in-out cursor-pointer">
+            <i class="fa-duotone fa-box-open-full mr-1"></i>${imp}
+          </li>         
+          <li onclick="fn_rptType('01');" class="status-tab-exp relative inline-flex items-center justify-center gap-1 font-medium leading-5 rounded-full px-3 py-1 border border-slate-200 hover:border-slate-300 shadow-sm bg-primary-50 text-slate-500 duration-150 ease-in-out cursor-pointer">
+            <i class="fa-duotone fa-box-taped mr-1"></i>${exp}
+          </li>
+        </ul>
+        </div>
+            
+            <div class="w-full h-[255px] overflow-auto">
+		           <div class="myChartClass" >
+		          	<canvas id="myChart" style="height:220px;"></canvas>
+		          </div>
+          </div>
+        </div>
+
+        <!-- Todo List -->
+        <c:choose>
+		<c:when test="${lang ne 'en'}">
+	        <div class="row-start-2 col-span-6 col-start-7 flex flex-col items-start justify-start">
+	            <h3 class="font-semibold my-2 truncate flex items-center gap-1 shrink-0 w-full">
+	                <i class="fa-regular fa-list"></i>${customsBroker}
+	            </h3>
+	            <div class="w-full h-hull overflow-auto">
+	                <table class="dashboard-table w-full">
+	                    <thead style="position: sticky; top: 0;">
+	                        <tr>
+	                            <th>${task}</th>
+	                            <th>${name}</th>
+	                            <th>${email}</th>
+	                            <th>${phnNo}</th>
+	                        </tr>
+	                    </thead>
+	                    <tbody id="dashManagerInfo"></tbody>
+	                </table>
+	            </div>
+	        </div>
+		</c:when>
+    	<c:otherwise>
+	        <div class="row-start-2 col-span-6 col-start-7 flex flex-col items-start justify-start">
+	            <h3 class="font-semibold my-2 truncate flex items-center gap-1 shrink-0 w-full">
+	                <i class="fa-regular fa-list"></i>${customsBroker}
+	            </h3>
+	            <div class="w-full h-hull overflow-auto">
+	                <table class="dashboard-table w-full">
+	                    <thead style="position: sticky; top: 0;">
+	                        <tr>
+	                            <th>${task}</th>
+	                            <th>${email}</th>
+	                            <th>${phnNo}</th>
+	                        </tr>
+	                    </thead>
+	                    <tbody id="dashManagerInfo"></tbody>
+	                </table>
+	            </div>
+	        </div>
+    	</c:otherwise>
+	</c:choose>
+  </div>
+</section>
+    <!-- News & Notice Section -->
+    <c:if test="${lang ne 'en'}">
+    <section class="p-2 grid grid-cols-12 gap-x-6 gap-y-4 w-full shrink-0 text-base">
+      <!-- Notice Section -->
+      <div class="col-span-6">
+        <div class="flex items-center justify-between mb-2 px-2">
+          <h2 class="grow font-semibold text-slate-800 dark:text-slate-100 truncate flex items-center justify-start gap-2 text-lg">
+            <i class="fa-duotone fa-bullhorn text-primary-900"></i>${notice}</h2>
+          <button onclick="go_notice()" class="shrink-0 text-primary-900 hover:text-primary-700 dark:hover:text-primary-400 ml-2">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 16 16">
+              <path
+                  d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z"/>
+            </svg>
+          </button>
+        </div>
+        <!-- Card -->
+        <ul class="bg-white dark:bg-slate-800 shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
+       	 <c:forEach var="notice" items="${noticeList}">
+            <li class="px-3 py-1 border-b first:pt-2 last:pb-2" >
+              <a href="#" class="flex items-end justify-between gap-2 w-full group/article">
+                <p class="flex items-center justify-start gap-1 overflow-hidden group-hover/article:underline">
+                 <c:if test="${notice.noticeType == 'Y'}">
+                    <i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i>
+                </c:if>
+                  <span class="truncate">${notice.titleKr}</span>
+                </p>
+                <p class="text-sm text-slate-400 shrink-0">
+                  ${notice.noticeDt}
+                </p>
+                <p class="text-sm text-slate-400 shrink-0" style="display: none;">${notice.noticeSeq}</p>
+              </a>
+            </li>
+          </c:forEach>
+        </ul>
+      </div>
+      <!-- News Section -->
+      <div class="col-span-6 col-start-7 text-base">
+        <div class="flex items-center justify-between mb-2 px-2">
+          <h2 class="grow font-semibold text-slate-800 dark:text-slate-100 truncate flex items-center justify-start gap-2 text-lg">
+            <i class="fa-duotone fa-newspaper text-primary-900"></i>${news}</h2> <!-- 관세뉴스 -->
+          <button onclick="go_news()" class="shrink-0 text-primary-900 hover:text-primary-700 dark:hover:text-primary-400 ml-2">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 16 16">
+              <path d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z"/>
+            </svg>
+          </button>
+        </div>
+        <!-- card -->
+        <div class="bg-blue dark:bg-slate-800 shadow-lg rounded-lg border border-slate-200 dark:border-slate-700">
+          <ul>
+           <c:forEach var="news" items="${newsList}">
+            <li class="px-3 py-1 border-b first:pt-2 last:pb-2" >
+              <a href="#" class="flex items-end justify-between gap-2 w-full group/article">
+                <p class="flex items-center justify-start gap-1 overflow-hidden group-hover/article:underline">
+                  <span class="truncate">${news.titleKr}</span>
+                </p>
+                <p class="text-sm text-slate-400 shrink-0">
+                  ${news.regDt}
+                </p>
+                <p class="text-sm text-slate-400 shrink-0" style="display: none;">${news.seq}</p>
+              </a>
+            </li>
+          </c:forEach>
+          </ul>
+        </div>
+      </div>
+    </section>
+    </c:if>
+    <form name="dashFileDownForm" method="post"
+		  action="/cmmn/noticesFileDown.do">
+		<input type="hidden" name="dashFileDown" id="dashFileDown"/>
+    </form>
+  </main>
+
+	<!-- notice modal popup -->
+	<div id="dashNoticePop" class="modal fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center flex" style="display: none;">
+	  <div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+	  <div class="dashNotice-modal modal-content bg-white shadow-xl relative rounded max-w-[800px] min-w-[42rem] overflow-hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+	    <div class="pl-7 pr-5 py-4 text-white bg-primary-900 flex items-center justify-between">
+	      <h2 class="font-bold text-xl"></h2>
+	      <button type="button" onclick="dashNoticeClose()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+	    </div>
+	    <div class="pl-7 pr-5 py-6">
+	      <h3 class="text-2xl text-primary-700 font-semibold"></h3> <!-- title -->
+	      <span class="text-sm text-gray-500"></span> <!-- date -->
+	      <input type="text" id="dashNoticeSeq" style="display:none;">
+	    </div>
+	      <textarea id="dashNoticeContent" class="mt-4 pt-4 border-t text-lg" style="width:800px; height:300px;" readonly></textarea> <!-- content -->
+		  <div class="mx-5 py-4 border-t-2 flex justify-between gap-2">
+		    <div class="text-base text-gray-500"></div>
+		    <div class="flex gap-2">
+		        <button type="button" onclick="dashNoticeClose()" class="modal-close px-3 py-2 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700 shrink-0">
+		           <i class="fa-solid fa-check"></i> 
+		       		${confirm}
+		        </button>
+		    </div>
+		</div>
+	  </div>
+	  <form name="dashNoticeFileDownForm" method="post" action="/cmmn/noticesFileDown.do">
+		<input type="hidden" name="dashNoticeFileDown" id="dashNoticeFileDown"/>
+      </form>
+	</div>
+	<!-- notice modal popup -->
+	<!-- news modal popup -->
+	<div id="dashNewsPop" class="modal fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center flex" style="display: none;">
+	  <div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+	  <div class="dashNews-modal modal-content bg-white shadow-xl relative rounded min-w-[42rem] overflow-hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+	    <div class="pl-7 pr-5 py-4 text-white bg-primary-900 flex items-center justify-between">
+	      <h2 class="font-bold text-xl"></h2>
+	      <button type="button" onclick="dashNewsClose()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+	    </div>
+	    <div class="pl-7 pr-5 py-6">
+	      <h3 class="text-2xl text-primary-700 font-semibold"></h3> <!-- title -->
+	      <span class="text-sm text-gray-500"></span> <!-- date -->
+	      <input type="text" id="dashNewsSeq" style="display:none;">
+	    </div>
+	     <div id="dashNewsContent" class="dashNewsContent mt-4 pt-4 border-t text-lg" style="width:1000px; height:500px; overflow:auto; margin:10px;" readonly></div>
+	     <div id="mainNewsFileName" class="text-base text-gray-500"></div>
+		  <div class="mx-5 py-4 border-t-2 flex justify-between gap-2">
+		    <div class="text-base text-gray-500"></div>
+		    <div class="flex gap-2">
+		        <button type="button" onclick="dashNewsClose()" class="modal-close px-3 py-2 rounded-lg text-white hover:opacity-50 duration-150 bg-primary-700 shrink-0">
+		           <i class="fa-solid fa-check"></i> 
+		           ${confirm}
+		        </button>
+		    </div>
+		</div>
+	  </div>
+	</div>
+	<!-- 대시보드 내 관세뉴스 -->
+	<form name="mainNewsFileDown" method="post"
+		  action="/cmmn/mainNewsFileDown.do">
+		<input type="hidden" name="mainNewsFileDown" id="mainNewsFileDown"/>
+    </form>
+<script>
+	var lang = "<%= request.getAttribute("lang") %>";
+	var impVal = "${impVal}";
+	var taxPaid = "${taxPaid}";
+	var cnt = "${cnt}";
+	var expVal = "${expVal}";
+</script>
+</body>
+</html>

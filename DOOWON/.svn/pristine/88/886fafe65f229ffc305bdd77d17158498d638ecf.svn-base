@@ -1,0 +1,1250 @@
+var importViewHot;
+var importViewSettings;
+var importViewPopupSettings;
+var importViewIndex = 9999;
+var importViewScrollTp = true;
+var importViewLanHot;
+var importViewLanSettings;
+var importViewLanIndex = 9999;
+var importViewLanScrollTp = true;
+var importViewSpecHot;
+var importViewSpecSettings;
+var importViewSpecIndex = 9999;
+var importViewSpecScrollTp = true;
+var importViewData = {};
+
+var numberValidator = function (value, callback) {
+	var tmpStr='';
+	var valueStr = (''+value).replace(/\s/g, '');
+	for(var i = 0 ; i<valueStr.length; i++){
+		tmpStr =valueStr.substring(i, i+1);
+		if(    tmpStr == '0' || tmpStr == '1' || tmpStr == '2'
+                        || tmpStr == '3' || tmpStr == '4' || tmpStr == '5'
+                        || tmpStr == '6' || tmpStr == '7' || tmpStr == '8'
+                        || tmpStr == '9' || tmpStr == ',' || tmpStr == '.'){
+
+		}else{
+			callback(false);
+			break;
+		}
+		callback(true);
+	}
+
+};
+
+$( document ).ready(function() {
+	  //달력 사용시 반드시 넣어주세요.
+     // $('.band-calendar').each(function(){ regCal(this) ;})
+	  //캘린더 포맷
+     //$('.datepicker').datepicker("option","dateFormat",calFormat);
+
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	  console.log("today"+today);
+	  console.log("mtoday"+today);
+	  
+	  $("#importView_srch2").val(mtoday);
+	  $("#importView_srch3").val(today);
+	  
+	  // 달력오픈 
+	  /*$('#importView_srch2').datepicker();
+	  $('#importView_srch3').datepicker();*/
+	  
+	  var importViewElement = document.querySelector('#importViewTable');
+	  var importViewElementContainer = importViewElement.parentNode;
+
+
+	  importViewHot = new Handsontable(importViewElement, importViewSettings);
+	  
+	  var importViewLanElement = document.querySelector('#importViewLanTable');
+	  var importViewLanElementContainer = importViewLanElement.parentNode;
+
+
+	  importViewLanHot = new Handsontable(importViewLanElement, importViewLanSettings);
+	  
+	  var importViewSpecElement = document.querySelector('#importViewSpecTable');
+	  var importViewSpecElementContainer = importViewSpecElement.parentNode;
+	  
+	  
+	  importViewSpecHot = new Handsontable(importViewSpecElement, importViewSpecSettings);
+	  
+	  
+	  var impViewListPopupElement = document.querySelector('#impViewListPopupTable');
+	  var impViewListPopupElementContainer = impViewListPopupElement.parentNode;
+	  impViewListPopupSettings = fn_handsonGridImpViewListPopupOption();
+	  impViewListHot = new Handsontable(impViewListPopupElement, impViewListPopupSettings);
+
+	  $("#importView_div1").show();
+	  $("#importView_div2").show();
+	  $("#importView_div3").hide();
+	  $("#importView_div4").hide();
+	  $("#btnImportViewSave").hide();
+	  $("#impViewInfo1").hide();
+	  $("#impViewInfo2").hide();
+	  fn_changeImportView('read');
+	  
+	  //scroll 이벤트
+	  fn_impViewasEventReg();
+	  //importViewUseEventReg();
+
+	  $(document).on("click", '.itemCdClass', function(){
+		  alert($(this).index());
+	  });
+});
+/** 이벤트 Start **/
+
+$("input:radio[name=importView_srch20]").change(function(){
+	$("input[name=importViewType][value=read]").prop("checked", true);
+	fn_changeImportView("read");
+})
+
+//테이블 타입 변경
+$("input[name=importViewType]").change(function(){
+	  fn_changeImportView($(this).val());
+});
+
+function fn_impViewchgDate1() {
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var day = date.getDay();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10);
+	  
+	  $("#importView_srch2").val(today);
+	  $("#importView_srch3").val(today);
+	  //$("#importView_srch3").val(today);
+}
+
+function fn_impViewchgDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10);
+	
+	$("#importView_srch2").val(mtoday);
+	$("#importView_srch3").val(today);
+}
+function fn_impViewchgDate3() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10);
+	
+	$("#importView_srch2").val(mtoday);
+	$("#importView_srch3").val(today);
+}
+function fn_impViewchgDate4() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	  var startDt = new Date();
+	  startDt.setMonth(startDt.getMonth() - 1);
+	  startDt.setDate(1);
+
+	  var endDt = new Date();
+	  endDt.setMonth(endDt.getMonth(), 1);
+	  endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10);
+	var mtoday = endDt.toISOString().substring(0,10);
+	
+	$("#importView_srch2").val(today);
+	$("#importView_srch3").val(mtoday);
+}
+
+//정렬항목
+/*$("select[name=alignImportView]").change(function(){
+	  fn_searchImportView();
+});
+*/
+//row 수
+$("select[name=importViewPageCnt]").change(function(){
+	  fn_searchImportView();
+});
+
+
+function fn_impViewasEventReg(){
+	
+ $("#importViewTable .wtHolder").scroll(function(){
+	  //fn_impViewFileList(row, col)
+  	  var scrollTop = $("#importViewTable .wtHolder").scrollTop();
+  	  var countPerPage = $("#importViewPageCnt option:selected").val();
+  	  var rowHeight = importViewHot.getRowHeight();
+  	  var addCnt = 790;
+  	  if(countPerPage == "50"){
+  		  addCnt = 790;
+  	  }else if(countPerPage == "100"){
+  		  addCnt = 2040;
+  	  }else if(countPerPage == "200"){
+  		  addCnt = 3290;
+  	  }else if(countPerPage == "500"){
+  		  addCnt = 4540;
+  	  }
+
+  	  if(importViewScrollTp && importViewIndex != 9999 && scrollTop >= (countPerPage * importViewIndex * rowHeight) + addCnt){
+  		  fn_importViewScroll();
+  	  }
+  });
+}
+/** 이벤트 End **/
+//스크롤
+function fn_importViewScroll(){
+	if( $("input[name=importViewType]:checked").val() == "enrol")
+		return;
+	fn_loading(true);
+	importViewScrollTp = false;
+	importViewIndex++;
+
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportViewList.do",
+		data : fn_setImportViewForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	console.log("data"+data);
+        	var getData = importViewHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	importViewHot.loadData(meargeJson);
+        	importViewScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	//alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+//Popup 테이블 스크롤
+
+//검색
+function fn_searchImportView(){
+	importViewIndex = 0;
+	$("#impViewSrch2").val($("#importView_srch2").val());
+	$("#impViewSrch3").val($("#importView_srch3").val());
+	$("#impViewSrch4").val($("#importView_srch4").val());
+	$("#impViewSrch5").val($("#importView_srch5").val());
+	$("#impViewSrch6").val($("#importView_srch6").val());
+	$("#impViewSrch7").val($("#importView_srch7").val());
+
+	var data = fn_setImportViewForm();
+	
+	fn_loading(true);
+
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportViewList.do",
+		data : fn_setImportViewForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        		importViewHot.loadData([]);
+        		importViewSpecHot.loadData([]);
+        		importViewLanHot.loadData([]);
+            	importViewHot.loadData(data.resultList);
+            	$("#importViewCnt").text(data.totCnt.toLocaleString()); //검색결과 총 갯수
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+function fn_searchImportViewLan(rptNo) {
+
+	rptNo = rptNo.replace(/-/g, '');
+	
+	var lData = {};
+	lData["srch2"] = rptNo;
+	
+	lData["recordCountPerPage"] = $("#importViewPageCnt option:selected").val();
+	lData["pageIndex"] = importViewIndex;
+	
+	
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportViewLanList.do",
+		data : lData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        		importViewSpecHot.loadData([]);
+        		importViewLanHot.loadData([]);
+            	importViewLanHot.loadData(data.resultList);
+            	importViewLanHot.updateSettings({
+            	        autoColumnSize: {samplingRatio: 30}
+            	    });
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+function fn_searchImportViewSpec(rptNo, ranNo) {
+	
+	//fn_loading(true);
+	
+	var pData = {};
+	pData["srch2"] = rptNo;
+	pData["srch3"] = ranNo;
+	
+	pData["recordCountPerPage"] = $("#importViewPageCnt option:selected").val();
+	pData["pageIndex"] = importViewIndex;
+	
+	
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportViewSpecList.do",
+		data : pData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+				importViewSpecHot.loadData([]);
+				importViewSpecHot.loadData(data.resultList);
+			fn_loading(false);
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("Your request is up. Please log back in if you wish continue");
+				location.href = document.referrer;
+			} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+};
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchImportView();
+    }
+}
+
+//판정 사용 내역 조회
+
+
+//검색조건 생성
+function fn_setImportViewForm(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=importView_srch1]:checked").val();
+	sData["srch2"] = $("#importView_srch2").val();
+	sData["srch3"] = $("#importView_srch3").val();
+	sData["srch4"] = $("#importView_srch4").val();
+	sData["srch5"] = $("#importView_srch5").val();
+	sData["srch6"] = $("#importView_srch6").val();
+	sData["srch7"] = $("#importView_srch7").val();
+	sData["srch8"] = $("#importViewDateType option:selected").val();
+	sData["recordCountPerPage"] = $("#importViewPageCnt option:selected").val();
+	sData["pageIndex"] = importViewIndex;
+	return sData;
+};
+
+//검색조건 초기화
+function fn_clearImportView(){
+	
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	
+	$("input:radio[name=importView_srch1][value=01]").prop('checked', true);
+	$("#importView_srch2").val(mtoday);
+	$("#importView_srch3").val(today);
+	$("#importView_srch4").val("");
+	$("#importView_srch5").val("");
+	$("#importView_srch6").val("");
+	$("#importView_srch7").val("");
+	$("#importViewDateType").val("01");
+};
+
+function fn_memoSave(row, col){
+	var rowData = importViewHot.getSourceDataAtRow(row);
+	
+	var rptNo = rowData.rptNo;
+	var value2 = $("#unreMemo"+row).val();
+	
+	console.log(rptNo);
+	console.log(value2);
+	
+	var sData = {};
+	sData["srch1"] = rptNo;
+	sData["srch2"] = value2;
+	
+	if(confirm("저장하시겠습니까?")){
+		
+		$.ajax({
+			type : "POST",
+			url : "/import/saveImportMemo.do",
+			data : sData,
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			dataType: "json",
+			success : function(data) {
+				alert('저장되었습니다.')
+				fn_searchImportView();
+				
+			},
+			error : function(e, textStatus, errorThrown) {
+				if(e.status == 400){
+					alert("Your request is up. Please log back in if you wish continue");
+					location.href = document.referrer;
+				} else {
+					console.log(errorThrown);
+					alert(msgSearchError);
+				}
+			}
+		});
+	} else {
+		return;
+	}
+	
+}
+
+
+//테이블 컬럼
+function fn_impViewTableCol(){
+	var tableType = $("input:radio[name=importViewType]:checked").val();
+	// 사용여부
+	var importView_srch20 = $("input:radio[name=importView_srch20]:checked").val(); 
+
+	var impViewFileLoadRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+        var $fileButton;
+        if (value != '' && value != null) {
+            $fileButton = $('<i class="fas fa-search search-icon" style="cursor:pointer;" onclick="fn_impViewFileList('+row+','+col+')"></i>');
+        } else {}
+        $(td).empty().append($fileButton).append("  " + value);
+	};
+	
+	var cusMemoRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		var $cusMemo = $('<input type="text" style="height:14px;" id="cusMemo" /><div class="btn btn-primary new-button">SAVE</div>');
+		$(td).empty().append(value+"	").append($cusMemo).css("text-align", "right");
+		};
+	
+	var unreMemoRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+	    var $unreMemoInput = $('<input type="text" class="row-start-3 col-start-2 bg-gray-50 border border-gray-300 rounded-lg" id="unreMemo' + row + '" style="height:8px; width:150px;" value="' + value + '"/>');
+	    var $unreMemoButton = $('<button type="button" onclick="fn_memoSave(' + row + ',' + col + ')" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-rose-700 ml-1 hover:bg-rose-500">저장</button>');
+	    $(td).empty().append($unreMemoInput).append($unreMemoButton).css("text-align", "right");
+	    $unreMemoInput.css({
+	        'font-family': '맑은 고딕',
+	        'font-size': '13px'
+	    });
+	    $unreMemoButton.css({
+	        'font-family': '맑은 고딕',
+	        'font-size': '13px'
+	    });
+	    $unreMemoInput.val(value);
+	};
+
+	
+	var chipRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		  td.classList.add('chip-cell');
+		  td.classList.add('text-center');
+		  switch (value) {
+		    case "예":
+		    case "접수":
+		    case "Y":
+		      td.innerHTML = `<span class="chip chip-blue">${value}</span>`
+		      break
+		    case "수리":
+		      td.innerHTML = `<span class="chip chip-green">${value}</span>`
+		      break
+		    case "N":
+		    case "서류 미비":
+		      td.innerHTML = `<span class="chip chip-red">${value}</span>`
+		      break
+		    case "자수":
+		      td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+		      break
+		    case "":
+	    	  td.innerHTML = `<span>${value}</span>`
+    		  break
+		    default:
+		      td.innerHTML = `<span class="chip chip-primary">${value}</span>`
+		      break
+		  }
+	};
+	
+	function saveRenderer(instance, td, row, col, prop, value, cellProperties) {
+		  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		  td.classList.add('save-cell');
+		  td.classList.add('text-center');
+		  td.classList.add('text-center');
+		  td.innerHTML = `${value}<button type="button" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-rose-700 ml-1 hover:bg-rose-500">저장</button>`
+		}
+
+	this.impViewCol = [
+		/*{data : 'saveCheck', type : 'text', className : "htCenter", width: 60,type: 'checkbox',checkedTemplate: true,uncheckedTemplate: false, readOnly:false},*/
+		{data : 'plntCd', className : "htCenter",width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'prOrdr', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rece', className : "htCenter", width: 50,wordWrap: false, className : "htCenter", readOnly:true, renderer : chipRenderer},
+		//{data : 'unreMemo', className : "htCenter",wordWrap: false, className : "htCenter", readOnly:true, renderer : unreMemoRenderer},
+		{data : 'cs', className : "htCenter", width: 60,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter", readOnly:true, renderer : impViewFileLoadRenderer},
+		{data : 'blno', className : "htCenter", width: 130,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'nabFirm', className : "htCenter",width: 180, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'supFirm', className : "htCenter", width: 200,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'reporter', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'incDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'lisDay', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'excCot', className : "htCenter", width: 110,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conKiCot', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conCod', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'freKrw', className : "htCenter", width: 90,wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'insuKrw', className : "htCenter",width: 90, wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'totWt', className : "htCenter",width: 120, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'totPackCnt', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conCur', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conTotAmt', className : "htCenter",width: 120, wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'lawCd', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'supSt', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'fodMark', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'oriStPrfYn', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true,renderer : chipRenderer},
+		{data : 'rmv', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true,renderer : chipRenderer},
+		{data : 'rptYn', className : "htCenter",width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		//{data : 'userMemo', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'userMemo', className : "htCenter", width: 250,wordWrap: false, className : "htCenter", readOnly:true, renderer : unreMemoRenderer},
+	] ;
+		
+
+	//판정 사용 내역 컬럼
+		
+		  Handsontable.renderers.registerRenderer('chip', chipRenderer);
+		  Handsontable.renderers.registerRenderer('save', saveRenderer);
+}
+//테이블 헤더
+function fn_impViewTableHeader(){
+	var tableType = $("input:radio[name=importViewType]:checked").val();
+	// 사용여부
+	//var importView_srch20 = $("input:radio[name=importView_srch20]:checked").val(); 
+	
+	this.impViewHeader = [
+		"공장코드", "PO", "상태", "C/S검사", "신고번호", "B/L번호", "납세자", "무역거래처", "신고인", "반입일자", "신고일자", "수리일자", "거래구분",
+		"결제방법", "인코텀즈", "운임", "보험료", "총중량", "총포장개수", "통화단위", "신고금액",  "요건승인", "해외공급자국가부호", "적출국(부호)", "FTA적용여부", "감면여부", "확정신고대상여부",
+		"사용자메모"
+	 ] ;
+}
+
+
+function fn_impViewLanTableCol(){
+	this.impViewLanCol = [
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter"},
+		{data : 'ranNo', className : "htCenter", width: 100,wordWrap: false, className : "htCenter"},
+		{data : 'hs', className : "htCenter", width: 100,wordWrap: false, className : "htCenter"},
+		{data : 'na', className : "htCenter", width: 100,wordWrap: false, className : "htCenter"},
+		{data : 'gsRate', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'stdGname1', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'excGname1', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'taxUsd', wordWrap: false, width: 100, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true},
+		{data : 'gs', wordWrap: false, width: 100, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'vat', wordWrap: false, width: 100, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'csChkCot', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"}
+	];
+}
+
+function fn_impViewLanTableHeader(){
+	this.impViewLanHeader = [
+		"신고번호","란번호","세번부호","구분","세율","품명","거래품명","과세가격원화","관세","부가세","CS"
+	];
+}
+
+function fn_impViewSpecTableCol(){
+	this.impViewSpecCol = [
+		{data : 'rptNo', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'ranNo', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'sil', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'impGname1', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'qty', wordWrap: false, type : 'numeric', width: 100, className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'ut', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'upi', wordWrap: false, type : 'numeric', width: 100, className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'amt', wordWrap: false, type : 'numeric', width: 100, className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'impGname2', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'compoent1', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'compoent2', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		];
+}
+
+function fn_impViewSpecTableHeader(){
+	this.impViewSpecHeader = [
+		"신고번호","란번호","규격번호","품명","수량","단위","단가","금액","품명2","성분1","성분2"
+		];
+}
+
+//테이블 히든컬럼
+function fn_impViewTableHidden(){
+	this.impViewHidden = [];
+}
+
+function fn_impViewLanTableHidden(){
+	this.impViewLanHidden = [0];
+}
+
+function fn_impViewSpecTableHidden(){
+	this.impViewSpecHidden = [0];
+}
+
+
+//table
+function fn_handsonGridViewOption(col, header, hidden){
+	var tableType = $("input:radio[name=importViewType]:checked").val();
+
+	importViewSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 300,
+	  rowHeights : 27,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualRowMove : true,
+	  manualColumnMove : true,
+	  licenseKey: 'non-commercial-and-evaluation', // for non-commercial use only
+	  //dropdownMenu : true,
+
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+	  autoColumnSize : {samplingRatio : 30},
+      mergeCells : false,
+      wordWrap : true,
+      afterOnCellMouseDown : function(event, coords){
+    	  var dataList = "";
+    	  var rptNo = "";
+    	  var dataList = importViewHot.getSourceData(coords.row, 35);
+    	  var rptNo = dataList[dataList.length-1].rptNo;
+    	  fn_searchImportViewLan(rptNo);
+      }
+	};
+
+	return importViewSettings;
+}
+
+function fn_handsonGridLanOption(col, header, hidden){
+	var tableType = $("input:radio[name=importViewType]:checked").val();
+
+	
+	importViewLanSettings = {
+			columns : col,
+			colHeaders : header,
+			hiddenColumns : {
+				copyPasteEnabled : false,
+				indicators : false,
+				columns : hidden
+			},
+			stretchH : 'all',
+			width : '100%',
+			autoWrapRow : true,
+			height : 200,
+			border : 1,
+			rowHeights : 25,
+			columnHeaderHeight : 25,
+			manualRowResize : true,
+			manualColumnResize : true,
+			manualRowMove : true,
+			manualColumnMove : false,
+			licenseKey: 'non-commercial-and-evaluation',
+			  filters : true,
+			  readOnly :  true ,
+			  allowInsertRow : true,
+			  allowRemoveRow : true,
+			 // columnSorting : {indicator : true},
+			  autoColumnSize : {samplingRatio : 30},
+		      mergeCells : false,
+		      wordWrap : true,
+
+			afterOnCellMouseDown : function(event, coords){
+				var dataList = "";
+				var rptNo = "";
+				var ranNo = "";
+				var dataList = importViewLanHot.getSourceData(coords.row, 35);
+				var rptNo = dataList[dataList.length-1].rptNo;
+				var ranNo = dataList[dataList.length-1].ranNo;
+				fn_searchImportViewSpec(rptNo, ranNo);
+			}
+	};
+	
+	return importViewLanSettings;
+}
+
+function fn_handsonGridSpecOption(col, header, hidden){
+	
+	importViewSpecSettings = {
+			columns : col,
+			colHeaders : header,
+			hiddenColumns : {
+				copyPasteEnabled : false,
+				indicators : false,
+				columns : hidden
+			},
+			stretchH : 'all',
+			width : '100%',
+			autoWrapRow : true,
+			height : 200,
+			rowHeights : 25,
+			columnHeaderHeight : 25,
+			manualRowResize : true,
+			manualColumnResize : true,
+			licenseKey: 'non-commercial-and-evaluation',
+			manualRowMove : true,
+			manualColumnMove : false,
+			
+			filters : true,
+			readOnly : true ,
+			allowInsertRow : true,
+			allowRemoveRow : true,
+			autoColumnSize : {samplingRatio : 30},
+			mergeCells : false,
+			wordWrap : true,
+	};
+	
+	return importViewSpecSettings;
+}
+
+//검색 그리드
+function fn_searchGridPurchOption(type){
+	if(type){
+		$("#impViewEnrol").show();
+		$("#importView_div1").show();
+		$("#importView_div2").show();
+		$("#importView_div3").hide();
+		$("#importView_div4").hide();
+		$("#importView_div12").hide();
+		$("#importView_div5").show();
+		$("#importView_div6").show();
+		$("#importView_div7").show();
+		$("#importView_div8").show();
+		$("#impViewInfo1").hide();
+		$("#impViewInfo2").hide();
+		$("#docBtn").show();
+	}else{
+		$("#impViewEnrol").hide();
+		$("#importView_div1").show();
+		$("#importView_div2").hide();
+		$("#importView_div3").show();
+		$("#importView_div4").show();
+		$("#importView_div5").hide();
+		$("#importView_div12").hide();
+		$("#importView_div6").show();
+		$("#importView_div7").hide();
+		$("#importView_div8").show();
+		$("#impViewInfo1").show();
+		$("#impViewInfo2").show();
+		$("#docBtn").hide();
+	}
+}
+
+function fn_searchGridPurchOption2(){
+	
+		$("#impViewEnrol").show();
+		$("#importView_div1").show();
+		$("#importView_div12").show();
+		$("#importView_div2").hide();
+		$("#importView_div3").hide();
+		$("#importView_div4").hide();
+		$("#importView_div5").hide();
+		$("#importView_div6").hide();
+		$("#importView_div7").hide();
+		$("#importView_div8").hide();
+		$("#impViewInfo1").hide();
+		$("#impViewInfo2").hide();
+		$("#docBtn").hide();		
+}
+
+//테이블 타입 변경
+function fn_changeImportView(type){
+
+	var searchTp = $("input:radio[name=importView_srch1]:checked").val();
+
+	importViewHot.updateSettings({readOnly:true, contextMenu : false});
+	$("#btnImportViewSave").hide();
+	$("#impExcel").show();
+	$("#docBtn").children().show();
+	fn_changeImportViewType(searchTp);
+};
+
+//검색구분 변경
+function fn_changeImportViewType(type){
+	let impViewCol = new fn_impViewTableCol();
+	let impViewHeader = new fn_impViewTableHeader();
+	let impViewHidden = new fn_impViewTableHidden();
+	
+	let impViewLanCol = new fn_impViewLanTableCol();
+	let impViewLanHeader = new fn_impViewLanTableHeader();
+	let impViewLanHidden = new fn_impViewLanTableHidden();
+	
+	let impViewSpecCol = new fn_impViewSpecTableCol();
+	let impViewSpecHeader = new fn_impViewSpecTableHeader();
+	let impViewSpecHidden = new fn_impViewSpecTableHidden();
+	
+	var col, header, hidden, col2, header2, hidden2, col3, header3, hidden3 ;
+
+	//$('#alignImportView option:eq(0)').prop('selected', true);
+
+	//구매원장
+		fn_searchGridPurchOption(true);
+		col = impViewCol.impViewCol;
+		header = impViewHeader.impViewHeader;
+		hidden = impViewHidden.impViewHidden;
+		
+		col2 = impViewLanCol.impViewLanCol;
+		header2 = impViewLanHeader.impViewLanHeader;
+		hidden2 = impViewLanHidden.impViewLanHidden;
+		
+		col3 = impViewSpecCol.impViewSpecCol;
+		header3 = impViewSpecHeader.impViewSpecHeader;
+		hidden3 = impViewSpecHidden.impViewSpecHidden;
+		
+		importViewHot.updateSettings(fn_handsonGridViewOption(col, header, hidden));
+		importViewLanHot.updateSettings(fn_handsonGridLanOption(col2, header2, hidden2));
+		importViewSpecHot.updateSettings(fn_handsonGridSpecOption(col3, header3, hidden3));
+	//원산지확인서
+	fn_searchImportView();
+};
+
+
+function fn_impViewExcelSrch(type){
+	$("#impViewSrch1").val($("input:radio[name=importView_srch1]:checked").val());
+	if(type == '01'){
+		$("#impViewExTit").val(colPurchLedgrInfo);
+		$("#impViewExCol").val(String([colPlntCd+"*",colVndrCd+"*",colPurchsNo+"*",colSaleOrdr+"*",colItemAllCd+"*",colItemNm,colTaxbilNo,colImportViewDt+"*",colInvoiceNo,
+		     colCustomImpNo,colStndrdNo,colNatCd+"*",colImportViewQty+"*",colUsedQty,colLeftQty,
+		      colInctrm,colPuchaseAmt,colCurrentUnt,colExchngRt,colImportViewAmtVn+"*",colPurchPriceCif])+",");
+		$("#impViewExCd").val("plntCd,vndrCd,importViewNo,importViewOrdr,itemCd,itemNm,taxbilNo,importViewDt,invoiceNo,customImpNo,stndrdNo,natCd,importViewQty,usedQty,leftQty,incoterms,importViewPriceVn,crrncyUnt,exchngRt,importViewPriceFr,importViewCifPrice,");
+		$("#impViewExType").val("cd,cd,cd,cd,cd,text,cd,cd,cd,cd,cd,cd,floatString,floatString,floatString,cd,floatString,cd,floatString,floatString,floatString,");
+	}else if(type == '02'){
+		$("#impViewExTit").val(colOriginCnftmnInfo);
+		$("#impViewExCol").val(String([colPlntCd+"*",colVndrCd+"*",colImportViewNo+"*",colImportViewOrdr+"*",colItemAllCd+"*",colFtaCd+"*",colHsVer,colHsCd,
+			colPsr+"*",colReqDtm,colDocuFile,colOriginYn,colConfmSttus,colRecvDt,colStateMsg+","]));
+		$("#impViewExCd").val("plntCd,vndrCd,importViewNo,importViewOrdr,itemCd,ftaCd,hsVer,hsCd,psrSumry,reqDtm,docuOrgFile,originYn,approvedState,recvDtm,stateMsg,");
+		$("#impViewExType").val("cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,");
+	} else{
+		$("#impViewExTit").val(colImportViewUsed);
+		$("#impViewExCol").val(String([colPlntCd+"*",colVndrCd+"*",colPurchsNo+"*",colSaleOrdr+"*",colItemAllCd+"*",colTaxbilNo,colImportViewDt+"*",colInvoiceNo,
+		     colCustomImpNo,colSalesNo,colUsedQty])+",");
+		$("#impViewExCd").val("plntCd,vndrCd,importViewNo,importViewOrdr,itemCd,taxbilNo,importViewDt,invoiceNo,customImpNo,salesNo,importViewQty,");
+		$("#impViewExType").val("cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,floatString,");
+	}
+
+}
+
+
+function fn_impViewFileList(row, col){
+
+	var data = importViewHot.getSourceDataAtRow(row);
+    console.log("data.rptNo: " + data.rptNo); // O
+	$("#impViewFileListPopUp").modal("show");
+	
+	var rptNoTitle = "신고번호: " + data.rptNo;
+    
+    var uploadImpViewFileListTitle = document.querySelector('.modal-content .impModal-title span');
+	uploadImpViewFileListTitle.textContent = rptNoTitle;
+	
+    var sData = fn_rptNoForPopup(data);
+    fn_searchImpViewFilesPopup(sData);
+};
+
+function fn_rptNoForPopup(selectedRow){
+	var sData = {};
+
+	sData["srch1"] = selectedRow["rptNo"].replace(/-/g, '');
+	sData["srch2"] = selectedRow["name"];
+	sData["srch3"] = selectedRow["orgFileName"];
+	// console.log("sData.srch1: " + sData["srch1"].replace(/-/g, '')); // O
+	// console.log("selectedRow_rptNo: " + selectedRow["rptNo"]); // O
+	return sData;
+}
+
+
+function fn_searchImpViewFilesPopup(data){
+	
+	fn_loading(true);
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImpViewFilesList.do",
+		data : data,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	impViewListHot.loadData([]);
+        	impViewListHot.loadData(data.impViewList);
+			setTimeout(function() {impViewListHot.render()}, 200);
+			fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("에러 발생");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+function fn_handsonGridImpViewListPopupOption() {
+	impViewListPopupSettings = {
+        columns: [
+        	{ data :'checkBox', type :'text', className :"htCenter", width: 30, type:'checkbox', checkedTemplate:'yes', uncheckedTemplate:'no', readOnly:false },
+        	{ data: 'rptNo', type: 'text', className: "htCenter", readOnly: true, 
+        		renderer: function(instance, td, row, col, prop, value, cellProperties) {
+                value = value.replace(/^(\d{5})(\d{2})(\d{6})(\w)$/, '$1-$2-$3$4');
+                Handsontable.renderers.TextRenderer.apply(this, arguments);
+                }
+        	  },
+            {
+                data: 'docuType',
+                type: 'text',
+                className: "htCenter",
+                readOnly: true,
+                renderer: function (instance, td, row, col, prop, value, cellProperties) {
+                    if (value === 'CI') {
+                        td.innerHTML = '<div style="text-align: center;">Invoice</div>';
+                    } else if (value === 'PL') {
+                        td.innerHTML = '<div style="text-align: center;">Packing List</div>';
+                    } else if (value === 'OT') {
+                        td.innerHTML = '<div style="text-align: center;">Receipt</div>';
+                    } else if (value === 'BL') {
+                        td.innerHTML = '<div style="text-align: center;">B/L</div>';
+                    } else if (value === 'CO') {
+                        td.innerHTML = '<div style="text-align: center;">원산지증명서</div>';
+                    } else if (value === 'RQ') {
+                        td.innerHTML = '<div style="text-align: center;">요건서류</div>';
+                    } else if (value === 'OT') {
+                        td.innerHTML = '<div style="text-align: center;">기타</div>';
+                    } else if (value === 'DC') {
+                        td.innerHTML = '<div style="text-align: center;">신고필증</div>';
+                    } else {
+                        td.innerHTML = '<div style="text-align: center;">통합</div>';
+                    }
+                }
+            },
+            { data: 'docuOrgFile', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'docuFile', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'uploadDt', type: 'text', className: "htCenter", readOnly: true }
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["", "신고번호", "파일 타입", "파일명", "", "업로드 일자"],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [1,4]},
+        afterGetColHeader: function(col, TH){
+        	if(col == 0){
+          	TH.innerHTML = "<input type='checkbox'  class='checker' id='id_impViewAllClick' onclick='fn_impViewAllClick();'>";
+          }
+        }
+    };
+
+    return impViewListPopupSettings;
+}
+
+
+function fn_impViewAllClick(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_impViewAllClick").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+
+	var data = impViewListHot.getData();
+
+	for(var i=0; i<data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	impViewListHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_impViewAllClick").prop("checked", true);
+	} else {
+		$("#id_impViewAllClick").prop("checked", false);
+	}
+}
+
+$("#importViewTable .wtHolder").scroll(function(){
+    var scrollTop = $("#impViewListPopupTable .wtHolder").scrollTop();
+    var countPerPage = 50;
+    var rowHeight = overHot.getRowHeight();
+    var addCnt = 790;
+});
+
+
+$("#popOverTable .wtHolder").scroll(function(){
+	fn_impViewFileList(row, col)
+	var data = importViewHot.getSourceData();
+	var scrollTop = $("#importViewTable .wtHolder").scrollTop();
+	var countPerPage = 50;
+	var rowHeight = filesHot.getRowHeight();
+	var addCnt = 790;
+	
+});
+
+function fn_impViewFileDown(){
+    var check = $("#id_impViewAllClick").prop("checked") ? "no" : "yes";
+    var data = impViewListHot.getSourceData();
+    var selectedData = [];
+    var rptNo = data[0].rptNo
+    
+    // console.log(data);
+    if (check === '' || check === null) {
+		alert('다운로드할 파일을 선택해 주세요.');
+		return false;
+	} else {
+		var anyChecked = false;
+		for (var i = 0; i < data.length; i++) {
+			if (data[i].checkBox === "yes") { 
+				selectedData.push(data[i]);
+				anyChecked = true;
+			}
+		}
+		if (!anyChecked) {
+			alert('다운로드할 파일을 선택해 주세요.');
+			return false;
+		}
+	}
+    
+    $.ajax({
+        type: "POST",
+        url: "/import/impViewZipCreate.do",
+        data: JSON.stringify(selectedData), 
+        contentType: 'application/json',
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader("AJAX", "true");
+        },
+        success: function(response) {
+        	$("#impViewZipDown").val(rptNo);
+        	document.impViewZipDownForm.action = "/import/downloadImpViewFile.do";
+          	document.impViewZipDownForm.submit();
+        },
+        error: function(xhr, status, error) {
+            console.error("다운로드 실패:", error);
+        }
+    });
+};
+
+
+function impViewFileListClose(){
+	$("#impViewFileListPopUp").modal("hide");
+}
+
+function fn_importViewExcelDownload(){
+	fn_loading(true);
+	 var type = $("input:radio[name=importView_srch1]:checked").val();
+	
+	//엑셀옵션
+	var exTitArr = [];
+	var exTit = "";
+	var exColArr = [];
+	var exCol = "";
+    var exTitDivArr = [];
+    var exTitDiv = "";
+	
+	let impViewCol = new fn_impViewTableCol();
+	let impViewHeader = new fn_impViewTableHeader();
+	
+	let impViewLanCol = new fn_impViewLanTableCol();
+	let impViewLanHeader = new fn_impViewLanTableHeader();
+	
+	let impViewSpecCol = new fn_impViewSpecTableCol();
+	let impViewSpecHeader = new fn_impViewSpecTableHeader();
+    
+    exColArr.push(fn_getExcelCol(impViewCol.impViewCol));
+	exColArr.push(fn_getExcelCol(impViewLanCol.impViewLanCol));
+	exColArr.push(fn_getExcelCol(impViewSpecCol.impViewSpecCol));
+	
+	exTitArr.push(fn_getExcelHead(impViewHeader.impViewHeader));
+	exTitArr.push(fn_getExcelHead(impViewLanHeader.impViewLanHeader));
+	exTitArr.push(fn_getExcelHead(impViewSpecHeader.impViewSpecHeader));
+	
+ 	exCol = exColArr.join("|||");
+	exTit = exTitArr.join("||||");
+	exTitDiv = "1|수입신고현황||2|수입신고란||3|수입신고규격";
+		
+   console.log(exCol);
+   console.log(exTit);
+   
+   var parameters = {exCol : "", exTit: "", exTitDiv: "", exType: "", srch40: ""};
+	
+   // 검색옵션
+   $.each(fn_setImportViewForm(), function(attrName, attrValue){
+   	parameters[attrName] = attrValue;
+   });
+	
+	console.log(exCol);
+	console.log(exTit);
+	console.log(exTitDiv);
+	
+	parameters.exCol = exCol.replace(/ /g,"_");
+	parameters.exTit = exTit.replace(/ /g,"_");
+	parameters.exTitDiv = exTitDiv.replace(/ /g,"_");
+	parameters.exType = type;
+	parameters.srch40 = "수입신고현황";
+	
+	console.log(parameters);
+	///import/importDownloadExcel.do
+    //$("#importViewForm").submit();
+	$.ajax({
+		 url: "/import/importDownloadExcel.do",
+		 data: parameters,
+		 type: 'POST',
+		 cache: false,
+		 timeout: 200000,
+		 xhrFields: {
+			 responseType: "blob",
+		 },
+	    success: function(blob, status, xhr) {
+	    	try {
+				// check for a filename
+				 var fileName = "";
+				 var disposition = xhr.getResponseHeader("Content-Disposition");
+
+			       if (disposition && disposition.indexOf("attachment") !== -1) {
+			      	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+			           var matches = filenameRegex.exec(disposition);
+
+			           if (matches != null && matches[1]) {
+			               fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+			           }
+			       }
+
+			       // for IE
+			       if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+			           window.navigator.msSaveOrOpenBlob(blob, fileName);
+			       } else {
+			           var URL = window.URL || window.webkitURL;
+			           var downloadUrl = URL.createObjectURL(blob);
+
+			           if (fileName) {
+			               var a = document.createElement("a");
+
+			               // for safari
+			               if (a.download === undefined) {
+			                   window.location.href = downloadUrl;
+			               } else {
+			                   a.href = downloadUrl;
+			                   a.download = fileName;
+			                   document.body.appendChild(a);
+			                   a.click();
+			               }
+			           } else {
+			               window.location.href = downloadUrl;
+			           }
+			       }
+		        fn_loading(false);
+			} catch (e) {
+				console.log(e);
+				fn_loading(false);
+			};
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+	
+}
+
+function fn_getExcelCol(viewCol){
+    return viewCol.map(item => item['data'] + '|' + item['className'] + '|' + item['width']).join("||");
+}
+ 
+function fn_getExcelHead(viewHead){
+    var result = [];
+    
+    if(viewHead.length > 1 && typeof(viewHead[0][0]) == 'object') {
+        for(var i=0; i < viewHead.length; i++) {
+            if(i == viewHead.length -1){
+                result.push(viewHead[i].join("|null||") + "|null");
+            }else {
+                result.push(viewHead[i].map(item => (item['label'] ? item['label'] : 'null') + '|' + (item['colspan'] ? item['colspan'] : 'null')).join("||"));
+            }
+        }
+        return result.join("|||");
+    }else{
+        return viewHead.join("|null||") + "|null";
+    };
+}

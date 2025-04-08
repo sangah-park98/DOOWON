@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.ms.imp.service.impl.msImportMapper">
+
+	<!-- 수입신고 현황 목록 조회 -->
+	<select id="selectImportViewList2" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			*
+		FROM (
+		SELECT 
+			ROW_NUMBER() OVER (ORDER BY a.rpt_no ASC) AS RowNum,
+			'' as plnt_cd, 
+			'' as pr_ordr, 
+			a.rece,
+			'' as unre_memo, 
+			'' as up_memo,
+			CASE b.cs WHEN 1 THEN '검사' ELSE '-' END AS cs,
+			CONVERT(VARCHAR(5), SUBSTRING(a.rpt_no, 1, 5)) + '-' + 
+    		CONVERT(VARCHAR(2), SUBSTRING(a.rpt_no, 6, 2)) + '-' + 
+    		CONVERT(VARCHAR(7), SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no,
+			a.blno, 
+			a.nab_firm, 
+			a.sup_firm, 
+			'' as step01_date, 
+			case when a.Inc_Day != '' then CONVERT(varchar, CONVERT(date, a.Inc_Day), 23) else '' END AS Inc_Day,
+			case when a.Rpt_Day != '' then CONVERT(varchar, CONVERT(date, a.Rpt_Day), 23) else '' END AS Rpt_Day,
+			case when a.Lis_Day != '' then CONVERT(varchar, CONVERT(date, a.Lis_Day), 23) else '' END AS Lis_Day,
+			case when a.BanChulDay != '' then CONVERT(varchar, CONVERT(date, a.BanChulDay), 23) else '' END AS BanChulDay,
+			a.Exc_Divi_Mark + '-' + a.Exc_Divi_Cot AS Exc_Cot, 
+			a.Con_Ki_Cot,
+			a.Con_Cod, 
+			a.Fre_Krw,
+			a.Insu_Krw, 
+			convert(varchar, a.tot_pack_cnt) + ' (' + a.Tot_Pack_Ut + ')' as tot_pack_cnt, 
+			convert(varchar, a.Tot_Wt) + ' (' + a.tot_ut + ')' as tot_wt,         
+			a.con_cur, 
+			a.con_tot_amt,
+			a.mrn, 
+			Isnull( Stuff((
+            SELECT DISTINCT ',' + law_cd
+            FROM cusdec929d1
+            WHERE sna1 = a.sn FOR xml path('') ), 1, 1, '' ), '' ) AS law_cd, 
+			a.sup_st, 
+			a.fod_mark, 
+			a.ori_st_prf_yn, 
+			CASE c.rmv WHEN 1 THEN 'Y' ELSE 'N' END AS rmv,
+			'' as rpt_yn,
+			a.user_memo, 
+			'' as cus_memo  
+			FROM cusdec929a1 A
+			LEFT OUTER JOIN (
+			SELECT   sna1,
+			max( CASE cs_chk_cot WHEN '청CS기준검사' THEN 1 ELSE 0 END ) cs
+			FROM  cusdec929b1
+			GROUP BY sna1 ) b
+			ON a.sn = b.sna1
+			LEFT OUTER JOIN (
+			SELECT   sna1,
+			max( CASE gs_rmv_mark  WHEN '' THEN 0  ELSE 1 END ) rmv
+			FROM cusdec929b1
+			GROUP BY sna1 ) c
+			ON a.sn = c.sna1 
+			WHERE 1=1
+			AND rpt_seq = '00'
+			<if test="srch2 != null and srch2 != ''">
+		    AND a.rpt_Day &gt;= REPLACE(#{srch2}, '-','')
+			</if>
+			<if test="srch3 != null and srch3 != ''">
+			AND a.rpt_Day &lt;= REPLACE(#{srch3}, '-','')
+			</if>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE '%' + UPPER(#{srch4}) + '%'
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND a.blno LIKE '%' + UPPER(#{srch5}) + '%'
+			</if>
+			<if test="srch6 != null and srch6 != ''">
+			AND a.plnt_cd LIKE CONCAT('%',UPPER(#{srch6}),'%')
+			</if>
+			<if test="srch7 != null and srch7 != ''">
+			AND a.pr_ordr LIKE CONCAT('%',UPPER(#{srch7}),'%')
+			</if>
+			) as IMPORT 
+			WHERe 1=1
+			AND RowNum BETWEEN #{startPageMs}  AND #{recordCountPerPage};
+	</select>
+	
+	<select id="selectImportViewListCnt2" parameterType="searchVO" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM (
+		SELECT 
+			ROW_NUMBER() OVER (ORDER BY a.rpt_no ASC) AS RowNum,
+			'' as plnt_cd, 
+			'' as pr_ordr, 
+			a.rece,
+			'' as unre_memo, 
+			'' as up_memo,
+			CASE b.cs WHEN 1 THEN '검사' ELSE '-' END AS cs,
+			CONVERT(VARCHAR(5), SUBSTRING(a.rpt_no, 1, 5)) + '-' + 
+    		CONVERT(VARCHAR(2), SUBSTRING(a.rpt_no, 6, 2)) + '-' + 
+    		CONVERT(VARCHAR(7), SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no,
+			a.blno, 
+			a.nab_firm, 
+			a.sup_firm, 
+			'' as step01_date, 
+			case when a.Inc_Day != '' then CONVERT(varchar, CONVERT(date, a.Inc_Day), 23) else '' END AS Inc_Day,
+			case when a.Rpt_Day != '' then CONVERT(varchar, CONVERT(date, a.Rpt_Day), 23) else '' END AS Rpt_Day,
+			case when a.Lis_Day != '' then CONVERT(varchar, CONVERT(date, a.Lis_Day), 23) else '' END AS Lis_Day,
+			case when a.BanChulDay != '' then CONVERT(varchar, CONVERT(date, a.BanChulDay), 23) else '' END AS BanChulDay,
+			a.Exc_Divi_Mark + '-' + a.Exc_Divi_Cot AS Exc_Cot, 
+			a.Con_Ki_Cot,
+			a.Con_Cod, 
+			a.Fre_Krw,
+			a.Insu_Krw, 
+			convert(varchar, a.tot_pack_cnt) + ' (' + a.Tot_Pack_Ut + ')' as tot_pack_cnt, 
+			convert(varchar, a.Tot_Wt) + ' (' + a.tot_ut + ')' as tot_wt,         
+			a.con_cur, 
+			a.con_tot_amt,
+			a.mrn, 
+			Isnull( Stuff((
+            SELECT DISTINCT ',' + law_cd
+            FROM cusdec929d1
+            WHERE sna1 = a.sn FOR xml path('') ), 1, 1, '' ), '' ) AS law_cd, 
+			a.sup_st, 
+			a.fod_mark, 
+			a.ori_st_prf_yn, 
+			CASE c.rmv WHEN 1 THEN 'Y' ELSE 'N' END AS rmv,
+			'' as rpt_yn,
+			a.user_memo, 
+			'' as cus_memo  
+			FROM cusdec929a1 A
+			LEFT OUTER JOIN (
+			SELECT   sna1,
+			max( CASE cs_chk_cot WHEN '청CS기준검사' THEN 1 ELSE 0 END ) cs
+			FROM  cusdec929b1
+			GROUP BY sna1 ) b
+			ON a.sn = b.sna1
+			LEFT OUTER JOIN (
+			SELECT   sna1,
+			max( CASE gs_rmv_mark  WHEN '' THEN 0  ELSE 1 END ) rmv
+			FROM cusdec929b1
+			GROUP BY sna1 ) c
+			ON a.sn = c.sna1 
+			WHERE 1=1
+			AND rpt_seq = '00'
+			<if test="srch2 != null and srch2 != ''">
+		    AND a.rpt_Day &gt;= REPLACE(#{srch2}, '-','')
+			</if>
+			<if test="srch3 != null and srch3 != ''">
+			AND a.rpt_Day &lt;= REPLACE(#{srch3}, '-','')
+			</if>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE '%' + UPPER(#{srch4}) + '%'
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND a.blno LIKE '%' + UPPER(#{srch5}) + '%'
+			</if>
+			<if test="srch6 != null and srch6 != ''">
+			AND a.plnt_cd LIKE CONCAT('%',UPPER(#{srch6}),'%')
+			</if>
+			<if test="srch7 != null and srch7 != ''">
+			AND a.pr_ordr LIKE CONCAT('%',UPPER(#{srch7}),'%')
+			</if>
+			) as IMPORT 
+			WHERe 1=1
+	</select>
+	
+	<!-- 수입신고 현황 상세 란 목록 조회 -->
+	<select id="selectImportViewLanList2" parameterType="searchVO" resultType="egovMap">
+	SELECT 
+	RPT_NO,
+	RAN_NO,
+	HS,
+	'' AS na,
+	GS_RATE,
+	STD_GNAME1,
+	EXC_GNAME1,
+	TAX_USD,
+	cs_chk_cot,
+	gs,
+	vat
+	FROM cusdec929b1
+	WHERE rpt_no = #{srch2}
+	AND rpt_seq = '00';
+	</select>
+	
+	<select id="selectImportViewSpecList2" parameterType="searchVO" resultType="egovMap">
+	SELECT 
+	Sil,
+	IMP_GNAME1,
+	Qty,
+	Ut,
+	Upi,
+	Amt,
+	IMP_GNAME2,
+	Compoent1,
+	Compoent2
+	FROM cusdec929c1
+	WHERE rpt_no = #{srch2}
+	AND RAN_NO = #{srch3}
+	AND rpt_seq = '00';
+	</select>
+
+	<!-- 수입신고 BL 등록 목록 조회 -->
+	<select id="selectImportBlList2" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			a.blno, 
+			a.rece, 
+			CONVERT(VARCHAR(5), SUBSTRING(a.rpt_no, 1, 5)) + '-' + 
+    		CONVERT(VARCHAR(2), SUBSTRING(a.rpt_no, 6, 2)) + '-' + 
+    		CONVERT(VARCHAR(7), SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no,
+			case when a.Rpt_Day != '' then CONVERT(varchar, CONVERT(date, a.Rpt_Day), 23) else '' END AS Rpt_Day,
+			case when a.Lis_Day != '' then CONVERT(varchar, CONVERT(date, a.Lis_Day), 23) else '' END AS Lis_Day,
+			'' as pdf,
+			'' as type
+			FROM cusdec929a1 A
+			WHERE 1=1
+			AND rpt_seq = '00'
+			<if test="srch2 != null and srch2 != ''">
+		    AND a.rpt_Day &gt;= REPLACE(#{srch2}, '-','')
+			</if>
+			<if test="srch3 != null and srch3 != ''">
+			AND a.rpt_Day &lt;= REPLACE(#{srch3}, '-','')
+			</if>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE '%' + UPPER(#{srch4}) + '%'
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND a.blno LIKE '%' + UPPER(#{srch5}) + '%'
+			</if>
+	</select>
+	
+	<select id="selectImportBlListCnt2" parameterType="searchVO" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM cusdec929a1 A
+			WHERE 1=1
+			AND rpt_seq = '00'
+			<if test="srch2 != null and srch2 != ''">
+		    AND a.rpt_Day &gt;= REPLACE(#{srch2}, '-','')
+			</if>
+			<if test="srch3 != null and srch3 != ''">
+			AND a.rpt_Day &lt;= REPLACE(#{srch3}, '-','')
+			</if>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE '%' + UPPER(#{srch4}) + '%'
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND a.blno LIKE '%' + UPPER(#{srch5}) + '%'
+			</if>
+	</select>
+	
+	<select id="selectImportUpdateList2" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			*
+		FROM (
+		SELECT 
+			ROW_NUMBER() OVER (ORDER BY a.rpt_no ASC) AS RowNum,
+			'' as plnt_cd, 
+			'' as pr_ordr, 
+			a.rece,
+			a.Rpt_Seq,
+			e.reason_doc1,
+			'' as unre_memo, 
+			'' as up_memo,
+			CASE b.cs WHEN 1 THEN '검사' ELSE '-' END AS cs,
+			CONVERT(VARCHAR(5), SUBSTRING(a.rpt_no, 1, 5)) + '-' + 
+    		CONVERT(VARCHAR(2), SUBSTRING(a.rpt_no, 6, 2)) + '-' + 
+    		CONVERT(VARCHAR(7), SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no,
+			a.blno, 
+			a.nab_firm, 
+			a.sup_firm, 
+			'' as step01_date, 
+			case when a.Inc_Day != '' then CONVERT(varchar, CONVERT(date, a.Inc_Day), 23) else '' END AS Inc_Day,
+			case when a.Rpt_Day != '' then CONVERT(varchar, CONVERT(date, a.Rpt_Day), 23) else '' END AS Rpt_Day,
+			case when a.Lis_Day != '' then CONVERT(varchar, CONVERT(date, a.Lis_Day), 23) else '' END AS Lis_Day,
+			case when a.BanChulDay != '' then CONVERT(varchar, CONVERT(date, a.BanChulDay), 23) else '' END AS BanChulDay,
+			a.Exc_Divi_Mark + '-' + a.Exc_Divi_Cot AS Exc_Cot, 
+			a.Con_Ki_Cot,
+			a.Con_Cod, 
+			a.Fre_Krw,
+			a.Insu_Krw, 
+			convert(varchar, a.tot_pack_cnt) + ' (' + a.Tot_Pack_Ut + ')' as tot_pack_cnt, 
+			convert(varchar, a.Tot_Wt) + ' (' + a.tot_ut + ')' as tot_wt,         
+			a.con_cur, 
+			a.con_tot_amt,
+			a.mrn, 
+			Isnull( Stuff((
+            SELECT DISTINCT ',' + law_cd
+            FROM cusdec929d1
+            WHERE sna1 = a.sn FOR xml path('') ), 1, 1, '' ), '' ) AS law_cd, 
+			a.sup_st, 
+			a.fod_mark, 
+			a.ori_st_prf_yn, 
+			CASE c.rmv WHEN 1 THEN 'Y' ELSE 'N' END AS rmv,
+			'' as rpt_yn,
+			a.user_memo, 
+			'' as cus_memo  
+			FROM cusdmr5fea1 e
+			INNER JOIN cusdec929a1 a
+			ON e.imp_rpt_no = a.rpt_no
+			AND LEFT(a.Rpt_No, 5) in ('40084','42836','44648','44013','44804')
+			AND a.rpt_seq = '00'
+			LEFT OUTER JOIN (
+			SELECT   sna1,
+			max( CASE cs_chk_cot WHEN '청CS기준검사' THEN 1 ELSE 0 END ) cs
+			FROM  cusdec929b1
+			GROUP BY sna1 ) b
+			ON a.sn = b.sna1
+			LEFT OUTER JOIN (
+			SELECT   sna1,
+			max( CASE gs_rmv_mark  WHEN '' THEN 0  ELSE 1 END ) rmv
+			FROM cusdec929b1
+			GROUP BY sna1 ) c
+			ON a.sn = c.sna1 
+			WHERE 1=1
+			<if test="srch2 != null and srch2 != ''">
+		    AND a.rpt_Day &gt;= REPLACE(#{srch2}, '-','')
+			</if>
+			<if test="srch3 != null and srch3 != ''">
+			AND a.rpt_Day &lt;= REPLACE(#{srch3}, '-','')
+			</if>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE '%' + UPPER(#{srch4}) + '%'
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND a.blno LIKE '%' + UPPER(#{srch5}) + '%'
+			</if>
+			<if test="srch6 != null and srch6 != ''">
+			AND a.plnt_cd LIKE CONCAT('%',UPPER(#{srch6}),'%')
+			</if>
+			<if test="srch7 != null and srch7 != ''">
+			AND a.pr_ordr LIKE CONCAT('%',UPPER(#{srch7}),'%')
+			</if>
+			) as IMPORT 
+			WHERe 1=1
+			AND RowNum BETWEEN #{startPageMs}  AND #{recordCountPerPage};
+	</select>
+	
+	<select id="selectImportUpdateListCnt2" parameterType="searchVO" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM (
+		SELECT 
+			ROW_NUMBER() OVER (ORDER BY a.rpt_no ASC) AS RowNum,
+			'' as plnt_cd, 
+			'' as pr_ordr, 
+			a.rece,
+			a.Rpt_Seq,
+			e.reason_doc1,
+			'' as unre_memo, 
+			'' as up_memo,
+			CASE b.cs WHEN 1 THEN '검사' ELSE '-' END AS cs,
+			CONVERT(VARCHAR(5), SUBSTRING(a.rpt_no, 1, 5)) + '-' + 
+    		CONVERT(VARCHAR(2), SUBSTRING(a.rpt_no, 6, 2)) + '-' + 
+    		CONVERT(VARCHAR(7), SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no,
+			a.blno, 
+			a.nab_firm, 
+			a.sup_firm, 
+			'' as step01_date, 
+			case when a.Inc_Day != '' then CONVERT(varchar, CONVERT(date, a.Inc_Day), 23) else '' END AS Inc_Day,
+			case when a.Rpt_Day != '' then CONVERT(varchar, CONVERT(date, a.Rpt_Day), 23) else '' END AS Rpt_Day,
+			case when a.Lis_Day != '' then CONVERT(varchar, CONVERT(date, a.Lis_Day), 23) else '' END AS Lis_Day,
+			case when a.BanChulDay != '' then CONVERT(varchar, CONVERT(date, a.BanChulDay), 23) else '' END AS BanChulDay,
+			a.Exc_Divi_Mark + '-' + a.Exc_Divi_Cot AS Exc_Cot, 
+			a.Con_Ki_Cot,
+			a.Con_Cod, 
+			a.Fre_Krw,
+			a.Insu_Krw, 
+			convert(varchar, a.tot_pack_cnt) + ' (' + a.Tot_Pack_Ut + ')' as tot_pack_cnt, 
+			convert(varchar, a.Tot_Wt) + ' (' + a.tot_ut + ')' as tot_wt,         
+			a.con_cur, 
+			a.con_tot_amt,
+			a.mrn, 
+			Isnull( Stuff((
+            SELECT DISTINCT ',' + law_cd
+            FROM cusdec929d1
+            WHERE sna1 = a.sn FOR xml path('') ), 1, 1, '' ), '' ) AS law_cd, 
+			a.sup_st, 
+			a.fod_mark, 
+			a.ori_st_prf_yn, 
+			CASE c.rmv WHEN 1 THEN 'Y' ELSE 'N' END AS rmv,
+			'' as rpt_yn,
+			a.user_memo, 
+			'' as cus_memo  
+			FROM cusdmr5fea1 e
+			INNER JOIN cusdec929a1 a
+			ON e.imp_rpt_no = a.rpt_no
+			AND LEFT(a.Rpt_No, 5) in ('40084','42836','44648','44013','44804')
+			AND a.rpt_seq = '00'
+			LEFT OUTER JOIN (
+			SELECT   sna1,
+			max( CASE cs_chk_cot WHEN '청CS기준검사' THEN 1 ELSE 0 END ) cs
+			FROM  cusdec929b1
+			GROUP BY sna1 ) b
+			ON a.sn = b.sna1
+			LEFT OUTER JOIN (
+			SELECT   sna1,
+			max( CASE gs_rmv_mark  WHEN '' THEN 0  ELSE 1 END ) rmv
+			FROM cusdec929b1
+			GROUP BY sna1 ) c
+			ON a.sn = c.sna1 
+			WHERE 1=1
+			<if test="srch2 != null and srch2 != ''">
+		    AND a.rpt_Day &gt;= REPLACE(#{srch2}, '-','')
+			</if>
+			<if test="srch3 != null and srch3 != ''">
+			AND a.rpt_Day &lt;= REPLACE(#{srch3}, '-','')
+			</if>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE '%' + UPPER(#{srch4}) + '%'
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND a.blno LIKE '%' + UPPER(#{srch5}) + '%'
+			</if>
+			<if test="srch6 != null and srch6 != ''">
+			AND a.plnt_cd LIKE CONCAT('%',UPPER(#{srch6}),'%')
+			</if>
+			<if test="srch7 != null and srch7 != ''">
+			AND a.pr_ordr LIKE CONCAT('%',UPPER(#{srch7}),'%')
+			</if>
+			) as IMPORT 
+			WHERe 1=1
+	</select>
+
+</mapper>

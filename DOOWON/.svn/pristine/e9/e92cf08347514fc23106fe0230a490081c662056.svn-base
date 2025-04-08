@@ -1,0 +1,1167 @@
+var fundSettleHot;
+var fundSettleDetailHot;
+var fundSettleSettings;
+var fundSettlePopupSettings;
+var fundSettleIndex = 9999;
+var fundSettleScrollTp = true;
+var globalSData = {};
+var partnCmpnyNm = "";
+var colCount = 0;
+var excelUploadHot;
+var customDropdown = [];
+var forwordDropdown = [];
+var transportationDropdown = [];
+var warehouseDropdown = [];
+var PremiumDropdown = [];
+var feeDropdown = [];
+var masterDropdown = [];
+
+$( document ).ready(function() {
+		
+	  customDropdown = Object.entries(customsList).map(([key, value]) => 
+	    value ? `${key}` : key 
+	  );
+	   forwordDropdown = Object.entries(forwordList).map(([key, value]) => 
+	    value ? `${key}` : key 
+	  );
+	   transportationDropdown = Object.entries(transportationList).map(([key, value]) => 
+	    value ? `${key}` : key 
+	  );
+	   PremiumDropdown = Object.entries(PremiumList).map(([key, value]) => 
+	    value ? `${key}` : key 
+	  );
+	   warehouseDropdown = Object.entries(warehouseList).map(([key, value]) => 
+	    value ? `${key}` : key 
+	  );
+	   
+	  feeDropdown = Object.entries(feeList).map(([key, value]) => 
+	    value ? `${key}` : key 
+	  );
+	   
+	  masterDropdown = Object.entries(masterList).map(([key, value]) => 
+	    value ? `${key}` : key 
+	  );
+	   
+	
+		
+	  //달력 사용시 반드시 넣어주세요.
+      $('.band-calendar').each(function(){ regCal(this) ;})
+	  //캘린더 포맷
+      $('.datepicker').datepicker("option","dateFormat",calFormat);
+
+	  	var date = new Date();
+		var month = date.getMonth();
+		var dayday = date.getDate();
+		var day = date.getDay();
+		
+		var today = new Date().toISOString().substring(0,10);
+		var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10);
+	  
+	  $("#fundSettle_srch2").val(today);
+	  $("#fundSettle_srch3").val(today);
+	  
+	  var fundSettleElement = document.querySelector('#fundSettleTable');
+	  var fundSettleElementContainer = fundSettleElement.parentNode;
+	  fundSettleHot = new Handsontable(fundSettleElement, fundSettleSettings);
+	  
+	  /*var fundSettlePopupElement = document.querySelector('#fundSettlePopupTable');
+	  var fundSettlePopupElementContainer = fundSettlePopupElement.parentNode;
+	  fundSettlePopupSettings = fn_handsonGridfundSettlePopupOption();
+	  fundSettlePopupHot = new Handsontable(fundSettlePopupElement, fundSettlePopupSettings);*/
+	  var impViewListPopupElement = document.querySelector('#fundSettlePopupTable');
+	  var impViewListPopupElementContainer = impViewListPopupElement.parentNode;
+	  impViewListPopupSettings = fn_handsonGridImpViewListPopupOption();
+	  fundSettleDetailHot = new Handsontable(impViewListPopupElement, impViewListPopupSettings);
+
+	  $("#fundSettle_div1").show();
+	  $("#fundSettle_div2").show();
+	  $("#fundSettle_div3").show();
+	  $("#fundSettle_div4").show();
+
+	  // 1️ 초기 값 강제 설정 (01 & read 기본 선택)
+	    $("input:radio[name=fundSettle_srch1][value='01']").prop("checked", true);
+	    $("input:radio[name=fundSettleType][value='read']").prop("checked", true);
+
+	    // 2️ 강제로 change 이벤트 실행 (초기 상태에서도 함수 실행)
+	    $("input:radio[name=fundSettle_srch1]:checked").trigger("change");
+	    $("input:radio[name=fundSettleType]:checked").trigger("change");
+
+	    //scroll 이벤트
+	    fn_calculateasEventReg();
+	  
+	  $("#fundSettleTextView").text("전체");
+	  $("#fundSettleTextView").prepend('<i class="fa-duotone fa-feather text-primary-900"></i>'); 
+	  
+	  
+});
+/** 이벤트 Start **/
+
+$(document).mousedown(function(e){	
+	if(e.target.name == "fundSettle1_date" || e.target.name == "fundSettle2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}	
+	}
+});
+
+// 3️`fundSettle_srch1` 변경 감지
+$(document).on("change", "input:radio[name=fundSettle_srch1]", function () {
+    fn_changeFundSettleView($(this).val());
+});
+
+// 4️ `fundSettleType` 변경 감지
+$(document).on("change", "input:radio[name=fundSettleType]", function () {
+    fn_changeFundSettleView($("input:radio[name=fundSettle_srch1]:checked").val());
+});
+
+
+function fn_calculChgDate1() {
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var day = date.getDay();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10);
+	  
+	  $("#fundSettle_srch2").val(today);
+	  $("#fundSettle_srch3").val(today);
+}
+
+function fn_calculChgDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10);
+	
+	$("#fundSettle_srch2").val(mtoday);
+	$("#fundSettle_srch3").val(today);
+}
+function fn_calculChgDate3() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10);
+	
+	$("#fundSettle_srch2").val(mtoday);
+	$("#fundSettle_srch3").val(today);
+}
+function fn_calculChgDate4() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	  var startDt = new Date();
+	  startDt.setDate(1);
+	  startDt.setMonth(startDt.getMonth() - 1);
+
+	  var endDt = new Date();
+	  endDt.setMonth(endDt.getMonth(), 1);
+	  endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10);
+	var mtoday = endDt.toISOString().substring(0,10);
+	
+	$("#fundSettle_srch2").val(today);
+	$("#fundSettle_srch3").val(mtoday);
+}
+
+//정렬항목
+/*$("select[name=alignImportView]").change(function(){
+	  fn_searchImportView();
+});
+*/
+function fn_setCalculView(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=fundSettle_srch1]:checked").val(); //srch1: 검색구분
+	sData["srch2"] = $("input[name=fundSettle1_date]").val(); // srch7: 신고일자 처음
+	sData["srch3"] = $("input[name=fundSettle2_date]").val(); // srch8: 신고일자 끝
+	sData["srch6"] = $("#fundSettle_srch6").val(); //신고번호
+	sData["srch7"] = $("#fundSettle_srch7").val(); //bl번호
+	sData["srch8"] = $("#fundSettle_srch8").val(); //코드
+	sData["srch9"] = $("#fundSettle_srch9").val(); //이름
+	sData["srch10"] = $("input:radio[name=fundSettleType]:checked").val(); //읽기 편집 등록
+	sData["srch33"] = $("#fundSettle_day option:selected").val(); // srch33: 신고일자 select
+	sData["pageIndex"] = fundSettleIndex;
+	sData["recordCountPerPage"] = $("#fundSettlePageCnt option:selected").val();
+	
+	// console.log(sData);
+	
+	return sData;
+};
+
+
+
+
+//검색 버튼 클릭 시 호출되는 함수
+function fn_searchFundSettleViewInfo(){
+	fundSettleIndex = 0;
+	
+	var sData = fn_setCalculView();
+	var radioTp = $("input:radio[name=fundSettle_srch1]:checked").val();
+	var tableType = $("input:radio[name=fundSettleType]:checked").val();
+	if(radioTp == '01'){
+		//자금정산
+		$.ajax({
+			type : "POST",
+			url : "/rpt/selectfundSettle.do",
+			data : sData,
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			dataType: "json",
+	        success : function(data) {
+	        	fundSettleHot.loadData([]);
+	        	 var totalCount = 0;
+	             if (data.resultList && data.resultList.length > 0) {
+	                 totalCount = data.resultList[0].cnt;
+	             }
+	        	$("#fundSettleCnt").text(totalCount); //검색결과 총 갯수
+	        	fundSettleHot.loadData(data.resultList);
+	        	fn_loading(false);
+	        },
+	        error : function(e, textStatus, errorThrown) {
+	        	if(e.status == 400){
+	        		alert("Your request is up. Please log back in if you wish continue");
+	        		location.href = document.referrer;
+	        	} else {
+		        	console.log(errorThrown);
+		        	alert(msgSearchError);
+	        	}
+	        }
+		});
+	}else if(radioTp == '02'){
+		//마스터 관리
+		$.ajax({
+			type : "POST",
+			url : "/rpt/selectMasterInfo.do",
+			data : sData,
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			dataType: "json",
+	        success : function(data) {
+	        	
+	         var totalCount = data.resultList[0].cnt; 
+	        	$("#fundSettleCnt").text(totalCount); //검색결과 총 갯수
+	        	fundSettleHot.loadData([]);
+	        	fundSettleHot.loadData(data.resultList);
+	        	fn_loading(false);
+	        },
+	        error : function(e, textStatus, errorThrown) {
+	        	if(e.status == 400){
+	        		alert("Your request is up. Please log back in if you wish continue");
+	        		location.href = document.referrer;
+	        	} else {
+		        	console.log(errorThrown);
+		        	alert(msgSearchError);
+	        	}
+	        }
+		});
+	}
+	
+};
+
+
+
+//비용체크박스 
+function fn_CalculAllClick(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_checkCalculAll").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+
+	var data = fundSettleHot.getData();
+
+	for(var i=0; i< data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	fundSettleHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_checkCalculAll").prop("checked", true);
+	} else {
+		$("#id_checkCalculAll").prop("checked", false);
+	}
+}
+
+//포워더체크박스 
+function fn_ForwardAllClick(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_checkForwardAll").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+
+	var data = calculateDetailHot.getData();
+
+	for(var i=0; i< data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	calculateDetailHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_checkForwardAll").prop("checked", true);
+	} else {
+		$("#id_checkForwardAll").prop("checked", false);
+	}
+}
+
+
+//row 수
+$("select[name=fundSettlePageCnt]").change(function(){
+	fn_searchFundSettleViewInfo();
+});
+
+
+// 스크롤할 때 행이 자동으로 추가 로드될 수 있게 하는 함수
+function fn_calculateasEventReg(){
+ $("#fundSettleTable .wtHolder").scroll(function(){
+	  	  var scrollTop = $("#fundSettleTable .wtHolder").scrollTop();
+	  	  var countPerPage = $("#fundSettlePageCnt option:selected").val();
+	  	  var rowHeight = fundSettleHot.getRowHeight();
+	  	  var addCnt = 727;
+	  	  if(countPerPage == "50"){
+	  		  addCnt = 727;
+	  	  }else if(countPerPage == "100"){
+	  		  addCnt = 2040;
+	  	  }else if(countPerPage == "200"){
+	  		  addCnt = 3290;
+	  	  }else if(countPerPage == "500"){
+	  		  addCnt = 4540;
+	  	  }
+	  	if(fundSettleScrollTp && fundSettleIndex != 9999 && scrollTop >= (countPerPage * fundSettleIndex * rowHeight) + addCnt){
+	  		fn_fundSettleScroll();
+	  	  }
+	  });
+
+}
+
+
+//스크롤
+function fn_fundSettleScroll(){
+	if( $("input[name=calculateType]:checked").val() == "enrol")
+		return;
+	
+	fn_loading(true);
+	fundSettleScrollTp = false;
+	fundSettleIndex++;
+	
+	var sData = fn_setCalculView();
+	var radioTp = $("input:radio[name=fundSettle_srch1]:checked").val();
+	var tableType = $("input:radio[name=fundSettleType]:checked").val();
+
+	if(radioTp == '01'){
+		$.ajax({
+		type : "POST",
+		url : "/rpt/selectfundSettle.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	var getData = fundSettleHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	fundSettleHot.loadData(meargeJson);
+        	fundSettleScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+	}else if(radioTp == '02'){
+		//마스터 관리
+		$.ajax({
+			type : "POST",
+			url : "/rpt/selectMasterInfo.do",
+			data : sData,
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			dataType: "json",
+	        success : function(data) {
+	        	var getData = fundSettleHot.getSourceData();
+	        	var meargeJson = getData.concat(data.resultList);
+	        	fundSettleHot.loadData(meargeJson);
+	        	fundSettleScrollTp = true;
+	        	fn_loading(false);
+	        },
+	        error : function(e, textStatus, errorThrown) {
+	        	if(e.status == 400){
+	        		alert("Your request is up. Please log back in if you wish continue");
+	        		location.href = document.referrer;
+	        	} else {
+		        	console.log(errorThrown);
+		        	alert(msgSearchError);
+	        	}
+	        }
+		});
+	}
+}
+
+
+//Popup 테이블 스크롤
+function calculateUseEventReg(){
+	$("#popUsedTable .wtHolder").scroll(function(){
+	  fn_popUsedStories(row, col)
+	  var data = exportViewHot.getSourceData();
+	  var scrollTop = $("#popUsedTable .wtHolder").scrollTop();
+	  var countPerPage = 50;
+	  var rowHeight = jdgmntUsageHot.getRowHeight();
+	  var addCnt = 790;
+
+//	  var addCnt = 790;
+//	  if(countPerPage == "50"){
+//		  addCnt = 790;
+//	  }else if(countPerPage == "100"){
+//		  addCnt = 2040;
+//	  }else if(countPerPage == "200"){
+//		  addCnt = 3290;
+//	  }else if(countPerPage == "500"){
+//		  addCnt = 4540;
+//	  }
+
+	  if(calculatePopScrollTp && fundSettleIndex != 9999 && scrollTop >= (countPerPage * fundSettleIndex * rowHeight) + addCnt){
+		  fn_calculatePopScroll(data[row]);
+	  }
+});
+
+}
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchFundSettleViewInfo();
+    }
+}
+
+
+//검색조건 초기화
+function fn_clearfundSettleView(){
+	
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	  
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	
+	$("#fundSettle_srch2").val(mtoday);
+	$("#fundSettle_srch3").val(today);
+};
+
+
+//테이블 컬럼
+function fn_fundSettleTableCol(){
+	
+	var itemPkNoneEdit = function(instance, td, row, col, prop, value, cellProperties) {
+	    // Handsontable 기본 셀 스타일 적용
+	    Handsontable.renderers.TextRenderer.apply(this, arguments);
+	}
+	var tableType = $("input:radio[name=fundSettleType]:checked").val();
+	var radioTp = $("input:radio[name=fundSettle_srch1]:checked").val();
+	
+	var fundSettleDetailRender = function(instance, td, row, col, prop, value, cellProperties) {
+		$(td).empty();
+		
+		 // 부모 요소를 Flexbox로 정렬
+	    $(td).css({
+	        "display": "flex",
+	        "justify-content": "center",
+	        "align-items": "center"
+	    });
+		
+	    if (value != '' && value != null) {
+	        var $detailButton = $('<i class="fas fa-search search-icon" style="cursor:pointer; margin-right: 5px;" onclick="fn_fundSettleDetailList('+row+','+col+')"></i>');
+	        $(td).append($detailButton);
+	    }
+
+	    // 값 추가
+	    if (value != null) {
+	        $(td).append($('<span>').text(value));
+	    }
+	};
+	
+		this.fundSettleCol =  
+			(tableType == "read" && radioTp == "02") ?[
+			{data : 'seq', className : "htCenter",wordWrap: false, width: 150, readOnly:true},
+			{data : 'grpCd', className : "htCenter",wordWrap: false, width: 150, readOnly:true},
+			{data : 'cmmnCd', className : "htCenter",wordWrap: false, width: 150, readOnly:true},
+			{data : 'cmmnNm', className : "htCenter",wordWrap: false, width: 150,  readOnly:true},
+			{data : 'delYn', className : "htCenter",wordWrap: false,width: 80,  readOnly:true}
+			] :
+			((tableType == "edit" || tableType == "enrol") && radioTp == "02") ?[
+			{data : 'seq', className : "htCenter",wordWrap: false, width: 150, readOnly:true},
+			{data : 'grpCd', className : "htCenter",wordWrap: false, width: 150},
+			{data : 'cmmnCd', className : "htCenter",wordWrap: false, width: 150},
+			{data : 'cmmnNm', className : "htCenter",wordWrap: false, width: 150},
+			{data : 'delYn',  type: 'dropdown', source: ['Y', 'N'], className : "htCenter",wordWrap: false,width: 80}
+			] : 
+			(radioTp == "01" && tableType == "read") ?[
+			{data : 'checkBox', type : 'text', className : "htCenter", width: 60, type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},
+			{data : 'hawb', className : "htCenter",wordWrap: false, width: 150, readOnly:true},
+			{data : 'rptNo', className : "htCenter",wordWrap: false, width: 150, readOnly:true,renderer : fundSettleDetailRender},
+			{data : 'tradeComNm', className : "htCenter",wordWrap: false, width: 180, readOnly:true},
+			{data : 'singoDt', className : "htCenter",wordWrap: false, width: 100, readOnly:true},
+			{data : 'suriDt', className : "htCenter",wordWrap: false, width: 100, readOnly:true},
+			{data : 'frKey', className : "htCenter",wordWrap: false, width: 150, readOnly:true},
+			{data : 'etc', className : "htCenter",wordWrap: false, width: 180, readOnly:true},
+			{data : 'deadlineYn', className : "htCenter",wordWrap: false,  readOnly:true},
+			]:(radioTp == "01" && tableType == "edit") ?[
+			{data : 'checkBox', type : 'text', className : "htCenter", width: 60, readOnly:true, type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},
+			{data : 'hawb', className : "htCenter",wordWrap: false, width: 150, readOnly:true},
+			{data : 'rptNo', className : "htCenter",wordWrap: false, width: 150,renderer : fundSettleDetailRender, readOnly:true},
+			{data : 'tradeComNm', className : "htCenter",wordWrap: false, width: 180, readOnly:true},
+			{data : 'singoDt', className : "htCenter",wordWrap: false, width: 100, readOnly:true},
+			{data : 'suriDt', className : "htCenter",wordWrap: false, width: 100, readOnly:true},
+			{data : 'frKey', className : "htCenter",wordWrap: false, width: 150, readOnly:true},
+			{data : 'etc', className : "htCenter",wordWrap: false, width: 180},
+			{data : 'deadlineYn', className : "htCenter",wordWrap: false, type: 'dropdown',source: ['Y', 'N']},
+			]:[];
+}
+
+
+
+//테이블 헤더
+function fn_fundSettleTableHeader(){
+	var tableType = $("input:radio[name=fundSettleType]:checked").val();
+	var radioTp = $("input:radio[name=fundSettle_srch1]:checked").val(); 
+			this.fundSettleHeader =( radioTp == "02")? [
+				"seq","구분","코드","이름","삭제여부"
+				]:[
+					"","B/L번호","신고번호","납세의무자","신고일자","수리일자","frKey","기타사항","마감여부"
+				]; 
+	
+}
+
+//테이블 히든컬럼
+function fn_fundSettleTableHidden(){
+	var tableType = $("input:radio[name=fundSettleType]:checked").val();
+	var radioTp = $("input:radio[name=fundSettle_srch1]:checked").val(); 
+	if(radioTp == '02'){
+		this.fundSettleHidden = [0];
+	}else  if(radioTp == '01' && tableType == 'read'){
+		this.fundSettleHidden = [6];
+	}else if(radioTp == '01' && tableType == 'edit'){
+		this.fundSettleHidden = [0,6];
+	}
+	
+}
+
+function fn_fundSettleDetailList(row, col){
+	var data = fundSettleHot.getSourceDataAtRow(row);
+	
+
+	
+$("#fundSettleDetailtPopUp").modal("show");
+	
+	var rptNoTitle = "신고번호: " + data.rptNo;
+	var blNoTitle = "BL번호: " + data.hawb;
+    
+    var fundSettleDetailTitle = document.querySelector('.modal-content .fundSettleModal-title span');
+    fundSettleDetailTitle.textContent = rptNoTitle+"  /  "+blNoTitle;
+	
+    globalSData = {
+            "srch1": data["rptNo"].replace(/-/g, ''),
+            "srch2": data["hawb"],
+            "srch9": data["frKey"],
+    		"srch10": data["tradeComNm"]
+        };
+
+	//console.log("globalSData", globalSData);
+	
+    fn_searchSettleDetailPopup(globalSData);
+}
+
+
+function fundSettleDetailListClose(){
+	  // 데이터 초기화 후 모달 닫기 (약간의 딜레이 추가)
+    fundSettleDetailHot.loadData([]);
+    
+    setTimeout(function() {
+        $("#fundSettleDetailtPopUp").modal("hide");
+    }, 50);
+}
+
+
+function fn_searchSettleDetailPopup(sData){
+	fn_loading(true);
+	 $.ajax({
+			type : "POST",
+			url : "/rpt/fundSettleDetailList.do",
+			data : sData,
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			dataType : 'json',
+			async: false,
+	        success : function(data) {
+	        	//console.log("data.resultList"+data.resultList);
+	        	fundSettleDetailHot.loadData([]);
+	        	fundSettleDetailHot.loadData(data.resultList);
+				setTimeout(function() {fundSettleDetailHot.render()}, 50);
+				fn_loading(false);
+	        },
+	        error : function(e, textStatus, errorThrown) {
+	        	if(e.status == 400){
+	        		alert("에러 발생");
+	        		location.href = document.referrer;
+	        	} else {
+		        	console.log(errorThrown);
+		        	alert(msgSearchError);
+	        	}
+	        }
+		});
+	}
+
+//table
+function fn_handsonGridCalOption(col, header, hidden){
+	var tableType = $("input:radio[name=fundSettleType]:checked").val();
+	
+	fundSettleSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 550,
+	  rowHeights : 25,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualColumnResize : true,
+	  manualRowMove : true,
+	  manualColumnMove : false,
+	  //dropdownMenu : true,
+	  copyPaste: true, // 엑셀 복사-붙여넣기 활성화
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	  columnSorting : {indicator : true},
+      autoColumnSize : {samplingRatio : 23},
+      ergeCells : false,
+      wordWrap : true,
+      afterGetColHeader: function(col, TH){
+      	if(col == 0){
+        	TH.innerHTML = "<input type='checkbox'  class='checker' id='id_checkCalculAll' onclick='fn_CalculAllClick();'>";
+        }
+      } ,
+	};
+	return fundSettleSettings;
+}
+
+
+function fn_handsonGridImpViewListPopupOption() {
+	impViewListPopupSettings = {
+columns: [
+        	//{ data :'checkBox', type :'text', className :"htCenter", width: 30, type:'checkbox', checkedTemplate:'yes', uncheckedTemplate:'no', readOnly:false },
+            { data: 'category', type: 'text', className: "htCenter" },
+            {
+                data: 'supplier',
+                editor: 'select',  // select 박스 사용
+                selectOptions: customDropdown, // 기본적으로 customDropdown을 사용
+                className: "htCenter",
+                renderer: function (instance, td, row, col, prop, value, cellProperties) {
+                    // 기존 값 유지
+                    Handsontable.renderers.TextRenderer.apply(this, arguments);
+                }
+            },
+            //{ data: 'supplier', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'clearFee', type : 'numeric', className : "htRight", 	numericFormat : {pattern : '0,0'},className: "htCenter"},
+            { data: 'taxVat', type : 'numeric',className : "htRight", 	numericFormat : {pattern : '0,0'}, className: "htCenter"},
+            { data: 'sumEk', type : 'numeric', className : "htRight", 	numericFormat : {pattern : '0,0'},className: "htCenter"},
+            { data: 'note', type : 'text', className: "htCenter"}
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["비용명", "공급업체", "공급가", "부가세", "합계", "비고"],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        contextMenu : ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] ,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: true,
+        allowRemoveRow : true,
+        // ✅ 각 행마다 category 값에 따라 selectOptions 동적으로 설정!
+        cells: function (row, col, prop) {
+            let cellProperties = {};
+
+            if (prop === 'supplier') {
+                // fundSettleDetailHot가 초기화된 후에만 getSourceDataAtRow 호출
+                if (fundSettleDetailHot) {
+                    // category 값 가져오기 (null 또는 undefined 방지)
+                    let rowData = fundSettleDetailHot.getSourceDataAtRow(row);
+
+                    // rowData가 유효하면 category 값을 안전하게 가져오기
+                    let categoryValue = rowData ? rowData.category : undefined;
+
+                    //console.log(`📌 Row ${row} Category: ${categoryValue}`);
+
+                    switch (categoryValue) {
+                        case "관세":
+                        case "부가세":
+                            cellProperties.selectOptions = customDropdown;
+                            break;
+                        case "항공운임":
+                        case "항공사수수료":
+                            cellProperties.selectOptions = forwordDropdown;
+                            break;
+                        case "창고료":
+                            cellProperties.selectOptions = warehouseDropdown;
+                            break;
+                        case "보험료":
+                            cellProperties.selectOptions = PremiumDropdown;
+                            break;
+                        case "내륙운송료":
+                            cellProperties.selectOptions = transportationDropdown;
+                            break;
+                        case "통관수수료":
+                            cellProperties.selectOptions = feeDropdown;
+                            break;
+                            
+                        default:
+                            cellProperties.selectOptions = masterDropdown;
+                    }
+
+                    //console.log(`✅ Updated selectOptions for Row ${row}:`, cellProperties.selectOptions);
+                } else {
+                   // console.log("❌ fundSettleDetailHot is not initialized yet.");
+                }
+            }
+
+            return cellProperties;
+        }
+	};
+
+    return impViewListPopupSettings;
+}
+
+
+
+//테이블 타입 변경
+function fn_changeFundSettleView(type) {
+    var searchTp = $("input:radio[name=fundSettleType]:checked").val();
+    var radioTp = $("input:radio[name=fundSettle_srch1]:checked").val();
+
+    if (radioTp == "01") {
+    	if(searchTp == "read"){
+    		 console.log("01 선택됨");
+    	        $("#fundSettleExcelDown").show();
+    	        $("#fundSettleSaveBtn").hide();
+    	        $(".fundSettle_div3").show();
+    	        $(".fundSettle_div4").show();
+    	        $(".fundSettle_div5").hide();
+    	        $(".fundSettle_div6").hide();
+    	        $("#fundSettle_div1").show();
+    	        $("#fundSettle_div2").show();
+    	        $(".registerDay").show();
+    	        $("#fundSettleEtcSaveBtn").hide();
+    	}else {
+    		console.log("1이랑 edit")
+    		$("#fundSettleExcelDown").show();
+	        $("#fundSettleSaveBtn").hide();
+	        $(".fundSettle_div3").show();
+	        $(".fundSettle_div4").show();
+	        $(".fundSettle_div5").hide();
+	        $(".fundSettle_div6").hide();
+	        $("#fundSettle_div1").show();
+	        $("#fundSettle_div2").show();
+	        $(".registerDay").show();
+	        $("#fundSettleEtcSaveBtn").show();
+    	}
+       
+        
+        fn_changefundSettleViewType(searchTp);
+    } else if (radioTp == "02") {
+        if (searchTp == "edit") {
+            console.log("edit 모드");
+            $("#fundSettleExcelDown").hide();
+            $("#fundSettleSaveBtn").show();
+            $(".fundSettle_div3").hide();
+            $(".fundSettle_div4").hide();
+            $(".fundSettle_div5").show();
+            $(".fundSettle_div6").show();
+            $("#fundSettle_div1").hide();
+            $("#fundSettle_div2").hide();
+            $(".registerDay").hide();
+            $("#fundSettleEtcSaveBtn").hide();
+        } else if (searchTp == "enrol") {
+            console.log("enrol 모드");
+            $("#fundSettleExcelDown").hide();
+            $("#fundSettleSaveBtn").show();
+            $(".fundSettle_div3").hide();
+            $(".fundSettle_div4").hide();
+            $(".fundSettle_div5").show();
+            $(".fundSettle_div6").show();
+            $("#fundSettle_div1").hide();
+            $("#fundSettle_div2").hide();
+            $(".registerDay").hide();
+            $("#fundSettleEtcSaveBtn").hide();
+        } else {
+            console.log("read 모드");
+            fundSettleHot.updateSettings({ readOnly: true, contextMenu: false });
+            $("#fundSettleExcelDown").hide();
+            $("#fundSettleSaveBtn").hide();
+            $(".fundSettle_div3").hide();
+            $(".fundSettle_div4").hide();
+            $(".fundSettle_div5").show();
+            $(".fundSettle_div6").show();
+            $("#fundSettle_div1").hide();
+            $("#fundSettle_div2").hide();
+            $(".registerDay").hide();
+            $("#fundSettleEtcSaveBtn").hide();
+        }
+        fn_changefundSettleViewType(searchTp);
+    }
+
+};
+//자금정산 디테일 저장 
+function fn_fundSettleDetailListSave(){
+	   console.log("Saving data:", globalSData);
+	   var detailData = fundSettleDetailHot.getSourceData();
+	   var popData = [];
+	   for(var i=0; i<detailData.length; i++){
+		   popData.push(detailData[i])
+	   }
+	   
+	   for (var i = 0; i < popData.length; i++) {
+	        popData[i].rptNo = globalSData.srch1;
+	        popData[i].blno = globalSData.srch2;
+	        popData[i].frKey = globalSData.srch9;
+	    }
+	   
+	   console.log("Updated popData:", popData);
+	   $.ajax({
+		   type : "POST",
+			url : "/rpt/savefundSettleDetail.do",
+			data : JSON.stringify(popData),
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			contentType: "application/json; charset=utf-8",
+	        success : function(data) {
+	            if(data.trim() === "success"){ 
+	        		alert("저장이 완료되었습니다.");
+	        		fundSettleDetailListClose();
+	        		fn_searchFundSettleViewInfo();
+	        	}
+	        	fn_loading(false);
+	        },
+	        error : function(e, textStatus, errorThrown) {
+	        	if(e.status == 400){
+	        		alert("Your request is up. Please log back in if you wish continue");
+	        		location.href = document.referrer;
+	        	} else {
+		        	console.log(errorThrown);
+		        	alert(msgSaveError);
+	        	}
+	        }
+		});
+}
+
+//마스터 편집 저장 
+function fn_savefundSettleSave(){
+	fn_loading(true);
+	var editeData = fundSettleHot.getSourceData();
+	var popData = [];
+	for(var i=0; i<editeData.length; i++){
+		popData.push(editeData[i]);
+	}
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/savefundSettle.do",
+		data : JSON.stringify(popData),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		contentType: "application/json; charset=utf-8",
+        success : function(data) {
+            if(data.trim() === "success"){ 
+        		alert("저장이 완료되었습니다.");
+        		$("input:radio[name=fundSettle_srch1][value='02']").prop("checked", true).trigger("click");
+        		$("input:radio[name=fundSettleType][value='read']").prop("checked", true).trigger("click");
+        		setTimeout(function() {
+        		    fn_searchFundSettleViewInfo();  // 라디오 버튼 변경 후 검색 실행
+        		}, 100);
+        	}
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSaveError);
+        	}
+        }
+	});
+}
+
+
+//기타사항 저장 
+function fn_savefundSettleEtc(){
+	fn_loading(true);
+	var editeData = fundSettleHot.getSourceData();
+	var popData = [];
+	for(var i=0; i<editeData.length; i++){
+		popData.push(editeData[i]);
+	}
+	
+	$.ajax({
+		type : "POST",
+		url : "/rpt/savefundSettleEtc.do",
+		data : JSON.stringify(popData),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		contentType: "application/json; charset=utf-8",
+        success : function(data) {
+            if(data.trim() === "success"){ 
+        		alert("저장이 완료되었습니다.");
+        		$("input:radio[name=fundSettle_srch1][value='01']").prop("checked", true).trigger("click");
+        		$("input:radio[name=fundSettleType][value='read']").prop("checked", true).trigger("click");
+        		fn_changeFundSettleView();
+        		setTimeout(function() {
+        		    fn_searchFundSettleViewInfo();  // 라디오 버튼 변경 후 검색 실행
+        		}, 100);
+        	}
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSaveError);
+        	}
+        }
+	});
+}
+
+
+//검색구분 변경
+function fn_changefundSettleViewType(type){
+	let fundSettleCol = new fn_fundSettleTableCol();
+	let fundSettleHeader = new fn_fundSettleTableHeader();
+	let fundSettleHidden = new fn_fundSettleTableHidden();
+	
+	var col, header, hidden, col2, header2, hidden2, col3, header3, hidden3 ;
+
+	//fn_searchGridPurchOption(true);
+	col = fundSettleCol.fundSettleCol;
+	header = fundSettleHeader.fundSettleHeader;
+	hidden = fundSettleHidden.fundSettleHidden;
+
+	
+	fundSettleHot.updateSettings(fn_handsonGridCalOption(col, header, hidden));
+
+	var radioTp = $("input:radio[name=fundSettle_srch1]:checked").val();
+	
+	// 마스터관리
+	if(radioTp == '02'){
+		console.log("마스터관리");
+		$('input[name="fundSettleType"][value="enrol"]').parent().show(); 
+		if(type == "read"){
+			fn_searchFundSettleViewInfo();
+			$("btnCalculateViewSave").hide();
+			}if(type == 'enrol'){
+				fundSettleHot.loadData([]);
+				fundSettleHot.alter('insert_row_below', 1, 1);
+				fn_loading(false);
+			}if(type == 'edit'){
+				//calculateDetailHot2.loadData([]);
+				console.log("5");
+				fn_searchFundSettleViewInfo();
+			}
+	//자금정산
+	}else if(radioTp == '01'){
+		console.log("자금정산");
+	    if(type == "read"){
+	        $('input[name="fundSettleType"][value="enrol"]').parent().hide();    // 'edit' 라디오 숨기기
+	        
+		    fn_searchFundSettleViewInfo();
+	    }else if(type == "edit"){
+	    	fn_searchFundSettleViewInfo();
+	    }
+	
+		
+	}
+	//fn_searchFundSettleViewInfo();
+	
+	
+};
+
+//정산서 엑셀 다운로드 
+function fn_funcSettleExcelDownload(){
+	fn_loading(true);
+	var cnt1 = 0;
+	var checkedData = fundSettleHot.getSourceData();
+	var fundSettle = [];
+	var fundSettle1 = [];
+	var blno = "";
+	 // 체크박스를 확인
+	 for (var i = 0; i < checkedData.length; i++) {
+	        // 체크박스가 체크되어 있는지 확인
+	        if (checkedData[i].checkBox === 'yes') {  // 'yes'일 경우 체크된 항목
+	            fundSettle.push(checkedData[i]);  // 해당 항목을 fundSettle에 추가
+	            fundSettle1.push({ blno: checkedData[i].hawb}); 
+	            cnt1++;  // 체크된 항목 개수 증가
+	        }
+	    }
+
+	    //console.log("체크된 항목 개수:", cnt1); // 체크된 항목 개수 확인
+	    //console.log("blno:", blno); // 체크된 항목 개수 확인
+    
+    // 체크된 항목이 1개 이상일 경우 alert을 띄움
+    /*if (cnt1 > 1) {
+        alert("정산서 엑셀 다운로드는 1개만 가능합니다.");
+        return false;
+    }  else*/ 
+	 if((cnt1 == 0)){
+        alert("정산서 엑셀 다운로드를 위해 최소 1개 항목을 선택하세요.");
+        return false;
+    }
+    
+    console.log("fundSettle",fundSettle);
+    console.log("fundSettle1",fundSettle1);
+    
+   $.ajax({
+    	type : "POST",
+    	url :"/rpt/excelFundSettle.do",
+    	data : JSON.stringify(fundSettle),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		contentType: "application/json; charset=utf-8",
+		async : false,
+		success : function(data, textStatus, jqXHR) {
+			console.log("서버응담:",data);
+			if(data == "success"){
+				fn_downloadSettleDO(fundSettle1);
+			} else {
+				alert("오류가 발생하였습니다.");
+			}
+			fn_loading(false);
+		},
+	
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("Your request is up. Please log back in if you wish continue");
+				location.href = document.referrer;
+			} else { 
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+    });
+	
+}
+
+function fn_downloadSettleDO(blno){
+	 if (!Array.isArray(blno)) {
+	        // ✅ 단일 파일 다운로드
+	     console.log("1");  
+		 window.location.href = "/rpt/downloadSettle.do?blno=" + encodeURIComponent(blno);
+	     return;
+	     fn_searchFundSettleViewInfo(); 
+	    }
+	    if (blno.length === 1) {
+	    	 console.log("2");  
+	        // ✅ 체크한 항목이 1개면 기존 방식 유지
+	        window.location.href = "/rpt/downloadSettle.do?blno=" + encodeURIComponent(blno[0].blno);
+	        fn_searchFundSettleViewInfo();
+	    } else {
+	        // ✅ 여러 개 선택하면 ZIP으로 다운로드 (Ajax 방식)
+	    	
+	    	var fundSettle = blno.map(item => item.blno);
+
+	        console.log("📌 ZIP 다운로드 요청 - blno 목록:", fundSettle);
+
+	        $.ajax({
+	            type: "POST",
+	            url: "/rpt/downloadSettleZip.do",
+	            data: JSON.stringify(fundSettle),
+	            beforeSend: function (xmlHttpRequest) {
+	                xmlHttpRequest.setRequestHeader("AJAX", "true");
+	            },
+	            contentType: "application/json; charset=utf-8",
+	            xhrFields: {
+	                responseType: "blob"
+	            },
+	            success: function (data, textStatus, xhr) {
+	            	  // ✅ 서버에서 받은 파일 이름을 헤더에서 가져오기
+	                var zipFileName = xhr.getResponseHeader("Zip-File-Name");
+
+	                if (!zipFileName) {
+	                    console.error("❌ Zip-File-Name 헤더가 없습니다.");
+	                    return;
+	                }
+
+	                zipFileName = decodeURIComponent(zipFileName); // 한글 파일명 깨짐 방지
+
+	                console.log("📌 받은 파일 이름:", zipFileName);
+
+	                var blob = new Blob([data], { type: "application/zip" });
+	                var link = document.createElement("a");
+	                link.href = window.URL.createObjectURL(blob);
+	                link.download = zipFileName;  // 헤더에서 받은 파일 이름 사용
+
+	                document.body.appendChild(link);
+	                link.click();
+	                document.body.removeChild(link);
+	                fn_searchFundSettleViewInfo();
+	            },
+	            error: function () {
+	                alert("ZIP 다운로드 중 오류 발생");
+	            }
+	        });
+	    }
+};
+
+

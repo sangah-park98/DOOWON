@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.api.service.impl.ApiShippingMapper">
+
+	<update id="updateOrderId" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			order_id = #{orderId}
+		WHERE rpt_no = #{rptNo}
+		AND bl_no = #{blNo}
+		AND ct_no = #{ctNo}
+		AND order_state = '접수'
+	</update>
+	
+	<update id="stateChange" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			order_state = #{orderState},
+			arrive_est_dt = CASE WHEN #{orderState} = '출발' THEN #{arriveEstDt} ELSE arrive_est_dt END,
+			arrive_dt = CASE WHEN #{orderState} = '도착' THEN NOW() ELSE arrive_dt END
+		WHERE order_id = #{orderId}
+	</update>
+	
+	<update id="arrangeAlloc" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			order_state = '배차',
+			est_charge = #{estCharge},
+			car_no = #{carNo},
+			car_nm = #{carNm},
+			car_phn_no = #{carPhnNo},
+			shipping_nm = #{shippingNm},
+			shipping_phn_no = #{shippingPhnNo},
+			dispatch_dt = #{dispatchDt}
+		WHERE order_id = #{orderId}
+	</update>
+	
+	<update id="allocCancel" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			order_state = '배차 취소',
+			reg_id = #{regId}
+		WHERE order_id = #{orderId}
+	</update>
+	
+	<update id="orderCancel" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			order_state = '요청 취소',
+			edt_id = #{regId}
+		WHERE order_id = #{orderId}
+	</update>
+	
+	<insert id="stateOrderAdd" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		INSERT INTO
+		shipping_order (
+			order_state,
+			cmpny_nm,
+			corp_no,
+			bl_no, 
+			rpt_no,
+			order_id,
+			recv_nm,
+			arrive_addr,
+			est_charge,
+			order_seq,
+			to_dt,
+			to_addr,
+			to_staff,
+			to_phn_no,
+			reg_dt
+		)
+		VALUES(
+			'접수',
+			#{cmpnyNm},
+			#{corpNo},
+			#{blNo},
+			#{rptNo},
+			#{orderId},
+			#{recvNm},
+			#{arriveAddr},
+			#{estCharge},
+			#{orderSeq},
+			DATE_FORMAT(#{arriveDt}, '%Y%m%d'),
+			#{arriveAddr},
+			#{recvNm},
+			#{toPhnNo},
+			NOW()
+		)
+	</insert>
+	
+	<select id="orderSeqCnt" parameterType="searchVO" resultType="int">
+		SELECT COALESCE(MAX(order_seq), 0) AS max_order_seq 
+		FROM shipping_order 
+		WHERE rpt_no = #{srch1} AND bl_no = #{srch2}
+	</select>
+	
+	<update id="etcCharge" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			fixed_charge = #{fixedCharge}
+		WHERE order_id = #{orderId}
+		AND rpt_no = #{rptNo}
+		AND bl_no = #{blNo}
+	</update>
+	
+	<update id="updateOrderState" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			edt_dt = #{edtDt},
+			from_req = #{fromReq},
+			from_specifics = #{fromSpecifics},	
+			from_dt = #{fromDt},
+			from_time = #{fromTime},	
+			from_addr = #{fromAddr},	
+			est_charge = #{estCharge},	
+			goods_weight = #{goodsWeight},	
+			mix_yn = #{mixYn},	
+			to_staff = #{toStaff},	
+			to_phn_no = #{toPhnNo},	
+			to_addr = #{toAddr},	
+			to_dt = #{toDt},
+			to_time = #{toTime},
+			manager_nm = #{managerNm},
+			bill_email = #{billEmail}
+		WHERE rpt_no = #{rptNo}
+		AND bl_no = #{blNo}
+		AND order_id = #{orderId}
+	</update>
+	
+	
+	<select id="selectShipList" parameterType="searchVO" resultType="egovMap">
+	SELECT 
+	RPT_NO,
+	BL_NO,
+	CMPNY_NM,
+	CT_NO,
+	BILL_EMAIL,
+	REG_ID
+	FROM SHIPPING_ORDER
+	WHERE ORDER_ID = #{srch1}
+	AND DISPATCH_DT = ''
+	</select>
+	
+	
+</mapper>

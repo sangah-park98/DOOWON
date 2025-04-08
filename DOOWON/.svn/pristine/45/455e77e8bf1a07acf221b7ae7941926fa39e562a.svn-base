@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.cmmn.service.impl.AuthorMapper">
+
+	<!-- 사용자그룹 목록 조회 -->
+	<select id="selectUserGrpInfoList" parameterType="searchVO" resultType="egovMap">
+		SELECT GRP_CD
+		     , GRP_CD AS ORG_GRP_CD
+		     , GRP_NM
+		     , ADMIN_YN
+		     , DEL_YN
+		  FROM USER_GRP_INFO
+		 WHERE DEL_YN = 'N'
+           <if test="srch2 != null and srch2 != ''">
+              AND GRP_CD = #{srch2}
+           </if>
+           <if test="srch3 != null and srch3 != ''">
+              AND GRP_NM LIKE CONCAT('%',UPPER(#{srch3}),'%')
+           </if>
+        <choose>
+        	<when test="alignItem == 'GRP_CD'">
+        		ORDER BY GRP_CD
+        	</when>
+        	<when test="alignItem == 'GRP_CD_DESC'">
+        		ORDER BY GRP_CD DESC
+        	</when>
+        	<when test="alignItem == 'GRP_NM'">
+        		ORDER BY GRP_NM
+        	</when>
+        	<when test="alignItem == 'GRP_NM_DESC'">
+        		ORDER BY GRP_NM DESC
+        	</when>
+        	<otherwise>
+        		ORDER BY GRP_CD
+        	</otherwise>
+        </choose>
+          LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+
+	<!-- 사용자그룹 목록 갯수 조회 -->
+	<select id="selectUserGrpInfoListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM USER_GRP_INFO
+		 WHERE DEL_YN = 'N'
+           <if test="srch2 != null and srch2 != ''">
+              AND GRP_CD = #{srch2}
+           </if>
+           <if test="srch3 != null and srch3 != ''">
+              AND GRP_NM LIKE CONCAT('%',UPPER(#{srch3}),'%')
+           </if>
+	</select>
+
+	<!-- 사용자그룹 정보 저장 -->
+	<!-- <insert id="insertUserGrpInfo" parameterType="egovframework.fta.cmmn.service.SaveFtaAuthorVO">
+		INSERT
+		  INTO USER_GRP_INFO (
+							  GRP_CD
+							, GRP_NM
+							, ADMIN_YN
+                            , DEL_YN
+                            , REG_DT
+                            , REG_ID
+	        		 ) VALUES (
+							  #{grpCd}
+							, #{grpNm}
+							, #{adminYn}
+							<choose>
+								<when test="delYn != null and delYn != ''">
+								   , #{delYn}
+								</when>
+								<otherwise>
+								   , 'N'
+								</otherwise>
+							</choose>
+							, DATE_FORMAT(NOW(), '%Y%m%d')
+							, #{regId}
+	        ) ON DUPLICATE KEY
+	                   UPDATE GRP_NM = #{grpNm}
+                            , ADMIN_YN = #{adminYn}
+                            <if test = "delYn != null and delYn != ''">
+								, DEL_YN = #{delYn}
+							</if>
+							<if test = "delYn == null and delYn == ''">
+								, DEL_YN = 'N'
+							</if>  
+							, EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+							, EDT_ID = #{edtId}
+	</insert>
+ -->
+	<!-- 메뉴별권한 목록 조회 -->
+	<select id="selectMenuAuthorList" parameterType="searchVO" resultType="egovMap">
+			SELECT DISTINCT
+			    B.GRP_CD, 
+			    B.GRP_NM, 
+			    C.MENU_ID, 
+			    CASE 
+			        WHEN C.MENU_TYPE = '01' THEN '대메뉴'
+			        WHEN C.MENU_TYPE = '02' THEN '소메뉴'
+			    END AS MENU_TYPE, 
+			    C.MENU_NM_KR AS menuNmKr,
+			    GET_AUTHOR_INFO(D.GRP_CD, C.MENU_ID, 'R') AS R_YN,
+			    GET_AUTHOR_INFO(D.GRP_CD, C.MENU_ID, 'W') AS W_YN
+			FROM 
+			    USER_GRP_INFO B
+			LEFT JOIN 
+			    MENU_INFO C ON C.DISP_YN = 'Y' AND C.DEL_YN = 'N'
+			LEFT JOIN 
+			    MENU_AUTHOR_INFO D ON B.GRP_CD = D.GRP_CD AND C.MENU_ID = D.MENU_ID AND D.DEL_YN ='N'
+			WHERE 
+			    C.DEL_YN = 'N'
+			    AND C.DISP_YN = 'Y'
+		   <if test="srch2 != null and srch2 != ''">
+              AND b.GRP_CD = #{srch2}
+           </if>
+           <if test="srch4 != null and srch4 != ''">
+              AND C.MENU_TYPE = #{srch4}
+           </if>
+           <if test="srch5 != null and srch5 != ''">
+            AND C.MENU_NM_KR LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		        <!-- <choose>
+		        	<when test="lang == 'en'">
+		        		AND C.MENU_NM_EN LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		        	</when>
+		        	<otherwise>
+		        		AND C.MENU_NM_KR LIKE CONCAT('%',UPPER(#{srch5}),'%')
+		        	</otherwise>
+		        </choose> -->
+           </if>
+           <choose>
+        	<when test="alignItem == 'GRP_CD'">
+        		ORDER BY B.GRP_CD
+        	</when>
+        	<when test="alignItem == 'GRP_CD_DESC'">
+        		ORDER BY B.GRP_CD DESC
+        	</when>
+        	<when test="alignItem == 'GRP_NM'">
+        		ORDER BY B.GRP_NM
+        	</when>
+        	<when test="alignItem == 'GRP_NM_DESC'">
+        		ORDER BY B.GRP_NM DESC
+        	</when>
+        	<otherwise>
+        		ORDER BY B.GRP_NM DESC,C.MENU_TYPE,C.MENU_NM_KR
+        	</otherwise>
+        </choose>
+         LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+
+	<!-- 메뉴별권한 목록 갯수 조회 -->
+	<select id="selectMenuAuthorListCnt" parameterType="searchVO" resultType="int">
+			SELECT DISTINCT
+			    COUNT(*)
+			FROM 
+			    USER_GRP_INFO B
+			LEFT JOIN 
+			    MENU_INFO C ON C.DISP_YN = 'Y' AND C.DEL_YN = 'N'
+			LEFT JOIN 
+			    MENU_AUTHOR_INFO D ON B.GRP_CD = D.GRP_CD AND C.MENU_ID = D.MENU_ID AND D.DEL_YN ='N'
+			WHERE 
+			    C.DEL_YN = 'N'
+			    AND C.DISP_YN = 'Y'
+		   <if test="srch2 != null and srch2 != ''">
+              AND b.GRP_CD = #{srch2}
+           </if>
+           <if test="srch3 != null and srch3 != ''">
+              AND b.GRP_NM LIKE CONCAT('%',UPPER(#{srch3}),'%')
+           </if>
+           <if test="srch4 != null and srch4 != ''">
+              AND C.MENU_TYPE = #{srch4}
+           </if>
+           <if test="srch5 != null and srch5 != ''">
+            AND C.MENU_NM_KR LIKE CONCAT('%',UPPER(#{srch5}),'%')
+           </if>
+	</select>
+
+	<!-- 그룹별권한 정보 저장 -->
+	<insert id="insertGroupAuthor" parameterType="egovframework.pf.cmmn.service.SaveAuthorVO">
+		INSERT
+		  INTO user_grp_info (
+								  GRP_CD
+								, GRP_NM
+								, ADMIN_YN
+	                            , DEL_YN
+	                            , REG_DT
+	                            , REG_ID
+		        	   ) VALUES (
+								  #{grpCd}
+								, #{grpNm}
+								, #{adminYn}
+								, 'N'
+								, DATE_FORMAT(NOW(), '%Y%m%d')
+								, #{regId}
+		              ) ON DUPLICATE KEY 
+		              	UPDATE
+		              		GRP_NM = #{grpNm},
+		              		ADMIN_YN = #{adminYn},
+		              		<if test = "delYn != null and delYn != ''">
+								DEL_YN = #{delYn},
+							</if>
+							<if test = "delYn == null and delYn == ''">
+								DEL_YN = 'N',
+							</if>  
+		              	    EDT_ID = #{regId},
+		              	    EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+		              		
+	</insert>
+
+	<!-- 메뉴별권한 정보 저장 -->
+	<insert id="insertMenuAuthor" parameterType="egovframework.pf.cmmn.service.SaveAuthorVO">
+		INSERT
+		  INTO MENU_AUTHOR_INFO (
+								  GRP_CD
+								, MENU_ID
+								, AUTHOR_CD
+	                            , DEL_YN
+	                            , REG_DT
+	                            , REG_ID
+	                            
+		        	   ) VALUES (
+								  #{grpCd}
+								, #{menuId}
+								, #{authorCd}
+								, #{delYn}
+								, DATE_FORMAT(NOW(), '%Y%m%d')
+								, #{regId}
+		              )ON DUPLICATE KEY 
+		              	UPDATE
+		              		<if test = "delYn != null and delYn != ''">
+								DEL_YN = #{delYn},
+							</if>
+							<if test = "delYn == null and delYn == ''">
+								DEL_YN = 'N',
+							</if>  
+		              	    EDT_ID = #{edtId},
+		              	    EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+		              		
+	</insert> 
+	
+	<select id="selectAuthorMember" parameterType="searchVO" resultType="String">
+			SELECT grp_cd FROM cmpny_id_info
+			WHERE usr_id = #{id};
+	</select>
+	
+	<select id="selectMenuIdDropdown" resultType="egovMap">
+	  	SELECT MENU_ID FROM menu_info
+	</select>
+	
+	<select id="selectGroupCodeDropdown" resultType="egovMap">
+	 	SELECT GRP_CD FROM USER_GRP_INFO
+	</select>
+	
+	<select id="selectMenuNameDropdown" resultType="egovMap">
+		SELECT MENU_NM_KR FROM menu_info
+	</select>
+</mapper>

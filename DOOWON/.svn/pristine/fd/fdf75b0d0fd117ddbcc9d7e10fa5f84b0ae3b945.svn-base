@@ -1,0 +1,42 @@
+package egovframework.pf.exp.service;
+
+import java.util.List;
+import java.util.Map;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+
+/**
+ * @Class Name : CustomsExportUpdateService.java
+ * @Description : CustomsExportUpdateService Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       20240.08.07                  권예지         			최초 생성
+ *
+ */
+
+public interface CustomsExportUpdateService {
+
+	Map<String, Object> insertExportTempExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+
+	int insertExportTempDataUploadLog(Map<String, Object> excelData, Map<String, Object> returnData,
+			UserSessionVO loginUser);
+
+	int deleteTempData(Map<String, Object> loginUser);
+
+	List<?> selectCustomsExportViewList(SearchVO vo);
+
+	List<?> selectCustomsFileList(SearchVO vo);
+
+	List<?> selectExportViewLanList(SearchVO vo);
+
+	List<?> selectExportViewSpecList(SearchVO vo);
+
+	void deleteExportView(SearchVO vo);
+
+
+	
+	
+}

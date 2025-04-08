@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.docu.service.impl.pfDocumentMapper">
+	
+	<select id="selectDocumentViewListByRptNo" parameterType="searchVO" resultType="egovMap">
+		SELECT
+		RPT_NO,			
+		CASE COUNT(CASE WHEN docu_type = 'DC' THEN 1 END)	
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'DC',			
+		CASE COUNT(CASE WHEN docu_type = 'UC' THEN 1 END)	
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'UC',			
+		CASE COUNT(CASE WHEN docu_type = 'CI' THEN 1 END)	
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'CI',			
+		CASE COUNT(CASE WHEN docu_type = 'PL' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'PL',
+		CASE COUNT(CASE WHEN docu_type = 'BL' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'BL',
+		CASE COUNT(CASE WHEN docu_type = 'CO' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'CO',
+		CASE COUNT(CASE WHEN docu_type = 'RQ' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'RQ',
+		CASE COUNT(CASE WHEN docu_type = 'CB' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'CB',
+		CASE COUNT(CASE WHEN docu_type = 'OT' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'OT',
+		CASE COUNT(CASE WHEN docu_type = 'AC' THEN 1 END)			
+		WHEN 0 THEN '-'			
+		ELSE 'O' END AS 'AC'
+		FROM file_info	
+		WHERE RPT_NO = #{rptNo}
+		GROUP BY RPT_NO
+	</select>
+	
+	<select id="selectDocumentImpViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+		 	COUNT(*) OVER() AS cnt,
+		    plnt_cd,
+		    pr_ordr,
+		    nab_firm,
+		    blno,
+		    CONCAT_WS('-', 
+		        SUBSTRING(rpt_No, 1, 5),
+		        SUBSTRING(rpt_No, 6, 2),
+		        SUBSTRING(rpt_No, 8)) AS rpt_no, 
+		    DATE_FORMAT(rpt_Day, '%Y-%m-%d') AS rpt_Day, 
+		    DATE_FORMAT(lis_day, '%Y-%m-%d') AS lis_day,
+		    DC,
+		    UC,
+		    CI,
+		    PL,
+		    BL,
+		    CO,
+		    RQ,
+		    CB,
+		    OT,
+		    AC
+		FROM (
+		  	SELECT
+	        SUBSTRING_INDEX(a.user_memo, '\n', 1) AS plnt_cd,
+		    CASE WHEN STR_CNT(a.user_memo, '\n') >= 1 THEN
+			SUBSTRING_INDEX(SUBSTRING_INDEX(a.user_memo, '\n', 2), '\n', -1)
+			ELSE '' END AS pr_ordr,
+			A.nab_firm,
+	        A.blno,
+	        A.rpt_No,
+	        rpt_Day,
+	        lis_day,
+		    CASE WHEN SUM(CASE WHEN C.docu_type = 'DC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'DC',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'UC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'UC',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'CI' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CI',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'PL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'PL',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'BL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'BL',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'CO' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CO',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'RQ' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'RQ',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'CB' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CB',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'OT' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'OT',
+		    CASE WHEN SUM(CASE WHEN B.docu_type = 'AC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'AC'	  			      
+		    FROM cusdec929a1 A
+		   	LEFT JOIN file_info B
+		   	ON A.blno = B.blno
+		   	AND B.FILE_TYPE = 'imp'
+		   	LEFT JOIN file_info C
+		    ON A.rpt_no = C.rpt_no
+		    AND C.FILE_TYPE = 'imp'
+		    AND C.docu_type = 'DC'
+		    WHERE 1=1
+			AND A.Rpt_Seq = '00'
+			AND A.rece In ('수리', '자수', '승인')			
+			<if test="list != null and list.size() > 0">
+	            AND A.nab_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+        	</if>
+			<if test="srch6 != '' and srch6 != null">
+		    AND a.rpt_No LIKE CONCAT('%', UPPER(REPLACE(#{srch6}, '-', '')), '%')
+		    </if>
+		    <if test="srch5 != null and srch5 != ''">
+        	AND A.blno LIKE CONCAT(UPPER(#{srch5}),'%')
+        	</if>
+		    <if test="srch33 == '01'">
+			AND rpt_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    <if test="srch33 == '02'">
+		    AND lis_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    GROUP BY A.blno, A.rpt_No, rpt_Day, lis_day
+		) AS A
+		WHERE 1=1
+		<if test="srch9 != null and srch9 != ''">
+		AND plnt_cd LIKE CONCAT('%',UPPER(#{srch9}),'%')
+		</if>
+		<if test="srch10 != null and srch10 != ''">
+		AND pr_ordr LIKE CONCAT('%',UPPER(#{srch10}),'%')
+		</if>
+		ORDER BY rpt_day desc, rpt_no desc
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+
+	<select id="selectDocumentExpViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			COUNT(*) OVER() AS cnt,
+		    plnt_cd,
+		    pr_ordr,
+		    exp_firm,
+		    Mg_Code ,
+		    CONCAT_WS('-', 
+		        SUBSTRING(A.rpt_No, 1, 5),
+		        SUBSTRING(A.rpt_No, 6, 2),
+		        SUBSTRING(A.rpt_No, 8)) AS rpt_no,
+		    DATE_FORMAT(rpt_Day, '%Y-%m-%d') AS rpt_Day, 
+		    DATE_FORMAT(exp_lis_day, '%Y-%m-%d') AS exp_lis_day,
+		    DC,
+		    UC,
+		    CI,
+		    PL,
+		    BL,
+		    CO,
+		    RQ,
+		    CB,
+		    OT,
+		    AC
+		FROM (
+		     SELECT
+		        SUBSTRING_INDEX(a.user_memo, '\n', 1) AS plnt_cd,
+		    	CASE WHEN STR_CNT(a.user_memo, '\n') >= 1 THEN
+				SUBSTRING_INDEX(SUBSTRING_INDEX(a.user_memo, '\n', 2), '\n', -1)
+				ELSE '' END AS pr_ordr,
+				A.exp_firm,
+		        b.mg_code,
+		        A.rpt_No,
+		        rpt_Day,
+		        exp_lis_day,
+		        CASE WHEN SUM(CASE WHEN D.docu_type = 'DC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'DC',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'UC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'UC',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'CI' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CI',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'PL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'PL',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'BL' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'BL',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'CO' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CO',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'RQ' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'RQ',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'CB' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'CB',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'OT' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'OT',
+		        CASE WHEN SUM(CASE WHEN C.docu_type = 'AC' THEN 1 ELSE 0 END) = 0 THEN '-' ELSE 'O' END AS 'AC'
+		    FROM
+		        cusdec830a1 A
+		    INNER JOIN (
+				 SELECT sna1, rpt_no, mg_code FROM cusdec830b1
+				 GROUP BY sna1, rpt_no)  B
+				 ON A.sn = B.sna1
+				 AND A.rpt_no = B.rpt_no
+		    LEFT JOIN file_info C
+		    ON b.mg_code = C.invoice_no
+		    AND C.FILE_TYPE = 'exp'
+		    LEFT JOIN file_info D
+		    ON A.rpt_no = D.rpt_no
+		    AND D.FILE_TYPE = 'exp'
+		    AND D.docu_type = 'DC'
+		    WHERE 1=1
+		    AND A.Rpt_Seq = '00'
+		    AND A.rece In ('수리', '승인')			
+		    <if test="list != null and list.size() > 0">
+	            AND A.Exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+        	</if>
+		    <if test="srch6 != '' and srch6 != null">
+		    AND  A.rpt_No LIKE CONCAT('%', UPPER(REPLACE(#{srch6}, '-', '')), '%')
+		    </if>
+		    <if test="srch5 != '' and srch5 != null">
+		    AND  B.MG_CODE LIKE CONCAT('%', UPPER(#{srch5}), '%')
+		    </if>
+		    <if test="srch33 == '01'">
+			AND rpt_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    <if test="srch33 == '02'">
+		    AND lis_day BETWEEN REPLACE(#{srch7}, '-', '') AND REPLACE(#{srch8}, '-', '')
+		    </if>
+		    GROUP BY b.mg_code, A.rpt_No, rpt_Day, exp_lis_day
+		) AS A
+		WHERE 1=1
+		<if test="srch9 != null and srch9 != ''">
+		AND plnt_cd LIKE CONCAT('%',UPPER(#{srch9}),'%')
+		</if>
+		<if test="srch10 != null and srch10 != ''">
+		AND pr_ordr LIKE CONCAT('%',UPPER(#{srch10}),'%')
+		</if>
+		ORDER BY rpt_day desc, rpt_no desc
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+	
+	<insert id="insertExpDocuFilesInfo" parameterType="egovframework.pf.docu.service.SaveDocuFileVO">
+		INSERT INTO file_info
+		(	FILE_TYPE
+		  ,	RPT_NO
+		  ,	BLNO
+		  , INVOICE_NO
+		  , UPLOAD_DT
+		  , DOCU_TYPE
+		  , DOCU_PATH
+		  , DOCU_FILE
+		  , DOCU_ORG_FILE
+		  , CMPNY_CD
+		  , DEL_YN
+		  , REG_DT
+		  , REG_ID
+		) VALUES (
+		    'exp'
+		  ,	replace(#{rptNo},'-','')
+		  ,	''
+		  , #{invoiceNo}
+		  , #{uploadDt}
+		  , #{docuType}
+		  , '/home/files'
+		  , #{fileName}
+		  , #{orgFileName}
+		  , #{cmpnyCd}
+		  , 'N'
+		  , #{regDt}
+		  , #{regId}
+		);
+	</insert>
+	
+	<insert id="insertImpDocuFilesInfo" parameterType="egovframework.pf.docu.service.SaveDocuFileVO">
+		INSERT INTO file_info
+		(	FILE_TYPE
+		  ,	RPT_NO
+		  ,	BLNO
+		  , INVOICE_NO
+		  , UPLOAD_DT
+		  , DOCU_TYPE
+		  , DOCU_PATH
+		  , DOCU_FILE
+		  , DOCU_ORG_FILE
+		  , CMPNY_CD
+		  , DEL_YN
+		  , REG_DT
+		  , REG_ID
+		) VALUES (
+		    'imp'
+		  ,	replace(#{rptNo},'-','')
+		  ,	#{blNo}
+		  , ''
+		  , #{uploadDt}
+		  , #{docuType}
+		  , '/home/files'
+		  , #{fileName}
+		  , #{orgFileName}
+		  , #{cmpnyCd}
+		  , 'N'
+		  , #{regDt}
+		  , #{regId}
+		);
+	</insert>
+	
+	<select id="selectDownloadFileList" parameterType="java.lang.Object" resultType="egovMap">
+		SELECT distinct rpt_no, file_type, docu_type, docu_path, docu_file, docu_org_file, upload_dt, cmpny_cd, invoice_no
+		  FROM file_info
+	     WHERE 1=1
+	      	AND RPT_NO IN
+		      <foreach collection="zipFiles" item="zipFile" open="(" separator="," close=")">
+	      		REPLACE(#{zipFile.rptNo},'-','')
+	      	</foreach>
+	      AND DOCU_TYPE IN
+	      <foreach collection="zipFiles" item="zipFiles" open="(" separator="," close=")">
+		      ''
+		      <if test="zipFiles.dc == 'true'">, 'dc' </if>
+		      <if test="zipFiles.uc == 'true'">, 'uc' </if>
+		      <if test="zipFiles.ci == 'true'">, 'ci' </if>
+    		  <if test="zipFiles.pl == 'true'">, 'pl' </if>	        
+    		  <if test="zipFiles.bl == 'true'">, 'bl' </if>	        
+    		  <if test="zipFiles.co == 'true'">, 'co' </if>	        
+    		  <if test="zipFiles.rq == 'true'">, 'rq' </if>	        
+    		  <if test="zipFiles.ac == 'true'">, 'ac' </if>	        
+    		  <if test="zipFiles.cb == 'true'">, 'cb' </if>	        
+    		  <if test="zipFiles.ot == 'true'">, 'ot' </if>	        
+	      </foreach>
+	</select>
+	
+	<select id="selectDocuImpModalUpdateList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			RPT_NO,
+			BLNO,
+			docu_type,
+			DATE_FORMAT(upload_dt, '%Y-%m-%d') AS upload_dt,
+			docu_file,
+			docu_org_file,
+			docu_path
+			FROM file_info
+			WHERE BLNO = #{srch2}
+			AND DOCU_TYPE != 'DC'
+		UNION
+		SELECT 
+			RPT_NO,
+			BLNO,
+			docu_type,
+			DATE_FORMAT(upload_dt, '%Y-%m-%d') AS upload_dt,
+			docu_file,
+			docu_org_file,
+			docu_path
+		FROM file_info
+		WHERE rpt_no = REPLACE(#{srch1},'-','')
+		AND DOCU_TYPE = 'DC'
+	</select>
+	
+	<select id="selectDocuExpModalUpdateList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		RPT_NO,
+		INVOICE_NO,
+		docu_type,
+		DATE_FORMAT(upload_dt, '%Y-%m-%d') AS upload_dt,
+		docu_file,
+		docu_org_file,
+		docu_path
+		FROM file_info
+		WHERE INVOICE_NO = #{srch4}
+		AND DOCU_TYPE != 'DC'
+		
+		UNION
+		
+		SELECT 
+		RPT_NO,
+		INVOICE_NO,
+		docu_type,
+		DATE_FORMAT(upload_dt, '%Y-%m-%d') AS upload_dt,
+		docu_file,
+		docu_org_file,
+		docu_path
+		FROM file_info
+		WHERE rpt_no = REPLACE(#{srch1},'-','')
+		AND DOCU_TYPE = 'DC'
+	</select>
+
+ 	<delete id="deleteDocuFile" parameterType="searchVO">
+		DELETE FROM FILE_INFO
+		WHERE 1=1
+		AND DOCU_FILE = #{srch1}
+		AND DOCU_ORG_FILE = #{srch2}
+		AND DOCU_PATH = #{srch3}
+		AND UPLOAD_DT = REPLACE(#{srch4},'-','')
+	</delete>
+
+
+</mapper>

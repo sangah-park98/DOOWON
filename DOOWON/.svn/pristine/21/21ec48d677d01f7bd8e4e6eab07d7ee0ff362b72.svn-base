@@ -1,0 +1,88 @@
+package egovframework.pf.shipping.service.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import egovframework.pf.api.service.ApiOrderCancelVO;
+import egovframework.pf.api.service.ApiOrderDetailVO;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.shipping.service.ShippingAddressVO;
+import egovframework.pf.shipping.service.ShippingOrderVO;
+import egovframework.pf.shipping.service.ShippingService;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+
+
+@Service("shippingService")
+public class ShippingServiceImpl extends EgovAbstractServiceImpl implements ShippingService {
+
+	@Resource(name="shippingMapper")
+	private ShippingMapper shippingMapper;
+
+	@Override
+	public List<?> selectShippingViewList(SearchVO vo) throws Exception {
+		return shippingMapper.selectShippingViewList(vo);
+	}
+	@Override
+	public List<?> selectShippingDstnList(ShippingAddressVO svo) throws Exception {
+		return shippingMapper.selectShippingDstnList(svo);
+	}
+	@Override
+	public void insertAddr(ShippingAddressVO svo) throws Exception {
+		shippingMapper.insertAddr(svo);
+	}
+	@Override
+	public void deleteAddr(ShippingAddressVO svo) throws Exception {
+		shippingMapper.deleteAddr(svo);
+	}
+	@Override
+	public void insertShippingTempList(List<ShippingOrderVO> voList, UserSessionVO userVO) throws Exception {
+		String id = userVO.getId();
+		String corpNo = userVO.getCorpNo();
+		for(int i = 0; i < voList.size(); i++) {
+			ShippingOrderVO vo = voList.get(i);
+			vo.setRegId(id);
+			vo.setCorpNo(corpNo);
+			shippingMapper.insertShippingTempList(vo);
+		}
+	}
+	@Override
+	public List<?> selectShippingTempList(SearchVO vo) throws Exception {
+		return shippingMapper.selectShippingTempList(vo);
+	}
+	@Override
+	public List<?> selectShippingReqList(SearchVO vo) throws Exception {
+		return shippingMapper.selectShippingReqList(vo);
+	}
+	@Override
+	public List<?> selectShippingOrderSeqList(SearchVO vo) throws Exception {
+		return shippingMapper.selectShippingOrderSeqList(vo);
+	}
+	@Override
+	public List<?> selectCtNoList(SearchVO vo) throws Exception {
+		return shippingMapper.selectCtNoList(vo);
+	}
+	@Override
+	public void insertShippingReqList(ShippingOrderVO svo) throws Exception {
+		shippingMapper.insertShippingReqList(svo);
+	}
+	@Override
+	public void orderCancel(ApiOrderCancelVO vo) throws Exception {
+		shippingMapper.orderCancel(vo);
+	}
+	@Override
+	public List<?> orderDetailChk(ApiOrderDetailVO dvo) throws Exception {
+		return shippingMapper.orderDetailChk(dvo);
+	}
+	@Override
+	public List<?> selectShippingOrderDetailChk(SearchVO vo) throws Exception {
+		return shippingMapper.selectShippingOrderDetailChk(vo);
+	}
+	@Override
+	public void updateShippingReqList(ShippingOrderVO svo) throws Exception {
+		shippingMapper.updateShippingReqList(svo);
+	}
+}

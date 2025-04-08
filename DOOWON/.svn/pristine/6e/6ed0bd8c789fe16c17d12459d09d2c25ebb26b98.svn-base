@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.trade.service.impl.TradeMapper">
+	
+	<select id="selectTradeViewList" parameterType="searchVO" resultType="egovMap">
+	SELECT
+	COUNT(*) OVER() as CNT,
+	rpt_no,
+	exp_firm,
+	exp_lis_day,
+	exc_divi,
+	itemName,
+	itemCode,
+	qty,
+	qty_ut,
+	mg_code,
+	buy_firm,
+	trade_qty,
+	trade_remark
+	FROM (
+		SELECT 
+		CONCAT(SUBSTRING(A.rpt_no, 1, 5), '-', SUBSTRING(A.rpt_no, 6, 2), '-', SUBSTRING(A.rpt_no, 8, 7)) AS rpt_no,
+		A.exp_firm,
+		CASE WHEN A.EXP_lis_day != '' THEN DATE_FORMAT(A.EXP_lis_day, '%Y-%m-%d') ELSE '' END AS EXP_lis_day,
+		CONCAT(A.exc_divi, '-', A.exc_diviNm ) AS exc_divi,
+		C.Gnm2 as itemName,
+		C.Gnm1 as itemCode,
+		C.Qty,
+		C.Qty_ut,
+		B.Mg_Code,
+		A.Buy_Firm,
+		A.Buy_Mark,
+		D.TRADE_QTY,
+		D.TRADE_REMARK
+		FROM cusdec830a1 A
+		LEFT JOIN cusdec830b1 B
+		ON A.SN = B.SNA1
+		AND A.Rpt_No = B.Rpt_No
+		LEFT JOIN cusdec830c1 C
+		ON A.SN = C.SNA1
+		AND A.Rpt_No = C.Rpt_No
+		AND B.SN = C.SNB1 
+		AND B.Ran_No = C.Ran_No
+		LEFT JOIN trade_info D
+		ON A.Rpt_No = D.TRADE_NO
+		AND A.Exp_sdno = D.CMPNY_CD
+		AND C.gnm1 = D.TRADE_ITEM_CD
+		AND D.TRADE_TYPE = 'EXP'
+		WHERE A.rece = '수리'
+		AND A.Exc_Divi = '29'
+		AND A.exp_sdno IN ('2208121836', '1248709424')
+		<choose>
+		<when test="srch8 =='01'">
+		 AND a.rpt_Day Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		</when>
+		<otherwise>
+		 AND a.Lis_Day Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		</otherwise>
+		</choose>		
+	) A
+	WHERE 1=1
+	ORDER BY exp_lis_day desc
+	LIMIT #{recordCountPerPage} OFFSET #{startPage};	
+		
+	 </select>
+	 
+	 
+	 <select id="selectTradeViewList2" parameterType="searchVO" resultType="egovMap">
+		
+		SELECT
+		COUNT(*) OVER() as CNT,
+		A.DeclarationID,
+		A.CompanyCode,
+		A.CompanyName,
+		A.DeclarationNo as rptNo,
+		DATE_FORMAT(A.DeclarationDate, '%Y/%m/%d') as rptDay,
+		A.DeclarationKindCode as tradeType,
+		B.ItemName as itemName,
+		B.MaterialCode as itemCode,
+		B.Quantity1 as qty,
+		B.QuantityUnitCode1 as unit,
+		A.InvoiceNo as invoiceNo,
+		DATE_FORMAT(A.InvoiceDate, '%Y/%m/%d') as invoiceDate,
+		A.CustomerCode,
+		A.CustomerName as buyFirm,
+		A.ContractNo,
+		C.TRADE_QTY,
+		C.TRADE_REMARK
+		FROM dbdeclaration A
+		LEFT JOIN dbgooditem B
+		ON A.DeclarationID = B.DeclarationID
+		LEFT JOIN trade_info C
+		ON A.DeclarationNo = C.TRADE_NO
+		AND B.MaterialCode = C.TRADE_ITEM_CD 
+		WHERE A.declarationType = 'N'
+		AND A.CompanyCode = '2300794371'
+		AND a.DeclarationDate Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		ORDER BY A.DeclarationDate desc
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+
+	 </select>
+	 
+	 
+	 <select id="selectTradeViewList3" parameterType="searchVO" resultType="egovMap">
+	  	SELECT 
+			  COUNT(*) OVER() as CNT
+			, A.CMPNY_CD
+			, A.PLNT_CD
+			, A.ITEM_TYPE						
+			, A.ENTRY_DT					
+			, A.ENTRY_NO as rptNo
+			, A.WARE_INFO
+			, A.ITEM_NOTE
+			, A.ITEM_CD as itemCode
+			, A.CUS_ITEM_CD
+			, A.UNIT
+			, A.IMP_DT				
+			, A.QTY			
+			, A.TRD_CD
+			, A.CD_ETC			
+			, A.CD_NO			
+			, A.REMARK
+			, A.DEL_YN
+			, B.TRADE_QTY
+			, B.TRADE_REMARK
+		  FROM LIQ_ENTRY_INFO A
+		  LEFT JOIN  trade_info B
+		  ON A.ENTRY_NO = B.TRADE_NO
+		  AND A.ITEM_NOTE = B.TRADE_ITEM_NOTE
+		  AND A.ITEM_CD = B.TRADE_ITEM_CD
+		  AND B.TRADE_TYPE = 'ENTRY'
+		 WHERE 1=1
+		 AND A.ENTRY_DT Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+	 </select>
+	 
+	 <insert id="saveTradeInfo" parameterType="searchVO">
+		INSERT INTO TRADE_INFO
+		(
+		TRADE_TYPE,
+		TRADE_NO,
+		TRADE_ITEM_CD,
+		TRADE_QTY,
+		TRADE_REMARK,
+		DEL_YN,
+		REG_DT	
+		) VALUES (
+		#{srch5},
+		REPLACE(#{srch1},'-',''),
+		#{srch2},
+		#{srch3},
+		#{srch4},
+		'N',
+		DATE_FORMAT(NOW(), '%Y%m%d')
+		) ON DUPLICATE KEY
+		UPDATE TRADE_QTY = #{srch3}, TRADE_REMARK = #{srch4}, EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+	</insert>
+	
+	 <select id="selectTradeGapList1" parameterType="searchVO" resultType="egovMap">
+	 	SELECT 
+	 	COUNT(*) OVER() as CNT
+	 	, A.itemCode
+		, A.Buy_Firm
+		, '' as ContractNo
+		, A.Mg_Code
+		, A.Qty + A.tradeQty AS expQty
+		,(A.Qty + A.tradeQty) - (IFNULL(B.qty,0) + IFNULL(B.tradeQty,0)) AS gap1
+		, IFNULL(B.qty,0) + IFNULL(B.tradeQty,0 )AS impQty
+		, IFNULL(B.qty,0) - ifnull(C.Qty,0) AS gap2
+		, ifnull(C.Qty,0) AS entryQty
+		FROM (
+		SELECT 
+		C.gnm1 as itemCode,
+		A.Buy_Firm,
+		'' AS contractNo,
+		B.Mg_Code,
+		C.Qty,
+		CAST(ifnull(D.trade_qty,0) AS DECIMAL(10, 2)) AS tradeQty,
+		D.TRADE_REMARK
+		FROM cusdec830a1 A
+		LEFT JOIN cusdec830b1 B
+		ON A.SN = B.SNA1
+		AND A.Rpt_No = B.Rpt_No
+		LEFT JOIN cusdec830c1 C
+		ON A.SN = C.SNA1
+		AND A.Rpt_No = C.Rpt_No
+		AND B.SN = C.SNB1 
+		AND B.Ran_No = C.Ran_No
+		LEFT JOIN trade_info D
+		ON A.Rpt_No = D.TRADE_NO
+		AND A.Exp_sdno = D.CMPNY_CD
+		AND C.gnm1 = D.TRADE_ITEM_CD
+		AND D.TRADE_TYPE = 'EXP'
+		WHERE A.rece = '수리'
+		AND A.Exc_Divi = '29'
+		AND A.exp_sdno IN ('2208121836', '1248709424')
+		AND A.rpt_day Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		) A left JOIN 
+		(
+		SELECT 
+		right(B.ItemName,10) as itemCode,
+		B.Quantity1 as qty,
+		A.InvoiceNo as invoiceNo,
+		A.ContractNo,
+		CAST(ifnull(C.trade_qty,0) AS DECIMAL(10, 2)) AS tradeQty,
+		C.TRADE_REMARK
+		FROM dbdeclaration A
+		LEFT JOIN dbgooditem B
+		ON A.DeclarationID = B.DeclarationID
+		LEFT JOIN trade_info C
+		ON A.DeclarationNo = C.TRADE_NO
+		AND B.MaterialCode = C.TRADE_ITEM_CD 
+		WHERE A.declarationType = 'N'
+		AND A.CompanyCode = '2300794371'
+		AND A.declarationDate Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		) B
+		ON A.itemCode = B.itemCode AND A.Mg_Code = B.invoiceNo
+		LEFT JOIN (	
+		SELECT 
+		item_cd AS itemCode, 
+		qty, 
+		cd_no AS invoiceNo, 
+		'' AS contract_no, 
+		IFNULL(B.TRADE_QTY,0) AS trade_qty, 
+		IFNULL(B.TRADE_REMARK,'') AS trade_remark 
+		FROM liq_entry_info A
+		LEFT JOIN trade_info B
+		ON A.ENTRY_NO = B.TRADE_NO
+		AND A.ITEM_CD = B.TRADE_ITEM_CD 
+		AND A.ITEM_NOTE = B.TRADE_ITEM_NOTE
+		WHERE A.entry_dt Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		) C
+		ON B.itemCode = C.itemCode AND B.invoiceNo = C.invoiceNo
+		WHERE 1=1 
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	 </select>
+	 
+	 
+	 
+	 <select id="selectTradeGapLanList" parameterType="searchVO" resultType="egovMap">
+ 		SELECT 
+		COUNT(*) OVER() AS CNT,
+		TRADE_TYPE,
+		DATE_FORMAT(REG_DT, '%Y-%m-%d') as REG_DT,
+		TRADE_NO,
+		TRADE_ITEM_CD,
+		TRADE_ITEM_NOTE,
+		TRADE_QTY,
+		TRADE_REMARK
+		FROM trade_info
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	 </select>
+	 
+	 
+	 <select id="selectTradeUploadList" parameterType="searchVO" resultType="egovMap">
+	 SELECT
+	 COUNT(*) OVER() as CNT,
+	 INVOICE_NO,
+	 INVOICE_DATE,
+	 ITEM_CD,
+	 CATAGORY,
+	 ITEM_NAME,
+	 QTY
+	 FROM TRADE_INVOICE
+	 WHERE 1=1
+	 
+	 </select>
+	 
+</mapper>
+

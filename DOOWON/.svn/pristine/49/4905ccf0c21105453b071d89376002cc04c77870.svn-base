@@ -1,0 +1,1377 @@
+var cusExpViewHot;
+var cusExpViewSettings;
+var cusExpViewPopupSettings;
+var cusExpViewIndex = 9999;
+var cusExpViewScrollTp = true;
+var cusExpViewData = {};
+var cusExpViewLanHot;
+var cusExpViewLanSettings;
+var cusExpViewLanIndex = 9999;
+var cusExpViewLanScrollTp = true;
+var cusExpViewSpecHot;
+var cusExpViewSpecSettings;
+var cusExpViewSpecIndex = 9999;
+var cusExpViewSpecScrollTp = true;
+var cusExpViewData = {};
+var natSelect = [];
+var incotermsSelect = [];
+var thisNatCd = '';
+var thisTaxbilNo = '';
+var thisCustomExpNo = '';
+
+
+$( document ).ready(function() {
+	
+      $('.band-calendar').each(function(){ regCal(this) ;})
+      $('.datepicker').datepicker("option","dateFormat",calFormat);
+
+      var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	  
+	  $("#cusExpView_srch2").val(mtoday);
+	  $("#cusExpView_srch3").val(today);
+	  
+	  var cusExpViewElement = document.querySelector('#cusExpViewTable');
+	  var cusExpViewElementContainer = cusExpViewElement.parentNode;
+
+	  cusExpViewHot = new Handsontable(cusExpViewElement, cusExpViewSettings);
+
+	  var cusExpViewLanElement = document.querySelector('#cusExpViewLanTable');
+	  var cusExpViewLanElementContainer = cusExpViewLanElement.parentNode;
+	  
+	  cusExpViewLanHot = new Handsontable(cusExpViewLanElement, cusExpViewLanSettings);
+	  
+	  var cusExpViewLanElement = document.querySelector('#cusExpViewSpecTable');
+	  var cusExpViewLanElementContainer = cusExpViewLanElement.parentNode;
+	  
+	  cusExpViewSpecHot = new Handsontable(cusExpViewLanElement, cusExpViewSpecSettings);
+	  
+	  fn_changeCusExpView($("input:radio[name=cusExpView_srch1]:checked").val());
+	  
+	 
+	  //scroll 이벤트
+	  fn_cusExpViewasEventReg();
+	  $("#cusExpViewTextView").text("전체");
+      $("#cusExpViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+      $(".cusExp_div7").hide();
+      $(".dropzone").hide();
+	  
+      var viewListPopupElement = document.querySelector('#cusExpViewListPopupTable');
+	  var viewListPopupElementContainer = viewListPopupElement.parentNode;
+	  viewListPopupSettings = fn_handsonGridViewListPopupOption();
+	  viewListHot = new Handsontable(viewListPopupElement, viewListPopupSettings);
+	  
+});
+
+$(document).mousedown(function(e){	
+	if(e.target.name == "cusExpView1_date" || e.target.name == "cusExpView2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}	
+	}
+});
+
+$("input:radio[name=cusExpView_srch20]").change(function(){
+	fn_changeCusExpView($("input:radio[name=cusExpView_srch1]:checked").val());
+})
+
+$("input[name=cusExpView_srch1]").change(function(){
+	
+	var selectedValue = $(this).val();
+    if(selectedValue === "01") {
+        $("#cusExpViewTextView").text("전체");
+        $("#cusExpViewLanTable").show();
+        $(".dropzone").hide();
+        $(".cusExp_div7").hide();
+    	$("#cusExpViewSpecTable").show();
+    	$("#cusExpDataDelete").show();
+    	$("#cusExpExcelDownload").show();
+    	$("#cusExp_div1").hide();
+    	$(".exportResult").show();
+    	$("#cusExpViewCnt").show();
+    	$("#cusExpView_div1").show(); // 검색기간 버튼
+    	$(".exportStartDate").show(); // 시작일자
+    	$(".exportEndDate").show(); // 종료일자
+    	$(".exportSearch").show(); // 검색기간
+    	$(".ExportRptNo").show(); // 신고번호
+    	$(".ExportInvoiceNo").show(); // 인보이스번호
+    	$("#cusExpViewSrchType1").show(); // 조건선택1
+    	$("#cusExpViewSrchType2").show(); // 조건선택2
+    	$("#cusExpViewPageCnt").show(); // Row Count
+    	$(".cusExpViewSrchType").show(); // 조건선택 textbox
+    	$(".cusExpClear").show(); // 초기화버튼
+    	$(".exportSearch").show(); // 검색버튼
+        $("#cusExpViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "02") {
+        $("#cusExpViewTextView").text("데이터 업로드 정보");
+        $("#cusExpViewLanTable").hide();
+        $(".cusExp_div7").show();
+        $(".dropzone").show();
+        $("#cusExpViewSpecTable").hide();
+    	$("#cusExpDataDelete").hide();
+    	$(".exportResult").hide();
+    	$("#cusExpViewCnt").hide();
+    	$("#cusExpExcelDownload").hide();
+    	$("#cusExp_div1").show();
+    	$("#cusExpView_div1").hide(); // 검색기간 버튼
+    	$(".exportStartDate").hide(); // 시작일자
+    	$(".exportEndDate").hide(); // 종료일자
+    	$(".exportSearch").hide(); // 검색기간
+    	$(".ExportRptNo").hide(); // 신고번호
+    	$("#cusExpViewSrchType1").hide(); // 조건선택1
+    	$("#cusExpViewSrchType2").hide(); // 조건선택2
+    	$("#cusExpViewPageCnt").hide(); // Row Count
+    	$(".ExportInvoiceNo").hide(); // 인보이스번호
+    	$(".cusExpViewSrchType").hide(); // 조건선택 textbox
+    	$(".cusExpClear").hide(); // 초기화버튼
+    	$(".exportSearch").hide(); // 검색버튼
+    	$("#cusExpViewTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } 
+    fn_changeCusExpView($("input:radio[name=cusExpView_srch1]:checked").val());
+});
+
+
+function fn_cusExpViewchgDate1() {
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var day = date.getDay();
+	  var today = new Date().toISOString().substring(0,10).replace(/-/g,'-');
+	  var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10).replace(/-/g,'-');
+	  
+	  $("#cusExpView_srch2").val(today);
+	  $("#cusExpView_srch3").val(today);
+}
+
+function fn_cusExpViewchgDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	var today = new Date().toISOString().substring(0,10).replace(/-/g,'-');
+	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10).replace(/-/g,'-');
+	
+	$("#cusExpView_srch2").val(mtoday);
+	$("#cusExpView_srch3").val(today);
+}
+function fn_cusExpViewchgDate3() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	var today = new Date().toISOString().substring(0,10).replace(/-/g,'-');
+	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10).replace(/-/g,'-');
+	
+	$("#cusExpView_srch2").val(mtoday);
+	$("#cusExpView_srch3").val(today);
+}
+function fn_cusExpViewchgDate4() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	var startDt = new Date();
+  	startDt.setMonth(startDt.getMonth() - 1);
+  	startDt.setDate(1);
+
+  	var endDt = new Date();
+  	endDt.setMonth(endDt.getMonth(), 1);
+  	endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10).replace(/-/g,'-')
+	var mtoday = endDt.toISOString().substring(0,10).replace(/-/g,'-')
+	
+	$("#cusExpView_srch2").val(today);
+	$("#cusExpView_srch3").val(mtoday);
+}
+
+//row 수
+$("select[name=cusExpViewPageCnt]").change(function(){
+	  fn_searchCusExpView();
+});
+
+
+// 스크롤할 때 행이 자동으로 추가 로드될 수 있게 하는 함수
+function fn_cusExpViewasEventReg(){
+	
+   $("#cusExpViewTable .wtHolder").scroll(function(){
+	  //fn_cusExpViewFileList(row, col)
+  	  var scrollTop = $("#cusExpViewTable .wtHolder").scrollTop();
+  	  var countPerPage = $("#cusExpViewPageCnt option:selected").val();
+  	  var rowHeight = cusExpViewHot.getRowHeight();
+
+  	  var addCnt = 790;
+  	  if(countPerPage == "50"){
+  		  addCnt = 790;
+  	  }else if(countPerPage == "100"){
+  		  addCnt = 2040;
+  	  }else if(countPerPage == "200"){
+  		  addCnt = 3290;
+  	  }else if(countPerPage == "500"){
+  		  addCnt = 4540;
+  	  }
+  	  if(cusExpViewScrollTp && cusExpViewIndex != 9999 && scrollTop >= (countPerPage * cusExpViewIndex * rowHeight) + addCnt){
+  		  fn_cusExpViewScroll();
+  	  }
+   });
+}
+
+// 스크롤
+function fn_cusExpViewScroll(){
+	if( $("input[name=cusExpViewType]:checked").val() == "enrol")
+		return;
+	fn_loading(true);
+	cusExpViewScrollTp = false;
+	cusExpViewIndex++;
+
+	$.ajax({
+		type : "POST",
+		url : "/cusExp/selectCusExpViewList.do",
+		data : fn_setExportViewForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	var getData = cusExpViewHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	cusExpViewHot.loadData(meargeJson);
+        	cusExpViewScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+// 검색
+function fn_searchCusExpView(){
+	cusExpViewIndex = 0;
+	
+	var data = fn_setExportViewForm();
+	var valid = fn_validateSearchDate(data["srch2"], data["srch3"]);
+
+	if(valid === "false"){
+		data["srch2"] = null;
+		data["srch3"] = null;
+		$("#cusExpView_srch2").val("");
+		$("#cusExpView_srch3").val("");
+		return;
+	} else {
+		data["srch2"] = $("#cusExpView_srch2").val();
+		data["srch3"] = $("#cusExpView_srch3").val();
+	}
+	
+	if(data["srch2"] == null || data["srch2"] == "" || data["srch3"] == "" || data["srch3"] == null){
+		alert("날짜를 입력해 주세요.");
+		return;
+	}
+	
+	fn_loading(true);
+
+	$.ajax({
+		type : "POST",
+		url : "/cusExp/selectCusExpViewList.do",
+		data : fn_setExportViewForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	cusExpViewHot.loadData([]);
+    		cusExpViewSpecHot.loadData([]);
+    		cusExpViewLanHot.loadData([]);
+        	cusExpViewHot.loadData(data.resultList);
+        	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+        	$("#cusExpViewCnt").text(totCnt); 
+    	fn_loading(false);
+	    },
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+};
+
+
+function fn_searchCusExpViewLan(rptNo) {
+
+	rptNo = rptNo.replace(/-/g, '');
+	
+	var lData = {};
+	lData["srch4"] = rptNo;
+	lData["recordCountPerPage"] = $("#cusExpViewPageCnt option:selected").val();
+	lData["pageIndex"] = cusExpViewIndex;
+	
+	
+	$.ajax({
+		type : "POST",
+		url : "/cusExp/selectCusExpViewLanList.do",
+		data : lData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+    		cusExpViewSpecHot.loadData([]);
+    		cusExpViewLanHot.loadData([]);
+        	cusExpViewLanHot.loadData(data.resultList);
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+function fn_searchCusExpViewSpec(rptNo, ranNo) {
+	
+	rptNo = rptNo.replace(/-/g, '');
+	
+	var pData = {};
+	pData["srch4"] = rptNo;
+	pData["srch6"] = ranNo; 
+	pData["recordCountPerPage"] = $("#cusExpViewPageCnt option:selected").val();
+	pData["pageIndex"] = cusExpViewIndex;
+	
+	
+	$.ajax({
+		type : "POST",
+		url : "/cusExp/selectCusExpViewSpecList.do",
+		data : pData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+				cusExpViewSpecHot.loadData([]);
+				cusExpViewSpecHot.loadData(data.resultList);
+			fn_loading(false);
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+				alert("Your request is up. Please log back in if you wish continue");
+				location.href = document.referrer;
+			} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+			}
+		}
+	});
+};
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchCusExpView();
+    }
+}
+
+
+// 검색조건 생성
+function fn_setExportViewForm(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=cusExpView_srch1]:checked").val();
+	sData["srch2"] = $("#cusExpView_srch2").val();
+	sData["srch3"] = $("#cusExpView_srch3").val();
+	sData["srch4"] = $("#cusExpView_srch4").val();
+	sData["srch5"] = $("#cusExpView_srch5").val();
+	sData["srch8"] = $("#cusExpViewDateType option:selected").val();
+	sData["recordCountPerPage"] = $("#cusExpViewPageCnt option:selected").val();
+	sData["pageIndex"] = cusExpViewIndex;
+	
+	sData["srchType1"] = $("#cusExpViewSrchType1 option:selected").val();
+	sData["srchText1"] = $("#cusExpViewSrchText1").val();
+	
+	sData["srchType2"] = $("#cusExpViewSrchType2 option:selected").val();
+	sData["srchText2"] = $("#cusExpViewSrchText2").val();
+	
+	return sData;
+};
+
+//검색조건 초기화
+function fn_clearCusExpView(){
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+  
+	$("input:radio[name=cusExpView_srch1][value=01]").prop('checked', true);
+	$("#cusExpView_srch2").val(mtoday);
+	$("#cusExpView_srch3").val(today);
+	$("#cusExpView_srch4").val("");
+	$("#cusExpView_srch5").val("");
+	$("#cusExpViewDateType").val("01");
+	
+	$("#cusExpViewSrchType1").val("");
+	$("#cusExpViewSrchType2").val("");
+	
+	$("#cusExpViewSrchText1").val("");
+	$("#cusExpViewSrchText2").val("");
+	
+};
+
+
+// 테이블 컬럼
+function fn_cusExpViewTableCol(){
+	var tableType = $("input:radio[name=cusExpViewType]:checked").val();
+	var type =  $("input:radio[name=cusExpView_srch1]:checked").val();
+	// 사용여부
+	var cusExpView_srch20 = $("input:radio[name=cusExpView_srch20]:checked").val(); 
+	
+	var cusExpViewFileLoadRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+        var $fileButton;
+        if (value != '' && value != null) {
+            $fileButton = $('<i class="fas fa-search search-icon" style="cursor:pointer;" onclick="fn_cusExpViewFileList('+row+','+col+')"></i>');
+        } else {}
+        $(td).empty().append($fileButton).append("  " + value);
+	};
+
+	
+	
+	var userMemoRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+	    var $userMemoInput = $('<input type="text" class="row-start-3 col-start-2 bg-gray-50 border border-gray-300 rounded-lg" id="userMemo' + row + '" style="height:8px; width:150px;" value="' + value + '"/>');
+	    var $userMemoButton = $('<button type="button" onclick="fn_userMemoSave(' + row + ',' + col + ')" class="save-button p-0.5 text-sm rounded text-white hover:opacity-50 duration-150 bg-rose-700 ml-1 hover:bg-rose-500">저장</button>');
+	    $(td).empty().append(" ").append($userMemoInput).append($userMemoButton).css("text-align", "right");
+	    $userMemoInput.css({
+	        'font-family': '맑은 고딕',
+	        'font-size': '13px'
+	    });
+	    $userMemoButton.css({
+	        'font-family': '맑은 고딕',
+	        'font-size': '13px'
+	    });
+	};
+
+	
+	function chipRenderer(hotInstance, td, row, column, prop, value, cellProperties) {
+		Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		td.classList.add('chip-cell');
+		td.classList.add('text-center');
+		switch (value) {
+		   case "화면심사":
+			   td.innerHTML = `<span class="chip chip-green">${value}</span>`
+		   break
+		   case "서류심사":
+			   td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+		   break
+		}
+	}
+	
+	var chipRenderer2 = function (instance, td, row, col, prop, value, cellProperties) {
+		Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		td.classList.add('chip-cell');
+		td.classList.add('text-center');
+		switch (value) {
+	    	case "예":
+	    	case "접수":
+	    	case "Y":
+	    		td.innerHTML = `<span class="chip chip-blue">${value}</span>`
+	    	break
+	    	case "수리":
+	    		td.innerHTML = `<span class="chip chip-green">${value}</span>`
+	    	break
+	    	case "N":
+	    	case "서류 미비":
+	    		td.innerHTML = `<span class="chip chip-red">${value}</span>`
+	    	break
+	    	case "자수":
+	    		td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+	    	break
+	    	case "":
+	    		td.innerHTML = `<span>${value}</span>`
+	    	break
+	    	default:
+	    		td.innerHTML = `<span class="chip chip-primary">${value}</span>`
+	    	break
+		}
+	};
+	
+	this.cusExpViewCol = (type == "01") ? [
+		{data : 'checkBox', type : 'text', className : "htCenter", width: 60,type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},
+		{data : 'sn', className : "htCenter", width: 60,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rece', className : "htCenter", width: 50, wordWrap: false, className : "htCenter", readOnly:true, renderer : chipRenderer2},
+		//{data : 'fail', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true, renderer : unreMemoRenderer},
+		{data : 'receResult', className : "htCenter", width: 80, wordWrap: false, className : "htCenter", readOnly:true, renderer : chipRenderer},
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter", readOnly:true, renderer : cusExpViewFileLoadRenderer},
+		{data : 'invoice', className : "htCenter", width: 130, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'expFirm', className : "htCenter", width: 180, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'buyFirm', className : "htCenter", width: 200, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'taStIso', className : "htCenter", width: 60, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptDay', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'expLisDay', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'jukDay', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'excCot', className : "htCenter", width: 160, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'conMetnm', className : "htCenter", width: 80, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'incoterms', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'totPackCnt', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'totWt', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'approval', className : "htCenter", width: 120, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'shipDay', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'expDetails', className : "htCenter", width: 100, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'factoryCode', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'srOrdr', className : "htCenter", width: 90, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'userMemo', className : "htCenter", width: 250, wordWrap: false, className : "htCenter", readOnly:true, renderer : userMemoRenderer},
+		{data : 'reporter', className : "htCenter", width: 120, wordWrap: false, className : "htCenter", readOnly:true},
+		//{data : 'cusMemo', className : "htCenter", wordWrap: false, className : "htCenter"},
+	] :[
+		{data : 'checkBox', type : 'text', className : "htCenter", width: 60,type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},
+		{data : 'rptDayRange', className : "htCenter",width: 180, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'fileName', className : "htCenter", width: 200,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'regDate', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'refNoCount', className : "htCenter", width: 90,wordWrap: false, className : "htCenter", readOnly:true}
+	];
+}
+
+// 테이블 헤더
+function fn_cusExpViewTableHeader(){
+	var tableType = $("input:radio[name=cusExpViewType]:checked").val(); 
+	var type =  $("input:radio[name=cusExpView_srch1]:checked").val();
+	// 사용여부
+	//var cusExpView_srch20 = $("input:radio[name=cusExpView_srch20]:checked").val(); 
+	
+	this.cusExpViewHeader = (type == "01") ? [
+		"","sn","상태", "C/S검사", "신고번호", "Invoice번호", "수출자", "해외거래처", "목적국", "신고일자", "수리일자", "적재의무기한", "거래구분",
+		 "결제방법", "인코텀즈", "총포장수", "총중량", "요건승인", "선적여부", "수출이행내역", "부서코드", "SO", "사용자메모",  "신고인"
+	 ] :[
+		 "","첫 신고일 - 마지막 신고일","파일명","업로드일자","업로드갯수"
+	 ];
+}
+	
+
+function fn_cusExpViewLanTableCol(){
+	this.cusExpViewLanCol = [
+		{data : '', className : "htCenter", width: 160, wordWrap: false, className : "htCenter"},
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter"},
+		{data : 'ranNo', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'hs', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'excGnm', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'conAmt', className : "htCenter", width: 100, wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true},
+		{data : 'sunWt', className : "htCenter", width: 100, wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true},
+		{data : 'packCnt', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'oriStMark1', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'invoice', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'attYn', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+	];
+}
+
+function fn_cusExpViewLanTableHeader(){
+	this.cusExpViewLanHeader = [
+		'',"신고번호","란번호","세번부호","거래품명","결제금액","순중량","포장갯수","원산지","Invoice번호","첨부"
+	];
+}
+
+function fn_cusExpViewSpecTableCol(){
+	this.cusExpViewSpecCol = [
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter"},
+		{data : 'ranNo', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'sil', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'gnm1', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'qty', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'price', className : "htCenter", width: 100, wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true},
+		{data : 'amt', className : "htCenter", width: 100, wordWrap: false, type : 'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true},
+		{data : 'gnm2', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'gnm3', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'gnm4', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+		{data : 'gnm5', className : "htCenter", width: 200, wordWrap: false, className : "htCenter"},
+	];
+}
+
+function fn_cusExpViewSpecTableHeader(){
+	this.cusExpViewSpecHeader = [
+		"신고번호","란번호","규격번호","품명","수량","단가","금액","품명2","품명3","품명4","품명5"
+	];
+}
+
+// 테이블 히든컬럼
+function fn_cusExpViewTableHidden(){
+	var type =  $("input:radio[name=cusExpView_srch1]:checked").val();
+	var tableType = $("input:radio[name=cusExpViewType]:checked").val();
+	
+	if(type == '01'){
+		this.cusExpViewHidden = [1];
+	}else{
+		this.cusExpViewHidden = [0];
+	}
+}
+
+function fn_cusExpViewLanTableHidden(){
+	this.cusExpViewLanHidden = [0,1];
+}
+
+function fn_cusExpViewSpecTableHidden(){
+	this.cusExpViewSpecHidden = [0,1];
+}		
+		
+
+// table
+function fn_handsonGridViewOption(col, header, hidden){
+	var tableType = $("input:radio[name=cusExpViewType]:checked").val();
+	
+	cusExpViewSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 300,
+	  rowHeights : 27,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualColumnResize : true,
+	  manualRowMove : true,
+	  manualColumnMove : true,
+	  licenseKey: 'non-commercial-and-evaluation',
+	  //dropdownMenu : true,
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+      autoColumnSize : {samplingRatio : 30},
+      mergeCells : false,
+      wordWrap : true,
+      afterGetColHeader: function(col, TH){
+      	if(col == 0){
+        	TH.innerHTML = "<input type='checkbox'  class='checker' id='id_checkCusExpAll' onclick='fn_cusExpAllClick();'>";
+        }
+      },
+      afterOnCellMouseDown : function(event, coords){
+    	  
+    	  var excludedColumns = [20];
+    	  
+    	  if (excludedColumns.includes(coords.col)) {
+    	        return; // 함수 실행 중단
+    	    }
+    	  var dataList = "";
+    	  var rptNo = "";
+    	  var dataList = cusExpViewHot.getSourceData(coords.row, 35);
+    	  var rptNo = dataList[dataList.length-1].rptNo;
+    	  fn_searchCusExpViewLan(rptNo);
+    	  setTimeout(function() {
+              fn_searchCusExpViewSpec(rptNo, "001");
+          }, 1);
+      }
+	};
+
+	return cusExpViewSettings;
+}
+
+
+function fn_handsonGridLanOption(col, header, hidden){
+	cusExpViewLanSettings = {
+		columns : col,
+		colHeaders : header,
+		hiddenColumns : {
+			copyPasteEnabled : false,
+			indicators : false,
+			columns : hidden
+		},
+		stretchH : 'all',
+		width : '99%',
+		autoWrapRow : true,
+		height : 200,
+		border : 1,
+		rowHeights : 25,
+		rowHeaders : true,
+		columnHeaderHeight : 25,
+		manualRowResize : true,
+		manualColumnResize : true,
+		manualRowMove : true,
+		manualColumnMove : false,
+		licenseKey: 'non-commercial-and-evaluation',
+		//dropdownMenu : true,
+		//contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+		filters : true,
+		//readOnly : (tableType == "read") ? true : false,	
+		readOnly : true ,
+		allowInsertRow : true,
+		allowRemoveRow : true,
+		// columnSorting : {indicator : true},
+		autoColumnSize : {samplingRatio : 23},
+		mergeCells : false,
+		wordWrap : true,
+		afterOnCellMouseDown : function(event, coords){
+			var dataList = "";
+			var rptNo = "";
+			var ranNo = "";
+			var dataList = cusExpViewLanHot.getSourceData(coords.row, 35);
+			var rptNo = dataList[dataList.length-1].rptNo;
+			var ranNo = dataList[dataList.length-1].ranNo;
+			fn_searchCusExpViewSpec(rptNo, ranNo);
+		}
+	};
+	
+	return cusExpViewLanSettings;
+}
+
+
+function fn_handsonGridSpecOption(col, header, hidden){
+	
+	cusExpViewSpecSettings = {
+		columns : col,
+		colHeaders : header,
+		hiddenColumns : {
+			copyPasteEnabled : false,
+			indicators : false,
+			columns : hidden
+		},
+		stretchH : 'all',
+		width : '100%',
+		autoWrapRow : true,
+		height : 200,
+		rowHeights : 25,
+		rowHeaders : true,
+		columnHeaderHeight : 25,
+		manualRowResize : true,
+		manualColumnResize : true,
+		manualRowMove : true,
+		manualColumnMove : false,
+		licenseKey: 'non-commercial-and-evaluation',
+		filters : true,
+		readOnly : true ,
+		allowInsertRow : true,
+		allowRemoveRow : true,
+		autoColumnSize : {samplingRatio : 23},
+		mergeCells : false,
+		wordWrap : true,
+	};
+	
+	return cusExpViewSpecSettings;
+}
+
+
+
+//테이블 타입 변경
+function fn_changeCusExpView(type){
+	var searchTp = ($("input:radio[name=cusExpView_srch1]:checked").val());
+	cusExpViewHot.updateSettings({readOnly:true, contextMenu : false});
+	$("#btnExportViewSave").hide();
+	$("#expExcel").show();
+	$("#docBtn").children().show();
+	
+	
+	//리스트	
+	if(searchTp == "01"){
+	$("#cusExp_div1").hide();
+	//	업로드
+	}else if(searchTp == "02"){
+		$("#cusExp_div1").show();
+	}
+	
+	
+	fn_changeCusExpViewType(searchTp);
+	
+};
+//전체체크버튼 
+function fn_cusExpAllClick(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_checkCusExpAll").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+
+	var data = cusExpViewHot.getData();
+
+	for(var i=0; i< data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	cusExpViewHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_checkCusExpAll").prop("checked", true);
+	} else {
+		$("#id_checkCusExpAll").prop("checked", false);
+	}
+}
+
+//데이터 삭제 
+function fn_cusExpViewdelete() {
+    var data = cusExpViewHot.getData();
+    var checked = false;
+    var customsData = []; // customsData 배열을 초기화
+
+    for (var i = 0; i < data.length; i++) {
+        if (data[i][0] === 'yes') { // 체크박스 상태가 'yes'인 경우만 처리
+            checked = true;
+            customsData.push({
+            	srch1: data[i][1],      // SN 추가
+            	srch2: data[i][4]    // 신고번호 추가
+            });
+        }
+    }
+   console.log("customsData",JSON.stringify(customsData));
+   
+    if (!checked) {
+        alert("체크박스를 선택해 주세요.");
+        return false;
+    }
+
+    if (confirm("삭제하시겠습니까?")) {
+        $.ajax({
+            type: "POST",
+            url: "/cusExp/deleteExportView.do",
+            data: JSON.stringify(customsData), // JSON 형태로 데이터 전송
+            dataType: "json",
+            contentType: "application/json",
+            success: function (data) {
+            	if (data.status === "success") {
+                    alert('삭제되었습니다.');
+                    fn_searchCusExpView(); // 삭제 후 검색 함수 호출
+                }
+            },
+            error: function (e, textStatus, errorThrown) {
+                if (e.status == 400) {
+                    alert("Your request is up. Please log back in if you wish continue");
+                    location.href = document.referrer;
+                } else {
+                    console.log(errorThrown);
+                    alert("삭제 중 오류가 발생했습니다."); // 에러 메시지 수정
+                }
+            }
+        });
+    } else {
+        return;
+    }
+}
+
+
+//검색구분 변경
+function fn_changeCusExpViewType(type){
+	
+	let cusExpViewCol = new fn_cusExpViewTableCol();
+	let cusExpViewHeader = new fn_cusExpViewTableHeader();
+	let cusExpViewHidden = new fn_cusExpViewTableHidden();
+	
+	let cusExpViewLanCol = new fn_cusExpViewLanTableCol();
+	let cusExpViewLanHeader = new fn_cusExpViewLanTableHeader();
+	let cusExpViewLanHidden = new fn_cusExpViewLanTableHidden();
+	
+	let cusExpViewSpecCol = new fn_cusExpViewSpecTableCol();
+	let cusExpViewSpecHeader = new fn_cusExpViewSpecTableHeader();
+	let cusExpViewSpecHidden = new fn_cusExpViewSpecTableHidden();
+	
+	var col, header, hidden, col2, header2, hidden2, col3, header3, hidden3 ;	
+
+	
+	col = cusExpViewCol.cusExpViewCol;
+	header = cusExpViewHeader.cusExpViewHeader;
+	hidden = cusExpViewHidden.cusExpViewHidden;
+	
+	col2 = cusExpViewLanCol.cusExpViewLanCol;
+	header2 = cusExpViewLanHeader.cusExpViewLanHeader;
+	hidden2 = cusExpViewLanHidden.cusExpViewLanHidden;
+	
+	col3 = cusExpViewSpecCol.cusExpViewSpecCol;
+	header3 = cusExpViewSpecHeader.cusExpViewSpecHeader;
+	hidden3 = cusExpViewSpecHidden.cusExpViewSpecHidden;
+	
+	cusExpViewHot.updateSettings(fn_handsonGridViewOption(col, header, hidden));
+	cusExpViewLanHot.updateSettings(fn_handsonGridLanOption(col2, header2, hidden2));
+	cusExpViewSpecHot.updateSettings(fn_handsonGridSpecOption(col3, header3, hidden3));
+	
+	fn_searchCusExpView();
+};
+	
+
+function fn_cusExpViewFileList(row, col){
+
+	var data = cusExpViewHot.getSourceDataAtRow(row);
+	$("#cusExpViewFileListPopUp").modal("show");
+	
+	var expRptNoTitle = "신고번호: " + data.rptNo;
+    var uploadExpViewFileListTitle = document.querySelector('.modal-content .expModal-title');
+    uploadExpViewFileListTitle.textContent = expRptNoTitle;
+	
+    var sData = fn_rptNoForPopup(data);
+    fn_searchViewFilesPopup(sData);
+};
+
+function fn_rptNoForPopup(selectedRow){
+	var sData = {};
+
+	sData["srch1"] = selectedRow["rptNo"].replace(/-/g, '');
+	sData["srch2"] = selectedRow["name"];
+	sData["srch3"] = selectedRow["orgFileName"];
+	return sData;
+}
+
+
+function fn_searchViewFilesPopup(data){
+	console.log(data);
+	fn_loading(true);
+	
+	$.ajax({
+		type : "POST",
+		url : "/export/selectExpViewFilesList.do",
+		data : data,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	viewListHot.loadData([]);
+        	viewListHot.loadData(data.cusExpViewList);
+			setTimeout(function() {viewListHot.render()}, 200);
+			fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+function fn_handsonGridViewListPopupOption() {
+	cusExpViewPopupSettings = {
+        columns: [
+        	{ data :'checkBox', type :'text', className :"htCenter", width: 30, type:'checkbox', checkedTemplate:'yes', uncheckedTemplate:'no', readOnly:false },
+        	{ data: 'rptNo', type: 'text', className: "htCenter", readOnly: true, 
+        		renderer: function(instance, td, row, col, prop, value, cellProperties) {
+                value = value.replace(/^(\d{5})(\d{2})(\d{6})(\w)$/, '$1-$2-$3$4');
+                Handsontable.renderers.TextRenderer.apply(this, arguments);
+                }
+        	  },
+            {
+                data: 'docuType',
+                type: 'text',
+                className: "htCenter",
+                readOnly: true,
+                renderer: function (instance, td, row, col, prop, value, cellProperties) {
+                	if (value === 'CI') {
+                        td.innerHTML = '<div style="text-align: center;">Invoice</div>';
+                    } else if (value === 'PL') {
+                        td.innerHTML = '<div style="text-align: center;">Packing List</div>';
+                    } else if (value === 'DC') {
+                        td.innerHTML = '<div style="text-align: center;">신고필증</div>';
+                    } else if (value === 'CB') {
+                        td.innerHTML = '<div style="text-align: center;">통합</div>';
+                    } else if (value === 'UC') {
+                        td.innerHTML = '<div style="text-align: center;">정정 통합</div>';
+                    } else if (value === 'CO') {
+                        td.innerHTML = '<div style="text-align: center;">원산지증명서</div>';
+                    } else if (value === 'RQ') {
+                        td.innerHTML = '<div style="text-align: center;">요건 서류</div>';
+                    } else if (value === 'OT') {
+                        td.innerHTML = '<div style="text-align: center;">기타</div>';
+                    } else if (value === 'AC') {
+                        td.innerHTML = '<div style="text-align: center;">정산서</div>';
+                    } else {
+                        td.innerHTML = '<div style="text-align: center;">B/L</div>';
+                    }
+                }
+            },
+            { data: 'docuOrgFile', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'docuFile', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'uploadDt', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'docuPath', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'invoiceNo', type: 'text', className: "htCenter", readOnly: true }
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["", "신고번호", "파일 타입", "파일명", "", "업로드 일자", "파일 경로"],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [1,4,6,7]},
+        afterGetColHeader: function(col, TH){
+        	if(col == 0){
+          	TH.innerHTML = "<input type='checkbox'  class='checker' id='id_cusExpViewAllClick' onclick='fn_cusExpViewAllClick();'>";
+          }
+        }
+    };
+
+    return cusExpViewPopupSettings;
+}
+
+
+function fn_cusExpViewAllClick(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_cusExpViewAllClick").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+	var data = viewListHot.getData();
+
+	for(var i=0; i< data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	viewListHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_cusExpViewAllClick").prop("checked", true);
+	} else {
+		$("#id_cusExpViewAllClick").prop("checked", false);
+	}
+}
+
+//파일업로드 
+function fn_submitExportFileUpload(){
+	
+	   if (dropzone.files.length === 0) {
+	        alert("업로드할 파일이 없습니다.");
+	        return;
+	    }
+	
+	    
+	    if (!confirm('업로드 작업을 시작하시겠습니까?\n데이터 양에 따라 시간이 다소 소요될 수 있습니다.\n*10,000행기준 7분정도 소요됩니다.')) {
+	        fn_loading(false);
+	        return;
+	    }
+	    // 모달 표시
+	    fn_resultCusExpUpload();
+	    var tableBody = document.getElementById('cusExpUplInfo');
+	    tableBody.innerHTML = "";
+	    
+		$.ajax({
+			type : "POST",
+			url : "/cusExp/deleteTempData.do",
+			data : null,
+			contentType: "application/json",
+	        success : function(response) {
+	        	submitFileUploadSet(response);
+	        	fn_searchCusExpView();
+	        },
+	        error: function(xhr, status, error) { 
+	            console.error("Request failed with status: " + status + " and error: " + error);
+	        }
+		});
+}
+	
+// 파일전체 삭제
+function fn_dropzoneExportReset(){
+	dropzone.removeAllFiles(true);
+}
+
+//업로드 결과
+function submitFileUploadSet(respones){
+	 //파일전송
+    dropzone.enqueueFiles(dropzone.getFilesWithStatus(Dropzone.ADDED));
+    $("#saveBtn").css("display", "block");
+    $("#saveCancel").css("display", "none");
+    //document.querySelector(".fileinput-button").style.display="none";
+    let dzRemoves = document.querySelectorAll(".dz-remove");
+    for(let dzRemove of dzRemoves){
+        dzRemove.style.display= "none";
+    }
+    $("#upload-2").css("display", "block");
+    //$.unblockUI();
+}
+
+
+$("#cusExpViewTable .wtHolder").scroll(function(){
+    var scrollTop = $("#cusExpViewListPopupTable .wtHolder").scrollTop();
+    var countPerPage = 50;
+    var rowHeight = overHot.getRowHeight();
+    var addCnt = 790;
+});
+
+
+$("#popOverTable .wtHolder").scroll(function(){
+	fn_cusExpViewFileList(row, col)
+	var data = cusExpViewHot.getSourceData();
+	var scrollTop = $("#cusExpViewTable .wtHolder").scrollTop();
+	var countPerPage = 50;
+	var rowHeight = filesHot.getRowHeight();
+	var addCnt = 790;
+	
+});
+
+function fn_cusExpViewFileDown(){
+	var sData = {};
+    var data = viewListHot.getSourceData();
+    var ExpViewRptNos = [];
+    var rptNo = data[0].rptNo
+    var invoiceNo = data[0].invoiceNo;
+    var cnt = 0;
+    
+	for (var i = 0; i < data.length; i++) {
+		if (data[i].checkBox === "yes") { 
+			ExpViewRptNos.push(data[i]);
+			cnt++;
+		}
+	}
+    if (cnt == 0){
+    	alert("다운로드할 파일을 선택해 주세요.");
+    	return;
+    }
+		
+    if (cnt == 1) {
+        $("#docuFile").val(ExpViewRptNos[0].docuFile);
+        $("#docuOrgFile").val(ExpViewRptNos[0].docuOrgFile);
+        document.cusExpViewZipDownForm.action = "/base/downloadFile.do";
+        document.cusExpViewZipDownForm.submit();
+    } else {
+	    $.ajax({
+	        type: "POST",
+	        url: "/export/expViewZipCreate.do",
+	        data: JSON.stringify(ExpViewRptNos), 
+	        contentType: 'application/json',
+	        beforeSend: function(xhr) {
+	            xhr.setRequestHeader("AJAX", "true");
+	        },
+	        success: function(response) {
+	        	$("#cusExpViewZipDown").val(invoiceNo + "_" + rptNo);
+	        	document.cusExpViewZipDownForm.action = "/export/downloadViewFile.do";
+	          	document.cusExpViewZipDownForm.submit();
+	        },
+	        error: function(xhr, status, error) {
+	            console.error("다운로드 실패:", error);
+	        }
+	    });
+	};
+}
+
+function cusExpViewFileListClose(){
+	$("#cusExpViewFileListPopUp").modal("hide");
+}
+
+
+function fn_userMemoSave(row, col){
+	var rowData = cusExpViewHot.getSourceDataAtRow(row);
+	var rptNo = rowData.rptNo;
+	var value2 = $("#userMemo" + row).val();
+	var sData = {};
+	sData["srch1"] = rptNo;
+	sData["srch2"] = value2;
+	
+	if(confirm("저장하시겠습니까?")){
+		
+		$.ajax({
+			type : "POST",
+			url : "/export/saveExpUserMemo.do",
+			data : sData,
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			dataType: "json",
+			success : function(data) {
+				alert('저장되었습니다.')
+				fn_searchCusExpView();
+				
+			},
+			error : function(e, textStatus, errorThrown) {
+				if(e.status == 400){
+					alert("Your request is up. Please log back in if you wish continue");
+					location.href = document.referrer;
+				} else {
+					console.log(errorThrown);
+					alert(msgSearchError);
+				}
+			}
+		});
+	} else {
+		return;
+	}
+}
+
+
+
+function fn_cusExpViewExcelDownload(){
+	 var type = $("input:radio[name=cusExpView_srch1]:checked").val();
+	 fn_loading(true);
+		//엑셀옵션
+		var exTitArr = [];
+		var exTit = "";
+		var exColArr = [];
+		var exCol = "";
+	    var exTitDivArr = [];
+	    var exTitDiv = "";
+		
+		let cusExpViewCol = new fn_cusExpViewTableCol();
+		let cusExpViewHeader = new fn_cusExpViewTableHeader();
+		
+		let cusExpViewLanCol = new fn_cusExpViewLanTableCol();
+		let cusExpViewLanHeader = new fn_cusExpViewLanTableHeader();
+		
+		let cusExpViewSpecCol = new fn_cusExpViewSpecTableCol();
+		let cusExpViewSpecHeader = new fn_cusExpViewSpecTableHeader();
+	    
+	    exColArr.push(fn_getExcelCol(cusExpViewCol.cusExpViewCol));
+		exColArr.push(fn_getExcelCol(cusExpViewLanCol.cusExpViewLanCol));
+		exColArr.push(fn_getExcelCol(cusExpViewSpecCol.cusExpViewSpecCol));
+		
+		exTitArr.push(fn_getExcelHead(cusExpViewHeader.cusExpViewHeader));
+		exTitArr.push(fn_getExcelHead(cusExpViewLanHeader.cusExpViewLanHeader));
+		exTitArr.push(fn_getExcelHead(cusExpViewSpecHeader.cusExpViewSpecHeader));
+		
+	 	exCol = exColArr.join("|||");
+		exTit = exTitArr.join("||||");
+		exTitDiv = "1|수츨신고현황||2|수출신고란||3|수출신고규격";
+			
+	   
+	   var parameters = {exCol : "", exTit: "", exTitDiv: "", exType: "", srch40: ""};
+		
+	   // 검색옵션
+	   $.each(fn_setExportViewForm(), function(attrName, attrValue){
+	   	parameters[attrName] = attrValue;
+	   });
+		
+		parameters.exCol = exCol.replace(/ /g,"_");
+		parameters.exTit = exTit.replace(/ /g,"_");
+		parameters.exTitDiv = exTitDiv.replace(/ /g,"_");
+		parameters.exType = type;
+		parameters.srch40 = "수출신고현황";
+		
+		$.ajax({
+			 url: "/cusExp/exportDownloadExcel.do",
+			 data: parameters,
+			 type: 'POST',
+			 cache: false,
+			 timeout: 200000,
+			 xhrFields: {
+				 responseType: "blob",
+			 },
+		    success: function(blob, status, xhr) {
+		    	try {
+					// check for a filename
+					 var fileName = "";
+					 var disposition = xhr.getResponseHeader("Content-Disposition");
+
+				       if (disposition && disposition.indexOf("attachment") !== -1) {
+				      	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+				           var matches = filenameRegex.exec(disposition);
+
+				           if (matches != null && matches[1]) {
+				               fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+				           }
+				       }
+
+				       // for IE
+				       if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+				           window.navigator.msSaveOrOpenBlob(blob, fileName);
+				       } else {
+				           var URL = window.URL || window.webkitURL;
+				           var downloadUrl = URL.createObjectURL(blob);
+
+				           if (fileName) {
+				               var a = document.createElement("a");
+
+				               // for safari
+				               if (a.download === undefined) {
+				                   window.location.href = downloadUrl;
+				               } else {
+				                   a.href = downloadUrl;
+				                   a.download = fileName;
+				                   document.body.appendChild(a);
+				                   a.click();
+				               }
+				           } else {
+				               window.location.href = downloadUrl;
+				           }
+				       }
+			       fn_loading(false);
+				} catch (e) {
+					console.log(e);
+					fn_loading(false);
+				};
+		    },
+		    error: function(e, textStatus, errorThrown) {
+		    	if(e.status == 400){
+		    		alert("Your request is up. Please log back in if you wish continue");
+		    		location.href = document.referrer;
+		    	} else {
+		        	console.log(errorThrown);
+		    	}
+		    }
+		});
+}
+
+function fn_getExcelCol(viewCol){
+	const hiddenIndices = [0,1]; // 숨길 열 인덱스
+	 return viewCol
+     .filter((_, index) => !hiddenIndices.includes(index)) // 숨길 열 제외
+     .map(item => item['data'] + '|' + item['className'] + '|' + item['width'])
+     .join("||");
+}
+ 
+function fn_getExcelHead(viewHead){
+	const hiddenIndices = [0,1]; // 숨길 열 인덱스
+	var result = [];
+    
+    if(viewHead.length > 1 && typeof(viewHead[0][0]) == 'object') {
+    	for (var i = 0; i < viewHead.length; i++) {
+            if (i == viewHead.length - 1) {
+                result.push(
+                    viewHead[i]
+                        .filter((_, index) => !hiddenIndices.includes(index)) // 숨길 열 제외
+                        .join("|null||") + "|null"
+                );
+            } else {
+                result.push(
+                    viewHead[i]
+                        .filter((_, index) => !hiddenIndices.includes(index)) // 숨길 열 제외
+                        .map(item => 
+                            (item['label'] ? item['label'] : 'null') + '|' + 
+                            (item['colspan'] ? item['colspan'] : 'null')
+                        )
+                        .join("||")
+                );
+            }
+        }
+        return result.join("|||");
+    } else {
+        return viewHead
+            .filter((_, index) => !hiddenIndices.includes(index)) // 숨길 열 제외
+            .join("|null||") + "|null";
+    }
+}
+

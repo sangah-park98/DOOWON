@@ -1,0 +1,34 @@
+package egovframework.pf.rpt.service;
+
+import java.util.List;
+
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+
+/**
+ * @Class Name : reportAnalysisService.java
+ * @Description : reportAnalysisService Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2025.03.17         	권예지         			최초 생성
+ *
+ * @author 권예지
+ * @since 2025.03.17
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KordSystems All right reserved.
+ */
+
+public interface reportAnalysisService {
+	 // 수입통관현황
+	 List<?> selectImportStatus(SearchVO vo) throws Exception;
+	 //수입통관 세액현황
+	 List<?> selectTaxStatus(SearchVO vo)throws Exception;
+	 // 전년 동월 대비 건수 비교 
+	 List<?> selectTaxCount(SearchVO vo)throws Exception;
+}

@@ -1,0 +1,28 @@
+package egovframework.pf.api.service.impl;
+
+import egovframework.pf.api.service.ApiOrderModVO;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.shipping.service.ShippingOrderVO;
+import egovframework.rte.psl.dataaccess.mapper.Mapper;
+
+@Mapper("apiShippingMapper")
+public interface ApiShippingMapper {
+
+	int stateChange(ShippingOrderVO svo) throws Exception;
+
+	int arrangeAlloc(ShippingOrderVO svo) throws Exception;
+
+	int allocCancel(ShippingOrderVO svo) throws Exception;
+
+	int orderCancel(ShippingOrderVO svo) throws Exception;
+
+	int stateOrderAdd(ShippingOrderVO svo) throws Exception;
+
+	void updateOrderId(ShippingOrderVO svo) throws Exception;
+
+	int orderSeqCnt(SearchVO vo) throws Exception;
+
+	int etcCharge(ShippingOrderVO svo) throws Exception;
+
+	void updateOrderState(ApiOrderModVO mvo) throws Exception;
+}

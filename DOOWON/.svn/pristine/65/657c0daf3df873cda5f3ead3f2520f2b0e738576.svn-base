@@ -1,0 +1,1478 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.exp.service.impl.pfExportMapper">
+
+	<!-- Invoice 등록 조회 -->
+	<select id="selectExportInList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    COUNT(*) OVER() AS cnt,
+		    invoice_no, 
+		    rece, 
+		    CASE WHEN rpt_no != '' THEN CONCAT_WS('-', SUBSTRING(rpt_no, 1, 5), SUBSTRING(rpt_no, 6, 2), SUBSTRING(rpt_no, 8)) ELSE '' END AS rpt_no, 
+		    CASE WHEN Rpt_Day != '' THEN DATE_FORMAT(Rpt_Day, '%Y-%m-%d') ELSE '' END AS rpt_day, 
+		    CASE WHEN exp_Lis_Day != '' THEN DATE_FORMAT(exp_Lis_Day, '%Y-%m-%d') ELSE '' END AS exp_Lis_Day, 
+		    pdf, 
+		    TYPE, 
+		    request_yn
+		FROM (
+		    SELECT 
+		        A.invoice_No, 
+		        CASE WHEN B.rece != '' THEN B.rece ELSE '' END AS rece, 
+		        CASE WHEN B.rpt_no != '' OR B.rpt_no IS NOT NULL THEN B.rpt_no ELSE '' END AS rpt_no, 
+		        CASE WHEN B.rpt_day != '' THEN B.rpt_day ELSE '' END AS rpt_day, 
+		        CASE WHEN B.exp_Lis_Day != '' THEN B.exp_Lis_Day ELSE '' END AS exp_Lis_Day, 
+		        A.docu_org_file AS pdf, 
+		        CASE WHEN B.type = '' OR B.type IS NULL THEN A.CMPNY_CD ELSE B.type END AS TYPE, 
+		        CASE WHEN B.rpt_no != '' OR B.rpt_no != NULL THEN 'Y' ELSE A.request_yn END AS request_yn
+		    FROM file_info A
+		    LEFT JOIN (
+		        SELECT 
+		            b.mg_code AS invoice_no, 
+		            a.rece, 
+		            a.rpt_no, 
+		            a.Rpt_Day, 
+		            a.exp_Lis_Day, 
+		            '' AS pdf, 
+		            exp_firm AS TYPE
+		        FROM cusdec830a1 A
+		        INNER JOIN (
+		            SELECT sna1, rpt_no, mg_code
+		            FROM cusdec830b1
+		            GROUP BY sna1, rpt_no
+		        ) B ON A.sn = B.sna1 AND A.rpt_no = B.rpt_no
+		        WHERE 1=1 AND A.rpt_seq = '00'
+		    ) B ON A.INVOICE_NO = B.INVOICE_NO
+		    WHERE A.file_type = 'exp' AND A.docu_type = 'CI' 
+		    <!-- <if test="cmpnyCd != null and cmpnyCd != ''">
+				AND A.cmpny_cd = #{cmpnyCd}
+		    </if> -->
+		    <if test="list != null and list.size() > 0">
+	            AND A.cmpny_cd IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+        	</if>
+		    UNION 
+		
+		    SELECT 
+		        B.invoice_No, 
+		        B.rece, 
+		        B.rpt_no, 
+		        B.rpt_day, 
+		        B.exp_Lis_Day, 
+		        IFNULL(A.docu_org_file,'') AS pdf, 
+		        B.type, 
+		        A.request_yn
+		    FROM file_info A
+		    RIGHT JOIN (
+		        SELECT 
+		            b.mg_code AS invoice_no, 
+		            a.rece, 
+		            a.rpt_no, 
+		            a.Rpt_Day, 
+		            a.exp_Lis_Day, 
+		            '' AS pdf, 
+		            exp_firm AS TYPE
+		        FROM cusdec830a1 A
+		        INNER JOIN (
+		            SELECT sna1, rpt_no, mg_code
+		            FROM cusdec830b1
+		            GROUP BY sna1, rpt_no
+		        ) B ON A.sn = B.sna1 AND A.rpt_no = B.rpt_no
+		        WHERE 1=1 AND A.rpt_seq = '00'
+		        <!-- <if test="cmpnyCd != null and cmpnyCd != ''">
+				    AND A.exp_firm = #{cmpnyCd}
+				</if> -->
+				<if test="list != null and list.size() > 0">
+		            AND A.exp_firm IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+	        	</if>
+				<choose>
+				    <when test="srch6 == '01'">
+				        AND A.rpt_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+				    </when>
+				    <otherwise>
+				        AND A.exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+				    </otherwise>
+				</choose>
+		    ) B ON A.INVOICE_NO = B.INVOICE_NO 
+		    AND A.DOCU_TYPE = 'CI'
+		    AND A.FILE_TYPE = 'exp'
+		    
+		    UNION ALL 
+		
+			SELECT 
+			    INVOICE_NO, 
+			    '임시저장' AS rece, 
+			    '' AS rpt_no, 
+			    '' AS rpt_day, 
+			    '' AS exp_Lis_Day, 
+			    '' AS pdf, 
+			    CMPNY_CD AS TYPE, 
+			    '' AS request_yn
+			FROM export_main_temp
+			WHERE 1=1
+			<!-- <if test="cmpnyCd != null and cmpnyCd != ''">
+				AND cmpny_cd = #{cmpnyCd}
+			</if> -->
+			
+			<if test="list != null and list.size() > 0">
+	            AND cmpny_cd IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+        	</if>
+		) A
+		WHERE 1=1 
+		    <if test="srch4 != null and srch4 != ''">
+				AND rpt_no LIKE CONCAT('%',UPPER(REPLACE(#{srch4},'-','')),'%')
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+				AND invoice_no LIKE CONCAT('%',UPPER(#{srch5}),'%')
+			</if>
+			<choose>
+			<when test="srch6 == '01'">
+				AND (rpt_day = '' OR rpt_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','') )
+			</when>
+			<otherwise>
+				AND (exp_Lis_Day = '' OR exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','') )
+			</otherwise>
+			</choose>
+			<choose>
+				<when test="srch1 == '02'">
+				    AND rpt_no != ''
+				</when>
+				<when test="srch1 == '03'">
+				    AND (rpt_no = '' AND rece = '')
+				</when>
+			</choose>  
+		ORDER BY rpt_day desc, rpt_no desc
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+	
+	<select id="selectTempInvoiceMainList" parameterType="searchVO" resultType="egovMap">
+		SELECT * FROM
+		export_main_temp
+		WHERE invoice_no = #{srch1};
+	</select>
+	
+	<select id="selectTempInvoiceSubList" parameterType="searchVO" resultType="egovMap">
+		SELECT * FROM export_item_temp
+		WHERE main_seq = 
+		(SELECT main_seq FROM export_main_temp WHERE invoice_no = #{srch1});
+	</select>
+	
+	<delete id="deleteTempExpMakeInList" parameterType="searchVO">
+		DELETE 
+		FROM 
+		export_main_temp 
+		WHERE main_seq = #{srch1};
+	</delete>
+	
+	<delete id="deleteTempExpMakeInSubList" parameterType="searchVO">
+		DELETE 
+		FROM 
+		export_item_temp 
+		WHERE main_seq = #{srch1};
+	</delete>
+	
+	<insert id="saveMakeInFile" parameterType="egovframework.pf.exp.service.SaveExpFileVO">
+		INSERT INTO file_info
+		(	FILE_TYPE
+		  ,	RPT_NO
+		  ,	BLNO
+		  , INVOICE_NO
+		  , UPLOAD_DT
+		  , DOCU_TYPE
+		  , DOCU_PATH
+		  , DOCU_FILE
+		  , DOCU_ORG_FILE
+		  , DEL_YN
+		  , REG_DT
+		  , REG_ID
+		  , CMPNY_CD
+		  , REQUEST_YN
+		) VALUES (
+		  'exp'
+		  ,	''
+		  ,	''
+		  , #{invoiceNo}
+		  , #{uploadDt}
+		  , 'CI'
+		  , '/home/files'
+		  , #{orgFileName}
+		  , #{orgFileName}
+		  , 'N'
+		  , #{uploadDt}
+		  , ''
+		  , #{cmpnyCd}
+		  , 'N'
+		);
+	</insert>
+
+	<insert id="insertExportFilesInfo" parameterType="egovframework.pf.exp.service.SaveExpFileVO">
+		INSERT INTO file_info
+		(	FILE_TYPE
+		  ,	RPT_NO
+		  ,	BLNO
+		  , INVOICE_NO
+		  , UPLOAD_DT
+		  , DOCU_TYPE
+		  , DOCU_PATH
+		  , DOCU_FILE
+		  , DOCU_ORG_FILE
+		  , DEL_YN
+		  , REG_DT
+		  , REG_ID
+		  , CMPNY_CD
+		  , REQUEST_YN
+		) VALUES (
+		  'exp'
+		  ,	REPLACE(#{rptNo},'-','')
+		  ,	''
+		  , #{invoiceNo}
+		  , #{uploadDt}
+		  , #{name}
+		  , '/home/files'
+		  , #{fileName}
+		  , #{orgFileName}
+		  , 'N'
+		  , #{regDt}
+		  , #{regId}
+		  , #{cmpnyCd}
+		  <choose>
+		  <when test="rptNo != '' and rptNo != null">
+		  ,'Y'
+		  </when>
+		  <otherwise>
+		  ,'N'
+		  </otherwise>
+		  </choose>
+		);
+	</insert>
+	
+	<!-- 같은 Invoice의 B/L, packing List 띄우는 팝업창  -->
+	<select id="selectInFilesList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+		   INVOICE_NO,
+		   DOCU_TYPE,
+		   DOCU_FILE,
+		   DOCU_ORG_FILE,
+		   DOCU_PATH,
+		   CONCAT(SUBSTRING(UPLOAD_DT, 1, 4), '-', SUBSTRING(UPLOAD_DT, 5, 2), '-', SUBSTRING(UPLOAD_DT, 7, 2)) AS UPLOAD_DT
+		FROM
+		   file_info
+		WHERE
+		   invoice_No = #{srch1};
+	</select>
+	
+	<select id="selectExpViewFilesList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+		   RPT_NO,
+		   DOCU_PATH,
+		   DOCU_TYPE,
+		   DOCU_FILE,
+		   DOCU_ORG_FILE,
+		   BLNO,
+		   INVOICE_NO,
+		   CONCAT(SUBSTRING(UPLOAD_DT, 1, 4), '-', SUBSTRING(UPLOAD_DT, 5, 2), '-', SUBSTRING(UPLOAD_DT, 7, 2)) AS UPLOAD_DT
+		FROM
+		   file_info
+		WHERE
+		   rpt_no = #{srch1};
+	</select>
+	
+	<!-- 편집 버튼의 PDF 파일 저장 -->
+	<update id="saveExportFileInfo" parameterType="egovframework.pf.exp.service.SaveExpFileVO">
+		UPDATE file_info SET
+		docu_type = #{name},
+		docu_file = #{fileName},
+		docu_org_file = #{orgFileName}
+		WHERE invoice_NO = #{exportInNo}
+	</update>
+	
+	<!-- Invoice 생성 페이지의 loading Port 드롭다운 데이터 가져오기 -->	
+	<select id="selectExportMkInList" parameterType="searchVO" resultType="egovMap">
+		SELECT cmmn_cd, cmmn_nm
+		FROM cmmn_cd
+		WHERE grp_cd = 'LOADPORT'
+		<if test="srch1 != '' and srch1 != null">
+		AND (cmmn_cd like CONCAT('%',UPPER(#{srch1}),'%') OR cmmn_nm like CONCAT('%',UPPER(#{srch1}),'%'))
+		</if>
+	</select>
+	
+	<!-- Invoice 생성 페이지의 terms of trade 드롭다운 데이터 가져오기 -->	
+	<select id="selectExportMkInTradeList" parameterType="searchVO" resultType="egovMap">
+		SELECT cmmn_cd, cmmn_nm
+		FROM cmmn_cd
+		WHERE grp_cd = 'INCOTERMS'
+		AND cmmn_cd IN ('EXW', 'FCA', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP', 'FAS', 'FOB', 'CFR', 'CIF')
+		<if test="srch1 != '' and srch1 != null">
+		AND (cmmn_cd like CONCAT('%',UPPER(#{srch1}),'%') OR cmmn_nm like CONCAT('%',UPPER(#{srch1}),'%'))
+		</if>
+	</select>
+	
+	<!-- Invoice 생성 페이지의 final destination 드롭다운 데이터 가져오기 -->	
+	<select id="selectExportMkInAprPortList" parameterType="searchVO" resultType="egovMap">
+		SELECT cmmn_cd, cmmn_nm
+		FROM cmmn_cd
+		WHERE grp_cd = 'ARRPORT'
+		<if test="srch1 != '' and srch1 != null">
+		 AND cmmn_cd LIKE CONCAT('%',UPPER(#{srch1}),'%')
+		</if>
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+	
+	<select id="selectExportMkInNationList" parameterType="searchVO" resultType="egovMap">
+		SELECT cmmn_cd, cmmn_nm
+		FROM cmmn_cd
+		WHERE grp_cd = 'NATION'
+		<if test="srch1 != '' and srch1 != null">
+		 AND cmmn_cd LIKE CONCAT('%',UPPER(#{srch1}),'%')
+		</if>
+		ORDER BY 
+		    CASE cmmn_cd
+		        WHEN 'US' THEN 1
+		        WHEN 'CN' THEN 2
+		        WHEN 'JP' THEN 3
+		        WHEN 'EU' THEN 4
+		        WHEN 'KR' THEN 5
+		        WHEN 'TW' THEN 6
+		        WHEN 'VN' THEN 7
+		        WHEN 'IN' THEN 8
+		        WHEN 'SG' THEN 9
+		        WHEN 'KH' THEN 10
+		        ELSE 11
+		    END,
+		    cmmn_cd;
+	</select>
+	
+	<select id="selectExportMkInUOMList" parameterType="searchVO" resultType="egovMap">
+		SELECT cmmn_cd, cmmn_nm
+		FROM cmmn_cd
+		WHERE grp_cd = 'QUANTITY2'
+		<if test="srch1 != '' and srch1 != null">
+		    AND cmmn_cd LIKE CONCAT('%', UPPER(#{srch1}), '%')
+		</if>
+		ORDER BY 
+		    CASE cmmn_cd
+		        WHEN 'KG' THEN 1
+		        WHEN 'MGM' THEN 2
+		        ELSE 3
+		    END,
+		    cmmn_cd;
+	</select>
+	
+	<select id="selectExportMkInCurrencyList" parameterType="searchVO" resultType="egovMap">
+		SELECT cmmn_cd, cmmn_nm
+		FROM cmmn_cd
+		WHERE grp_cd = 'EXCHANGERT'
+		<if test="srch1 != '' and srch1 != null">
+		    AND cmmn_cd LIKE CONCAT('%', UPPER(#{srch1}), '%')
+		</if>
+		ORDER BY 
+		    CASE cmmn_cd
+		        WHEN 'USD' THEN 1
+		        WHEN 'CNY' THEN 2
+		        WHEN 'JPY' THEN 3
+		        WHEN 'EUR' THEN 4
+		        WHEN 'KRW' THEN 5
+		        WHEN 'TWD' THEN 6
+		        WHEN 'VND' THEN 7
+		        WHEN 'INR' THEN 8
+		        WHEN 'SGD' THEN 9
+		        WHEN 'HKD' THEN 10
+		        ELSE 11
+		    END,
+		    cmmn_cd;
+	</select>
+	
+	<select id="selectExportMkPLtotCntList" parameterType="searchVO" resultType="egovMap">
+		SELECT cmmn_cd, cmmn_nm
+		FROM cmmn_cd
+		WHERE grp_cd= 'PACKUNT'
+		<if test="srch1 != '' and srch1 != null">
+		AND (cmmn_cd like CONCAT('%',UPPER(#{srch1}),'%') OR cmmn_nm like CONCAT('%',UPPER(#{srch1}),'%'))
+		</if>
+	</select>
+	
+	<insert id="insertInvoiceMainList" parameterType="egovframework.pf.exp.service.SaveExpMainVO">
+		INSERT INTO EXPORT_MAIN(
+		 CORP_NO,
+		 SHIPPER,
+		 ADDRESS,
+		 CONSIGNEE,
+		 CONSIGNEE_ADDRESS,
+		 INVOICE_NO,
+		 INVOICE_DATE,
+		 INVOICE_TO,
+		 LOADPORT,
+		 FLIGHT,
+		 PAYMENT,
+		 TRADE,
+		 FREIGHT,
+		 FREIGHT_CURRENCY,
+		 INSURANCE,
+		 INSURANCE_CURRENCY,
+		 DEPDATE,
+		 DESTINATION,
+		 MANUFACT,
+		 TOTAL,
+		 TOTAL_PRICE,
+		 TOTAL_AMOUNT,
+		 COMMENTS,
+		 DEL_YN,
+		 REG_DT,
+		 REG_ID
+		)VALUES(
+			#{corpNo},
+			#{shipper},
+			#{address},
+			#{consignee},
+			#{consigneeAddress},
+			#{invoiceNo},
+			#{invoiceDate},
+			#{invoiceTo},
+			#{loadPort},
+			#{flight},
+			#{payment},
+			#{trade},
+			#{freight},
+			#{freightCurrency},
+			#{insurance},
+			#{insuranceCurrency},
+			#{depDate},
+			#{destination},
+			'',
+			#{total},
+			#{totalPrice},
+			#{totalAmount},
+			#{comments},
+			'N',
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		#{regId}
+	  		) ON DUPLICATE KEY
+			UPDATE EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+			 , EDT_ID = #{edtId}
+			 , SHIPPER = #{shipper}
+			 , ADDRESS = #{address}
+			 , CONSIGNEE = #{consignee}
+			 , CONSIGNEE_ADDRESS = #{consigneeAddress}
+			 , INVOICE_NO = #{invoiceNo}
+			 , INVOICE_DATE = #{invoiceDate}
+			 , INVOICE_TO = #{invoiceTo}
+			 , CONSIGNEE  = #{consigneeAddress}
+			 , LOADPORT = #{loadPort}
+			 , FLIGHT = #{flight}
+			 , PAYMENT = #{payment}
+			 , TRADE = #{trade}
+			 , FREIGHT = #{freight}
+			 , FREIGHT_CURRENCY = #{freightCurrency}
+			 , INSURANCE = #{insurance}
+			 , INSURANCE_CURRENCY = #{insuranceCurrency}
+			 , DEPDATE = #{depDate}
+			 , DESTINATION = #{destination}
+			 , MANUFACT = ''
+			 , TOTAL = #{total}
+			 , TOTAL_PRICE = #{totalPrice}
+			 , TOTAL_AMOUNT = #{totalAmount}
+			 , COMMENTS = #{comments}
+			 , DEL_YN = 'N'
+	</insert>
+	
+	<select id="checkTempInvoiceNumber" parameterType="searchVO" resultType="String">
+		SELECT MAIN_SEQ
+		FROM EXPORT_MAIN_TEMP
+		WHERE INVOICE_NO = #{srch10}
+	</select>
+	
+	<insert id="saveTempExpMakeInList" parameterType="egovframework.pf.exp.service.SaveExpMainVO">
+		INSERT INTO EXPORT_MAIN_TEMP(
+		 CMPNY_CD,
+		 CORP_NO,
+		 SHIPPER,
+		 ADDRESS,
+		 CONSIGNEE,
+		 CONSIGNEE_ADDRESS,
+		 INVOICE_NO,
+		 INVOICE_DATE,
+		 INVOICE_TO,
+		 LOADPORT,
+		 FLIGHT,
+		 PAYMENT,
+		 TRADE,
+		 FREIGHT,
+		 FREIGHT_CURRENCY,
+		 INSURANCE,
+		 INSURANCE_CURRENCY,
+		 DEPDATE,
+		 DESTINATION,
+		 MANUFACT,
+		 TOTAL,
+		 TOTAL_PRICE,
+		 TOTAL_AMOUNT,
+		 COMMENTS,
+		 DEL_YN,
+		 REG_DT,
+		 REG_ID
+		)VALUES(
+			#{cmpnyCd},
+			#{corpNo},
+			#{shipper},
+			#{address},
+			#{consignee},
+			#{consigneeAddress},
+			#{invoiceNo},
+			#{invoiceDate},
+			#{invoiceTo},
+			#{loadPort},
+			#{flight},
+			#{payment},
+			#{trade},
+			#{freight},
+			#{freightCurrency},
+			#{insurance},
+			#{insuranceCurrency},
+			#{depDate},
+			#{destination},
+			'',
+			#{total},
+			#{totalPrice},
+			#{totalAmount},
+			#{comments},
+			'N',
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		#{regId}
+	  		) 
+	</insert>
+	
+	<insert id="saveTempExpMakeInSubList" parameterType="egovframework.pf.exp.service.SaveExpMainVO">
+		INSERT INTO EXPORT_ITEM_TEMP(
+		 MAIN_SEQ,
+		 ITEM_CODE,
+		 HS_CODE,
+		 ITEM_NAME,
+		 GOODS_DESCRIPTION,
+		 NATION,
+		 QUANTITY,
+		 UOM,
+		 UNIT_PRICE,
+		 CURRENCY,
+		 AMOUNT,
+		 DEL_YN,
+		 REG_DT,
+		 REG_ID
+		)VALUES(
+			#{mainIndex},
+			#{itemCode},
+			#{hsCode},
+			#{itemName},
+			#{goodDes},
+			#{nation},
+			#{quantity},
+			#{uom},
+			#{unitPrice},
+			#{currency},
+			#{amount},
+			'N',
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		#{regId}
+	  		) 
+	</insert>
+	
+	<select id="selectTempInvoiceMainIdex" parameterType="egovframework.pf.exp.service.SaveExpMainVO" resultType="String">
+		SELECT MAIN_SEQ
+		FROM EXPORT_MAIN_TEMP
+		WHERE INVOICE_NO = #{invoiceNo}
+	</select>
+	
+	<select id="selectInvoiceMainIdex" parameterType="egovframework.pf.exp.service.SaveExpMainVO" resultType="String">
+		SELECT MAIN_SEQ
+		FROM EXPORT_MAIN
+		WHERE INVOICE_NO = #{invoiceNo}
+	</select>
+	
+	<select id="checkInvoiceNumber" parameterType="searchVO" resultType="String">
+		SELECT MAIN_SEQ 
+		FROM EXPORT_MAIN
+		WHERE INVOICE_NO = #{srch10}
+	</select>
+	
+	<insert id="insertInvoiceSubList" parameterType="egovframework.pf.exp.service.SaveExpMainVO">
+		INSERT INTO EXPORT_ITEM(
+		 MAIN_SEQ,
+		 ITEM_CODE,
+		 HS_CODE,
+		 ITEM_NAME,
+		 GOODS_DESCRIPTION,
+		 NATION,
+		 QUANTITY,
+		 UOM,
+		 UNIT_PRICE,
+		 CURRENCY,
+		 AMOUNT,
+		 DEL_YN,
+		 REG_DT,
+		 REG_ID
+		)VALUES(
+			#{mainIndex},
+			#{itemCode},
+			#{hsCode},
+			#{itemName},
+			#{goodDes},
+			#{nation},
+			#{quantity},
+			#{uom},
+			#{unitPrice},
+			#{currency},
+			#{amount},
+			'N',
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		#{regId}
+	  		) ON DUPLICATE KEY
+			UPDATE EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+			 , EDT_ID = #{edtId}
+			 , ITEM_CODE = #{itemCode}
+			 , HS_CODE = #{hsCode}
+			 , ITEM_NAME = #{itemName}
+			 , GOODS_DESCRIPTION = #{goodDes}
+			 , NATION = #{nation}
+			 , QUANTITY = #{quantity}
+		     , UOM = #{uom}
+		     , UNIT_PRICE = #{unitPrice}
+			 , CURRENCY = #{currency}
+			 , AMOUNT = #{amount}
+			 , DEL_YN = 'N'
+	</insert>
+
+	<!-- <insert id="insertPackingListMainList" parameterType="egovframework.pf.exp.service.SaveExpMainVO">
+		INSERT INTO EXPORT_MAIN(
+		 SHIPPER,
+		 INVOICE_NO,
+		 INVOICE_DATE,
+		 CONSIGNEE,
+		 MANUFACT,
+		 PL_LOADPORT,
+		 PL_FLIGHT,
+		 PL_DESTINATION,
+		 PL_DEPDATE,
+		 TOTAL_QUANTITY,
+		 TOTAL_NET,
+		 TOTAL_GROSS,
+		 TOTAL_KG,
+		 DEL_YN,
+		 REG_DT,
+		 REG_ID
+		)VALUES(
+			#{shipper},
+			#{invoiceNo},
+			#{invoiceDate},
+			#{consignee},
+			#{manufact},
+			#{plLoadPort},
+			#{plFlight},
+			#{plDestination},
+			#{plDepDate},
+			#{totalQuantity},
+			#{totalNet},
+			#{totalGross},
+			#{totalKg},
+			'N',
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		#{regId}
+	  		) ON DUPLICATE KEY
+			UPDATE EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+			 , EDT_ID = #{edtId}
+			 , SHIPPER = #{shipper}
+			 , INVOICE_NO = #{invoiceNo}
+			 , INVOICE_DATE = #{invoiceDate}
+			 , CONSIGNEE  = #{consignee}
+			 , LOADPORT = #{plLoadPort}
+			 , FLIGHT = #{plFlight}
+			 , PL_DEPDATE = #{plDepDate}
+			 , PL_DESTINATION = ''
+			 , MANUFACT = ''
+			 , TOTAL_QUANTITY = #{totalQuantity}
+			 , TOTAL_NET = #{totalNet}
+			 , TOTAL_GROSS = #{totalGross}
+			 , TOTAL_KG = #{totalKg}
+			 , DEL_YN = 'N'
+	</insert> -->
+	
+	<update id="updateManufactPackList" parameterType="searchVO">
+		UPDATE EXPORT_MAIN
+		SET MANUFACT = #{srch1}
+		, PL_LOADPORT = #{srch2}
+		, PL_DESTINATION = #{srch3}
+		, PL_DEPDATE = #{srch4}
+		, PL_FLIGHT = #{srch5}
+		, TOTAL_QUANTITY = #{srch6}
+		, TOTAL_NET = #{srch7}
+		, TOTAL_GROSS = #{srch8}
+		, TOTAL_KG = #{srch9}
+		, TOTAL_CNT = #{srch11}
+		, COMMENTS = #{srch12}
+		WHERE INVOICE_NO = #{srch10};
+	</update>
+	
+	<update id="updateTempManufactPlList" parameterType="searchVO">
+		UPDATE EXPORT_MAIN_TEMP
+		SET MANUFACT = #{srch1}
+		, PL_LOADPORT = #{srch2}
+		, PL_DESTINATION = #{srch3}
+		, PL_DEPDATE = #{srch4}
+		, PL_FLIGHT = #{srch5}
+		, TOTAL_QUANTITY = #{srch6}
+		, TOTAL_NET = #{srch7}
+		, TOTAL_GROSS = #{srch8}
+		, TOTAL_KG = #{srch9}
+		, TOTAL_CNT = #{srch11}
+		, COMMENTS = #{srch12}
+		WHERE INVOICE_NO = #{srch10};
+	</update>
+	
+	<select id="selectTempPlMainIdex"  parameterType="egovframework.pf.exp.service.SaveExpMainVO" resultType="String">
+		SELECT MAIN_SEQ
+		FROM EXPORT_MAIN_TEMP
+		WHERE INVOICE_NO = #{srch10}
+	</select>
+	
+	<select id="selectPackingListMainIdex"  parameterType="egovframework.pf.exp.service.SaveExpMainVO" resultType="String">
+		SELECT MAIN_SEQ
+		FROM EXPORT_MAIN
+		WHERE INVOICE_NO = #{srch10}
+	</select>
+	
+	<insert id="insertPackingListSubList" parameterType="egovframework.pf.exp.service.SaveExpMainVO">
+		INSERT INTO EXPORT_CT(
+		 MAIN_SEQ,
+		 CT_NUMBER,
+		 HS_CODE,
+		 GENERAL_NAME,
+		 GOODS_DESCRIPTION,
+		 NATION,
+		 QUANTITY,
+		 UOM,
+		 NET_WEIGHT,
+		 GROSS_WEIGHT,
+		 KG,
+		 DEL_YN,
+		 REG_DT,
+		 REG_ID,
+		 EDT_DT,
+		 EDT_ID
+		)VALUES(
+			#{mainIndex},
+			#{ctNo},
+			#{plHsCode},
+			#{plItemName},
+			#{plGoodDes},
+			#{plNation},
+			#{plQuantity},
+			#{plUom},
+			#{net},
+			#{gross},
+			#{kg},
+			'N',
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		#{regId},
+	  		'N',
+	  		'N'
+	  		) ON DUPLICATE KEY
+			UPDATE EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+			 , EDT_ID = #{edtId}
+			 , CT_NUMBER = #{ctNo}
+			 , HS_CODE = #{plHsCode}
+			 , GENERAL_NAME = #{plItemName}
+			 , GOODS_DESCRIPTION = #{plGoodDes}
+			 , NATION = #{plNation}
+			 , QUANTITY = #{plQuantity}
+		     , UOM = #{plUom}
+		     , NET_WEIGHT = #{net}
+		     , GROSS_WEIGHT = #{gross}
+		     , KG = #{kg}
+			 , DEL_YN = 'N'
+	</insert>
+	
+	<insert id="saveTempExpMakePlSubList" parameterType="egovframework.pf.exp.service.SaveExpMainVO">
+		INSERT INTO EXPORT_CT_TEMP(
+		 MAIN_SEQ,
+		 CT_NUMBER,
+		 HS_CODE,
+		 GENERAL_NAME,
+		 GOODS_DESCRIPTION,
+		 NATION,
+		 QUANTITY,
+		 UOM,
+		 NET_WEIGHT,
+		 GROSS_WEIGHT,
+		 KG,
+		 DEL_YN,
+		 REG_DT,
+		 REG_ID,
+		 EDT_DT,
+		 EDT_ID
+		)VALUES(
+			#{mainIndex},
+			#{ctNo},
+			#{plHsCode},
+			#{plItemName},
+			#{plGoodDes},
+			#{plNation},
+			#{plQuantity},
+			#{plUom},
+			#{net},
+			#{gross},
+			#{kg},
+			'N',
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		#{regId},
+	  		'N',
+	  		'N'
+	  		) ON DUPLICATE KEY
+			UPDATE EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+			 , EDT_ID = #{edtId}
+			 , CT_NUMBER = #{ctNo}
+			 , HS_CODE = #{plHsCode}
+			 , GENERAL_NAME = #{plItemName}
+			 , GOODS_DESCRIPTION = #{plGoodDes}
+			 , NATION = #{plNation}
+			 , QUANTITY = #{plQuantity}
+		     , UOM = #{plUom}
+		     , NET_WEIGHT = #{net}
+		     , GROSS_WEIGHT = #{gross}
+		     , KG = #{kg}
+			 , DEL_YN = 'N'
+	</insert>
+	
+	<!-- 수출신고 현황 목록 조회 -->
+	<select id="selectExportViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			COUNT(*) over() AS cnt,
+		    rece,
+		    fail,
+		    rece_result,
+		    rpt_no,
+		    invoice,
+		    BlNo,
+		    exp_firm,
+		    buy_firm,
+		    Ta_St_iso,
+		    reporter,
+		    rpt_Day,
+		    Exp_Lis_Day,
+		    Juk_Day,
+		    ship_day,
+		    exp_details,
+		    Exc_Cot,
+		    Con_MetNm,
+		    incoterms,
+		    tot_pack_cnt,
+		    tot_wt,
+		    approval,
+		    factory_code,
+		    sr_ordr,
+		    user_memo, 
+		    cus_memo
+		FROM (
+			SELECT
+		    SUBSTRING_INDEX(a.user_memo, '\n', 1) AS factory_code,
+		    CASE WHEN STR_CNT(a.user_memo, '\n') >= 1 THEN
+			SUBSTRING_INDEX(SUBSTRING_INDEX(a.user_memo, '\n', 2), '\n', -1)
+			ELSE '' END AS sr_ordr,
+		    a.rece,
+		    '' AS fail,
+		    a.rece_result,
+		    CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no,
+		    b.mg_code AS invoice,
+		    a.BlNo,
+		    a.exp_firm,
+		    a.buy_firm,
+		    a.Ta_St_iso,
+		    IFNULL(I.cmmn_nm,'타관세법인') AS reporter,
+		    CASE WHEN a.Rpt_Day != '' THEN DATE_FORMAT(a.Rpt_Day, '%Y-%m-%d') ELSE '' END AS rpt_Day,
+		    CASE WHEN a.Exp_Lis_Day != '' THEN DATE_FORMAT(a.Exp_Lis_Day, '%Y-%m-%d') ELSE '' END AS Exp_Lis_Day,
+		    CASE WHEN a.Juk_Day != '' THEN DATE_FORMAT(a.Juk_Day, '%Y-%m-%d') ELSE '' END AS Juk_Day,
+		    case when a.ship_day IS NULL then '-' 
+		    	 when a.ship_day = '' then '-'
+			ELSE DATE_FORMAT(a.ship_day, '%Y-%m-%d') end as ship_day,
+		    '' AS exp_details,
+		    CONCAT(a.Exc_Divi, '-', a.Exc_DiviNm) AS Exc_Cot,
+		    a.Con_MetNm,
+		    b.amt_cod AS incoterms,
+		    CONCAT(a.Tot_Pack_Cnt, ' (', a.tot_pack_ut, ')') AS tot_pack_cnt,
+		    CONCAT(a.Tot_Wt, ' (', a.ut, ')') AS tot_wt,
+		    '' AS approval,
+		    IFNULL(E.user_memo,'') as user_memo, 
+		    '' AS cus_memo
+		FROM 
+		    (SELECT @row_number:=0) AS row_number,
+		    CUSDEC830A1 a
+		    
+		    LEFT JOIN
+			(select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'EXPSHRPTCD') I
+			on I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+			
+		INNER JOIN 
+		    (SELECT COUNT(*) over() AS cnt, sna1, rpt_no, MAX(mg_code) AS mg_code, amt_cod FROM cusdec830b1 GROUP BY sna1, rpt_no) b
+		ON a.sn = b.sna1
+		AND a.rpt_no = b.rpt_no
+		LEFT JOIN MEMO_INFO E
+		on a.rpt_no = E.rpt_no
+		AND E.memo_type = 'exp'
+		WHERE 
+		    A.rpt_seq = '00'
+		    <choose>
+		    <when test="srch1 =='02'">
+		    AND A.rece = '수리'
+		    </when>
+		    <when test="srch1 =='03'">
+		    AND A.rece NOT IN ('수리', '승인')
+		    </when>
+		    <when test="srch1 =='04'">
+		    AND A.rece = '승인'
+		    </when>
+		    </choose>
+			<choose>
+		    <when test="srch8 =='01'">
+		    AND A.rpt_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		    </when>
+		    <otherwise>
+		    AND A.exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		    </otherwise>
+		    </choose>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE CONCAT('%',UPPER(REPLACE(#{srch4},'-','')),'%')
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND b.mg_code LIKE CONCAT('%',UPPER(#{srch5}),'%')
+			</if>
+			<if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+        	</if>
+		) AS EXPORT
+		WHERE 1=1
+			<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+			AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+			</if>
+			<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+			AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+			</if>
+			ORDER BY rpt_day desc, rpt_no desc
+			LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	 </select>
+	
+	 <!-- 수출신고 현황 상세 란 목록 조회 -->
+	 <select id="selectExportViewLanList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			RPT_NO,
+			RAN_NO,
+			CONCAT(SUBSTRING(HS, 1, 4), '.', SUBSTRING(HS, 5, 2), '-', SUBSTRING(HS, 7, 4)) AS HS,
+			Exc_Gnm,
+			Con_Amt,
+			Sun_Wt,
+			Pack_Cnt,
+			Ori_st_mark1,
+			mg_code AS invoice,
+			Att_yn
+		FROM cusdec830b1
+			WHERE rpt_no = #{srch4}
+			AND rpt_seq = '00'
+			ORDER BY RPT_NO, RAN_NO;
+	</select>
+	
+	 <select id="selectExportViewLanListExcel" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			RPT_NO,
+			RAN_NO,
+			CONCAT(SUBSTRING(HS, 1, 4), '.', SUBSTRING(HS, 5, 2), '-', SUBSTRING(HS, 7, 4)) AS HS,
+			Exc_Gnm,
+			Con_Amt,
+			Sun_Wt,
+			Pack_Cnt,
+			Ori_st_mark1,
+			mg_code AS invoice,
+			Att_yn
+		FROM cusdec830b1
+		WHERE rpt_no IN (
+			SELECT RPT_NO FROM CUSDEC830A1 A
+			WHERE A.rpt_seq = '00'
+		    <choose>
+		    <when test="srch1 =='02'">
+		    AND A.rece = '수리'
+		    </when>
+		    <when test="srch1 =='03'">
+		    AND A.rece NOT IN ('수리', '승인')
+		    </when>
+		    <when test="srch1 =='04'">
+		    AND A.rece = '승인'
+		    </when>
+		    </choose>
+			<choose>
+		    <when test="srch8 =='01'">
+		    AND A.rpt_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		    </when>
+		    <otherwise>
+		    AND A.exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		    </otherwise>
+		    </choose>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE CONCAT('%',UPPER(REPLACE(#{srch4},'-','')),'%')
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND b.mg_code LIKE CONCAT('%',UPPER(#{srch5}),'%')
+			</if>
+			<if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+        	</if>
+		)
+		AND rpt_seq = '00'
+		ORDER BY rpt_no, ran_no;
+	</select>
+
+	<!-- 수출신고 현황 상세 규격 목록 조회 -->
+	<select id="selectExportViewSpecList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			RPT_NO,
+			RAN_NO, 
+			Sil,
+			Gnm1, 
+			Qty, 
+			Price, 
+			Amt,
+			Gnm2, 
+			Gnm3, 
+			Gnm4, 
+			Gnm5
+		FROM cusdec830c1
+		WHERE rpt_no = #{srch4}
+		AND RAN_NO = #{srch6}
+		AND rpt_seq = '00'
+		ORDER BY RPT_NO, RAN_NO, SIL;
+	</select>
+	
+	<!-- 수출신고 현황 상세 규격 목록 조회 -->
+	<select id="selectExportViewSpecListExcel" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			RPT_NO,
+			RAN_NO, 
+			Sil,
+			Gnm1, 
+			Qty, 
+			Price, 
+			Amt,
+			Gnm2, 
+			Gnm3, 
+			Gnm4, 
+			Gnm5
+			FROM cusdec830c1
+			WHERE rpt_no IN (
+			SELECT RPT_NO 
+		FROM CUSDEC830A1 A
+		WHERE 
+		    A.rpt_seq = '00'
+		    <choose>
+		    <when test="srch1 =='02'">
+		    AND A.rece = '수리'
+		    </when>
+		    <when test="srch1 =='03'">
+		    AND A.rece NOT IN ('수리', '승인')
+		    </when>
+		    <when test="srch1 =='04'">
+		    AND A.rece = '승인'
+		    </when>
+		    </choose>
+			<choose>
+		    <when test="srch8 =='01'">
+		    AND A.rpt_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		    </when>
+		    <otherwise>
+		    AND A.exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+		    </otherwise>
+		    </choose>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE CONCAT('%',UPPER(REPLACE(#{srch4},'-','')),'%')
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND b.mg_code LIKE CONCAT('%',UPPER(#{srch5}),'%')
+			</if>
+			<if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+        	</if>
+		)
+		AND rpt_seq = '00'
+		ORDER BY rpt_no, ran_no, sil;
+	</select>
+	
+	<select id="selectExportUpdateList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			COUNT(*) over() AS cnt,
+			factory_code,
+			sr_ordr,
+			rece,
+			modi_seq,
+			rece_result,
+			Modi_Cot1,
+			rpt_no,
+			invoice,
+			exp_firm,
+			buy_firm,
+			Ta_St_iso,
+			rpt_Day,
+		    Exp_Lis_Day,
+		    Juk_Day,
+			ship_day,
+			exp_details,
+			Exc_Cot,
+			Con_MetNm,
+			incoterms,
+			tot_pack_cnt,
+			tot_wt, 
+			approval,
+			user_memo,
+			cus_memo
+		FROM 
+		(	
+			SELECT 
+		    SUBSTRING_INDEX(b.user_memo, '\n', 1) AS factory_code,
+		    CASE WHEN STR_CNT(b.user_memo, '\n') >= 1 THEN
+			SUBSTRING_INDEX(SUBSTRING_INDEX(b.user_memo, '\n', 2), '\n', -1)
+			ELSE '' END AS sr_ordr,
+		    a.rece,
+		    a.modi_seq,
+		    IFNULL(b.rece_result, '') AS RECE_RESULT,
+		    a.Modi_Cot1,
+		    CONCAT(SUBSTRING(b.rpt_no, 1, 5), '-', SUBSTRING(b.rpt_no, 6, 2), '-', SUBSTRING(b.rpt_no, 8, 7)) AS rpt_no,
+		    c.Mg_Code AS invoice,
+		    b.exp_firm,
+		    b.buy_firm,
+		    b.Ta_St_iso,
+		    CASE WHEN a.Rpt_Day != '' THEN DATE_FORMAT(a.Rpt_Day, '%Y-%m-%d') ELSE '' END AS rpt_Day,
+		    CASE WHEN a.Lis_Day != '' THEN DATE_FORMAT(a.Lis_Day, '%Y-%m-%d') ELSE '' END AS Exp_Lis_Day,
+		    CASE WHEN b.Juk_Day != '' THEN DATE_FORMAT(b.Juk_Day, '%Y-%m-%d') ELSE '' END AS Juk_Day,
+		    case when b.ship_day IS NULL then '-' 
+		    	 when b.ship_day = '' then '-'
+			ELSE DATE_FORMAT(b.ship_day, '%Y-%m-%d') end as ship_day,
+		    '' AS exp_details,
+		    CONCAT(Exc_Divi, '-', Exc_DiviNm) AS Exc_Cot,
+		    Con_MetNm,
+		    c.amt_cod AS incoterms,
+		    CONCAT(b.Tot_Pack_Cnt, ' (', b.tot_pack_ut, ')') AS tot_pack_cnt, 
+		    CONCAT(b.Tot_Wt, ' (', b.ut, ')') AS tot_wt,         
+		    '' AS approval,
+		    b.user_memo,
+		    '' AS cus_memo
+			FROM 
+		    cusdmr5asa1 a
+			INNER JOIN cusdec830a1 b
+			ON a.exp_rpt_no = b.rpt_no 
+			AND a.BRANCH = b.BRANCH 
+			AND a.CUS_PRG = b.CUS_PRG 
+			AND a.CUSDEC830SN = b.SN
+			AND LEFT(b.Rpt_No, 5) IN ('40084', '42836', '44648', '44013', '44804')
+			INNER JOIN
+				    (SELECT COUNT(*) over() AS cnt, sna1, rpt_no, MAX(mg_code) AS mg_code, amt_cod FROM cusdec830b1 GROUP BY sna1, rpt_no) c
+			ON b.sn = c.sna1
+			AND b.rpt_no = c.rpt_no
+			where 1=1
+				<choose>
+			    <when test="srch1 =='02'">
+			    AND a.rece = '승인'
+			    </when>
+			    <when test="srch1 =='03'">
+			    AND a.rece NOT IN ('승인')
+			    </when>
+			    </choose>
+				<choose>
+			    <when test="srch8 =='01'">
+			    AND a.rpt_day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			    </when>
+			    <otherwise>
+			    AND a.Lis_Day BETWEEN REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+			    </otherwise>
+			    </choose>
+				<if test="srch4 != null and srch4 != ''">
+				AND b.rpt_no LIKE CONCAT('%',UPPER(REPLACE(#{srch4},'-','')),'%')
+				</if>
+				<if test="srch5 != null and srch5 != ''">
+				AND c.mg_code LIKE CONCAT('%',UPPER(#{srch5}),'%')
+				</if>
+				<if test="list != null and list.size() > 0">
+		            AND b.exp_sdno IN
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+	        	</if>
+			) AS PagingQuery
+			WHERE 1=1
+			<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+			AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+			</if>
+			<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+			AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+			</if>
+			ORDER BY rpt_day desc, rpt_no desc
+			LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+	
+	<delete id="deleteExpInFile" parameterType="searchVO">
+		DELETE FROM FILE_INFO
+		WHERE 1=1
+		AND FILE_TYPE = 'exp'
+		AND DOCU_FILE = #{srch1}
+		AND DOCU_ORG_FILE = #{srch2}
+		AND DOCU_PATH = #{srch3}
+		AND UPLOAD_DT = REPLACE(#{srch4},'-','');
+	</delete>
+	
+	<insert id="saveExpUserMemo" parameterType="searchVO">
+		INSERT INTO MEMO_INFO
+		(
+			MEMO_TYPE,
+			RPT_NO,
+			USER_MEMO,
+			DEL_YN,
+			REG_DT	
+		) VALUES (
+			'exp',
+			REPLACE(#{srch1},'-',''),
+			#{srch2},
+			'N',
+			DATE_FORMAT(NOW(), '%Y%m%d')
+		) ON DUPLICATE KEY
+		UPDATE USER_MEMO = #{srch2}, EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+	</insert>
+	
+	<update id="expRequestBl" parameterType="searchVO">
+		UPDATE file_info
+		SET REQUEST_YN = 'Y'
+		WHERE 1=1
+		AND INVOICE_NO = #{srch1}
+	</update>
+	
+	<select id="selectLoadDataList" parameterType="searchVO" resultType="egovMap">
+		SELECT * FROM export_main
+		WHERE corp_no = #{srch1};
+	</select>
+	
+	<select id="selectLoadDataMainView" parameterType="searchVO" resultType="egovMap">
+		SELECT * FROM export_main
+		WHERE invoice_no = #{invoiceNo};
+	</select>
+	
+	<select id="selectLoadDataSubView" parameterType="searchVO" resultType="egovMap">
+		SELECT * FROM export_item
+		WHERE main_seq = 
+		(SELECT main_seq FROM export_main WHERE invoice_no = #{invoiceNo});
+	</select>
+	
+	<delete id="deleteLoadDataMainView" parameterType="searchVO">
+		DELETE FROM export_main
+		WHERE invoice_no = #{srch1};
+	</delete>
+	
+	<delete id="deleteLoadDataSubView" parameterType="searchVO">
+		DELETE FROM export_item
+		WHERE main_seq = (SELECT main_seq FROM export_main_temp WHERE invoice_no = #{srch1});
+	</delete>
+	
+	<select id="selectExportItemCntList" parameterType="searchVO" resultType="int">
+		SELECT 
+			COUNT(*)
+		 	from export_item
+		 	WHERE main_seq = (SELECT main_seq FROM export_main WHERE invoice_no = #{invoiceNo})
+	</select>
+	
+	<select id="selectExportItemCntList2" parameterType="searchVO" resultType="int">
+		SELECT 
+			COUNT(*)
+		 	from invoice_sub
+		 	WHERE main_seq = (SELECT main_seq FROM invoice_info WHERE ci_no = #{ciNo})
+	</select>
+	
+	<!-- ///////////////////////////////////////////////////////////////////// -->
+	<select id="checkInvoiceNumber2" parameterType="searchVO" resultType="String">
+		SELECT ci_no
+		FROM invoice_info
+		WHERE ci_no = #{srch1}
+	</select>
+	
+	<select id="selectInvoiceMainIdex2" parameterType="egovframework.pf.exp.service.SaveExpInvoiceVO" resultType="String">
+		SELECT MAIN_SEQ
+		FROM invoice_info
+		WHERE ci_no = #{ciNo}
+	</select>
+	
+	<insert id="saveInvoiceInfoList2" parameterType="egovframework.pf.exp.service.SaveExpInvoiceVO">
+		INSERT INTO invoice_info(
+		    CORP_NO,
+		    IMPORTER,
+		    CI_NO,
+		    CONSIGNEE,
+		    INVOICE_DATE,
+		    EXPORTER,
+		    OTHER_REFERENCES,
+		    LC_NO,
+		    LC_DATE,
+		    ORIGIN,
+		    TRANSPORT,
+		    INCOTERMS,
+		    LOADING_PORT,
+		    LOCATION,
+		    VESSEL,
+		    TERMS_OF_TRADE,
+		    VOYAGE_NO,
+		    CONDITIONS,
+		    DISCHARGE,
+		    DELIVERY,
+		    TRANSHIPMENT,
+		    FREIGHT_METHOD,
+		    FINAL_DESTINATION,
+		    DEPARTURE_DATE,
+		    GROSS_WEIGHT,
+		    NET_WEIGHT,
+		    CURRENCY,
+		    TOTAL_AMOUNT,
+		    FREIGH, 
+		    INSURANCE,
+		    PACKAGE_CODE,
+		    PACKAGE_NAME,
+		    TOTAL_PACKAGES,
+		    COMMENTS,
+		    DEL_YN,
+		    REG_DT,
+		    REG_ID
+		) VALUES (
+		    #{corpNo},
+		    #{importer},
+		    #{ciNo},
+		    #{consignee},
+		    #{invoiceDate},
+		    #{exporter},
+		    #{otherReferences},
+		    #{lcNo},
+		    #{lcDate},
+		    #{origin},
+		    #{transport},
+		    #{incoterms},
+		    #{loadingPort},
+		    #{location},
+		    #{vessel},
+		    #{termsOfTrade},
+		    #{voyageNo},
+		    #{conditions},
+		    #{discharge},
+		    #{delivery},
+		    #{transhipment},
+		    #{freightMethod},
+		    #{finalDestination},
+		    #{departureDate},
+		    #{grossWeight},
+		    #{netWeight},
+		    #{currency},
+		    #{totalAmount},
+		    #{freigh}, 
+		    #{insurance},
+		    #{packageCode},
+		    #{packageName},
+		    #{totalPackages},
+		    #{comments},
+		    'N',
+		    DATE_FORMAT(NOW(), '%Y%m%d'),
+		    #{regId}
+		) ON DUPLICATE KEY UPDATE
+		    EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d'),
+		    EDT_ID = #{edtId},
+		    IMPORTER = #{importer},
+		    CI_NO = #{ciNo},
+		    CONSIGNEE = #{consignee},
+		    INVOICE_DATE = #{invoiceDate},
+		    EXPORTER = #{exporter},
+		    OTHER_REFERENCES = #{otherReferences},
+		    LC_NO = #{lcNo},
+		    LC_DATE = #{lcDate},
+		    ORIGIN = #{origin},
+		    TRANSPORT = #{transport},
+		    INCOTERMS = #{incoterms},
+		    LOADING_PORT = #{loadingPort},
+		    LOCATION = #{location},
+		    VESSEL = #{vessel},
+		    TERMS_OF_TRADE = #{termsOfTrade},
+		    VOYAGE_NO = #{voyageNo},
+		    CONDITIONS = #{conditions},
+		    DISCHARGE = #{discharge},
+		    DELIVERY = #{delivery},
+		    TRANSHIPMENT = #{transhipment},
+		    FREIGHT_METHOD = #{freightMethod},
+		    FINAL_DESTINATION = #{finalDestination},
+		    DEPARTURE_DATE = #{departureDate},
+		    GROSS_WEIGHT = #{grossWeight},
+		    NET_WEIGHT = #{netWeight},
+		    CURRENCY = #{currency},
+		    TOTAL_AMOUNT = #{totalAmount},
+		    FREIGH = #{freigh}, 
+		    INSURANCE = #{insurance},
+		    PACKAGE_CODE = #{packageCode},
+		    PACKAGE_NAME = #{packageName},
+		    TOTAL_PACKAGES = #{totalPackages},
+		    COMMENTS = #{comments},
+		    DEL_YN = 'N';
+	</insert>
+	
+	<insert id="saveInvoiceSubList2" parameterType="egovframework.pf.exp.service.SaveExpInvoiceVO">
+		INSERT INTO invoice_sub (
+			 MAIN_SEQ,
+			 ITEM_CODE,
+			 LINE_NO,
+			 HS_CODE,
+			 SPECIFICATION,
+			 PACKING_NO,
+			 QUANTITY,
+			 UNIT_OF_QTY,
+			 UNIT_PRICE,
+			 AMOUNT_OF_PRICE,
+			 DEL_YN,
+			 REG_DT,
+			 REG_ID
+		)VALUES(
+			 #{mainIndex},
+			 #{lineNo},
+			 #{itemCode},
+			 #{hsCode},
+			 #{specification},
+			 #{packingNo},
+			 
+			 #{quantity},
+			 #{unitOfQty},
+			 #{unitPrice},
+			 #{amountOfPrice},
+			 'N',
+			 DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		 #{regId}
+	  	) ON DUPLICATE KEY
+			 UPDATE EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+			 , EDT_ID = #{edtId}
+			 , LINE_NO = #{lineNo}
+			 , ITEM_CODE = #{itemCode}
+			 , HS_CODE = #{hsCode}
+			 , SPECIFICATION = #{specification}
+			 , PACKING_NO = #{packingNo}
+			 , QUANTITY = #{quantity}
+			 , UNIT_OF_QTY = #{unitOfQty}
+		     , UNIT_PRICE = #{unitPrice}
+		     , AMOUNT_OF_PRICE = #{amountOfPrice}
+			 , DEL_YN = 'N'
+	</insert>
+	
+</mapper>

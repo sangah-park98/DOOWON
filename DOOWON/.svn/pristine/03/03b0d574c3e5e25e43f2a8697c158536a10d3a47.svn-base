@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.16.0.final using JasperReports Library version 6.16.0-48579d909b7943b64690c65c71e07e0b80981928  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BOM_C1_sub" pageWidth="842" pageHeight="842" columnWidth="822" leftMargin="0" rightMargin="20" topMargin="0" bottomMargin="0" isFloatColumnFooter="true" uuid="f5c60afd-9aaa-49fd-921a-0dc94fcc2b05">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="kord"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<style name="Table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<parameter name="i_prm1" class="java.lang.String"/>
+	<parameter name="i_prm2" class="java.lang.String"/>
+	<parameter name="i_prm4" class="java.lang.String"/>
+	<parameter name="i_prm5" class="java.lang.String"/>
+	<parameter name="i_prm6" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT @rownum:=@rownum+1 AS d1, d2, d3, d4, d5, d6, d7, d8, d9, d10
+FROM (
+			SELECT '' AS d1,  
+			B.ITEM_NM AS d3, 
+			B.ITEM_CD AS d2,
+			IFNULL(E.BASE_UNT,'') AS d4, 
+			A.RAW_ITEM_CD AS d5,
+			IFNULL(C.PRDCT_VNM,'') AS d6,
+			IFNULL(C.BASE_UNT,'') AS d7,
+			SUM(ROUND((A.INPT_ALL_QY/J.SALES_QTY),9)) AS d8,
+			'' AS d9,
+			SUM(A.local_price+A.ofshr_price) AS d10	
+			FROM jdgmnt_rawmtrl A
+			LEFT JOIN crft_co_hist_dts B
+				ON (A.JDGMNT_SEQ = B.JDGMNT_SEQ AND A.PSR_SEQ = B.PSR_SEQ)
+		  	LEFT JOIN ITEM_INFO  C
+		      ON (A.RAW_ITEM_CD = C.ITEM_CD AND A.PLNT_CD = C.PLNT_CD AND A.CMPNY_CD = C.CMPNY_CD)
+		  	LEFT JOIN partn_vndr_info D
+		  	  ON (A.CMPNY_CD = D.CMPNY_CD AND A.VNDR_CD = D.VNDR_ID)
+	  	  	LEFT JOIN ITEM_INFO  E
+	      ON (B.ITEM_CD = E.ITEM_CD AND B.PLNT_CD = E.PLNT_CD AND B.CMPNY_CD = E.CMPNY_CD)
+	      LEFT JOIN jdgmnt_result J
+			ON (A.JDGMNT_SEQ = J.JDGMNT_SEQ AND A.PSR_SEQ = J.PSR_SEQ)
+			WHERE A.JDGMNT_SEQ  = $P{i_prm2}
+			AND A.PSR_SEQ = $P{i_prm4}
+			AND A.PLNT_CD = $P{i_prm5}
+			AND B.ISSU_NO = $P{i_prm6}
+			AND A.INPT_ALL_QY > 0
+			GROUP BY d5
+			
+			UNION ALL
+			
+			SELECT '' AS d1,  
+			B.ITEM_NM AS d3, 
+			B.ITEM_CD AS d2,
+			IFNULL(E.BASE_UNT,'') AS d4, 
+			A.RAW_ITEM_CD AS d5,
+			IFNULL(C.PRDCT_VNM,'') AS d6,
+			IFNULL(C.BASE_UNT,'') AS d7,
+			SUM(ROUND((A.INPT_ALL_QY/J.SALES_QTY),9)) AS d8,
+			'' AS d9,
+			SUM(A.local_price+A.ofshr_price) AS d10	
+			FROM jdgmnt_rawmtrl A
+			LEFT JOIN crft_do_hist B
+				ON (A.JDGMNT_SEQ = B.JDGMNT_SEQ AND A.PSR_SEQ = B.PSR_SEQ)
+		  	LEFT JOIN ITEM_INFO  C
+		      ON (A.RAW_ITEM_CD = C.ITEM_CD AND A.PLNT_CD = C.PLNT_CD AND A.CMPNY_CD = C.CMPNY_CD)
+		  	LEFT JOIN partn_vndr_info D
+		  	  ON (A.CMPNY_CD = D.CMPNY_CD AND A.VNDR_CD = D.VNDR_ID)
+	  	  	LEFT JOIN ITEM_INFO  E
+	      ON (B.ITEM_CD = E.ITEM_CD AND B.PLNT_CD = E.PLNT_CD AND B.CMPNY_CD = E.CMPNY_CD)
+	      LEFT JOIN jdgmnt_result J
+			ON (A.JDGMNT_SEQ = J.JDGMNT_SEQ AND A.PSR_SEQ = J.PSR_SEQ)
+			WHERE A.JDGMNT_SEQ  = $P{i_prm2}
+			AND A.PSR_SEQ = $P{i_prm4}
+			AND A.PLNT_CD = $P{i_prm5}
+			AND B.ISSU_NO = $P{i_prm6}
+			AND A.INPT_ALL_QY > 0
+			GROUP BY d5
+			ORDER BY d10 desc
+) AA JOIN (select @rownum:=0) tmp]]>
+	</queryString>
+	<field name="d1" class="java.lang.Integer"/>
+	<field name="d2" class="java.lang.String"/>
+	<field name="d3" class="java.lang.String"/>
+	<field name="d4" class="java.lang.String"/>
+	<field name="d5" class="java.lang.String"/>
+	<field name="d6" class="java.lang.String"/>
+	<field name="d7" class="java.lang.String"/>
+	<field name="d8" class="java.lang.String"/>
+	<field name="d9" class="java.lang.String"/>
+	<field name="d10" class="java.lang.String"/>
+	<detail>
+		<band height="15" splitType="Prevent">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="ElementGroupHeight" x="0" y="0" width="30" height="15" isPrintInFirstWholeBand="true" uuid="e79ef5b2-2c96-4dc1-ba45-bcbe1014500f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d1}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="ElementGroupHeight" x="30" y="0" width="126" height="15" isPrintInFirstWholeBand="true" uuid="d08ce315-6818-448a-88f6-3649571bbfd3">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d2}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="ElementGroupHeight" x="156" y="0" width="95" height="15" isPrintInFirstWholeBand="true" uuid="ef391a60-6323-430d-9930-2bc589f3f7c7">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d3}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="ElementGroupHeight" x="251" y="0" width="60" height="15" isPrintInFirstWholeBand="true" uuid="3d91a03e-f353-494a-8663-8c3b2a413b77">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d4}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="ElementGroupHeight" x="311" y="0" width="127" height="15" uuid="ace53e2e-e49a-4423-a7aa-3284606fc284">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d5}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="ElementGroupHeight" x="438" y="0" width="95" height="15" uuid="88e72e54-f108-44be-8239-4bc89762bbde">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d6}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="ElementGroupHeight" x="533" y="0" width="58" height="15" uuid="ea78411f-abbf-4dbf-ad07-306cdb4ce5b7">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d7}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="ElementGroupHeight" x="591" y="0" width="115" height="15" uuid="c42469e0-e83b-4be4-8db1-e22cd3ffc602">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d8}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="ElementGroupHeight" x="706" y="0" width="41" height="15" uuid="9906c518-c9ab-4c77-b30c-f00fc8b1667b">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d9}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

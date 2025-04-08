@@ -1,0 +1,957 @@
+package egovframework.pf.imp.service.impl;
+
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.itextpdf.text.log.SysoCounter;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.exp.service.SaveExpFileVO;
+import egovframework.pf.imp.service.CusImpUploadService;
+import egovframework.pf.imp.service.ImportService;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+
+/**
+ * @Class Name : CustomsImportUpdateServiceImpl.java
+ * @Description : CustomsImportUpdateServiceImpl Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2024.08.02          	권예지         			최초 생성
+ *
+ * @author 권예지
+ * @since 2024.08.02
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KordSystems All right reserved.
+ */
+
+@Service("cusImpUploadService")
+public class CusImpUploadServiceImpl extends EgovAbstractServiceImpl implements CusImpUploadService {
+
+	@Resource(name="cusImpUploadMapper")
+	private CusImpUploadMapper cusImpUploadMapper;
+
+	
+/*	@Override
+	public Map<String, Integer> insertTempExcelData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		 Map<String, Integer> result = new HashMap<String, Integer>();
+		 System.out.println("2222");
+		 System.out.println("columnCount"+excelData.get("columnCount").toString());
+			//레디
+		 System.out.println("3333");
+			if(excelData.get("columnCount").toString().equals("228")) {
+				System.out.println("레디");
+				result = insertReadyImportData(excelData,loginUser);
+			}//엔컴
+			else if(excelData.get("columnCount").toString().equals("260")) {
+				System.out.println("엔컴");
+				result = insertEncomImportData(excelData,loginUser);
+			}else {
+				 result.put("error", 1); // 에러 상태를 반환
+				 System.out.println("result"+result);
+			}
+			return result;
+	}*/
+	
+	
+
+
+
+	
+	
+	@Override
+	public Map<String, Integer> insertFedexExcelData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		System.out.println("FEDEX");
+		List<Map<String, Object>> dataList = (List<Map<String, Object>>) excelData.get("dataList");
+		//신고일자
+		List<String> registerDate = new ArrayList<String>();
+		
+		Map<String, Integer> resultMap = new HashMap<>();
+		//파일이름 
+		String fileName = (String) excelData.get("fileName");
+		
+	
+		
+		int failCount = 0;
+		int successCount = 0;
+		int doubleCount = 0;
+		int resultCntView = 0;
+		int resultCntLan = 0;
+		int resultCntSpec = 0;
+		int failReason = 0;
+		
+		Map<String, Integer> errorMap = new HashMap<>(); 
+		
+		//System.out.println("dataList"+dataList);
+		for(Map<String,Object>data : dataList) {
+			//System.out.println("data"+data);
+			/*//신고일자
+			if (data.get("excel_1") != null && StringUtils.isNotEmpty(data.get("excel_2").toString())) {
+                registerDate.add(data.get("excel_1").toString());
+            }*/
+			//데이터유효성
+			if(data.size() != 238) {
+				//갯수가 적음
+				//data.put("FAIL_REASON", "열의 개수가 맞지 않습니다.");
+				failReason = 1;
+				failCount += 1;
+			}else if(data.get("excel_20") == null || !data.get("excel_20").toString().equals(loginUser.getCorpNo())){
+				//사업자번호다름 
+				//data.put("FAIL_REASON", "사업자번호가 다릅니다.");
+				failReason = 2;
+	            failCount += 1;
+			}else if(data.get("excel_0") == null) {
+				// data.put("FAIL_REASON", "신고번호가 누락되었습니다."); 
+				failReason = 3;//필수데이터누락
+	             failCount += 1;
+			}
+			  
+			 
+			 if (failReason != 0) {
+		            errorMap.put("failReason", failReason); // Integer 타입으로 저장
+		        }
+			 System.out.println("failReason"+failReason);
+			 
+		 if(failCount == 0) {
+             // 화물관리번호 
+			 String num = (String) data.get("excel_12");
+             System.out.println("num"+num);
+			 String mrn = "";
+             String msn = "";
+             String hsn = "";
+             if (num != null) {
+                 mrn = num.length() >= 11 ? num.substring(0, 11) : "";
+                 msn = num.length() >= 15 ? num.substring(11, 15) : "";
+                 hsn = num.length() >= 19 ? num.substring(15, 19) : "";
+             }
+             System.out.println("mrn"+mrn);
+             System.out.println("msn"+msn);
+             System.out.println("hsn"+hsn);
+             data.put("mrn", mrn);
+             data.put("msn", msn);
+             data.put("hsn", hsn);
+             //세관 기제란
+             String cus = (String) data.get("excel_118");
+             String cus1 = "";
+             String cus2 = "";
+             String cus3 = "";
+             String cus4 = "";
+             String cus5 = "";
+             String cus6 = "";
+             String cus7 = "";
+             String cus8 = "";
+             
+             if(cus != null) {
+            	 cus1 = cus.length() >= 60 ? cus.substring(0, 60) : cus;
+        	     cus2 = cus.length() >= 120 ? cus.substring(60, 120) : "";
+        	     cus3 = cus.length() >= 180 ? cus.substring(120, 180) : "";
+        	     cus4 = cus.length() >= 240 ? cus.substring(180, 240) : "";
+        	     cus5 = cus.length() >= 300 ? cus.substring(240, 300) : "";
+        	     cus6 = cus.length() >= 360 ? cus.substring(300, 360) : "";
+        	     cus7 = cus.length() >= 420 ? cus.substring(360, 420) : "";
+        	     cus8 = cus.length() >= 480 ? cus.substring(420, 480) : "";
+             }
+             data.put("cus1", cus1);
+             data.put("cus2", cus2);
+             data.put("cus3", cus3);
+             data.put("cus4", cus4);
+             data.put("cus5", cus5);
+             data.put("cus6", cus6);
+             data.put("cus7", cus7);
+             data.put("cus8", cus8);
+             data.put("fileName", fileName);
+             
+           
+            data.put("Id", loginUser.getId());
+            
+           
+            System.out.println("data"+data);
+            String rptNo = data.get("excel_0").toString();
+            String ranNo = data.get("excel_136").toString();
+            String sil = data.get("excel_226").toString();
+            System.out.println("rptNo"+rptNo);
+			//공통내역 seq
+            Map<String, String> resultMap1 = cusImpUploadMapper.insertReadyImportDataA1Seq(rptNo);
+            String resultCount1Seq = String.valueOf(resultMap1.get("SN"));
+            String result1Status = resultMap1.get("STATUS");
+            data.put("resultCount1", resultCount1Seq);
+            //란 seq
+            Map<String, String> resultMap2 = cusImpUploadMapper.insertReadyImportDataB1Seq(rptNo, ranNo);
+            String resultCount2Seq = String.valueOf(resultMap2.get("SN"));
+            String result2Status = resultMap2.get("STATUS");
+            data.put("resultCount2", resultCount2Seq);
+            
+            //규격
+            Map<String, String> resultMap3 = cusImpUploadMapper.insertReadyImportDataC1Seq(rptNo, ranNo, sil);
+            String resultCount3Seq = String.valueOf(resultMap3.get("SN"));
+            String result3Status = resultMap3.get("STATUS");
+            data.put("resultCount3", resultCount3Seq);
+            
+            //공통내역
+			int resultCount1 = cusImpUploadMapper.insertFedexImportDataA1(data);
+			//란
+			int resultCount2 = cusImpUploadMapper.insertFedexImportDataB1(data);
+			//규격
+			int resultCount3 = cusImpUploadMapper.insertFedexImportDataC1(data);
+			
+			if(result1Status.equals("신규")) {
+				resultCntView += resultCount1;
+			}
+			if(result2Status.equals("신규")) {
+				resultCntLan += resultCount2;
+			}
+			if(result3Status.equals("신규")) {
+				resultCntSpec += resultCount3;
+			}
+			
+		}
+		resultMap.put("main", resultCntView);
+		resultMap.put("lan", resultCntLan);
+		resultMap.put("spec", resultCntSpec);
+		}
+		resultMap.put("failReason", failReason);
+		//return  dataProcessing(registerDate(registerDate, "COMMON"), obj.get("fileName").toString(), (successCount - failCount), failCount, doubleCount, null);
+		return resultMap;
+	}
+
+
+
+	@Override
+	public Map<String, Integer> insertDhlExcelData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		// TODO Auto-generated method stub
+		System.out.println("DHL");
+		List<Map<String, Object>> dataList = (List<Map<String, Object>>) excelData.get("dataList");
+		//신고일자
+		List<String> registerDate = new ArrayList<String>();
+		
+		Map<String, Integer> resultMap = new HashMap<>();
+		//파일이름 
+		String fileName = (String) excelData.get("fileName");
+		
+	
+		
+		int failCount = 0;
+		int successCount = 0;
+		int doubleCount = 0;
+		int resultCntView = 0;
+		int resultCntLan = 0;
+		int resultCntSpec = 0;
+		int failReason = 0;
+		
+		Map<String, Integer> errorMap = new HashMap<>(); 
+		
+		//System.out.println("dataList"+dataList);
+		for(Map<String,Object>data : dataList) {
+			//System.out.println("data"+data);
+			/*//신고일자
+			if (data.get("excel_1") != null && StringUtils.isNotEmpty(data.get("excel_2").toString())) {
+                registerDate.add(data.get("excel_1").toString());
+            }*/
+			//데이터유효성
+			if(data.size() != 217) {
+				//갯수가 적음
+				//data.put("FAIL_REASON", "열의 개수가 맞지 않습니다.");
+				failReason = 1;
+				failCount += 1;
+			}else if(data.get("excel_19") == null || !data.get("excel_19").toString().equals(loginUser.getCorpNo())){
+				//사업자번호다름 
+				//data.put("FAIL_REASON", "사업자번호가 다릅니다.");
+				failReason = 2;
+	            failCount += 1;
+			}else if(data.get("excel_0") == null) {
+				// data.put("FAIL_REASON", "신고번호가 누락되었습니다."); 
+				failReason = 3;//필수데이터누락
+	             failCount += 1;
+			}
+			  
+			 
+			 if (failReason != 0) {
+		            errorMap.put("failReason", failReason); // Integer 타입으로 저장
+		        }
+			 System.out.println("failReason"+failReason);
+			 
+		 if(failCount == 0) {
+             // 화물관리번호 
+			 String num = (String) data.get("excel_12");
+             System.out.println("num"+num);
+			 String mrn = "";
+             String msn = "";
+             String hsn = "";
+             if (num != null) {
+                 mrn = num.length() >= 11 ? num.substring(0, 11) : "";
+                 msn = num.length() >= 15 ? num.substring(11, 15) : "";
+                 hsn = num.length() >= 19 ? num.substring(15, 19) : "";
+             }
+             System.out.println("mrn"+mrn);
+             System.out.println("msn"+msn);
+             System.out.println("hsn"+hsn);
+             data.put("mrn", mrn);
+             data.put("msn", msn);
+             data.put("hsn", hsn);
+             //세관 기제란
+             String cus = (String) data.get("excel_117");
+             String cus1 = "";
+             String cus2 = "";
+             String cus3 = "";
+             String cus4 = "";
+             String cus5 = "";
+             String cus6 = "";
+             String cus7 = "";
+             String cus8 = "";
+             
+             if(cus != null) {
+            	 cus1 = cus.length() >= 60 ? cus.substring(0, 60) : cus;
+        	     cus2 = cus.length() >= 120 ? cus.substring(60, 120) : "";
+        	     cus3 = cus.length() >= 180 ? cus.substring(120, 180) : "";
+        	     cus4 = cus.length() >= 240 ? cus.substring(180, 240) : "";
+        	     cus5 = cus.length() >= 300 ? cus.substring(240, 300) : "";
+        	     cus6 = cus.length() >= 360 ? cus.substring(300, 360) : "";
+        	     cus7 = cus.length() >= 420 ? cus.substring(360, 420) : "";
+        	     cus8 = cus.length() >= 480 ? cus.substring(420, 480) : "";
+             }
+             data.put("cus1", cus1);
+             data.put("cus2", cus2);
+             data.put("cus3", cus3);
+             data.put("cus4", cus4);
+             data.put("cus5", cus5);
+             data.put("cus6", cus6);
+             data.put("cus7", cus7);
+             data.put("cus8", cus8);
+             data.put("fileName", fileName);
+             
+           
+            data.put("Id", loginUser.getId());
+            
+           
+            //System.out.println("data"+data);
+            String rptNo = data.get("excel_0").toString();
+            String ranNo = data.get("excel_118").toString();
+            String sil = data.get("excel_205").toString();
+            System.out.println("rptNo"+rptNo);
+			//공통내역 seq
+            Map<String, String> resultMap1 = cusImpUploadMapper.insertReadyImportDataA1Seq(rptNo);
+            String resultCount1Seq = String.valueOf(resultMap1.get("SN"));
+            String result1Status = resultMap1.get("STATUS");
+            data.put("resultCount1", resultCount1Seq);
+            //란 seq
+            Map<String, String> resultMap2 = cusImpUploadMapper.insertReadyImportDataB1Seq(rptNo, ranNo);
+            String resultCount2Seq = String.valueOf(resultMap2.get("SN"));
+            String result2Status = resultMap2.get("STATUS");
+            data.put("resultCount2", resultCount2Seq);
+            
+            //규격
+            Map<String, String> resultMap3 = cusImpUploadMapper.insertReadyImportDataC1Seq(rptNo, ranNo, sil);
+            String resultCount3Seq = String.valueOf(resultMap3.get("SN"));
+            String result3Status = resultMap3.get("STATUS");
+            data.put("resultCount3", resultCount3Seq);
+            
+            //공통내역
+			int resultCount1 = cusImpUploadMapper.insertDHLImportDataA1(data);
+			//란
+			int resultCount2 = cusImpUploadMapper.insertDHLImportDataB1(data);
+			//규격
+			int resultCount3 = cusImpUploadMapper.insertDHLImportDataC1(data);
+			
+			if(result1Status.equals("신규")) {
+				resultCntView += resultCount1;
+			}
+			if(result2Status.equals("신규")) {
+				resultCntLan += resultCount2;
+			}
+			if(result3Status.equals("신규")) {
+				resultCntSpec += resultCount3;
+			}
+			
+		}
+		resultMap.put("main", resultCntView);
+		resultMap.put("lan", resultCntLan);
+		resultMap.put("spec", resultCntSpec);
+		}
+		resultMap.put("failReason", failReason);
+		//return  dataProcessing(registerDate(registerDate, "COMMON"), obj.get("fileName").toString(), (successCount - failCount), failCount, doubleCount, null);
+		return resultMap;
+	}
+
+
+
+
+	@Override
+	public Map<String, Integer> insertTntExcelData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+
+	@Override
+	public Map<String, Integer> insertUpsExcelData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		// TODO Auto-generated method stub
+				System.out.println("ups");
+				List<Map<String, Object>> dataList = (List<Map<String, Object>>) excelData.get("dataList");
+				//신고일자
+				List<String> registerDate = new ArrayList<String>();
+				
+				Map<String, Integer> resultMap = new HashMap<>();
+				//파일이름 
+				String fileName = (String) excelData.get("fileName");
+				
+			
+				
+				int failCount = 0;
+				int successCount = 0;
+				int doubleCount = 0;
+				int resultCntView = 0;
+				int resultCntLan = 0;
+				int resultCntSpec = 0;
+				int failReason = 0;
+				
+				Map<String, Integer> errorMap = new HashMap<>(); 
+				
+				//System.out.println("dataList"+dataList);
+				for(Map<String,Object>data : dataList) {
+					//System.out.println("data"+data);
+					/*//신고일자
+					if (data.get("excel_1") != null && StringUtils.isNotEmpty(data.get("excel_2").toString())) {
+		                registerDate.add(data.get("excel_1").toString());
+		            }*/
+					//데이터유효성
+					if(data.size() != 287) {
+						//갯수가 적음
+						//data.put("FAIL_REASON", "열의 개수가 맞지 않습니다.");
+						failReason = 1;
+						failCount += 1;
+					}else if(data.get("excel_19") == null || !data.get("excel_19").toString().equals(loginUser.getCorpNo())){
+						//사업자번호다름 
+						//data.put("FAIL_REASON", "사업자번호가 다릅니다.");
+						failReason = 2;
+			            failCount += 1;
+					}else if(data.get("excel_1") == null) {
+						// data.put("FAIL_REASON", "신고번호가 누락되었습니다."); 
+						failReason = 3;//필수데이터누락
+			             failCount += 1;
+					}
+					  
+					 
+					 if (failReason != 0) {
+				            errorMap.put("failReason", failReason); // Integer 타입으로 저장
+				        }
+					 System.out.println("failReason"+failReason);
+					 
+				 if(failCount == 0) {
+		             // 화물관리번호 
+					 String num = (String) data.get("excel_63");
+		             System.out.println("num"+num);
+					 String mrn = "";
+		             String msn = "";
+		             String hsn = "";
+		             if (num != null) {
+		                 mrn = num.length() >= 11 ? num.substring(0, 11) : "";
+		                 msn = num.length() >= 15 ? num.substring(11, 15) : "";
+		                 hsn = num.length() >= 19 ? num.substring(15, 19) : "";
+		             }
+		             System.out.println("mrn"+mrn);
+		             System.out.println("msn"+msn);
+		             System.out.println("hsn"+hsn);
+		             data.put("mrn", mrn);
+		             data.put("msn", msn);
+		             data.put("hsn", hsn);
+		             //세관 기제란
+		             String cus = (String) data.get("excel_129");
+		             String cus1 = "";
+		             String cus2 = "";
+		             String cus3 = "";
+		             String cus4 = "";
+		             String cus5 = "";
+		             String cus6 = "";
+		             String cus7 = "";
+		             String cus8 = "";
+		             
+		             if(cus != null) {
+		            	 cus1 = cus.length() >= 60 ? cus.substring(0, 60) : cus;
+		        	     cus2 = cus.length() >= 120 ? cus.substring(60, 120) : "";
+		        	     cus3 = cus.length() >= 180 ? cus.substring(120, 180) : "";
+		        	     cus4 = cus.length() >= 240 ? cus.substring(180, 240) : "";
+		        	     cus5 = cus.length() >= 300 ? cus.substring(240, 300) : "";
+		        	     cus6 = cus.length() >= 360 ? cus.substring(300, 360) : "";
+		        	     cus7 = cus.length() >= 420 ? cus.substring(360, 420) : "";
+		        	     cus8 = cus.length() >= 480 ? cus.substring(420, 480) : "";
+		             }
+		             data.put("cus1", cus1);
+		             data.put("cus2", cus2);
+		             data.put("cus3", cus3);
+		             data.put("cus4", cus4);
+		             data.put("cus5", cus5);
+		             data.put("cus6", cus6);
+		             data.put("cus7", cus7);
+		             data.put("cus8", cus8);
+		             data.put("fileName", fileName);
+		             
+		           
+		            data.put("Id", loginUser.getId());
+		            
+		           
+		            //System.out.println("data"+data);
+		            String rptNo = data.get("excel_1").toString();
+		            String ranNo = data.get("excel_169").toString();
+		            String sil = data.get("excel_273").toString();
+		            System.out.println("rptNo"+rptNo);
+					//공통내역 seq
+		            Map<String, String> resultMap1 = cusImpUploadMapper.insertReadyImportDataA1Seq(rptNo);
+		            String resultCount1Seq = String.valueOf(resultMap1.get("SN"));
+		            String result1Status = resultMap1.get("STATUS");
+		            data.put("resultCount1", resultCount1Seq);
+		            //란 seq
+		            Map<String, String> resultMap2 = cusImpUploadMapper.insertReadyImportDataB1Seq(rptNo, ranNo);
+		            String resultCount2Seq = String.valueOf(resultMap2.get("SN"));
+		            String result2Status = resultMap2.get("STATUS");
+		            data.put("resultCount2", resultCount2Seq);
+		            
+		            //규격
+		            Map<String, String> resultMap3 = cusImpUploadMapper.insertReadyImportDataC1Seq(rptNo, ranNo, sil);
+		            String resultCount3Seq = String.valueOf(resultMap3.get("SN"));
+		            String result3Status = resultMap3.get("STATUS");
+		            data.put("resultCount3", resultCount3Seq);
+		            
+		            //공통내역
+					int resultCount1 = cusImpUploadMapper.insertUPSImportDataA1(data);
+					//란
+					int resultCount2 = cusImpUploadMapper.insertUPSImportDataB1(data);
+					//규격
+					int resultCount3 = cusImpUploadMapper.insertUPSImportDataC1(data);
+					
+					if(result1Status.equals("신규")) {
+						resultCntView += resultCount1;
+					}
+					if(result2Status.equals("신규")) {
+						resultCntLan += resultCount2;
+					}
+					if(result3Status.equals("신규")) {
+						resultCntSpec += resultCount3;
+					}
+					
+				}
+				resultMap.put("main", resultCntView);
+				resultMap.put("lan", resultCntLan);
+				resultMap.put("spec", resultCntSpec);
+				}
+				resultMap.put("failReason", failReason);
+				//return  dataProcessing(registerDate(registerDate, "COMMON"), obj.get("fileName").toString(), (successCount - failCount), failCount, doubleCount, null);
+				return resultMap;
+			}
+	
+	
+
+
+		public Map<String, Integer> insertEncomExcelData (Map<String, Object> excelData, UserSessionVO loginUser) {
+		System.out.println("엔컴2");
+		List<Map<String, Object>> dataList = (List<Map<String, Object>>) excelData.get("dataList");
+		//신고일자
+		List<String> registerDate = new ArrayList<String>();
+		
+		Map<String, Integer> resultMap = new HashMap<>();
+		//파일이름 
+		String fileName = (String) excelData.get("fileName");
+		
+		int failCount = 0;
+		int successCount = 0;
+		int doubleCount = 0;
+		int resultCntView = 0;
+		int resultCntLan = 0;
+		int resultCntSpec = 0;
+		int failReason = 0;
+		
+		Map<String, Integer> errorMap = new HashMap<>(); 
+		
+		
+		for(Map<String,Object>data : dataList) {
+			System.out.println("data.size()"+data.size());
+			
+			//신고일자
+			if (data.get("excel_1") != null && StringUtils.isNotEmpty(data.get("excel_2").toString())) {
+                registerDate.add(data.get("excel_1").toString());
+            }
+			//데이터유효성
+			
+			if(data.size() != 261) {
+				//갯수가 적음
+				data.put("FAIL_REASON", "열의 개수가 맞지 않습니다.");
+				failCount += 1;
+			}else if(data.get("excel_18") == null || !data.get("excel_18").toString().equals(loginUser.getCorpNo())){
+				//사업자번호다름 
+				data.put("FAIL_REASON", "사업자번호가 다릅니다.");      
+				failCount += 1;
+	            failReason = 2;
+			}else if(data.get("excel_1") == null) {
+				 data.put("FAIL_REASON", "신고번호가 누락되었습니다.");      //필수데이터누락
+				 failCount += 1;
+	             failReason = 3;//필수데이터누락
+			}
+			
+			if (failReason != 0) {
+	            errorMap.put("failReason", failReason); // Integer 타입으로 저장
+	        }
+			
+			if(failCount == 0) {
+			// ' 있을때 처리 
+			String Std_GName1 = (String) data.get("excel_170");
+			if (Std_GName1.contains("'")) {
+			    Std_GName1 = Std_GName1.replace("'", "''");
+			    System.out.println("Std_GName1"+Std_GName1);
+			    data.put("excel_170", Std_GName1);
+			} 
+			String Exc_GName1 = (String) data.get("excel_171");
+			if (Exc_GName1.contains("'")) {
+				 Exc_GName1 = Exc_GName1.replace("'", "''");
+				 System.out.println("Exc_GName1"+Exc_GName1);
+				 data.put("excel_171", Exc_GName1);
+			 } 
+			String num = (String) data.get("excel_59");
+			String mrn = "";
+			String msn = "";
+			String hsn = "";
+			
+			// 화물관리번호 
+			if (num != null) {
+			    int length = num.length();
+
+			    if (length == 20) { 
+			        mrn = num.substring(0, 12);
+			        msn = num.substring(12, 15);
+			        hsn = num.substring(15, 19);
+			    } else if (length == 19) {
+			        mrn = num.substring(0, 11);
+			        msn = num.substring(11, 15);
+			        hsn = num.substring(15, 19);
+			    } else { 
+			        // 길이가 맞지 않는 경우 예외 처리
+			        System.out.println("Unexpected num length: " + length);
+			    }
+			}
+			
+             System.out.println("mrn"+mrn);
+             System.out.println("msn"+msn);
+             System.out.println("hsn"+hsn);
+             data.put("mrn", mrn);
+             data.put("msn", msn);
+             data.put("hsn", hsn);
+             //세관 기제란
+             String cus = (String) data.get("excel_120");
+             String cus1 = "";
+             String cus2 = "";
+             String cus3 = "";
+             String cus4 = "";
+             String cus5 = "";
+             String cus6 = "";
+             String cus7 = "";
+             String cus8 = "";
+             
+             if(cus != null) {
+            	 cus1 = cus.length() >= 60 ? cus.substring(0, 60) : cus;
+        	     cus2 = cus.length() >= 120 ? cus.substring(60, 120) : "";
+        	     cus3 = cus.length() >= 180 ? cus.substring(120, 180) : "";
+        	     cus4 = cus.length() >= 240 ? cus.substring(180, 240) : "";
+        	     cus5 = cus.length() >= 300 ? cus.substring(240, 300) : "";
+        	     cus6 = cus.length() >= 360 ? cus.substring(300, 360) : "";
+        	     cus7 = cus.length() >= 420 ? cus.substring(360, 420) : "";
+        	     cus8 = cus.length() >= 480 ? cus.substring(420, 480) : "";
+             }
+             data.put("cus1", cus1);
+             data.put("cus2", cus2);
+             data.put("cus3", cus3);
+             data.put("cus4", cus4);
+             data.put("cus5", cus5);
+             data.put("cus6", cus6);
+             data.put("cus7", cus7);
+             data.put("cus8", cus8);
+             data.put("fileName", fileName);
+             
+           
+            data.put("Id", loginUser.getId());
+            
+           
+            System.out.println("data"+data);
+            String rptNo = data.get("excel_1").toString();
+            String ranNo = data.get("excel_129").toString();
+            String sil = data.get("excel_217").toString();
+            System.out.println("rptNo"+rptNo);
+			//공통내역 seq
+            Map<String, String> resultMap1 = cusImpUploadMapper.insertReadyImportDataA1Seq(rptNo);
+            String resultCount1Seq = String.valueOf(resultMap1.get("SN"));
+            String result1Status = resultMap1.get("STATUS");
+            data.put("resultCount1", resultCount1Seq);
+            //란 seq
+            Map<String, String> resultMap2 = cusImpUploadMapper.insertReadyImportDataB1Seq(rptNo, ranNo);
+            String resultCount2Seq = String.valueOf(resultMap2.get("SN"));
+            String result2Status = resultMap2.get("STATUS");
+            data.put("resultCount2", resultCount2Seq);
+            
+            //규격
+            Map<String, String> resultMap3 = cusImpUploadMapper.insertReadyImportDataC1Seq(rptNo, ranNo, sil);
+            String resultCount3Seq = String.valueOf(resultMap3.get("SN"));
+            String result3Status = resultMap3.get("STATUS");
+            data.put("resultCount3", resultCount3Seq);
+            
+            //공통내역
+			int resultCount1 = cusImpUploadMapper.insertEncomImportDataA1(data);
+			//란
+			int resultCount2 = cusImpUploadMapper.insertEncomImportDataB1(data);
+			//규격
+			int resultCount3 = cusImpUploadMapper.insertEncomImportDataC1(data);
+			
+			if(result1Status.equals("신규")) {
+				resultCntView += resultCount1;
+			}
+			if(result2Status.equals("신규")) {
+				resultCntLan += resultCount2;
+			}
+			if(result3Status.equals("신규")) {
+				resultCntSpec += resultCount3;
+			}
+			
+		}
+		resultMap.put("main", resultCntView);
+		resultMap.put("lan", resultCntLan);
+		resultMap.put("spec", resultCntSpec);
+		}
+		resultMap.put("failReason", failReason);
+		//return  dataProcessing(registerDate(registerDate, "COMMON"), obj.get("fileName").toString(), (successCount - failCount), failCount, doubleCount, null);
+		return resultMap;
+	}
+
+
+	public Map<String, Integer> insertReadyExcelData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		System.out.println("레디2");
+		List<Map<String, Object>> dataList = (List<Map<String, Object>>) excelData.get("dataList");
+		//신고일자
+		List<String> registerDate = new ArrayList<String>();
+		Map<String, Integer> resultMap = new HashMap<>();
+		//파일이름 
+		String fileName = (String) excelData.get("fileName");
+		
+		int failCount = 0;
+		int successCount = 0;
+		int doubleCount = 0;
+		int resultCntView = 0;
+		int resultCntLan = 0;
+		int resultCntSpec = 0;
+		int failReason = 0;
+		
+		Map<String, Integer> errorMap = new HashMap<>(); 
+		
+		//System.out.println("dataList"+dataList);
+		for(Map<String,Object>data : dataList) {
+			//System.out.println("data"+data);
+			
+			//데이터유효성
+			if(data.size() != 229) {
+				//갯수가 적음
+				//data.put("FAIL_REASON", "열의 개수가 맞지 않습니다.");
+				failCount += 1;
+				failReason = 1;
+			}else if(data.get("excel_22") == null || !data.get("excel_22").toString().equals(loginUser.getCorpNo())){
+				//사업자번호다름 
+				//data.put("FAIL_REASON", "사업자번호가 다릅니다.");      
+	            failCount += 1;
+	            failReason = 2;
+			}else if(data.get("excel_0") == null) {
+				 //data.put("FAIL_REASON", "신고번호가 누락되었습니다.");      //필수데이터누락
+	             failCount += 1;
+	             failReason = 3;//필수데이터누락
+			}
+			
+			 if (failReason != 0) {
+		            errorMap.put("failReason", failReason); // Integer 타입으로 저장
+		        }
+			 //System.out.println("failReason"+failReason);
+			 
+		 if(failCount == 0) {
+			// 화물관리번호 
+			 String num = (String) data.get("excel_12");
+             System.out.println("num"+num);
+			 String mrn = "";
+             String msn = "";
+             String hsn = "";
+             if (num != null) {
+                 mrn = num.length() >= 11 ? num.substring(0, 11) : "";
+                 msn = num.length() >= 15 ? num.substring(11, 15) : "";
+                 hsn = num.length() >= 19 ? num.substring(15, 19) : "";
+             }
+             System.out.println("mrn"+mrn);
+             System.out.println("msn"+msn);
+             System.out.println("hsn"+hsn);
+             data.put("mrn", mrn);
+             data.put("msn", msn);
+             data.put("hsn", hsn);
+             //세관 기제란
+             String cus = (String) data.get("excel_120");
+             String cus1 = "";
+             String cus2 = "";
+             String cus3 = "";
+             String cus4 = "";
+             String cus5 = "";
+             String cus6 = "";
+             String cus7 = "";
+             String cus8 = "";
+             
+             if(cus != null) {
+            	 cus1 = cus.length() >= 60 ? cus.substring(0, 60) : cus;
+        	     cus2 = cus.length() >= 120 ? cus.substring(60, 120) : "";
+        	     cus3 = cus.length() >= 180 ? cus.substring(120, 180) : "";
+        	     cus4 = cus.length() >= 240 ? cus.substring(180, 240) : "";
+        	     cus5 = cus.length() >= 300 ? cus.substring(240, 300) : "";
+        	     cus6 = cus.length() >= 360 ? cus.substring(300, 360) : "";
+        	     cus7 = cus.length() >= 420 ? cus.substring(360, 420) : "";
+        	     cus8 = cus.length() >= 480 ? cus.substring(420, 480) : "";
+             }
+             data.put("cus1", cus1);
+             data.put("cus2", cus2);
+             data.put("cus3", cus3);
+             data.put("cus4", cus4);
+             data.put("cus5", cus5);
+             data.put("cus6", cus6);
+             data.put("cus7", cus7);
+             data.put("cus8", cus8);
+             data.put("fileName", fileName);
+             
+           
+            data.put("Id", loginUser.getId());
+            
+            //System.out.println("data"+data);
+            String rptNo = data.get("excel_0").toString();
+            String ranNo = data.get("excel_129").toString();
+            String sil = data.get("excel_217").toString();
+            
+            //System.out.println("rptNo"+rptNo);
+			//공통내역 seq
+            Map<String, String> resultMap1 = cusImpUploadMapper.insertReadyImportDataA1Seq(rptNo);
+            String resultCount1Seq = String.valueOf(resultMap1.get("SN"));
+            String result1Status = resultMap1.get("STATUS");
+            data.put("resultCount1", resultCount1Seq);
+            //란 seq
+            Map<String, String> resultMap2 = cusImpUploadMapper.insertReadyImportDataB1Seq(rptNo, ranNo);
+            String resultCount2Seq = String.valueOf(resultMap2.get("SN"));
+            String result2Status = resultMap2.get("STATUS");
+            data.put("resultCount2", resultCount2Seq);
+            
+            Map<String, String> resultMap3 = cusImpUploadMapper.insertReadyImportDataC1Seq(rptNo, ranNo, sil);
+            String resultCount3Seq = String.valueOf(resultMap3.get("SN"));
+            String result3Status = resultMap3.get("STATUS");
+            data.put("resultCount3", resultCount3Seq);
+            
+            //공통내역
+			int resultCount1 = cusImpUploadMapper.insertReadyImportDataA1(data);
+			//란
+			int resultCount2 = cusImpUploadMapper.insertReadyImportDataB1(data);
+			//규격
+			int resultCount3 = cusImpUploadMapper.insertReadyImportDataC1(data);
+			
+			if(result1Status.equals("신규")) {
+				resultCntView += resultCount1;
+			}
+			if(result2Status.equals("신규")) {
+				resultCntLan += resultCount2;
+			}
+			if(result3Status.equals("신규")) {
+				resultCntSpec += resultCount3;
+			}
+		}
+		resultMap.put("main", resultCntView);
+		resultMap.put("lan", resultCntLan);
+		resultMap.put("spec", resultCntSpec);
+		}
+		resultMap.put("failReason", failReason);
+		//return  dataProcessing(registerDate(registerDate, "COMMON"), obj.get("fileName").toString(), (successCount - failCount), failCount, doubleCount, null);
+		return resultMap;
+		
+	}
+
+
+	@Override
+	public int insertTempDataUploadLog(Map<String, Object> excelData, Map<String, Object> returnData,
+			UserSessionVO loginUser) {
+		return 0;
+	}
+
+
+	@Override
+	public int deleteTempData(Map<String, Object> loginUser) {
+		return 0;
+	}
+
+	// 타관세사 파일 업로드 공통내역
+	@Override
+	public List<?> selectCusImpViewList(SearchVO vo) {
+		return cusImpUploadMapper.selectCusImpViewList(vo);
+	}
+
+	// 타관세사 파일 업로드 란내역
+	@Override
+	public List<?> selectCusImpViewLanList(SearchVO vo) {
+		return cusImpUploadMapper.selectCusImpViewLanList(vo);
+	}
+	
+	// 타관세사 파일 업로드 정보
+	@Override
+	public List<?> selectCusImpFileList(SearchVO vo) {
+		return cusImpUploadMapper.selectCusImpFileList(vo);
+	}
+
+	// 타관세사 파일 업로드 규격내역
+	@Override
+	public List<?> selectCusImpViewSpecList(SearchVO vo) {
+		return cusImpUploadMapper.selectCusImpViewSpecList(vo);
+	}
+
+	// 리스트 삭제
+	@Override
+	public void deleteImportView(SearchVO vo) {
+		cusImpUploadMapper.deleteCusImpDataA1(vo);
+		cusImpUploadMapper.deleteCusImpDataB1(vo);
+		cusImpUploadMapper.deleteCusImpDataC1(vo);
+	}
+
+
+	@Override
+	public Map<String, Integer> insertTempExcelData(Map<String, Object> excelData, UserSessionVO loginUser) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+	@Override
+	public List<?> selectCusImpViewLanListExcel(SearchVO vo) throws Exception {
+		// TODO Auto-generated method stub
+		return cusImpUploadMapper.selectCusImpViewLanListExcel(vo);
+	}
+
+
+
+	@Override
+	public List<?> selectCusImpViewSpecListExcel(SearchVO vo) throws Exception {
+		// TODO Auto-generated method stub
+		return cusImpUploadMapper.selectCusImpViewSpecListExcel(vo);
+	}
+
+
+	
+
+
+
+
+	
+}

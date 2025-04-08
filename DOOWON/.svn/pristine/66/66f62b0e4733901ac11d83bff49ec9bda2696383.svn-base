@@ -1,0 +1,57 @@
+package egovframework.pf.imp.service;
+
+import java.util.List;
+import java.util.Map;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+
+/**
+ * @Class Name : CustomsImportUpdateService.java
+ * @Description : CustomsImportUpdateService Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2024.07.31         	권예지         			최초 생성
+ *
+ * @author 권예지
+ * @since 2024.07.31
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KordSystems All right reserved.
+ */
+
+public interface CusImpUploadService {
+
+	Map<String, Integer> insertTempExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+
+	int insertTempDataUploadLog(Map<String, Object> excelData, Map<String, Object> returnData,
+			UserSessionVO loginUser);
+
+	int deleteTempData(Map<String, Object> loginUser);
+
+	List<?> selectCusImpViewList(SearchVO vo);
+
+	List<?> selectCusImpFileList(SearchVO vo);
+
+	List<?> selectCusImpViewLanList(SearchVO vo);
+
+	List<?> selectCusImpViewSpecList(SearchVO vo);
+
+	void deleteImportView(SearchVO vo);
+	// FEDEX
+	Map<String, Integer> insertFedexExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+	// DHL
+	Map<String, Integer> insertDhlExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+	// TNT
+	Map<String, Integer> insertTntExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+	// UPS
+	Map<String, Integer> insertUpsExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+	// 레디
+	Map<String, Integer> insertReadyExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+	// 엔컴
+	Map<String, Integer> insertEncomExcelData(Map<String, Object> excelData, UserSessionVO loginUser);
+
+}

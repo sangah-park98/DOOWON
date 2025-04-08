@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.dw.remains.service.impl.remainsQtyMapper">
+
+	<select id="selectRemainsViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			COUNT(*) over() AS cnt,
+			rpt_Day,
+			rpt_no,
+			exp_firm,
+			buy_firm,
+			Ta_St_iso,
+			ran_no,
+			sil,
+			hs,
+			'' AS caseType,
+			gnm1,
+			qty,
+			importer,
+			used_qty,
+			remains_qty
+		FROM (
+			SELECT 
+				CASE WHEN a.Rpt_Day != '' THEN DATE_FORMAT(a.Rpt_Day, '%Y-%m-%d') ELSE '' END AS rpt_Day, 
+				CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no, 
+				a.exp_firm,
+				a.buy_firm,
+				a.Ta_St_iso,
+				b.ran_no,
+				c.Sil,
+				CONCAT(SUBSTRING(b.hs, 1, 4), '.', SUBSTRING(b.hs, 5, 2), '-', SUBSTRING(b.hs, 7, 4)) AS hs,
+				'' AS caseType,
+				c.Gnm1,
+				FORMAT(c.qty, 0) AS qty,
+				r.importer,
+				FORMAT(SUM(r.used_qty), 0) AS used_qty,
+				FORMAT(c.qty - COALESCE(SUM(r.used_qty), 0), 0) AS remains_qty
+			FROM platform.cusdec830a1 a
+			LEFT JOIN platform.cusdec830b1 b ON a.rpt_no = b.rpt_no AND a.SN = b.SNA1
+			LEFT JOIN platform.cusdec830c1 c ON a.rpt_no = c.rpt_no AND a.SN = c.SNA1 AND b.SN = c.SNB1
+			LEFT JOIN remains_info r ON a.rpt_no = r.rpt_no AND b.ran_no = r.lan_no AND c.sil = r.sil
+			WHERE a.rpt_seq = '00'
+            <choose>
+            	<when test="srch8 == '01'">
+                    AND A.rpt_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+                </when>
+                <otherwise>
+                    AND A.exp_Lis_Day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+                </otherwise>
+            </choose>
+			<if test="srch4 != null and srch4 != ''">
+			AND a.rpt_no LIKE CONCAT('%',UPPER(REPLACE(#{srch4},'-','')),'%')
+			</if>
+			<if test="srch5 != null and srch5 != ''">
+			AND a.rpt_no IN (SELECT DISTINCT RPT_NO FROM cusdec830b1selrdy WHERE mg_code like CONCAT('%',UPPER(#{srch5}),'%'))
+			</if>
+			<if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+        	</if>
+        	GROUP BY a.rpt_no, a.exp_firm, a.buy_firm, b.ran_no, c.sil
+        	<choose>
+		        <when test="srch1 == '02'">
+		         	HAVING remains_qty > 0
+		        </when>
+		         <when test="srch1 == '03'">
+		          	HAVING remains_qty &lt;= 0
+		        </when>
+	    	</choose>
+		) AS EXPORT
+		WHERE 1=1
+		<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+		AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+		</if>
+		<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+		AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+		</if>
+		ORDER BY rpt_day desc, rpt_no desc
+	 	LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+	
+	<select id="selectRemainsRptNoList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+		   rpt_no,
+		   docu_path,
+		   docu_type,
+		   docu_file,
+		   docu_org_file,
+		   blno,
+		   invoice_no,
+		   CONCAT(SUBSTRING(upload_dt, 1, 4), '-', SUBSTRING(upload_dt, 5, 2), '-', SUBSTRING(upload_dt, 7, 2)) AS upload_dt
+		FROM platform.file_info
+		WHERE rpt_no = #{srch1};
+	</select>
+	
+ 	<delete id="deleteRemainsInputList" parameterType="searchVO">
+		DELETE FROM remains_info
+		WHERE 1=1
+		AND exp_firm = #{expFirm}
+		AND importer = #{importer}
+		AND rpt_no = #{rptNo}
+		AND lan_no = #{lanNo}
+		AND sil = #{sil}
+		AND used_qty = #{usedQty}
+		AND used_dt = #{usedDt}
+		AND reg_id = #{regId}
+	</delete>
+	
+	<select id="selectRemainsInputList" parameterType="searchVO" resultType="egovMap">
+ 		WITH cte AS (
+		    SELECT
+		        r.rpt_no,
+		        c.qty AS qty,
+		        r.used_qty,
+		        r.seq,
+		        r.used_dt,
+		        SUM(r.used_qty) OVER (PARTITION BY r.rpt_no ORDER BY r.seq ASC) AS sum_used_qty,
+		        (c.qty - SUM(r.used_qty) OVER (PARTITION BY r.rpt_no ORDER BY r.seq ASC)) AS remains_qty
+		    FROM remains_info r
+		    LEFT JOIN platform.cusdec830c1 c 
+		        ON c.rpt_no = r.rpt_no 
+		        AND c.ran_no = r.lan_no 
+		        AND c.sil = r.sil
+		    WHERE r.rpt_no = #{srch1}
+		    AND r.lan_no = #{srch2}
+		    AND r.sil = #{srch3}
+		)
+		SELECT 
+		    COUNT(*) OVER() AS CNT,
+		    r.rpt_no,
+		    r.exp_firm,
+		    r.importer,
+		    FORMAT(c.qty,0) AS qty,
+		    FORMAT(r.used_qty, 0) AS used_qty,
+		    FORMAT(cte.remains_qty, 0) AS remains_qty,
+		    r.used_rsn,
+		    DATE_FORMAT(r.used_dt, '%Y-%m-%d') AS used_dt,
+		    r.used_dt AS used_dt2,
+		    r.reg_id,
+		    c.Ran_No,
+		    c.sil
+		FROM remains_info r
+		LEFT JOIN platform.cusdec830a1 a ON a.rpt_no = r.rpt_no
+		LEFT JOIN platform.cusdec830c1 c ON c.rpt_no = r.rpt_no AND a.SN = c.SNA1 AND c.ran_no = r.lan_no AND c.sil = r.sil
+		LEFT JOIN cte ON cte.rpt_no = r.rpt_no AND cte.seq = r.seq
+		WHERE r.rpt_no = #{srch1}
+		ORDER BY r.used_dt DESC
+	 </select>
+	 
+	 <select id="getImporterList" parameterType="searchVO" resultType="egovMap">
+ 		SELECT DISTINCT buy_firm FROM platform.cusdec830a1
+		WHERE exp_sdno IN ('1298118421', '2118180957', '3128103345', '3128109408')
+	 </select>
+	 
+	 <insert id="insertRemainsInputList" parameterType="searchVO">
+		INSERT INTO remains_info (
+			rpt_no,
+			exp_firm,
+			importer,
+			used_qty,
+			used_rsn,
+			used_dt,
+			lan_no,
+			sil,
+			del_yn,
+			reg_id
+		) VALUES (
+			REPLACE(#{rptNo},'-',''),
+			#{expFirm},
+			#{importer},
+			#{usedQty},
+			#{usedRsn},
+			DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'),
+			#{lanNo},
+			#{sil},
+			'N',
+			#{regId})
+	</insert>
+</mapper>

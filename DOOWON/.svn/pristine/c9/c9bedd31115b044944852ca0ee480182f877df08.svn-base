@@ -1,0 +1,99 @@
+package egovframework.pf.trade.service;
+
+
+public class TradeVO {
+
+	
+	private String cmpnyCd;
+	private String invoiceNo;
+	private String invoiceDate;
+	private String itemCd;
+	private String catagory;
+	private String itemName;
+	private String qty;
+	
+	private String delYn;
+	private String regDt;
+	private String regId;
+	private String edtDt;
+	private String edtId;
+	
+	
+	
+	public String getCmpnyCd() {
+		return cmpnyCd;
+	}
+	public void setCmpnyCd(String cmpnyCd) {
+		this.cmpnyCd = cmpnyCd;
+	}
+	public String getInvoiceNo() {
+		return invoiceNo;
+	}
+	public void setInvoiceNo(String invoiceNo) {
+		this.invoiceNo = invoiceNo;
+	}
+	public String getInvoiceDate() {
+		return invoiceDate;
+	}
+	public void setInvoiceDate(String invoiceDate) {
+		this.invoiceDate = invoiceDate;
+	}
+	public String getItemCd() {
+		return itemCd;
+	}
+	public void setItemCd(String itemCd) {
+		this.itemCd = itemCd;
+	}
+	public String getCatagory() {
+		return catagory;
+	}
+	public void setCatagory(String catagory) {
+		this.catagory = catagory;
+	}
+	public String getItemName() {
+		return itemName;
+	}
+	public void setItemName(String itemName) {
+		this.itemName = itemName;
+	}
+	public String getQty() {
+		return qty;
+	}
+	public void setQty(String qty) {
+		this.qty = qty;
+	}
+	public String getDelYn() {
+		return delYn;
+	}
+	public void setDelYn(String delYn) {
+		this.delYn = delYn;
+	}
+	public String getRegDt() {
+		return regDt;
+	}
+	public void setRegDt(String regDt) {
+		this.regDt = regDt;
+	}
+	public String getRegId() {
+		return regId;
+	}
+	public void setRegId(String regId) {
+		this.regId = regId;
+	}
+	public String getEdtDt() {
+		return edtDt;
+	}
+	public void setEdtDt(String edtDt) {
+		this.edtDt = edtDt;
+	}
+	public String getEdtId() {
+		return edtId;
+	}
+	public void setEdtId(String edtId) {
+		this.edtId = edtId;
+	}
+	
+	
+	
+	
+}

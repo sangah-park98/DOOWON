@@ -1,0 +1,872 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.16.0.final using JasperReports Library version 6.16.0-48579d909b7943b64690c65c71e07e0b80981928  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="FormVC" pageWidth="595" pageHeight="842" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="20" uuid="4d2bcced-8600-4194-860f-abf88b1fbc85">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="kord"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="i_prm1" class="java.lang.String"/>
+	<parameter name="i_prm2" class="java.lang.Integer"/>
+	<parameter name="i_prm3" class="java.lang.Integer"/>
+	<parameter name="i_prm4" class="java.lang.String"/>
+	<parameter name="i_prm6" class="java.lang.Integer"/>
+	<parameter name="i_prm7" class="java.lang.Integer"/>
+	<parameter name="i_prm10" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[SELECT CONCAT(EXPRT_NM, '<BR>', EXPRT_ADRS, ', ', EXPRT_COUNTRY ,'<BR>', EXPRT_TEL, '/' , EXPRT_FAX, '<BR>' , EXPRT_EMAIL) as prm1,
+       CONCAT(IMPRT_NM, '<BR>', IMPRT_ADRS, ', ', IMPRT_COUNTRY, '<BR>', IMPRT_TEL, '/', IMPRT_FAX, '<BR>', IMPRT_EMAIL) as prm2,
+		 CASE 
+		WHEN DPRTR_DT IS NULL THEN ''
+		WHEN DPRTR_DT = '' THEN ''
+		ELSE DATE_FORMAT(DPRTR_DT,'%b %d, %Y') END as prm3, 
+		 VSSLS_NM as prm4, 
+		 PRTF_DSCHRG as prm5,
+		 'VIET NAM' as prm6,
+		 ETC1 as prm9,
+		 ETC2 as prm10,
+		 ETC3 as prm11,
+		 EXPRT_COUNTRY as prm12,
+		  CONCAT(date_format(SYSDATE(), '%b %d %Y'),' ', WRTR_NM, ' ', SIGNR_CMPNY_NM) as prm13,
+		 '' as prm14,
+		 MNSF_TRNSPRT as prm15,
+		 TOTAL as prm16,
+ 		 CASE WHEN $P{i_prm6} != $P{i_prm7} then 'More detail in next page' ELSE '' END as prm17,
+ 		 $P{i_prm6} as prm18,
+ 		 $P{i_prm7} as prm19,
+ 		 IFNULL(RFRNC_NO,'') AS prm30,
+ 		 CASE WHEN $P{i_prm10} = '1' then 'DUPLICATE' WHEN $P{i_prm10} = '2' then 'Triplicate' else 'ORIGINAL' END as prm31
+FROM crft_co_hist
+WHERE issu_no =$P{i_prm1} LIMIT 1]]>
+	</queryString>
+	<field name="prm1" class="java.lang.String"/>
+	<field name="prm2" class="java.lang.String"/>
+	<field name="prm3" class="java.lang.String"/>
+	<field name="prm4" class="java.lang.String"/>
+	<field name="prm5" class="java.lang.String"/>
+	<field name="prm6" class="java.lang.String"/>
+	<field name="prm9" class="java.lang.String"/>
+	<field name="prm10" class="java.lang.String"/>
+	<field name="prm11" class="java.lang.String"/>
+	<field name="prm12" class="java.lang.String"/>
+	<field name="prm13" class="java.lang.String"/>
+	<field name="prm14" class="java.lang.String"/>
+	<field name="prm30" class="java.lang.String"/>
+	<field name="prm15" class="java.lang.String"/>
+	<field name="prm16" class="java.lang.String"/>
+	<field name="prm17" class="java.lang.String"/>
+	<field name="prm18" class="java.lang.String"/>
+	<field name="prm19" class="java.lang.String"/>
+	<field name="prm31" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="428" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<rectangle>
+				<reportElement x="26" y="45" width="269" height="116" uuid="cde01301-c3e2-44f1-b9ff-ee023bb22296">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="26" y="161" width="269" height="125" uuid="1c894f47-5117-43f3-9c35-c4211460875d">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="26" y="286" width="269" height="108" uuid="148dd5d0-0a8a-485e-9010-8befa763a70e">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="295" y="45" width="269" height="139" uuid="b379115c-05d2-4772-a472-3abeea661c85">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="295" y="184" width="269" height="102" uuid="57fb5ce2-2f87-44f1-a5db-db4cb74ab394">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="295" y="286" width="269" height="108" uuid="b9ab1d65-cc54-4ea9-be9c-055793a28f21">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="26" y="394" width="48" height="34" uuid="17004bfd-b68a-4c27-882f-e72cf5200738">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="493" y="394" width="71" height="34" uuid="c1be8bfe-86ff-4c24-a73c-e84e70201d39">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="414" y="394" width="79" height="34" uuid="cedd3a0b-ac14-4535-a518-6f90696b5289">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="343" y="394" width="71" height="34" uuid="d2d7360d-f165-40ed-9504-4b26cb5069ea">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="142" y="394" width="201" height="34" uuid="dab02197-7647-4f9b-9c37-7d567377f168">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="74" y="394" width="68" height="34" uuid="97c0f152-92db-4e48-bc3a-928ff1518734">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="32" y="47" width="170" height="12" uuid="af7bc558-0c70-4848-80cf-c6570824f6b5">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[1. Exporter's business name, address, country]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="32" y="163" width="148" height="12" uuid="0c78085f-a9a4-454a-a9c7-7cfa21a6e967">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[2. Consignee's name, address, country]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="32" y="288" width="188" height="12" uuid="023a65d2-416e-442a-95cc-6cb172e4f030">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[3. Means of transport and route (as far as known)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="32" y="315" width="68" height="12" uuid="da1e400e-ab86-4773-8ed1-0dc4c7527de3">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[Departure date:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="32" y="342" width="110" height="12" uuid="5c4b160e-25e0-4519-93e6-2ba1cb3b5e6e">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[Vessel's name/Aircraft etc:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="32" y="367" width="68" height="12" uuid="c3919121-4b38-4421-9238-8fdd1937e49f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[Port of Discharge:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="300" y="57" width="80" height="12" uuid="7017989e-dad8-4c28-acdc-df5437e4f97d">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[4. Reference No. :]]></text>
+			</staticText>
+			<line>
+				<reportElement x="391" y="67" width="76" height="1" uuid="80c87e2f-d373-4cb0-b4d7-dc4d1f72e091">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="376" y="79" width="123" height="20" uuid="a99c15f8-97c0-4a07-b4db-211a1925e968">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="DejaVu Sans" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[VIET NAM - CHILE
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="371" y="94" width="134" height="14" uuid="932ddacc-9ec4-4a86-bf61-2ca62e81766e">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="DejaVu Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Free Trade Agreement]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="391" y="117" width="88" height="17" uuid="abe67d83-945a-4e67-90b0-9ad6b02ec3c8">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="DejaVu Sans" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[FORM VC]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="307" y="146" width="57" height="14" uuid="f149dcc6-dd1f-4a05-956f-50f7af420341">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="DejaVu Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Issued in]]></text>
+			</staticText>
+			<line>
+				<reportElement x="363" y="159" width="160" height="1" uuid="e393bcd7-810d-45a0-a612-fb6d92237151">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="396" y="161" width="100" height="23" uuid="a3e79afb-f0cc-49b0-8c91-d2b847dcb8ff">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[(Country)
+(See Overleaf Notes)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="300" y="187" width="70" height="12" uuid="c83ff383-3cad-4519-9de6-b464304c0974">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[For Official Use]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="315" y="203" width="17" height="17" uuid="6fd8430f-d413-4f7e-92a3-a2b346c55bba">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.7"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="315" y="229" width="17" height="17" uuid="33207d23-5349-4e2f-9283-e59e743baafd">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.7"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="349" y="205" width="188" height="12" uuid="4486a30e-d81b-4712-891d-e989161ac41b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[Preferential Tariff Treatment Given under FTA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="349" y="226" width="201" height="23" uuid="f381cfb7-bc9e-4bf0-a29b-4d71b7a34739">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[Preferential Tariff Treatment Not Given under FTA
+(please state reason(s))]]></text>
+			</staticText>
+			<line>
+				<reportElement x="300" y="269" width="250" height="1" uuid="815ee4e5-42db-415d-bec1-0cab63f3c6e7"/>
+				<graphicElement>
+					<pen lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="301" y="272" width="248" height="12" uuid="d64f84c6-017f-4970-994d-ff6c3f0c504e">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[Signature of Authorized Signatory of the Importing Country]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="300" y="288" width="7" height="12" uuid="ec453014-597a-4876-ab25-6bf1a68ad748">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[5]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="315" y="300" width="17" height="17" uuid="8f6ae4de-f7f6-4964-ab71-0b35debd6eaa">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.7"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="315" y="332" width="17" height="17" uuid="8282fd61-6c0d-43d7-baf0-7c8f7cad1367">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.7"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="315" y="364" width="17" height="17" uuid="00798a8b-68b4-4948-a4f6-cd1d9badad42">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.7"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="349" y="302" width="91" height="12" uuid="d39216cb-9dfa-41b4-9f8e-dc7d38af6d94">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[Issued Retroactively]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="349" y="334" width="91" height="12" uuid="312b83a0-4020-4796-befd-e3e9c829c97b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[Non-Party Invoicing]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="349" y="367" width="91" height="12" uuid="c98e5c6a-57bb-4d27-98f5-1832d7b36165">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[Certified True Copy]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="32" y="396" width="28" height="22" uuid="5490efd3-0c32-4b18-b301-040668f207ea">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[6. Item
+number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="80" y="396" width="50" height="32" uuid="d6dd3701-62b9-4b2f-8e05-1116b5ecf77b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[7. Marks and
+numbers of
+packages]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="153" y="396" width="178" height="22" uuid="8b55511b-b263-41a4-9f83-5654a5cbfa7f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[8. Number and type of packages, description
+    of goods (including HS code)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="358" y="395" width="38" height="32" uuid="4eb2d18d-8789-42fa-a894-2a88c83068f7">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[9. Origin
+criterion]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="428" y="395" width="50" height="32" uuid="4b3d1a74-b0c6-4d93-8543-270bd64f54df">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[10. Gross
+weight or
+quantity]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="503" y="395" width="50" height="32" uuid="452a5b2e-db9f-48b1-baf6-4df72214c20a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[11. Number
+and date of
+invoices]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="35" y="59" width="258" height="91" uuid="b5c3acdb-2de8-4076-9db4-e068d533762b"/>
+				<textElement markup="html">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm1}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="35" y="175" width="258" height="91" uuid="8265a765-9976-459f-b4e7-99b078c926d9"/>
+				<textElement markup="html">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="32" y="328" width="258" height="14" uuid="e304bfb3-afe4-47cb-be4a-92bd90b081d4"/>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm3}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="32" y="354" width="258" height="14" uuid="bea27556-d901-4a2c-a223-6b1807820831"/>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm4}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="31" y="379" width="258" height="14" uuid="ed38a4b1-54fc-4986-9ee0-26212c971524"/>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm5}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="364" y="146" width="161" height="14" uuid="6701733f-d58e-4c0b-a015-2cbecb17af5f"/>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm6}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="320" y="300" width="28" height="16" uuid="f600ef5c-997d-48ca-ad16-4e897f021033"/>
+				<textElement>
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm9}.equals("TRUE") ? "V" : " "]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="320" y="332" width="28" height="16" uuid="6b03ca57-23c6-430e-8220-5dbfc1ba06f5"/>
+				<textElement>
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm10}.equals("TRUE") ? "V" : " "]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="319" y="364" width="28" height="16" uuid="8d700263-92bb-4c5d-aedf-bb657ae63f01"/>
+				<textElement>
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm11}.equals("TRUE") ? "V" : " "]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="207" y="22" width="180" height="20" uuid="7d2f936f-7463-4881-984e-e4054b84dd25"/>
+				<textElement>
+					<font fontName="DejaVu Sans" size="13" isBold="true"/>
+				</textElement>
+				<text><![CDATA[CERTIFICATE OF ORIGIN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="523" y="34" width="13" height="11" uuid="8b1fb626-23a9-4972-8009-8190687e4568">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[/]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="460" y="34" width="30" height="11" uuid="e20c245c-63bd-4049-a2d9-77696c893281">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[Page:]]></text>
+			</staticText>
+			<line>
+				<reportElement x="526" y="41" width="37" height="1" uuid="61519815-4902-4def-a567-368beb0cee7b"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="484" y="41" width="37" height="1" uuid="1a867577-ecd1-468f-9b9b-a95576b6106a"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<textField>
+				<reportElement x="392" y="56" width="122" height="11" uuid="ae321cae-d7fc-4334-b2e0-11977c2aedbb">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm30}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="32" y="300" width="258" height="14" uuid="8058045d-b24e-488c-b13a-eb01b73d3a66"/>
+				<textElement>
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm15}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="497" y="30" width="42" height="11" uuid="c0c7cf68-fa56-4f8f-8ebf-4b9c14605aa3">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm19}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="536" y="30" width="42" height="11" uuid="2c7c69f9-3b8b-49bd-ad4c-2f628305eeaf">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm18}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="426" y="14" width="138" height="16" uuid="fdd0b566-d159-410e-8d0a-541dc7ee2979">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm31}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="217" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<subreport>
+				<reportElement x="26" y="0" width="538" height="217" uuid="7276d034-a219-46ab-944b-33fb6d0ff48a">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<subreportParameter name="REPORT_CONNECTION">
+					<subreportParameterExpression><![CDATA[$P{REPORT_CONNECTION}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm1">
+					<subreportParameterExpression><![CDATA[$P{i_prm1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm2">
+					<subreportParameterExpression><![CDATA[$P{i_prm2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm3">
+					<subreportParameterExpression><![CDATA[$P{i_prm3}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm6">
+					<subreportParameterExpression><![CDATA[$P{i_prm6}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm7">
+					<subreportParameterExpression><![CDATA[$P{i_prm7}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportExpression><![CDATA[$P{i_prm4} + "/templet/FormVC_sub_L.jasper"]]></subreportExpression>
+			</subreport>
+			<frame>
+				<reportElement x="26" y="0" width="48" height="217" uuid="9ca59080-cfd0-4f47-86bf-7bf12717077d">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</frame>
+			<frame>
+				<reportElement x="74" y="0" width="68" height="217" uuid="46bc9afc-d60a-4c74-bced-0ecb98146b0f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</frame>
+			<frame>
+				<reportElement x="142" y="0" width="201" height="217" uuid="325b091e-c463-4362-ae26-3123120a3c38">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</frame>
+			<frame>
+				<reportElement x="343" y="0" width="71" height="217" uuid="7f5843f3-aa5d-419b-9e2f-1f7a0fa305aa">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</frame>
+			<frame>
+				<reportElement x="414" y="0" width="79" height="217" uuid="9812a7af-f1f8-48ef-ac24-d3d582db3f1f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</frame>
+			<frame>
+				<reportElement x="493" y="0" width="71" height="217" uuid="d21a5166-f47d-400c-aa6c-6a508dde0091">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+			</frame>
+			<textField>
+				<reportElement x="27" y="202" width="115" height="14" uuid="95621ba9-d0e7-429d-b5da-05c4bdcb6dcd"/>
+				<textElement>
+					<font fontName="Noto Sans" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm17}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="143" y="184" width="336" height="32" uuid="01147a41-2b8c-4822-8925-5181b792d1f5"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="Noto Sans" size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm16}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="177" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<rectangle>
+				<reportElement x="26" y="0" width="269" height="171" uuid="3b51470c-385f-42db-b7ef-6a554a5720fc">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="295" y="0" width="269" height="171" uuid="20a53609-46e6-464f-94a3-bab5844c4e43">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="32" y="6" width="120" height="12" uuid="41f5e3e6-7a3f-4fa2-af7d-e938a57fd8ea">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[12. Declaration by the exporter:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="32" y="17" width="234" height="26" uuid="a177136d-677d-43d3-8ae8-0aaf3a32af4c">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[The undersigned, hereby declares that the above details and
+statement are correct; that all the goods were produced in]]></text>
+			</staticText>
+			<line>
+				<reportElement x="86" y="62" width="134" height="1" uuid="16c660b8-e03c-4bc0-ba46-0ae674ace8a8"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="139" y="63" width="52" height="12" uuid="b715a6c6-63c0-412f-8996-1594b47f86b0">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[(country)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="32" y="81" width="218" height="26" uuid="6f4a6c21-23d4-4d9f-ad81-e60294a4247e">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[and that comply with the origin requirements specified for
+these goods in the VCFTA]]></text>
+			</staticText>
+			<line>
+				<reportElement x="90" y="134" width="134" height="1" uuid="b707808b-afbb-4d63-8c59-0707a34def29"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="48" y="147" width="218" height="22" uuid="3584b4a9-09be-4320-8ee5-063c6505720a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[Place and date, name, signature and company authorized
+signatory]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="301" y="5" width="70" height="18" uuid="8528d849-40d5-45a5-9709-b92fad511f9f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[13. Certification]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="301" y="17" width="236" height="26" uuid="3d7a2612-b1be-49b9-9d42-a1e05940a32a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[It is hereby certified, on the basis of control carried out, that the
+declaration by the exporter is correct.]]></text>
+			</staticText>
+			<line>
+				<reportElement x="310" y="122" width="185" height="1" uuid="f82a7282-81d0-45e5-83ea-42d3138e396b"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="315" y="126" width="176" height="22" uuid="be8f47c4-9626-4be6-b7a1-b72381e04249">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="DejaVu Sans" size="7"/>
+				</textElement>
+				<text><![CDATA[Place and date, signature and stamp of
+Issuing Authority]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="86" y="49" width="133" height="14" uuid="34f20b6b-f547-44cb-b916-a2c8f0b3321e"/>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm12}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="311" y="107" width="184" height="14" uuid="cd1e54bc-8033-4937-a9c7-6b897828a0ce"/>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm14}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="91" y="120" width="133" height="14" uuid="a10fda1d-a0e8-49f1-8a59-5a0d6d0ceb26">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm13}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnFooter>
+</jasperReport>

@@ -1,0 +1,253 @@
+package egovframework.pf.api.service.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+
+import egovframework.pf.api.service.ApiOrderModVO;
+import egovframework.pf.api.service.ApiShippingService;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.shipping.service.ShippingOrderVO;
+import egovframework.pf.shipping.utill.ShippingEmailUtill;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+
+
+@Service("apiShippingService")
+@Repository
+public class ApiShippingServiceImpl extends EgovAbstractServiceImpl implements ApiShippingService {
+
+	private int totalCnt;
+	private int successCnt;
+	private ArrayList<String> reasonList;
+
+	@Resource(name="apiShippingMapper")
+	private ApiShippingMapper apiShippingMapper;
+
+	@Override
+	public void updateOrderId(ShippingOrderVO svo) throws Exception {
+		apiShippingMapper.updateOrderId(svo);
+	}
+	
+	// 2_1 오더상태변경
+	@RequestMapping(value = "/stateChange")
+	public String stateChange(ShippingOrderVO svo) throws Exception {
+	    Map<String, Object> result = new HashMap<>();
+	    
+	    try {
+	        if (svo.getOrderState() == null || svo.getOrderState().isEmpty()) {
+	            throw new IllegalArgumentException("OrderState가 누락되었습니다.");
+	        }
+	        if (svo.getOrderId() == null || svo.getOrderId().isEmpty()) {
+	            throw new IllegalArgumentException("OrderId가 누락되었습니다.");
+	        }
+	        successCnt = apiShippingMapper.stateChange(svo);
+	        
+	        if (successCnt > 0) {
+	            result.put("result", true);
+	            result.put("msg", "성공");
+	            
+	            SearchVO vo = new SearchVO();
+	            vo.setSrch1(svo.getOrderId());
+	            List<?> mail = apiShippingMapper.selectShipList(vo);
+	            System.out.println(mail);
+	            String rptNo = "";
+	            String blNo = "";
+	            String cmpnyNm = "";
+	            String sendEmail = "";
+	            
+	            if (!mail.isEmpty() && mail.get(0) instanceof Map) {
+	                Map<?, ?> map = (Map<?, ?>) mail.get(0);
+
+	                rptNo =  (String) map.get("rptNo");
+	                blNo =  (String) map.get("blNo");
+	                cmpnyNm =  (String) map.get("cmpnyNm");
+	                sendEmail =  (String) map.get("regId");
+	                
+	            }
+	            
+	            if(svo.getOrderState().equals("도착") && sendEmail != "") {
+	            	sendShippStatus(rptNo, blNo, cmpnyNm, sendEmail, svo.getOrderState());
+	            }
+	            
+	        } else {
+	            throw new RuntimeException("업데이트된 행이 없습니다.");
+	        }
+	    } catch (Exception e) {
+	        result.put("result", false);
+	        result.put("msg", "Error updating database. Cause: " + e.getMessage());
+	    }
+	    System.out.println(result);
+	    return new ObjectMapper().writeValueAsString(result);
+	}
+	
+	// 2_2 배차처리
+	@Override
+	public String arrangeAlloc(ShippingOrderVO svo) throws Exception {
+		Map<String, Object> result = new HashMap<>();
+		try {
+	        if (svo.getOrderId() == null || svo.getOrderId().isEmpty()) {
+	            throw new IllegalArgumentException("OrderId가 누락되었습니다.");
+	        }
+	        successCnt = apiShippingMapper.arrangeAlloc(svo);
+	        
+	        if (successCnt > 0) {
+	            result.put("result", true);
+	            result.put("msg", "성공");
+	            
+	            SearchVO vo = new SearchVO();
+	            vo.setSrch1(svo.getOrderId());
+	            List<?> mail = apiShippingMapper.selectShipList(vo);
+	            System.out.println(mail);
+	            String rptNo = "";
+	            String blNo = "";
+	            String cmpnyNm = "";
+	            String sendEmail = "";
+	            
+	            if (!mail.isEmpty() && mail.get(0) instanceof Map) {
+	                Map<?, ?> map = (Map<?, ?>) mail.get(0);
+
+	                rptNo =  (String) map.get("rptNo");
+	                blNo =  (String) map.get("blNo");
+	                cmpnyNm =  (String) map.get("cmpnyNm");
+	                sendEmail =  (String) map.get("regId");
+	                
+	            }
+	            
+	            if(sendEmail != "") {
+	            	sendShippStatus(rptNo, blNo, cmpnyNm, sendEmail, "배차");
+	            }
+	            
+	            
+	        } else {
+	            throw new RuntimeException("업데이트된 행이 없습니다.");
+	        }
+	    } catch (Exception e) {
+	        result.put("result", false);
+	        result.put("msg", "Error updating database. Cause: " + e.getMessage());
+	    }
+	    System.out.println(result);
+	    return new ObjectMapper().writeValueAsString(result);
+	}
+	
+	// 2_3 배차취소
+	@Override
+	public String allocCancel(ShippingOrderVO svo) throws Exception {
+		Map<String, Object> result = new HashMap<>();
+		try {
+	        if (svo.getOrderId() == null || svo.getOrderId().isEmpty()) {
+	            throw new IllegalArgumentException("OrderId가 누락되었습니다.");
+	        }
+	        successCnt = apiShippingMapper.allocCancel(svo);
+	        
+	        if (successCnt > 0) {
+	            result.put("result", true);
+	            result.put("msg", "성공");
+	        } else {
+	            throw new RuntimeException("업데이트된 행이 없습니다.");
+	        }
+	    } catch (Exception e) {
+	        result.put("result", false);
+	        result.put("msg", "Error updating database. Cause: " + e.getMessage());
+	    }
+	    System.out.println(result);
+	    return new ObjectMapper().writeValueAsString(result);
+	}
+		
+	// 2_4 오더취소
+	@Override
+	public String orderCancel(ShippingOrderVO svo) throws Exception {
+		Map<String, Object> result = new HashMap<>();
+		try {
+	        if (svo.getOrderId() == null || svo.getOrderId().isEmpty()) {
+	            throw new IllegalArgumentException("OrderId가 누락되었습니다.");
+	        }
+	        successCnt = apiShippingMapper.orderCancel(svo);
+	        
+	        if (successCnt > 0) {
+	            result.put("result", true);
+	            result.put("msg", "성공");
+	        } else {
+	            throw new RuntimeException("업데이트된 행이 없습니다.");
+	        }
+	    } catch (Exception e) {
+	        result.put("result", false);
+	        result.put("msg", "Error updating database. Cause: " + e.getMessage());
+	    }
+	    System.out.println(result);
+	    return new ObjectMapper().writeValueAsString(result);
+	}
+
+	// 2_5 오더추가
+	@Override
+	public String stateOrderAdd(ShippingOrderVO svo) throws Exception {
+		Map<String, Object> result = new HashMap<>();
+		try {
+	        if (svo.getOrderId() == null || svo.getOrderId().isEmpty()) {
+	            throw new IllegalArgumentException("OrderId가 누락되었습니다.");
+	        }
+	        successCnt = apiShippingMapper.stateOrderAdd(svo);
+	        
+	        if (successCnt > 0) {
+	            result.put("result", true);
+	            result.put("msg", "성공");
+	        } else {
+	            throw new RuntimeException("업데이트된 행이 없습니다.");
+	        }
+	    } catch (Exception e) {
+	        result.put("result", false);
+	        result.put("msg", "Error updating database. Cause: " + e.getMessage());
+	    }
+	    System.out.println(result);
+	    return new ObjectMapper().writeValueAsString(result);
+	}
+
+	@Override
+	public int orderSeqCnt(SearchVO vo) throws Exception {
+		return apiShippingMapper.orderSeqCnt(vo);
+	}
+
+	@Override
+	public String etcCharge(ShippingOrderVO svo) throws Exception {
+		Map<String, Object> result = new HashMap<>();
+		try {
+	        if (svo.getOrderId() == null || svo.getOrderId().isEmpty()) {
+	            throw new IllegalArgumentException("OrderId가 누락되었습니다.");
+	        }
+	        successCnt = apiShippingMapper.etcCharge(svo);
+	        if (successCnt > 0) {
+	            result.put("result", true);
+	            result.put("msg", "성공");
+	        } else {
+	            throw new RuntimeException("업데이트된 행이 없습니다.");
+	        }
+	    } catch (Exception e) {
+	        result.put("result", false);
+	        result.put("msg", "Error updating database. Cause: " + e.getMessage());
+	    }
+	    System.out.println(result);
+	    return new ObjectMapper().writeValueAsString(result);
+	}
+
+	@Override
+	public void updateOrderState(ShippingOrderVO mvo) throws Exception {
+		apiShippingMapper.updateOrderState(mvo);
+	}
+
+	
+	private String sendShippStatus(String rptNo, String blNo, String cmpnyNm, String sendEmail, String Status) throws Exception {
+  		//String sendEmail = "import@ilyang.com";
+  		String result = ShippingEmailUtill.sendEmailStatus(rptNo, blNo, cmpnyNm, sendEmail, Status);
+  		return result;
+  	}
+	
+}

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.11.0.final using JasperReports Library version 6.11.0-0c4056ccaa4d25a5a8c45672d2f764ea3498bebb  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="LANG1" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="f5fbd690-a80a-47db-9fcd-4d374545912e">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="VCS"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="condition1" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT *
+FROM menu_info
+WHERE menu_id = $P{condition1}]]>
+	</queryString>
+	<field name="MENU_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MENU_ID"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="MENU_TYPE" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MENU_TYPE"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="UPPR_MENU_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="UPPR_MENU_ID"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="URL" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="URL"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="MENU_NM_VN" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MENU_NM_VN"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="MENU_NM_EN" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MENU_NM_EN"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="MENU_NM_KR" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="MENU_NM_KR"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="ORDR_SN" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="ORDR_SN"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="DISP_YN" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="DISP_YN"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="TARGET_TYPE" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="TARGET_TYPE"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="DEL_YN" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="DEL_YN"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="REG_DT" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="REG_DT"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="REG_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="REG_ID"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="REG_IP" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="REG_IP"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="EDT_DT" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="EDT_DT"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="EDT_ID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="EDT_ID"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<field name="EDT_IP" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="EDT_IP"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="menu_info"/>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="35" splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="63" splitType="Stretch">
+			<staticText>
+				<reportElement x="20" y="0" width="160" height="61" uuid="86c3eee9-ee59-43a8-923a-62eac9274930"/>
+				<textElement>
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<text><![CDATA["Mua ở đâu Thông tin đối tác Thay đổi lịch sử Xác nhận lịch sử Tỷ lệ chuyển đổi giá"]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="280" y="1" width="190" height="61" uuid="5a1dc292-8166-4797-8b87-0ba0a12fbc82"/>
+				<textElement>
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Mua ở đâu Thông tin đối tác Thay đổi lịch sử Xác nhận lịch sử Tỷ lệ chuyển đổi giá"]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="61" splitType="Stretch">
+			<staticText>
+				<reportElement x="20" y="31" width="100" height="30" uuid="5b57623b-d115-47bd-be6b-b3453105d9f0">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="2dff9b0f-e7b4-4be1-a87c-dba72a5842fe"/>
+				</reportElement>
+				<text><![CDATA[MENU_ID]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="120" y="30" width="160" height="30" uuid="1a153882-5251-480e-93ca-7dedf331a3d1">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="3a8ba1ae-3259-4d48-ac40-7dedf8f89e7f"/>
+				</reportElement>
+				<text><![CDATA[MENU_NM_VN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="410" y="30" width="140" height="30" uuid="a418f6b3-0432-4caa-ac26-137acbd3f4db">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="21bc755f-289c-4ba3-a1f7-fd3f70671c77"/>
+				</reportElement>
+				<text><![CDATA[MENU_NM_KR]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="280" y="30" width="130" height="30" uuid="49b34690-f1aa-4469-8661-c889570683bc">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="995049b5-bb2e-4185-8a66-03e6cd112bac"/>
+				</reportElement>
+				<text><![CDATA[MENU_NM_EN]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="30" splitType="Stretch">
+			<textField>
+				<reportElement x="20" y="0" width="100" height="30" uuid="e2136bf9-8113-4eb5-88ca-a4853948629c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="2dff9b0f-e7b4-4be1-a87c-dba72a5842fe"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{MENU_ID}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="120" y="0" width="160" height="30" uuid="9e4bb7d6-5d52-4dbb-95c6-ad9be19e4b84">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="3a8ba1ae-3259-4d48-ac40-7dedf8f89e7f"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{MENU_NM_VN}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="280" y="0" width="130" height="30" uuid="e5d80e5d-be75-4ffe-a3e5-3b1ce366f198">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="995049b5-bb2e-4185-8a66-03e6cd112bac"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{MENU_NM_EN}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="410" y="0" width="140" height="30" uuid="fe9e544d-c394-4fb8-9753-c58084898d44">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="21bc755f-289c-4ba3-a1f7-fd3f70671c77"/>
+				</reportElement>
+				<textElement>
+					<font fontName="굴림체"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{MENU_NM_KR}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="45" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="54" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="42" splitType="Stretch"/>
+	</summary>
+</jasperReport>

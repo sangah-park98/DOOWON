@@ -1,0 +1,681 @@
+package egovframework.ms.item.web;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFDataFormat;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import egovframework.pf.cmmn.service.CmmnService;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.item.service.ItemCheckedVO;
+import egovframework.pf.item.service.pfItemService;
+import egovframework.pf.util.ExcelUtil;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+
+@Controller
+public class itemController {
+
+	@Resource(name = "CmmnService")
+	private CmmnService CmmnService;
+	
+	@Resource(name = "pfItemService")
+	private pfItemService pfitemService;
+
+	@RequestMapping(value = "/item/itemInfo.do")
+	public String importView(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		SearchVO vo = new SearchVO();
+		vo.setLang(userVO.getLang());
+		vo.setSrch2("item");
+		List<?> msgList = CmmnService.selectMsgList(vo);
+		for(int i=0; i<msgList.size(); i++) {
+			EgovMap map = (EgovMap)msgList.get(i);
+			model.addAttribute((String)map.get("msgId"), map.get("msgNm"));
+		}
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		vo.setCorpNo(userVO.getCorpNo());
+		model.addAttribute("userCmpnyCd", userVO.getCmpnyCd());
+		model.addAttribute("grpCd", userVO.getGrpCd());
+		return "item/itemView";
+	}
+		 
+	@RequestMapping(value="/item/selectItemViewList.do")
+	public ModelAndView selectItemViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setList(userVO.getCorpNos());
+	    List<?> resultList = null;
+	    
+	    if(vo.getExType().equals("01")) {
+	    	if(vo.getSrch13()!= null) {
+	    		System.out.println("전체,중복O");
+	    		// resultList = pfitemService.selectDuplicationItemViewList(vo);
+	    	} else {
+	    		System.out.println("전체,중복X");
+    		    resultList = pfitemService.selectItemViewList(vo);
+	    	}
+	    } else if(vo.getExType().equals("02")) {
+	    	if(vo.getSrch13()!= null) {
+	    		System.out.println("수입,중복O"); 
+	    		 // resultList = pfitemService.selectDuplicationItemViewImpList(vo);
+	    	} else {
+	    		System.out.println("수입,중복X");
+	    		resultList = pfitemService.selectItemViewImpList(vo);
+	    	}
+	    } else if(vo.getExType().equals("03")) {
+	    	if(vo.getSrch13()!= null) {
+	    		System.out.println("수출,중복O"); 
+				// resultList = pfitemService.selectDuplicationItemViewExpList(vo);
+	    	} else {
+	    		System.out.println("수출,중복X");   
+				resultList = pfitemService.selectItemViewExpList(vo);
+	    	}
+				
+	    }
+	    ModelAndView mav = new ModelAndView("jsonView");
+	    mav.addObject("resultList", resultList);
+	    return mav;
+	}
+		
+	@RequestMapping(value = "/item/selectItemCodeChkList.do")
+	public ModelAndView selectItemCodeChkList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setList(userVO.getCorpNos());
+		List<?> resultList = pfitemService.selectItemCodeChkList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/item/insertItemChkedList.do")
+	@ResponseBody
+	public Map<String, String> insertItemChkedList(@RequestBody List<ItemCheckedVO> ivoList, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    
+	    for (ItemCheckedVO ivo : ivoList) {
+	        Map<String, Object> map = new HashMap<>();
+	        map.put("itemCode", ivo.getItemCode());
+	        map.put("itemStatus", ivo.getItemStatus());
+	        map.put("excGname", ivo.getExcGname());
+	        map.put("itemDesc", ivo.getItemDesc());
+	        map.put("currency", ivo.getCurrency());
+	        map.put("hs", ivo.getHs());
+	        map.put("memo", ivo.getMemo());
+	        ivo.setCmpnyCd(userVO.getCorpNo());
+	        ivo.setRegId(userVO.getId());
+	        
+	        pfitemService.insertItemChkedList(ivo);
+	    }
+	    Map<String, String> response = new HashMap<>();
+	    response.put("status", "success");
+	    return response;
+	}
+	
+	
+	@RequestMapping(value = "/item/updateItemMemoList.do")
+	@ResponseBody
+	public Map<String, String> updateItemMemoList(@RequestBody List<ItemCheckedVO> ivoList, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    List<String> corpNos = userVO.getCorpNos(); 
+	    
+	    for (ItemCheckedVO ivo : ivoList) {
+	        Map<String, Object> map = new HashMap<>();
+	        map.put("itemCode", ivo.getItemCode());
+	        map.put("memo", ivo.getMemo());
+	        map.put("hs", ivo.getHs());
+	        map.put("currency", ivo.getCurrency());
+	        
+	        ivo.setRegId(userVO.getId());
+	        ivo.setList(corpNos);
+	        pfitemService.updateItemMemoList(ivo);
+	    }
+	    Map<String, String> response = new HashMap<>();
+	    response.put("status", "success");
+	    return response;
+	}
+	
+	@RequestMapping(value = "/item/deleteItemMemoList.do", method = RequestMethod.POST)
+	@ResponseBody
+	public void deleteItemMemoList(@RequestBody List<ItemCheckedVO> ivoList, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    List<String> corpNos = userVO.getCorpNos();
+	    
+        for (ItemCheckedVO ivo : ivoList) {
+        	ivo.setList(corpNos);
+        	ivo.setRegId(userVO.getId());
+            pfitemService.deleteItemMemoList(ivo);
+        }
+	}
+	
+	@RequestMapping(value = "/item/selectItemCodeMemoList.do")
+	public ModelAndView selectItemCodeMemoList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, 
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+		List<?> resultList = pfitemService.selectItemCodeMemoList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/item/selectItemChkDetailList.do")
+	public ModelAndView selectItemChkDetailList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, 
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+		List<?> resultList = pfitemService.selectItemChkDetailList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/item/deleteItemChkDetailList.do", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, String> deleteItemChkDetailList(@RequestBody List<ItemCheckedVO> ivoList, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    List<String> corpNos = userVO.getCorpNos();
+
+	    for (ItemCheckedVO ivo : ivoList) {
+	        ivo.setList(corpNos);
+	        ivo.setRegId(userVO.getId());
+	        pfitemService.deleteItemChkDetailList(ivo);
+	    }
+
+	    Map<String, String> response = new HashMap<>();
+	    response.put("status", "success");
+	    return response;
+	}
+	
+	@RequestMapping(value="/item/selectItemHsCodeDiffList.do", method = RequestMethod.POST)
+	public ModelAndView selectItemHsCodeDiffList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setList(userVO.getCorpNos());
+	    List<?> resultList = null;
+	    
+	    if(vo.getExType().equals("01")) {
+	    	System.out.println("전체: 세번적용내역"); 
+	    	resultList = pfitemService.selectItemHsCodeDiffList(vo);
+	    	for(Object obj : resultList) {
+		    	EgovMap map = (EgovMap)obj;
+		    	SearchVO subVo = new SearchVO();
+		    	List<?> subResultList = null;
+		    	
+		    	subVo.setList(userVO.getCorpNos());
+		    	subVo.setExType(vo.getExType());
+		    	subVo.setSrch1(vo.getSrch1());
+		    	subVo.setSrch2(vo.getSrch2());
+		        subVo.setSrch3(vo.getSrch3());
+		        subVo.setSrch10(vo.getSrch10());
+		    	subVo.setSrch4((String)map.get("hs"));
+		    	subVo.setSrch5((String)map.get("goodsName"));
+		    	
+		    	subResultList = pfitemService.selectItemHsCodeDiffSubList(subVo);
+		    	map.put("__children", subResultList);
+		    }
+	    } else if(vo.getExType().equals("02")) {
+	    	System.out.println("수입: 세번적용내역");
+	    	resultList = pfitemService.selectItemHsCodeDiffImpList(vo);
+	    	for(Object obj : resultList) {
+		    	EgovMap map = (EgovMap)obj;
+		    	SearchVO subVo = new SearchVO();
+		    	List<?> subResultList = null;
+		    	
+		    	subVo.setList(userVO.getCorpNos());
+		    	subVo.setExType(vo.getExType());
+		    	subVo.setSrch1(vo.getSrch1());
+		    	subVo.setSrch2(vo.getSrch2());
+		        subVo.setSrch3(vo.getSrch3());
+		        subVo.setSrch4((String)map.get("hs"));
+		        subVo.setSrch10(vo.getSrch10());
+		    	
+		    	subResultList = pfitemService.selectItemHsCodeDiffImpSubList(subVo);
+		    	map.put("__children", subResultList);
+		    }
+	    } else {
+	    	System.out.println("수출: 세번적용내역");
+	    	resultList = pfitemService.selectItemHsCodeDiffExpList(vo);
+	    	for(Object obj : resultList) {
+		    	EgovMap map = (EgovMap)obj;
+		    	SearchVO subVo = new SearchVO();
+		    	List<?> subResultList = null;
+		    	
+		    	subVo.setList(userVO.getCorpNos());
+		    	subVo.setExType(vo.getExType());
+		    	subVo.setSrch1(vo.getSrch1());
+		    	subVo.setSrch2(vo.getSrch2());
+		    	subVo.setSrch3(vo.getSrch3());
+		    	subVo.setSrch4((String)map.get("hs"));
+		    	subVo.setSrch10(vo.getSrch10());
+		    	
+		    	subResultList = pfitemService.selectItemHsCodeDiffExpSubList(subVo);
+		    	map.put("__children", subResultList);
+		    }
+	    }
+				
+	    ModelAndView mav = new ModelAndView("jsonView");
+	    mav.addObject("resultList", resultList);
+	    return mav;
+	}
+	
+	@RequestMapping(value = "/item/selectItemPriceList.do")
+	public ModelAndView selectItemPriceList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setList(userVO.getCorpNos());
+		List<?> resultList = null;
+		List<?> resultList2 = null;
+		
+		if(vo.getExType().equals("01")) {
+	    	resultList = pfitemService.selectItemPriceImpList(vo);
+	    	resultList2 = pfitemService.selectItemPriceExpList(vo);
+	    } else if(vo.getExType().equals("02")) {
+	    	resultList = pfitemService.selectItemPriceImpList(vo);
+	    } else {
+	    	resultList = pfitemService.selectItemPriceExpList(vo);
+	    }
+		model.addAttribute("resultList", resultList);
+		model.addAttribute("resultList2", resultList2);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/item/selectItemOutOfRateList.do")
+	public ModelAndView selectItemOutOfRateList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setList(userVO.getCorpNos());
+		List<?> resultList = null;
+	    
+	    if(vo.getExType().equals("01")) {
+	    	resultList = pfitemService.selectItemOutOfRateList(vo);
+	    } else if(vo.getExType().equals("02")) {
+	    	resultList = pfitemService.selectItemOutOfRateImpList(vo);
+	    } else {
+	    	resultList = pfitemService.selectItemOutOfRateExpList(vo);
+	    }
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/item/selectItemPriceChart.do")
+	public ModelAndView selectItemPriceChart(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setList(userVO.getCorpNos());
+		}
+		List<?> resultList = pfitemService.selectItemPriceChart(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/item/selectItemRptNoList.do")
+	public ModelAndView selectItemRptNoList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setList(userVO.getCorpNos());
+		List<?> resultList = null;
+	    
+	    if(vo.getExType().equals("01")) {
+	    	resultList = pfitemService.selectItemRptNoList(vo);
+	    } else if(vo.getExType().equals("02")) {
+	    	resultList = pfitemService.selectItemRptNoImpList(vo);
+	    } else {
+	    	resultList = pfitemService.selectItemRptNoExpList(vo);
+	    }
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value="/item/selectItemLawCdList.do", method = RequestMethod.POST)
+	public ModelAndView selectItemLawCdList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setList(userVO.getCorpNos());
+		List<?> resultList = null;
+		
+    	if(vo.getExType().equals("01")) {
+    		resultList = pfitemService.selectItemLawCdList(vo);
+    		
+	    	for(Object obj : resultList) {
+		    	EgovMap map = (EgovMap)obj;
+		    	SearchVO subVo = new SearchVO();
+		    	List<?> subResultList1 = null;
+		    	List<?> subResultList2 = null;
+		    	
+		    	subVo.setList(userVO.getCorpNos());
+		    	subVo.setExType(vo.getExType());
+		    	subVo.setSrch1(vo.getSrch1());
+		    	subVo.setSrch2(vo.getSrch2());
+		    	subVo.setSrch3(vo.getSrch3());
+		    	subVo.setSrch10(vo.getSrch10());
+		    	
+		    	subResultList1 = pfitemService.selectItemLawCdApprovalList(subVo);
+		    	subResultList2 = pfitemService.selectItemLawCdExcludeList(subVo);
+		    	// 핸더슨 서브행의 분리를 위해 빈 리스트 추가
+		    	subResultList1 = (subResultList1 == null) ? new ArrayList<>() : subResultList1;
+		    	subResultList2 = (subResultList2 == null) ? new ArrayList<>() : subResultList2;
+
+		    	map.put("__children1", subResultList1);
+		    	map.put("__children2", subResultList2);
+		    }
+    	} else if(vo.getExType().equals("02")) {
+    		resultList = pfitemService.selectItemLawCdImpList(vo);
+    		
+	    	for(Object obj : resultList) {
+		    	EgovMap map = (EgovMap)obj;
+		    	SearchVO subVo = new SearchVO();
+		    	List<?> subResultList1 = null;
+		    	List<?> subResultList2 = null;
+		    	
+		    	subVo.setList(userVO.getCorpNos());
+		    	subVo.setExType(vo.getExType());
+		    	subVo.setSrch1(vo.getSrch1());
+		    	subVo.setSrch2(vo.getSrch2());
+		    	subVo.setSrch3(vo.getSrch3());
+		    	subVo.setSrch10(vo.getSrch10());
+		    	
+		    	subResultList1 = pfitemService.selectItemLawCdApprovalImpList(subVo);
+		    	subResultList2 = pfitemService.selectItemLawCdExcludeImpList(subVo);
+		    	subResultList1 = (subResultList1 == null) ? new ArrayList<>() : subResultList1;
+		    	subResultList2 = (subResultList2 == null) ? new ArrayList<>() : subResultList2;
+
+		    	map.put("__children1", subResultList1);
+		    	map.put("__children2", subResultList2);
+		    }
+	    } else {
+	    	resultList = pfitemService.selectItemLawCdExpList(vo);
+    		
+	    	for(Object obj : resultList) {
+		    	EgovMap map = (EgovMap)obj;
+		    	SearchVO subVo = new SearchVO();
+		    	List<?> subResultList1 = null;
+		    	List<?> subResultList2 = null;
+		    	
+		    	subVo.setList(userVO.getCorpNos());
+		    	subVo.setExType(vo.getExType());
+		    	subVo.setSrch1(vo.getSrch1());
+		    	subVo.setSrch2(vo.getSrch2());
+		    	subVo.setSrch3(vo.getSrch3());
+		    	subVo.setSrch10(vo.getSrch10());
+		    	
+		    	subResultList1 = pfitemService.selectItemLawCdApprovalExpList(subVo);
+		    	subResultList2 = pfitemService.selectItemLawCdExcludeExpList(subVo);
+		    	subResultList1 = (subResultList1 == null) ? new ArrayList<>() : subResultList1;
+		    	subResultList2 = (subResultList2 == null) ? new ArrayList<>() : subResultList2;
+
+		    	map.put("__children1", subResultList1);
+		    	map.put("__children2", subResultList2);
+		    }
+	    }
+	    ModelAndView mav = new ModelAndView("jsonView");
+	    mav.addObject("resultList", resultList);
+	    return mav;
+	}
+	
+	@RequestMapping(value = "/item/itemViewExcelDownload.do")
+	public ModelAndView itemViewExcelDownload(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    ModelAndView mv = new ModelAndView("jsonView");
+	    String resultCode = "200";
+
+	    try {
+	        XSSFWorkbook workBook = new XSSFWorkbook();
+	        String[] colUnion = vo.getExCol().split("\\|\\|\\|");
+	        String[] haedUnion = vo.getExTit().split("\\|\\|\\|\\|");
+	        String[] divUnion = vo.getExTitDiv().split("\\|\\|", -1);
+
+	        XSSFCellStyle borderStyle = workBook.createCellStyle();
+	        borderStyle.setBorderTop(BorderStyle.THIN);
+	        borderStyle.setBorderBottom(BorderStyle.THIN);
+	        borderStyle.setBorderLeft(BorderStyle.THIN);
+	        borderStyle.setBorderRight(BorderStyle.THIN);
+	        
+	        XSSFCellStyle numberStyle = workBook.createCellStyle();
+	        XSSFDataFormat fmt = workBook.createDataFormat();
+	        numberStyle.setDataFormat(fmt.getFormat("#,##0"));
+
+	        int unionIdx = 0;
+
+	        for (String div : divUnion) {
+	            String[] divInfo = div.split("\\|");
+	            String divIdx = divInfo[0];
+	            String divName = divInfo[1];
+
+	            XSSFSheet sheet = ExcelUtil.createSheetWithTitleRow(workBook, divName, colUnion[unionIdx].split("\\|\\|").length);
+
+	            SearchVO sheetSearchVo = new SearchVO();
+	            sheetSearchVo.setList(userVO.getCorpNos());
+	            sheetSearchVo.setRecordCountPerPage(99999999);
+	            sheetSearchVo.setStartPage(0);
+	            sheetSearchVo.setExType(vo.getExType());
+	            sheetSearchVo.setExTit(vo.getExTit());
+	            sheetSearchVo.setExCol(vo.getExCol());
+
+	            sheetSearchVo.setSrch1(vo.getSrch1());
+	            sheetSearchVo.setSrch2(vo.getSrch2());
+	            sheetSearchVo.setSrch3(vo.getSrch3());
+	            sheetSearchVo.setSrch10(vo.getSrch10());
+	            sheetSearchVo.setSrch14(vo.getSrch14());
+
+	            List<?> resultList = new ArrayList<>();
+
+	            if ("01".equals(vo.getExType())) {
+	                switch (divIdx) {
+	                    case "1":
+	                        resultList = (List<?>) this.selectItemViewList(sheetSearchVo, request, new ModelMap()).getModel().get("resultList");
+	                        break;
+	                    case "2":
+	                        resultList = (List<?>) this.selectItemHsCodeDiffList(sheetSearchVo, request, new ModelMap()).getModel().get("resultList");
+	                        List<EgovMap> subList2 = new ArrayList<EgovMap>();
+	                        for(Object obj : resultList) {
+								EgovMap map = (EgovMap) obj;
+								subList2.add(map);
+								List<EgovMap> children = (List<EgovMap>)map.get("Children");
+								subList2.addAll(children);
+							}
+	                        resultList = subList2;
+	                        break;
+	                    case "3":
+	                        List<?> summaryList = (List<?>) this.selectItemPriceList(sheetSearchVo, request, new ModelMap()).getModel().get("resultList");
+	                        if (summaryList != null && !summaryList.isEmpty()) {
+	                            EgovMap map = (EgovMap) summaryList.get(0);
+	                            String itemCode = (String) map.get("itemCode");
+	                            String maxPrice = (String) map.get("maxPrice");
+	                            String minPrice = (String) map.get("minPrice");
+	                            String avgPrice = (String) map.get("avgPrice");
+	                            String startDate = sheetSearchVo.getSrch2();
+	                            String endDate = sheetSearchVo.getSrch3();
+	                            String cmpnyCd = userVO.getCmpnyCd();
+	                            String format = "%s의 %s ~ %s 기간 동안, 자재코드 %s의 최고단가(KRW)는 %s원, 최저단가(KRW)는 %s원, 평균단가(KRW)는 %s원입니다.";
+	                            String cont = String.format(format, cmpnyCd, startDate, endDate, itemCode, maxPrice, minPrice, avgPrice);
+	                            
+	                            try {
+	                                sheet.createRow(sheet.getLastRowNum() + 1);
+	                                XSSFRichTextString richStr = null;
+	                                XSSFRow row = null;
+	                                XSSFCell cell = null;
+	                                
+	                                row = sheet.createRow(sheet.getLastRowNum() + 1);
+	                                String[] contParams = {cmpnyCd, startDate, endDate, itemCode, maxPrice, minPrice, avgPrice};
+	                                richStr = ExcelUtil.getRichTextString(sheet, cont, contParams, IndexedColors.RED.getIndex());
+	                                cell = row.createCell(0);
+	                                cell.setCellValue(richStr);
+
+	                            } catch (Exception e) {
+	                                e.printStackTrace();
+	                            }
+	                        }
+	                        resultList = (List<?>) this.selectItemRptNoList(sheetSearchVo, request, new ModelMap()).getModel().get("resultList");
+	                        break;
+	                    case "4":
+	                        resultList = (List<?>) this.selectItemLawCdList(sheetSearchVo, request, new ModelMap()).getModel().get("resultList");
+	                        List<EgovMap> subList4 = new ArrayList<EgovMap>();
+	                        for(Object obj : resultList) {
+								EgovMap map = (EgovMap) obj;
+								subList4.add(map);
+								List<EgovMap> children = (List<EgovMap>)map.get("Children");
+								if (children != null) {
+								    subList4.addAll(children);
+								}
+								if (map.get("selectItemLawCdApprovalList") == null) {
+	                                map.put("selectItemLawCdApprovalList", 0);
+	                            }
+	                            if (map.get("selectItemLawCdExcludeList") == null) {
+	                                map.put("selectItemLawCdExcludeList", 0);
+	                            }
+							}
+	                        resultList = subList4;
+	                        break;
+	                    
+
+	                    /*case "4":
+	                        resultList = (List<?>) this.selectItemLawCdList(sheetSearchVo, request, new ModelMap()).getModel().get("resultList");
+	                        List<EgovMap> subList4 = new ArrayList<>();
+
+	                        for (Object obj : resultList) {
+	                            EgovMap map = (EgovMap) obj;
+
+	                            // null 값 0으로 변환
+	                            if (map.get("selectItemLawCdApprovalList") == null) {
+	                                map.put("selectItemLawCdApprovalList", 0);
+	                            }
+	                            if (map.get("selectItemLawCdExcludeList") == null) {
+	                                map.put("selectItemLawCdExcludeList", 0);
+	                            }
+
+	                            subList4.add(map);
+
+	                            Object childrenObj = map.get("Children");
+	                            if (childrenObj instanceof List<?>) {  // 🔹 List<EgovMap>인지 확인
+	                                List<EgovMap> children = (List<EgovMap>) childrenObj;
+
+	                                for (EgovMap child : children) {
+	                                    // null 값 0으로 변환
+	                                    if (child.get("selectItemLawCdApprovalList") == null) {
+	                                        child.put("selectItemLawCdApprovalList", 0);
+	                                    }
+	                                    if (child.get("selectItemLawCdExcludeList") == null) {
+	                                        child.put("selectItemLawCdExcludeList", 0);
+	                                    }
+	                                    subList4.add(child);
+	                                }
+	                            }
+	                        }
+	                        resultList = subList4;
+	                        break;*/
+	                }
+	            }
+	            if (resultList != null && !resultList.isEmpty()) {
+	                sheetSearchVo.setExCol(colUnion[unionIdx]);
+	                sheetSearchVo.setExTit(haedUnion[unionIdx]);
+	                sheet = ExcelUtil.createMainTable(sheet, resultList, sheetSearchVo);
+	            }
+	            for (int rowIdx = 1; rowIdx <= sheet.getLastRowNum(); rowIdx++) {
+	                XSSFRow row = sheet.getRow(rowIdx);
+	                if (row != null) {
+	                    for (int colIdx = 0; colIdx < row.getLastCellNum(); colIdx++) {
+	                        XSSFCell cell = row.getCell(colIdx);
+	                        if (cell != null && cell.getCellType() == CellType.NUMERIC) {
+	                            XSSFCellStyle originalStyle = cell.getCellStyle();
+
+	                            XSSFCellStyle newStyle = workBook.createCellStyle();
+	                            newStyle.cloneStyleFrom(originalStyle);
+	                            newStyle.setDataFormat(fmt.getFormat("#,##0"));
+	                            cell.setCellStyle(newStyle);
+	                        }
+	                    }
+	                }
+	            }
+	            unionIdx++;
+	        }
+
+	        int sheetCnt = workBook.getNumberOfSheets();
+	        SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	        String nowTime = sdf1.format(new Date());
+
+	        for (int i = 0; i < sheetCnt; i++) {
+	            XSSFSheet tempSheet = workBook.getSheetAt(i);
+	            int cellCnt = tempSheet.getPhysicalNumberOfRows();
+	            
+	            if ("1".equals(divUnion[i].split("\\|")[0])) {
+	                for (int colIdx = 11; colIdx <= 14; colIdx++) {
+	                    tempSheet.setColumnHidden(colIdx, true);
+	                }
+	            }
+	            for (int j = 1; j < cellCnt; j++) {
+	                tempSheet.autoSizeColumn(j);
+	            }
+
+	            tempSheet.createRow(tempSheet.getLastRowNum() + 1);
+	            XSSFRow row = tempSheet.createRow(tempSheet.getLastRowNum() + 1);
+	            XSSFCell cell = row.createCell(0);
+	            cell.setCellValue(nowTime);
+	        }
+
+	        int cnt = userVO.getCorpNos().size() - 1;
+	        String fileName = "ITEM정보(전체)";
+	        if ("01".equals(vo.getExType())) {
+	            fileName = "ITEM정보(전체)";
+	        } else if ("02".equals(vo.getExType())) {
+	            fileName = "ITEM정보(수입)";
+	        } else if ("03".equals(vo.getExType())) {
+	            fileName = "ITEM정보(수출)";
+	        }
+	        String ExcelTitle = (cnt > 0) ? userVO.getCmpnyCd() + " 외 " + cnt + "개" : userVO.getCmpnyCd();
+	        ExcelUtil.generateExcelFile(workBook, ExcelTitle + " " + fileName.replace("_", " "), response);
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+
+	    mv.addObject("resultCode", resultCode);
+	    return mv;
+	}
+}

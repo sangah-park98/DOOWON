@@ -1,0 +1,156 @@
+package egovframework.pf.api.web;
+
+import javax.annotation.Resource;
+
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import egovframework.pf.api.service.ApiAllocCancelVO;
+import egovframework.pf.api.service.ApiArrangeAllocVO;
+import egovframework.pf.api.service.ApiEtcChargeVO;
+import egovframework.pf.api.service.ApiOrderCancelVO;
+import egovframework.pf.api.service.ApiShippingService;
+import egovframework.pf.api.service.ApiStateChangeVO;
+import egovframework.pf.api.service.ApiStateOrderAddVO;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.shipping.service.ShippingOrderVO;
+
+@RestController
+@RequestMapping("/api")
+@CrossOrigin(origins = "*")
+public class ApiShippingController {
+
+	@Resource(name = "apiShippingService")
+	private ApiShippingService apiShippingService;
+	
+	@RequestMapping("/order/stateChange")
+	public @ResponseBody String stateChange(@RequestBody String param) throws Exception {
+		System.out.println("오더상태변경: " + param);
+	    ObjectMapper objectMapper = new ObjectMapper();
+	    ApiStateChangeVO avo = objectMapper.readValue(param, ApiStateChangeVO.class);
+	    ShippingOrderVO svo = new ShippingOrderVO();
+	    
+	    svo.setOrderId(avo.getOrderId());
+	    svo.setOrderState(avo.getOrderState());
+		return apiShippingService.stateChange(svo);
+	}
+	
+	@RequestMapping("/order/arrange/alloc.do")
+	public @ResponseBody String arrangeAlloc(@RequestBody String param) throws Exception {
+		System.out.println("배차등록: " + param);
+		ObjectMapper objectMapper = new ObjectMapper();
+		ApiArrangeAllocVO avo = objectMapper.readValue(param, ApiArrangeAllocVO.class);
+		ShippingOrderVO svo = new ShippingOrderVO();
+		
+		svo.setOrderId(avo.getOrderId());
+		svo.setEstCharge(avo.getSellCharge());
+		svo.setCarNo(avo.getCarNum());
+		svo.setCarNm(avo.getDriverName());
+		svo.setCarPhnNo(avo.getDriverTel());
+		svo.setShippingNm(avo.getRegNm());
+		svo.setShippingPhnNo(avo.getRegTel());
+		
+		return apiShippingService.arrangeAlloc(svo);
+	}
+	
+	@RequestMapping("/order/state/allocCancel.do")
+	public @ResponseBody String allocCancel(@RequestBody String param) throws Exception {
+		System.out.println("배차취소: " + param);
+		ObjectMapper objectMapper = new ObjectMapper();
+		ApiAllocCancelVO avo = objectMapper.readValue(param, ApiAllocCancelVO.class);
+		ShippingOrderVO svo = new ShippingOrderVO();
+		
+		svo.setOrderId(avo.getOrderId());
+		svo.setRegId(avo.getRegid());
+		return apiShippingService.allocCancel(svo);
+	}
+	
+	@RequestMapping("/order/state/orderCancel.do")
+	public @ResponseBody String orderCancel(@RequestBody String param) throws Exception {
+		System.out.println(param);
+		ObjectMapper objectMapper = new ObjectMapper();
+		ApiOrderCancelVO avo = objectMapper.readValue(param, ApiOrderCancelVO.class);
+		ShippingOrderVO svo = new ShippingOrderVO();
+		
+		svo.setOrderId(avo.getOrderId());
+		svo.setRegId(avo.getRegid());
+		return apiShippingService.orderCancel(svo);
+	}
+	
+	@RequestMapping("/order/state/orderAdd.do")
+	public @ResponseBody String stateOrderAdd(@RequestBody String param) throws Exception {
+		System.out.println("오더추가: " + param);
+		ObjectMapper objectMapper = new ObjectMapper();
+		ApiStateOrderAddVO avo = objectMapper.readValue(param, ApiStateOrderAddVO.class);
+		ShippingOrderVO svo = new ShippingOrderVO();
+		
+		String blNo = avo.getExternalInfomation();
+		String rptNo = avo.getExternalNumber();
+		SearchVO vo = new SearchVO();
+		vo.setSrch1(rptNo);
+		vo.setSrch2(blNo);
+		
+		int orderSeq = apiShippingService.orderSeqCnt(vo);
+		
+		svo.setCmpnyNm(avo.getBizName());
+		svo.setCorpNo(avo.getBizNum());
+		svo.setBlNo(avo.getExternalInfomation());
+		svo.setRptNo(avo.getExternalNumber());
+		svo.setOrderId(avo.getOrderId());
+		svo.setRecvNm(avo.geteComName());
+		svo.setArriveAddr(avo.geteAddr());
+		svo.setArriveDt(avo.geteDate());
+		svo.setFixedCharge(avo.getSellCharge());
+		svo.setOrderSeq(orderSeq+1);
+		
+		return apiShippingService.stateOrderAdd(svo);
+	}
+	
+	@RequestMapping("/order/state/etcCharge.do")
+	public @ResponseBody String etcCharge(@RequestBody String param) throws Exception {
+		System.out.println("운송비 전달: " + param);
+		ObjectMapper objectMapper = new ObjectMapper();
+		ApiEtcChargeVO avo = objectMapper.readValue(param, ApiEtcChargeVO.class);
+		ShippingOrderVO svo = new ShippingOrderVO();
+		
+		svo.setOrderId(avo.getOrderId());
+		svo.setFixedCharge(avo.getSellCharge());
+		svo.setBlNo(avo.getExternalInfomation());
+		svo.setRptNo(avo.getExternalNumber());
+		
+		return apiShippingService.etcCharge(svo);
+	}
+	
+	@RequestMapping("/order/orderMod.do")
+	public @ResponseBody String orderMod(@RequestBody String param) throws Exception {
+		System.out.println("오더수정: " + param);
+		ObjectMapper objectMapper = new ObjectMapper();
+		ApiStateOrderAddVO avo = objectMapper.readValue(param, ApiStateOrderAddVO.class);
+		ShippingOrderVO svo = new ShippingOrderVO();
+		
+		String blNo = avo.getExternalInfomation();
+		String rptNo = avo.getExternalNumber();
+		SearchVO vo = new SearchVO();
+		vo.setSrch1(rptNo);
+		vo.setSrch2(blNo);
+		
+		int orderSeq = apiShippingService.orderSeqCnt(vo);
+		
+		svo.setCmpnyNm(avo.getBizName());
+		svo.setCorpNo(avo.getBizNum());
+		svo.setBlNo(avo.getExternalInfomation());
+		svo.setRptNo(avo.getExternalNumber());
+		svo.setOrderId(avo.getOrderId());
+		svo.setRecvNm(avo.geteComName());
+		svo.setArriveAddr(avo.geteAddr());
+		svo.setArriveDt(avo.geteDate());
+		svo.setFixedCharge(avo.getSellCharge());
+		svo.setOrderSeq(orderSeq+1);
+		
+		return apiShippingService.stateOrderAdd(svo);
+	}
+	
+}

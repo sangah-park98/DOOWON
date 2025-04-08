@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.rpt.service.impl.fundSettleMapper">
+
+	<select id="selectMasterInfo" parameterType="searchVO" resultType="egovMap">
+		SELECT
+		COUNT(*) OVER() as cnt,
+		SEQ,
+		GRP_CD,
+		CMMN_CD,
+		CMMN_NM,
+		DEL_YN
+		FROM adjust_master
+		WHERE 1=1
+		<if test="srch8 != null and srch8 != ''">
+		AND CMMN_CD LIKE CONCAT('%',UPPER(#{srch8}),'%')
+		</if>
+		<if test="srch9 != null and srch9 != ''">
+		AND CMMN_NM LIKE CONCAT('%',UPPER(#{srch9}),'%')
+		</if>
+		order by GRP_CD
+		 LIMIT #{recordCountPerPage} OFFSET #{startPage}; 
+	</select>
+	
+	<insert id="savefundSettle" parameterType="egovframework.pf.rpt.service.SaveFundSettleVO">
+		INSERT INTO ADJUST_MASTER(
+		GRP_CD,
+		CMMN_CD,
+		CMMN_NM,
+		DEL_YN,
+		REG_ID,
+		REG_DT)
+		VALUES(
+		IFNULL(#{grpCd},''),
+		IFNULL(#{cmmnCd},''),
+		IFNULL(#{cmmnNm},''),
+		IFNULL(#{delYn},''),
+		#{regId},
+		DATE_FORMAT(NOW(), '%Y%m%d')
+		)
+	</insert>
+	
+	<update id="updatefundSettle" parameterType="egovframework.pf.rpt.service.SaveFundSettleVO">
+		UPDATE  ADJUST_MASTER SET
+			 GRP_CD = #{grpCd}
+			,CMMN_CD = #{cmmnCd}
+			,CMMN_NM = #{cmmnNm}
+			,DEL_YN = #{delYn}
+			,EDT_ID = #{regId}
+			,EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<select id = "selectfundSettle" parameterType="searchVO" resultType="egovMap">
+	SELECT 
+	    COUNT(*) OVER() as cnt,
+	    A.FR_KEY,
+	    A.HAWB,
+		 CONCAT(
+	        LEFT(CAST(SINGO_YEAR AS CHAR), 5), '-', 
+	        RIGHT(CAST(SINGO_YEAR AS CHAR), 2), '-', 
+	        CAST(SINGO_NO AS CHAR)
+	    ) AS RPT_NO,
+	    TRADE_COM_NM,
+        CONCAT(
+        SUBSTRING(SURI_DT, 1, 4), '-',  
+        SUBSTRING(SURI_DT, 5, 2), '-',  
+        SUBSTRING(SURI_DT, 7, 2)        
+    	) AS SURI_DT,
+    	 CONCAT(
+        SUBSTRING(SINGO_DT, 1, 4), '-',  
+        SUBSTRING(SINGO_DT, 5, 2), '-',  
+        SUBSTRING(SINGO_DT, 7, 2)        
+    	) AS SINGO_DT,
+    	B.ETC AS ETC,
+    	CASE 
+		    WHEN B.DEADLINE_YN IS NULL THEN 'N'
+		    ELSE B.DEADLINE_YN
+		END AS DEADLINE_YN
+	FROM fr_mainselops A
+	LEFT JOIN adjust_etc B
+	ON A.FR_KEY = B.FR_KEY
+	AND A.HAWB = B.BLNO
+	WHERE 1=1
+	<if test="list != null and list.size() > 0">
+        AND  OWNER_BIZ_NO IN 
+        <foreach item="id" collection="list" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+     </if>
+	<if test="srch6 != null and srch6 != ''">
+		AND 
+        CONCAT(SINGO_YEAR,SINGO_NO)
+	   	LIKE CONCAT('%',UPPER(REPLACE(#{srch6},'-','')),'%')
+	</if>
+	<if test="srch7 != null and srch7 != ''">
+		AND A.HAWB LIKE CONCAT('%',UPPER(#{srch7}),'%')
+	</if>
+	<choose>
+	<when test="srch33 =='01'">
+	AND SINGO_DT Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+	</when>
+	<otherwise>
+	AND SURI_DT Between REPLACE(#{srch2}, '-','') AND REPLACE(#{srch3}, '-','')
+	</otherwise>
+	</choose>
+	ORDER BY suri_dt desc, SINGO_DT desc,HAWB,A.FR_KEY
+	LIMIT #{recordCountPerPage} OFFSET #{startPage}; 		
+	</select>
+	
+<select id= "selectfrKey" parameterType="searchVO" resultType="String">
+	SELECT FR_KEY
+	FROM fr_mainselops
+	WHERE 1=1
+	<if test="list != null and list.size() > 0">
+        AND  OWNER_BIZ_NO IN 
+        <foreach item="id" collection="list" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+     </if>
+     AND CONCAT(SINGO_YEAR,SINGO_NO) = #{srch1}
+	 AND HAWB = #{srch2}
+	</select>
+	
+	<select id="selectmrnNo" parameterType="String" resultType="String">
+		SELECT MRN_NO
+		FROM fr_mainselops
+		WHERE FR_KEY = #{frKey}
+	</select>
+	
+		<select id = "selectfundSettleDetail" parameterType="searchVO" resultType="egovMap">
+		WITH category_list AS (
+	    SELECT '관세' AS category
+	    UNION ALL SELECT '부가세'
+	    UNION ALL SELECT '항공운임'                            
+	    UNION ALL SELECT '보험료'
+	    UNION ALL SELECT '항공사수수료'
+	    UNION ALL SELECT '창고료'
+	    UNION ALL SELECT '내륙운송료'
+	    UNION ALL SELECT '통관수수료'
+	)
+	SELECT 
+	    cl.category,
+	    COALESCE(final.supplier, '') AS supplier,
+	    COALESCE(final.clearFee, 0) AS clearFee,
+	    COALESCE(final.taxVat, 0) AS taxVat,
+	    COALESCE(final.sumEk, 0) AS sumEk,
+	    COALESCE(final.note, '') AS note
+	FROM category_list cl
+	LEFT JOIN (
+			SELECT 
+					'관세' AS category,
+						 CASE WHEN C.SUPPLIER IS NOT NULL OR C.SUPPLIER != ''
+							 THEN C.SUPPLIER
+							 ELSE(
+							 SELECT CMMN_NM
+							 FROM adjust_master C
+							 WHERE TRIM(C.CMMN_CD) = TRIM(B.SEGWAN)LIMIT 1) 
+						 END AS supplier,
+						 A.SUP_EK AS clearFee,
+						 A.TAX_EK AS taxVat,
+						 A.SUM_EK AS sumEk,
+						IFNULL(C.NOTE,'') AS note
+					FROM adj_listselops A
+					INNER JOIN fr_mainselops B
+					ON A.fr_key = B.fr_key
+					LEFT JOIN adjust_info C
+					ON A.fr_key = C.fr_key
+					AND TRIM(A.ADJ_NM) = TRIM(C.CATEGORY)
+					WHERE A.fr_key = #{srch9}
+					AND TRIM(A.ADJ_NM) = '관세'
+					
+						UNION 
+					
+					SELECT 
+					    '부가세' AS category,
+					    CASE 
+					        WHEN C.SUPPLIER IS NOT NULL AND C.SUPPLIER != '' 
+					        THEN C.SUPPLIER
+					        ELSE (
+					            SELECT CMMN_NM
+					            FROM adjust_master M
+					            WHERE TRIM(M.CMMN_CD) = TRIM(B.SEGWAN)
+					            ORDER BY M.CMMN_NM LIMIT 1
+					        ) 
+					    END AS supplier,
+					  A.SUP_EK AS clearFee,
+					  A.TAX_EK AS taxVat,
+					  A.SUM_EK AS sumEk,
+					  IFNULL(C.NOTE,'') AS note
+					FROM adj_listselops A
+					INNER JOIN fr_mainselops B
+					    ON A.fr_key = B.fr_key
+					LEFT JOIN adjust_info C
+					    ON A.fr_key = C.fr_key 
+					    AND TRIM(A.ADJ_NM) = TRIM(C.CATEGORY)
+					WHERE A.fr_key = #{srch9}
+					AND TRIM(A.ADJ_NM) = '부가세'
+					
+								UNION 
+					
+					SELECT 
+					    '항공운임' AS category,
+					    CASE 
+					        WHEN C.SUPPLIER IS NOT NULL AND C.SUPPLIER != '' 
+					        THEN C.SUPPLIER
+					        ELSE (
+					            SELECT CMMN_NM
+					            FROM adjust_master M
+					            WHERE TRIM(M.CMMN_CD) =  #{srch8}
+					            ORDER BY M.CMMN_NM LIMIT 1
+					        ) 
+					    END AS supplier,
+					 	A.SUP_EK AS clearFee,
+						A.TAX_EK AS taxVat,
+					 	A.SUM_EK AS sumEk,
+					    CASE 
+						 	 WHEN C.NOTE IS NOT NULL OR C.NOTE != ''
+						 	 THEN C.NOTE
+						 	 ELSE A.ADJ_NOTE
+						END AS note
+					FROM adj_listselops A
+					INNER JOIN fr_mainselops B
+					    ON A.fr_key = B.fr_key
+					LEFT JOIN adjust_info C
+					    ON A.fr_key = C.fr_key 
+					    AND TRIM(A.ADJ_NM) = TRIM(C.CATEGORY)
+					WHERE A.fr_key = #{srch9}
+					AND TRIM(A.ADJ_NM) = '항공운임'
+					
+								
+						UNION 
+						
+						
+					SELECT '보험료'AS category,
+					CASE 
+					     WHEN B.SUPPLIER IS NOT NULL AND B.SUPPLIER != '' 
+					     THEN B.SUPPLIER
+					     WHEN A.SUM_EK != '0' OR A.SUM_EK != NULL
+					     THEN '(주)자스포워딩코리아'
+					     ELSE ''
+					 END AS supplier,
+					 A.SUP_EK AS clearFee,
+					 A.TAX_EK AS taxVat,
+					 A.SUM_EK AS sumEk,
+					    CASE 
+						 	 WHEN B.NOTE IS NOT NULL OR B.NOTE != ''
+						 	 THEN B.NOTE
+						 	 ELSE A.ADJ_NOTE
+						END AS note
+					FROM adj_listselops A
+					LEFT JOIN adjust_info B
+					 ON A.fr_key = B.fr_key 
+					 AND TRIM(A.ADJ_NM) = TRIM(B.CATEGORY)
+					WHERE A.fr_key = #{srch9}
+					AND TRIM(ADJ_NM) = '보험료'
+					
+					UNION 
+					
+						SELECT 
+					    '항공사수수료' AS category,
+					    CASE 
+					        WHEN C.SUPPLIER IS NOT NULL AND C.SUPPLIER != '' 
+					        THEN C.SUPPLIER
+					        ELSE (
+					            SELECT CMMN_NM
+					            FROM adjust_master M
+					            WHERE TRIM(M.CMMN_CD) =  #{srch8}
+					            ORDER BY M.CMMN_NM LIMIT 1
+					        ) 
+					    END AS supplier,
+					 	A.SUP_EK AS clearFee,
+					 	A.TAX_EK AS taxVat,
+					 	A.SUM_EK AS sumEk,
+					    CASE 
+						 	 WHEN C.NOTE IS NOT NULL OR C.NOTE != ''
+						 	 THEN C.NOTE
+						 	 ELSE A.ADJ_NOTE
+						END AS note
+					FROM adj_listselops A
+					INNER JOIN fr_mainselops B
+					    ON A.fr_key = B.fr_key
+					LEFT JOIN adjust_info C
+					    ON A.fr_key = C.fr_key 
+					    AND TRIM(A.ADJ_NM) = TRIM(C.CATEGORY)
+					WHERE A.fr_key = #{srch9}
+					AND TRIM(A.ADJ_NM) = '항공사수수료'
+					
+					union
+					
+					(SELECT
+							*
+							FROM
+							(
+								SELECT 
+								    '창고료' AS category,
+								    COALESCE(SUPPLIER, '') AS supplier, 
+								    NULL AS CLEAR_FEE,
+								    NULL AS TAX_VAT,
+								    NULL AS SUM_EK,
+								    COALESCE(NOTE, '') AS note
+								    
+								FROM adjust_info
+								WHERE fr_key = #{srch9} AND TRIM(CATEGORY) = '창고료'
+								
+								UNION ALL
+								
+								SELECT 
+								    '창고료' AS category,
+									CASE 
+							          WHEN SUM_EK = 0 THEN '' 
+							          WHEN  #{srch10} = '싸토리우스코리아유한회사' THEN '신한인비스타'
+							          WHEN  #{srch10} = '싸토리우스코리아바이오텍유한' THEN '(주)연우지엘에스'
+							          ELSE ''
+									 END AS supplier,
+								    SUP_EK AS clearFee,
+								    TAX_EK AS taxVat,
+								    SUM_EK AS sumEk,
+								    NULL AS note
+								FROM adj_listselops
+								WHERE fr_key = #{srch9} AND TRIM(ADJ_NM) = '창고료'
+							) C LIMIT 1) 
+							
+					union
+					
+					(SELECT
+						*
+						FROM
+						(
+							SELECT 
+							   '내륙운송료' AS category,
+							    COALESCE(SUPPLIER, '') AS supplier,    
+				             NULL AS clearFee,                    
+				             NULL AS taxVat,                    
+				             NULL AS sumEk,
+				            COALESCE(NOTE, '') AS note
+							FROM adjust_info
+							WHERE fr_key = #{srch9} AND TRIM(CATEGORY) = '내륙운송료'
+							
+							UNION ALL
+							
+							SELECT 
+							    	'내륙운송료' AS category,
+								CASE 
+						          WHEN SUM_EK = 0 THEN '' 
+						          WHEN  #{srch10}  = '싸토리우스코리아유한회사' THEN '신한인비스타'
+						          WHEN  #{srch10}  = '싸토리우스코리아바이오텍유한' THEN '(주)연우지엘에스'
+						          ELSE ''
+								 END AS supplier,
+							    SUP_EK AS clearFee,
+							    TAX_EK AS taxVat,
+							    SUM_EK AS sumEk,
+							    NULL AS note
+							FROM adj_listselops
+							WHERE fr_key = #{srch9} AND TRIM(ADJ_NM) = '운송료'
+						) D LIMIT 1)
+					
+						UNION
+
+					SELECT 
+					'통관수수료' AS category,
+					  CASE 
+					     WHEN  B.SUPPLIER IS NOT NULL AND B.SUPPLIER != '' 
+					     THEN B.SUPPLIER
+					     ELSE '신한관세법인'
+					 END AS supplier,      
+					 A.SUP_EK AS clearFee,
+					 A.TAX_EK AS taxVat,
+					 A.SUM_EK AS sumEk,
+					 CASE 
+						 	 WHEN B.NOTE IS NOT NULL OR B.NOTE != ''
+						 	 THEN B.NOTE
+						 	 ELSE A.ADJ_NOTE
+						END AS note
+					FROM adj_listselops A
+					LEFT JOIN adjust_info B
+					 ON A.fr_key = B.fr_key 
+					 AND TRIM(A.ADJ_NM) = TRIM(B.CATEGORY)
+					WHERE A.fr_key = #{srch9}
+					AND TRIM(ADJ_NM) = '통관수수료'
+			) final
+			ON cl.category = final.category;
+	</select>
+	
+	<select id = "selectCustomsList" resultType="egovMap">
+		SELECT CMMN_NM,CMMN_CD
+		FROM ADJUST_MASTER
+		WHERE GRP_CD = '세관'
+	</select>
+	
+	<select id = "selectforwordList" resultType="egovMap">
+		SELECT CMMN_NM,CMMN_CD
+		FROM ADJUST_MASTER
+		WHERE GRP_CD = '포워더'
+	</select>
+	
+	<select id = "selectTransportationList" resultType="egovMap">
+		SELECT CMMN_NM,CMMN_CD
+		FROM ADJUST_MASTER
+		WHERE GRP_CD = '운송료'
+	</select>
+	
+	<select id = "selectWarehouseList" resultType="egovMap">
+		SELECT CMMN_NM,CMMN_CD
+		FROM ADJUST_MASTER
+		WHERE GRP_CD = '창고료'
+	</select>
+	
+	<select id = "selectPremiumList" resultType="egovMap">
+		SELECT CMMN_NM,CMMN_CD
+		FROM ADJUST_MASTER
+		WHERE GRP_CD = '보험료'
+	</select>
+	
+	<select id = "selectfeeList" resultType="egovMap">
+		SELECT CMMN_NM,CMMN_CD
+		FROM ADJUST_MASTER
+		WHERE GRP_CD = '통관수수료'
+	</select>
+	
+	<select id = "selectMasterList" resultType="egovMap">
+		SELECT CMMN_NM,CMMN_CD
+		FROM ADJUST_MASTER
+	</select>
+	
+	<insert id="savefundSettleDetail" parameterType="egovframework.pf.rpt.service.SaveFundSettledetailVO">
+		INSERT INTO ADJUST_INFO 
+		(
+		 TAX_NO,
+		 FR_KEY,
+		 RPT_NO,
+		 BLNO,
+		 CATEGORY,
+		 SUPPLIER,
+		 CLEAR_FEE,
+		 TAX_VAT,
+		 SUM_EK,
+		 NOTE,
+		 DEL_YN,
+		 REG_DT,
+		 REG_ID
+		)VALUES(
+		#{taxNo},
+		#{frKey},
+		REPLACE(#{rptNo},'-',''),
+		#{blno},
+		#{category},
+		#{supplier},
+		CASE 
+		    WHEN #{clearFee} IS NULL OR #{clearFee} = '' THEN '0'
+		    ELSE #{clearFee} 
+		END,
+		CASE 
+		    WHEN #{taxVat} IS NULL OR #{taxVat} = '' THEN '0'
+		    ELSE #{taxVat} 
+		END,
+		CASE 
+		    WHEN #{sumEk} IS NULL OR #{sumEk} = '' THEN '0'
+		    ELSE #{sumEk} 
+		END,
+		#{note},
+		'N',
+		DATE_FORMAT(NOW(), '%Y%m%d'),
+		#{regId}
+		) ON DUPLICATE KEY
+		UPDATE
+		 SUPPLIER = #{supplier},
+		 CLEAR_FEE = CASE 
+					    WHEN #{clearFee} IS NULL OR #{clearFee} = '' THEN '0'
+					    ELSE #{clearFee} 
+					  END,
+		 TAX_VAT = CASE 
+					    WHEN #{taxVat} IS NULL OR #{taxVat} = '' THEN '0'
+					    ELSE #{taxVat} 
+					END,
+		 SUM_EK = CASE 
+				    WHEN #{sumEk} IS NULL OR #{sumEk} = '' THEN '0'
+				    ELSE #{sumEk} 
+				  END,
+		 NOTE = #{note},
+		 DEL_YN = 'N',
+		 EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d'),
+		 EDT_ID = #{regId}
+	</insert>
+	
+		<insert id="insertfundSettleEtc" parameterType="egovframework.pf.rpt.service.SaveFundSettledetailVO">
+		INSERT INTO ADJUST_ETC (
+			 TAX_NO,
+			 FR_KEY,
+			 RPT_NO,
+			 BLNO,
+			 ETC,
+			 DEADLINE_YN
+			 REG_DT,
+			 REG_ID
+			)VALUES(
+			#{taxNo},
+			#{frKey},
+			REPLACE(#{rptNo},'-',''),
+			#{hawb},
+			IFNULL(#{etc},''),
+			#{deadlineYn},
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+			#{regId}
+			) ON DUPLICATE KEY
+			UPDATE
+			 ETC = IFNULL(#{etc},''),
+			 DEADLINE_YN = #{deadlineYn},
+			 EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d'),
+			 EDT_ID = #{regId}
+	</insert>
+	
+	<insert id = "insertDeadlineYn" parameterType="egovframework.pf.rpt.service.SaveFundSettledetailVO">
+		INSERT INTO ADJUST_ETC (
+			 TAX_NO,
+			 FR_KEY,
+			 RPT_NO,
+			 BLNO,
+			 DEADLINE_YN,
+			 ETC,
+			 REG_DT,
+			 REG_ID
+			)VALUES(
+			#{taxNo},
+			#{frKey},
+			REPLACE(#{rptNo},'-',''),
+			#{hawb},
+			'Y',
+			NULL,
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+			#{regId}
+			) ON DUPLICATE KEY
+			UPDATE
+			 DEADLINE_YN = 'Y',
+			 EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d'),
+			 EDT_ID = #{regId}
+	</insert>
+</mapper>

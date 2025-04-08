@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.member.service.impl.MemberMapper">
+
+	<!-- 아이디 체크 -->
+	<select id="selectIdCheck" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+	    FROM user_info
+	    WHERE usr_id = #{usrId}
+	</select>
+	
+	<!--이메일 인증 저장  -->
+	<insert id="insertCertNumber" parameterType="hashmap">
+		INSERT INTO TEMP_EMAIL_CERT
+		(
+			MEMBER_EMAIL
+			,CERT_NUM
+			,CERT_CHECK
+			,CRT_DT
+			,CRT_ID
+		)
+		SELECT 
+			#{email}
+			,#{cert_num}
+			,'N'
+			,DATE_FORMAT(NOW(), '%Y%m%d')
+			,#{email}
+		FROM DUAL
+		 WHERE NOT EXISTS(
+		 	SELECT 
+		 		A.MEMBER_EMAIL
+		 	FROM
+		 		TEMP_EMAIL_CERT A
+		 	WHERE
+		 		MEMBER_EMAIL = #{email}
+		 		AND CERT_NUM = #{cert_num}
+		 );
+	</insert>
+	
+	<update id="updateCertNumberTimeOut" parameterType="hashmap">
+		UPDATE TEMP_EMAIL_CERT
+			SET
+			CERT_CHECK = 'N',
+			TIMEOUT='Y',
+			UPT_DT = DATE_FORMAT(NOW(), '%Y%m%d'),
+			UPT_ID = #{email}
+		WHERE MEMBER_EMAIL = #{email}
+		AND CERT_CHECK = 'N'
+		AND TIMEOUT = 'N'
+	</update>
+	
+	<select id="selectMailCode" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			<if test="LANG == 'kr'">
+				MSG_NM_KR AS CODE_NAME
+			</if>
+			<if test="LANG == 'en'">
+				MSG_NM_EN AS CODE_NAME
+			</if>
+		,MSG_ID
+		FROM MSG_INFO
+		WHERE MSG_ID = #{MSG_ID}
+		AND DEL_YN = 'N'
+	</select>
+	
+	
+	<update id="updateMailTimeout" parameterType="String">
+		UPDATE TEMP_EMAIL_CERT
+			SET
+			CERT_CHECK = 'N',
+			TIMEOUT = 'Y',
+			UPT_DT = DATE_FORMAT(NOW(), '%Y%m%d'),
+			UPT_ID = #{email},
+		WHERE MEMBER_EMAIL = #{email}
+		AND CERT_CHECK = 'N'
+		AND TIMEOUT = 'N'
+	</update>
+	
+	<select id="selectcertNumber" parameterType="hashmap" resultType="int">
+		SELECT COUNT(*)
+		FROM TEMP_EMAIL_CERT A
+		WHERE MEMBER_EMAIL = #{MEMBER_EMAIL}
+		AND CERT_NUM = #{CERT_NUM}
+		AND CRT_DT >= DATE_SUB(DATE_FORMAT(NOW(), '%Y%m%d'), INTERVAL 5 MINUTE)
+	</select>
+	
+	<update id="updateCertNumber" parameterType="hashmap">
+		UPDATE TEMP_EMAIL_CERT
+			SET 
+			CERT_CHECK = 'Y',
+			TIMEOUT = 'N',
+			UPT_DT = DATE_FORMAT(NOW(), '%Y%m%d'),
+			UPT_ID = #{MEMBER_EMAIL}
+		WHERE MEMBER_EMAIL = #{MEMBER_EMAIL}
+		AND CERT_NUM = #{CERT_NUM}
+		AND CRT_DT >= DATE_SUB(DATE_FORMAT(NOW(), '%Y%m%d'), INTERVAL 5 MINUTE)
+	</update>
+	
+	<!-- 사업자 번호 체크 -->
+	<select id="selectCompnyCheck" parameterType="hashmap" resultType="int">
+	 	SELECT COUNT(*)
+	 	FROM USER_CMPNY_INFO
+	 	WHERE TAX_NO = #{COMP_REG_NO}
+	</select>
+	
+	<!--회원 등록  -->
+	<insert id="insertMember" parameterType="egovframework.pf.member.sevice.SaveMemberVO">
+		INSERT INTO USER_INFO (
+			 USR_ID
+			,USR_PW
+			,USR_NM
+			,USR_EMAIL
+			,USR_TELNO
+			,ALARM_EMAIL
+			,ALARM_SMS
+			,ALARM_KAKAO
+			,SHINHAN_MANER
+			,RECV_YN
+			,GRP_CD
+			,APPR_YN
+			,DEL_YN
+			,REG_DT
+			,REG_ID
+		)VALUES(
+			#{MEMBER_ID}
+			,#{MEMBER_PASS}
+			,#{MEMBER_NAME}
+			,#{MEMBER_EMAIL}
+			,#{MEMBER_TEL}
+			, <choose>
+	            <when test="alarmEmail == 'true'">
+	                'Y'
+	            </when>
+	            <otherwise>
+	                'N'
+	            </otherwise>
+        	</choose>,
+        	<choose>
+	            <when test="alarmSMS == 'true'">
+	                'Y'
+	            </when>
+	            <otherwise>
+	                'N'
+	            </otherwise>
+        	</choose>,
+       	 	<choose>
+	            <when test="alarmKakao == 'true'">
+	                'Y'
+	            </when>
+	            <otherwise>
+	                'N'
+	            </otherwise>
+        	</choose>
+        	,#{COMP_PERSON}
+        	,'N'
+        	,""
+        	,'N'
+        	,'N'
+        	,DATE_FORMAT(NOW(), '%Y%m%d')
+        	,#{MEMBER_ID}
+			)
+	</insert>
+	
+	<insert id="insertUserCompny" parameterType="map">
+		INSERT INTO USER_CMPNY_INFO
+		(USR_ID
+		,TAX_NO
+		,CMPNY_NM
+		,MANER_YN
+		,DEL_YN
+		,REG_DT
+		,REG_ID)VALUES(
+		 #{USER_ID}
+        ,#{TAX_NO}
+        ,#{CMPNY_NM}
+		,"N"
+		,#{DEL_YN}
+		, DATE_FORMAT(NOW(), '%Y%m%d')
+		,#{USER_ID}
+		)
+	</insert>
+	
+	<insert id="insertCompny" parameterType="map">
+		INSERT INTO CMPNY_INFO
+		(TAX_NO
+		,CMPNY_NM
+		,CMPNY_CEO_NM
+		,CMPNY_ZIP
+		,CMPNY_ADDR1
+		,CMPNY_ADDR2
+		,MANGER_EMAIL
+		,DEL_YN
+		,REG_DT
+		,REG_ID)VALUES(
+			#{TAX_NO}
+			,#{CMPNY_NM}
+			,""
+			,""
+			,""
+			,""
+			,""
+			,"N"
+			,DATE_FORMAT(NOW(), '%Y%m%d')
+			,#{USER_ID}
+			)
+	</insert>
+	
+	<select id="selectManagerEmail" parameterType="map" resultType="String">
+		SELECT DISTINCT MANGER_EMAIL
+		FROM CMPNY_INFO
+		WHERE
+			 TAX_NO = #{TAX_NO}
+		AND  CMPNY_NM = #{CMPNY_NM}
+	</select>
+	
+	<select id="selectCompny" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM CMPNY_INFO
+		WHERE 
+		TAX_NO = #{TAX_NO}
+		AND  CMPNY_NM = #{CMPNY_NM}
+	</select>
+	
+	<select id="selectMemberCheck" parameterType="HashMap" resultType="int">
+		SELECT COUNT(*)
+		FROM USER_CMPNY_INFO
+		WHERE 1=1
+		AND TAX_NO = #{COMP_REG_NO}
+		AND USR_ID = (
+			SELECT USR_ID
+			FROM USER_INFO
+			WHERE USR_EMAIL = #{MEMBER_EMAIL}
+		)
+	</select>
+	
+	<select id="selectMemberSearch" parameterType="HashMap" resultType="HashMap">
+		SELECT
+			A.USR_ID
+			,A.USR_PW
+			,A.USR_NM
+			,A.USR_EMAIL
+			,A.USR_TELNO
+			,B.CMPNY_NM
+			,B.TAX_NO
+			FROM USER_INFO A
+			LEFT JOIN USER_CMPNY_INFO B
+			ON A.USR_ID = B.USR_ID
+			WHERE 1 = 1
+			AND A.USR_EMAIL = #{MEMBER_EMAIL}
+			AND B.TAX_NO = #{COMP_REG_NO}
+	</select>
+	
+	<update id="updateNewPassword" parameterType="HashMap" >
+		UPDATE USER_INFO
+		SET
+			USR_PW = #{USR_PW},
+			EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d'),
+			EDT_ID = #{USR_ID}
+		WHERE USR_ID = #{USR_ID}
+	</update>
+	
+	<select id="selectMyPageUserInfo" parameterType="HashMap" resultType="egovframework.pf.member.sevice.SaveMemberVO">
+		 SELECT USR_ID AS MEMBER_ID
+		 		,USR_NM AS MEMBER_NAME
+		 		,USR_TELNO AS MEMBER_TEL
+		 		,USR_EMAIL AS MEMBER_EMAIL
+		 		,ALARM_EMAIL AS alarmEmail
+		 		,ALARM_SMS AS alarmSMS
+		 		,ALARM_KAKAO AS alarmKakao
+		 		,USR_PW AS MEMBER_PASSWORD
+		 		,GRP_CD AS grpCd
+		 FROM USER_INFO 
+		 WHERE USR_ID = #{MEMBER_ID}
+	</select>
+	
+	<select id="selectMyPageCmpnyInfo" parameterType="HashMap" resultType="egovframework.pf.member.sevice.SaveCompnyVO">
+		SELECT TAX_NO AS COMP_REG_NO2
+			  ,CMPNY_NM AS COMP_NAME2
+		FROM USER_CMPNY_INFO
+		WHERE USR_ID = #{MEMBER_ID}
+	</select>
+	
+	<select id="selectPassCheck" resultType="int">
+	 SELECT COUNT(*)
+	  FROM USER_INFO
+	  WHERE USR_ID = #{usrId}
+	  AND USR_PW = #{usrPwd}
+	</select>
+	
+	<update id="updateMember" parameterType="egovframework.pf.member.sevice.SaveMemberVO">
+    UPDATE USER_INFO
+    SET
+        <if test="MEMBER_PASS != null and MEMBER_PASS != ''">
+            USR_PW = #{MEMBER_PASS},
+        </if>
+        <if test="MEMBER_PASS == null or MEMBER_PASS == ''">
+            USR_PW = #{MEMBER_CURRENTPWD},
+        </if>
+        USR_NM = #{MEMBER_NAME},
+        USR_EMAIL = #{MEMBER_EMAIL},
+        USR_TELNO = #{MEMBER_TEL},
+        ALARM_EMAIL =
+        <choose>
+            <when test="alarmEmail == 'true'">
+                'Y'
+            </when>
+            <otherwise>
+                'N'
+            </otherwise>
+        </choose>,
+        ALARM_SMS =
+        <choose>
+            <when test="alarmSMS == 'true'">
+                'Y'
+            </when>
+            <otherwise>
+                'N'
+            </otherwise>
+        </choose>,
+        ALARM_KAKAO =
+        <choose>
+            <when test="alarmKakao == 'true'">
+                'Y'
+            </when>
+            <otherwise>
+                'N'
+            </otherwise>
+        </choose>,
+        EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d'),
+        EDT_ID = #{MEMBER_ID}
+    WHERE USR_ID = #{MEMBER_ID}
+</update>
+
+<delete id="deleteCmpnyUserInfo" parameterType="egovframework.pf.member.sevice.SaveCompnyVO">
+	DELETE 
+	FROM USER_CMPNY_INFO
+	WHERE USR_ID = #{MEMBER_ID}
+	AND TAX_NO = #{manerEmail}
+</delete>
+
+<select id="selectMyPageCmpnyTaxNo" parameterType="egovframework.pf.member.sevice.SaveCompnyVO" resultType="String">
+	 SELECT TAX_NO 
+	 FROM USER_CMPNY_INFO
+	 WHERE USR_ID = #{MEMBER_ID}
+</select>
+
+<select id="comRegNoConfirm" parameterType="String" resultType="int">
+	 SELECT COUNT(*)
+	 FROM CMPNY_INFO
+	 WHERE TAX_NO = #{compRegNo}
+</select>
+
+<select id="selectCmpnyInfo" parameterType="String" resultType="egovMap">
+	SELECT TAX_NO,
+			CMPNY_NM
+	 FROM CMPNY_INFO
+	 WHERE TAX_NO = #{compRegNo}
+</select>
+
+<update id="updateManagerApprove" parameterType="egovMap">
+    UPDATE USER_CMPNY_INFO 
+    SET MANER_YN = 'Y'
+    WHERE USR_ID = #{id}
+    AND TAX_NO = #{taxNo}
+</update>
+
+<select id="selectCmpnyTaxNo" parameterType = "SearchVO" resultType="String">
+		SELECT tax_no 
+		FROM user_cmpny_info
+		WHERE 
+		USR_ID = #{srch1}
+		AND TAX_NO IN (SELECT 
+		TAX_NO FROM CMPNY_INFO
+		WHERE MANGER_EMAIL = #{srch2});
+</select>
+
+<select id="selectCmpnyManger" parameterType="String" resultType="String">
+		 SELECT manger_email
+		 FROM cmpny_info
+		 WHERE TAX_NO = #{compRegNo}
+</select>
+
+<insert id="insertMangerEmail" parameterType="searchVO">
+	UPDATE CMPNY_INFO 
+	SET manger_email = #{srch2}
+	WHERE TAX_NO = #{srch1}
+</insert>
+
+<select id="selectMyPageCmpnyManger" parameterType="String" resultType="String">
+		 SELECT manger_email
+		 FROM cmpny_info
+		 WHERE TAX_NO = #{compRegNo}
+</select>
+
+
+	
+	
+</mapper>

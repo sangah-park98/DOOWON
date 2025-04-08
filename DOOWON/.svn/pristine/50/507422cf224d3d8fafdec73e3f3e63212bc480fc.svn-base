@@ -1,0 +1,450 @@
+package egovframework.pf.shipping.service;
+
+import java.util.List;
+
+public class ShippingOrderVO {
+
+	private int seq;
+	private int orderSeq;
+	private String corpNo;
+	private String shippingCmpny;
+	private String orderId;
+	private String orderStatus;
+	private String rptType;
+	private String rptNo;
+	private String blNo;
+	private String ctNo;
+	private String truckType;
+	
+	private String fromName;
+	private String fromAddr;
+	private String fromDtlsAddr;
+	private String fromDt;
+	private String fromTime;
+	private String fromStaff;
+	private String fromPhnNo;
+	private String fromMemo;
+	private String fromWay;
+	private String fromSpecifics;
+	private String fromReq;
+	
+	private String toName;
+	private String toAddr;
+	private String toDtlsAddr;
+	private String toDt;
+	private String toTime;
+	private String toStaff;
+	private String toPhnNo;
+	private String toMemo;
+	private String toWay;
+	
+	private String goodsName;
+	private String goodsWeight;
+	private String goodsQty;
+	private String goodsUnit;
+	private String mixYn;
+	private String mixSize;
+	
+	private String returnYn;
+	private String reqCarTon;
+	private String reqCarType;
+	private String chargeType;
+	private String consignorName;
+	private String consignorCode;
+	private String consignorStaff;
+	private String consignorEmail;
+	private String consignorMemo;
+	private String product;
+	private String estimatedCharge;
+	private String fixedCharge;
+	
+	private String carNumber;
+	private String resCarTon;
+	private String resCarType;
+	private String driverName;
+	private String driverMemo;
+	private String driverPhnNo;
+	private String attachment;
+	
+	private String regDt;
+	private String regId;
+	private String edtDt;
+	private String edtId;
+	
+	private List<String> list;
+	private List<String> list2;
+	
+	public int getSeq() {
+		return seq;
+	}
+	public void setSeq(int seq) {
+		this.seq = seq;
+	}
+	public int getOrderSeq() {
+		return orderSeq;
+	}
+	public void setOrderSeq(int orderSeq) {
+		this.orderSeq = orderSeq;
+	}
+	public String getCorpNo() {
+		return corpNo;
+	}
+	public void setCorpNo(String corpNo) {
+		this.corpNo = corpNo;
+	}
+	public String getShippingCmpny() {
+		return shippingCmpny;
+	}
+	public void setShippingCmpny(String shippingCmpny) {
+		this.shippingCmpny = shippingCmpny;
+	}
+	public String getOrderId() {
+		return orderId;
+	}
+	public void setOrderId(String orderId) {
+		this.orderId = orderId;
+	}
+	public String getOrderStatus() {
+		return orderStatus;
+	}
+	public void setOrderStatus(String orderStatus) {
+		this.orderStatus = orderStatus;
+	}
+	public String getRptType() {
+		return rptType;
+	}
+	public void setRptType(String rptType) {
+		this.rptType = rptType;
+	}
+	public String getRptNo() {
+		return rptNo;
+	}
+	public void setRptNo(String rptNo) {
+		this.rptNo = rptNo;
+	}
+	public String getBlNo() {
+		return blNo;
+	}
+	public void setBlNo(String blNo) {
+		this.blNo = blNo;
+	}
+	public String getCtNo() {
+		return ctNo;
+	}
+	public void setCtNo(String ctNo) {
+		this.ctNo = ctNo;
+	}
+	public String getTruckType() {
+		return truckType;
+	}
+	public void setTruckType(String truckType) {
+		this.truckType = truckType;
+	}
+	public String getFromName() {
+		return fromName;
+	}
+	public void setFromName(String fromName) {
+		this.fromName = fromName;
+	}
+	public String getFromAddr() {
+		return fromAddr;
+	}
+	public void setFromAddr(String fromAddr) {
+		this.fromAddr = fromAddr;
+	}
+	public String getFromDtlsAddr() {
+		return fromDtlsAddr;
+	}
+	public void setFromDtlsAddr(String fromDtlsAddr) {
+		this.fromDtlsAddr = fromDtlsAddr;
+	}
+	public String getFromDt() {
+		return fromDt;
+	}
+	public void setFromDt(String fromDt) {
+		this.fromDt = fromDt;
+	}
+	public String getFromTime() {
+		return fromTime;
+	}
+	public void setFromTime(String fromTime) {
+		this.fromTime = fromTime;
+	}
+	public String getFromStaff() {
+		return fromStaff;
+	}
+	public void setFromStaff(String fromStaff) {
+		this.fromStaff = fromStaff;
+	}
+	public String getFromPhnNo() {
+		return fromPhnNo;
+	}
+	public void setFromPhnNo(String fromPhnNo) {
+		this.fromPhnNo = fromPhnNo;
+	}
+	public String getFromMemo() {
+		return fromMemo;
+	}
+	public void setFromMemo(String fromMemo) {
+		this.fromMemo = fromMemo;
+	}
+	public String getFromWay() {
+		return fromWay;
+	}
+	public void setFromWay(String fromWay) {
+		this.fromWay = fromWay;
+	}
+	public String getFromSpecifics() {
+		return fromSpecifics;
+	}
+	public void setFromSpecifics(String fromSpecifics) {
+		this.fromSpecifics = fromSpecifics;
+	}
+	public String getFromReq() {
+		return fromReq;
+	}
+	public void setFromReq(String fromReq) {
+		this.fromReq = fromReq;
+	}
+	public String getToName() {
+		return toName;
+	}
+	public void setToName(String toName) {
+		this.toName = toName;
+	}
+	public String getToAddr() {
+		return toAddr;
+	}
+	public void setToAddr(String toAddr) {
+		this.toAddr = toAddr;
+	}
+	public String getToDtlsAddr() {
+		return toDtlsAddr;
+	}
+	public void setToDtlsAddr(String toDtlsAddr) {
+		this.toDtlsAddr = toDtlsAddr;
+	}
+	public String getToDt() {
+		return toDt;
+	}
+	public void setToDt(String toDt) {
+		this.toDt = toDt;
+	}
+	public String getToTime() {
+		return toTime;
+	}
+	public void setToTime(String toTime) {
+		this.toTime = toTime;
+	}
+	public String getToStaff() {
+		return toStaff;
+	}
+	public void setToStaff(String toStaff) {
+		this.toStaff = toStaff;
+	}
+	public String getToPhnNo() {
+		return toPhnNo;
+	}
+	public void setToPhnNo(String toPhnNo) {
+		this.toPhnNo = toPhnNo;
+	}
+	public String getToMemo() {
+		return toMemo;
+	}
+	public void setToMemo(String toMemo) {
+		this.toMemo = toMemo;
+	}
+	public String getToWay() {
+		return toWay;
+	}
+	public void setToWay(String toWay) {
+		this.toWay = toWay;
+	}
+	public String getGoodsName() {
+		return goodsName;
+	}
+	public void setGoodsName(String goodsName) {
+		this.goodsName = goodsName;
+	}
+	public String getGoodsWeight() {
+		return goodsWeight;
+	}
+	public void setGoodsWeight(String goodsWeight) {
+		this.goodsWeight = goodsWeight;
+	}
+	public String getGoodsQty() {
+		return goodsQty;
+	}
+	public void setGoodsQty(String goodsQty) {
+		this.goodsQty = goodsQty;
+	}
+	public String getGoodsUnit() {
+		return goodsUnit;
+	}
+	public void setGoodsUnit(String goodsUnit) {
+		this.goodsUnit = goodsUnit;
+	}
+	public String getMixYn() {
+		return mixYn;
+	}
+	public void setMixYn(String mixYn) {
+		this.mixYn = mixYn;
+	}
+	public String getMixSize() {
+		return mixSize;
+	}
+	public void setMixSize(String mixSize) {
+		this.mixSize = mixSize;
+	}
+	public String getReturnYn() {
+		return returnYn;
+	}
+	public void setReturnYn(String returnYn) {
+		this.returnYn = returnYn;
+	}
+	public String getReqCarTon() {
+		return reqCarTon;
+	}
+	public void setReqCarTon(String reqCarTon) {
+		this.reqCarTon = reqCarTon;
+	}
+	public String getReqCarType() {
+		return reqCarType;
+	}
+	public void setReqCarType(String reqCarType) {
+		this.reqCarType = reqCarType;
+	}
+	public String getChargeType() {
+		return chargeType;
+	}
+	public void setChargeType(String chargeType) {
+		this.chargeType = chargeType;
+	}
+	public String getConsignorName() {
+		return consignorName;
+	}
+	public void setConsignorName(String consignorName) {
+		this.consignorName = consignorName;
+	}
+	public String getConsignorCode() {
+		return consignorCode;
+	}
+	public void setConsignorCode(String consignorCode) {
+		this.consignorCode = consignorCode;
+	}
+	public String getConsignorStaff() {
+		return consignorStaff;
+	}
+	public void setConsignorStaff(String consignorStaff) {
+		this.consignorStaff = consignorStaff;
+	}
+	public String getConsignorEmail() {
+		return consignorEmail;
+	}
+	public void setConsignorEmail(String consignorEmail) {
+		this.consignorEmail = consignorEmail;
+	}
+	public String getConsignorMemo() {
+		return consignorMemo;
+	}
+	public void setConsignorMemo(String consignorMemo) {
+		this.consignorMemo = consignorMemo;
+	}
+	public String getProduct() {
+		return product;
+	}
+	public void setProduct(String product) {
+		this.product = product;
+	}
+	public String getEstimatedCharge() {
+		return estimatedCharge;
+	}
+	public void setEstimatedCharge(String estimatedCharge) {
+		this.estimatedCharge = estimatedCharge;
+	}
+	public String getFixedCharge() {
+		return fixedCharge;
+	}
+	public void setFixedCharge(String fixedCharge) {
+		this.fixedCharge = fixedCharge;
+	}
+	public String getCarNumber() {
+		return carNumber;
+	}
+	public void setCarNumber(String carNumber) {
+		this.carNumber = carNumber;
+	}
+	public String getResCarTon() {
+		return resCarTon;
+	}
+	public void setResCarTon(String resCarTon) {
+		this.resCarTon = resCarTon;
+	}
+	public String getResCarType() {
+		return resCarType;
+	}
+	public void setResCarType(String resCarType) {
+		this.resCarType = resCarType;
+	}
+	public String getDriverName() {
+		return driverName;
+	}
+	public void setDriverName(String driverName) {
+		this.driverName = driverName;
+	}
+	public String getDriverMemo() {
+		return driverMemo;
+	}
+	public void setDriverMemo(String driverMemo) {
+		this.driverMemo = driverMemo;
+	}
+	public String getDriverPhnNo() {
+		return driverPhnNo;
+	}
+	public void setDriverPhnNo(String driverPhnNo) {
+		this.driverPhnNo = driverPhnNo;
+	}
+	public String getAttachment() {
+		return attachment;
+	}
+	public void setAttachment(String attachment) {
+		this.attachment = attachment;
+	}
+	public String getRegDt() {
+		return regDt;
+	}
+	public void setRegDt(String regDt) {
+		this.regDt = regDt;
+	}
+	public String getRegId() {
+		return regId;
+	}
+	public void setRegId(String regId) {
+		this.regId = regId;
+	}
+	public String getEdtDt() {
+		return edtDt;
+	}
+	public void setEdtDt(String edtDt) {
+		this.edtDt = edtDt;
+	}
+	public String getEdtId() {
+		return edtId;
+	}
+	public void setEdtId(String edtId) {
+		this.edtId = edtId;
+	}
+	public List<String> getList() {
+		return list;
+	}
+	public void setList(List<String> list) {
+		this.list = list;
+	}
+	public List<String> getList2() {
+		return list2;
+	}
+	public void setList2(List<String> list2) {
+		this.list2 = list2;
+	}
+	
+}

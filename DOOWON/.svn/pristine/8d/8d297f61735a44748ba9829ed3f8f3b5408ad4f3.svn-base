@@ -1,0 +1,33 @@
+package egovframework.pf.dashboard.service;
+
+import java.util.List;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+public interface DashboardService {
+
+	//1-1.대시보드 공지사항정보 조회
+	EgovMap selectDashNoticeInfo(SearchVO vo) throws Exception;
+	
+	List<?> selectDashboardInfoImp1(SearchVO vo) throws Exception;
+	
+	List<?> selectDashboardInfoExp1(SearchVO vo) throws Exception;
+
+	List<?> selectDashboardInfoImp2(SearchVO vo) throws Exception;
+	
+	List<?> selectDashboardInfoExp2(SearchVO vo) throws Exception;
+	
+	List<?> selectDashboardInfoImp3(SearchVO vo) throws Exception;
+	
+	List<?> selectDashboardInfoExp3(SearchVO vo) throws Exception;
+	
+	List<?> selectDashboardNoticeList(SearchVO vo) throws Exception;
+	
+	List<?> selectDashboardNewsList(SearchVO vo) throws Exception;
+
+	List<?> selectDashNoticeViewList(SearchVO vo) throws Exception;
+
+	List<?> selectDashManagerInfo(SearchVO vo) throws Exception;
+
+}

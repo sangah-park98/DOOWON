@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN" "http://tiles.apache.org/dtds/tiles-config_2_1.dtd">
+ 
+<tiles-definitions>
+
+    <!-- 기본 -->
+    <definition name="base"    				template="/WEB-INF/tiles/tiles-layout.jsp">
+        <put-attribute name="header"        value="/WEB-INF/tiles/inc/header.jsp" />
+        <put-attribute name="footer"        value="/WEB-INF/tiles/inc/footer.jsp" />
+        <put-attribute name="body"          value=""/>
+    </definition>
+    
+    <definition name="*/*.base" 			extends="base">
+        <put-attribute name="body" 			value="/WEB-INF/jsp/{1}/{2}.jsp" />
+    </definition> 
+ 
+ 	<!-- blank -->
+    <definition name="blank"    			template="/WEB-INF/tiles/tiles-blank.jsp">
+        <put-attribute name="body"          value=""/>
+    </definition>
+    
+    <definition name="*/*.blank" 			extends="blank">
+        <put-attribute name="body" 			value="/WEB-INF/jsp/{1}/{2}.jsp" />
+    </definition> 
+    
+	<!-- tabs -->
+	<definition name="tabs"    				template="/WEB-INF/tiles/tiles-tabs.jsp">
+        <put-attribute name="body"          value=""/>
+    </definition>
+    
+    <definition name="*/*.tabs" 			extends="tabs">
+        <put-attribute name="body" 			value="/WEB-INF/jsp/{1}/{2}.jsp" />
+    </definition> 
+	
+    <definition name="*/*.reportPdf"		template="/WEB-INF/tiles/tiles-pdf.jsp">
+        <put-attribute name="body" 			value="/WEB-INF/jsp/{1}/{2}.jsp" />
+    </definition> 
+	
+</tiles-definitions>

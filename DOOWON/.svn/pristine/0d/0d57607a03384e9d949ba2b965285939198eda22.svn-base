@@ -1,0 +1,887 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.16.0.final using JasperReports Library version 6.16.0-48579d909b7943b64690c65c71e07e0b80981928  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="3_Annex_DO" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="730" leftMargin="56" rightMargin="56" topMargin="28" bottomMargin="28" uuid="fbcf6679-24d0-49fb-b661-7367456beccb">
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="FTP_DB"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
+	<parameter name="i_prm1" class="java.lang.String"/>
+	<parameter name="i_prm2" class="java.lang.String"/>
+	<parameter name="i_prm3" class="java.lang.String"/>
+	<parameter name="i_prm4" class="java.lang.String"/>
+	<parameter name="i_prm5" class="java.lang.String"/>
+	<parameter name="i_prm6" class="java.lang.String"/>
+	<parameter name="i_prm7" class="java.lang.String"/>
+	<parameter name="i_prm8" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT 
+				C.CMPNY_NM_EN AS prm1,
+				C.TAX_NB AS prm2,
+				H.CUSTOM_EXP_NO AS prm3,
+				A.PSR_INFO prm4,
+				E.PRDCT_VNM AS prm5,
+				E.HS_CD AS prm6,
+				H.SALES_QTY prm7,
+				H.SALES_PRICE AS prm8,
+				DATE_FORMAT(CURDATE(), '%d-%m-%Y') prm9,
+				DATE_FORMAT(CURDATE(), '%d') prm10,
+				DATE_FORMAT(CURDATE(), '%m') prm11,
+				DATE_FORMAT(CURDATE(), '%y') prm12
+			FROM 
+				jdgmnt_result A 
+				LEFT JOIN cmpny_info C
+				ON A.CMPNY_CD = C.CMPNY_CD
+				LEFT JOIN jdgmnt_psr_info D
+				ON (A.PSR_SEQ = D.PSR_SEQ AND A.JDGMNT_SEQ = D.JDGMNT_SEQ AND A.CMPNY_CD = D.CMPNY_CD)
+				LEFT JOIN item_info E
+				ON (A.CMPNY_CD = E.CMPNY_CD AND A.PLNT_CD = E.PLNT_CD AND A.ITEM_CD = E.ITEM_CD)
+				LEFT JOIN crft_do_hist G
+				ON (A.JDGMNT_SEQ = G.JDGMNT_SEQ AND A.PSR_SEQ = G.PSR_SEQ)
+				LEFT JOIN sales_list H
+				ON (A.SALES_NO = H.SALES_NO  AND A.ITEM_CD = H.ITEM_CD AND A.CMPNY_CD = H.CMPNY_CD)
+			WHERE  
+				A.JDGMNT_SEQ = $P{i_prm1}
+				AND G.ISSU_NO = $P{i_prm4}
+				AND G.PLNT_CD = $P{i_prm5}
+				
+				UNION
+				
+				SELECT DISTINCT
+	C.CMPNY_NM_EN AS prm1,
+	C.TAX_NB AS prm2,
+	H.CUSTOM_EXP_NO AS prm3,
+	A.PSR_INFO prm4,
+	E.PRDCT_VNM AS prm5,
+	GET_HSCD(E.HS_CD) AS prm6,
+	ROUND(H.SALES_QTY,2) prm7,
+	ROUND(H.SALES_PRICE,2) AS prm8,
+	DATE_FORMAT(CURDATE(), '%d-%m-%Y') prm9,
+	DATE_FORMAT(CURDATE(), '%d') prm10,
+	DATE_FORMAT(CURDATE(), '%m') prm11,
+	DATE_FORMAT(CURDATE(), '%y') prm12
+FROM 
+	jdgmnt_result A 
+	LEFT JOIN cmpny_info C
+	ON A.CMPNY_CD = C.CMPNY_CD
+	LEFT JOIN jdgmnt_psr_info D
+	ON (A.PSR_SEQ = D.PSR_SEQ AND A.JDGMNT_SEQ = D.JDGMNT_SEQ AND A.CMPNY_CD = D.CMPNY_CD)
+	LEFT JOIN item_info E
+	ON (A.CMPNY_CD = E.CMPNY_CD AND A.PLNT_CD = E.PLNT_CD AND A.ITEM_CD = E.ITEM_CD)
+	LEFT JOIN crft_co_hist G
+	ON A.CRFT_NO = G.ISSU_NO
+	LEFT JOIN sales_list H
+	ON (A.SALES_NO = H.SALES_NO  AND A.ITEM_CD = H.ITEM_CD AND A.CMPNY_CD = H.CMPNY_CD)
+WHERE  
+A.JDGMNT_SEQ = $P{i_prm1}
+AND G.ISSU_NO = $P{i_prm4}
+AND G.PLNT_CD = $P{i_prm5}]]>
+	</queryString>
+	<field name="prm1" class="java.lang.String"/>
+	<field name="prm2" class="java.lang.String"/>
+	<field name="prm3" class="java.lang.String"/>
+	<field name="prm4" class="java.lang.String"/>
+	<field name="prm5" class="java.lang.String"/>
+	<field name="prm6" class="java.lang.String"/>
+	<field name="prm7" class="java.lang.String"/>
+	<field name="prm8" class="java.lang.String"/>
+	<field name="prm9" class="java.lang.String"/>
+	<field name="prm10" class="java.lang.String"/>
+	<field name="prm11" class="java.lang.String"/>
+	<field name="prm12" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="154" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<staticText>
+				<reportElement x="130" y="-2" width="470" height="48" uuid="c19ba500-c4ef-4404-b6af-d09ac766dcb3"/>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="13" isBold="true"/>
+					<paragraph lineSpacing="Proportional" lineSpacingSize="0.8"/>
+				</textElement>
+				<text><![CDATA[Phụ lục III
+BẢNG KÊ KHAI HÀNG HÓA XUẤT KHẨU ĐẠT TIÊU CHÍ "WO"
+(sử dụng nguyên liệu thu mua trong nước, có hóa đơn giá trị gia tăng)
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="16" y="44" width="684" height="18" uuid="5e8000c0-f6d0-4e7a-a999-e9ee41b1b38c"/>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="12" isBold="false" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[(ban hành kèm theo Thông tư số 05/2018/TT-BCT ngày 03 tháng 4 năm 2018 quy định về xuất xứ hàng hóa)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="7" y="67" width="150" height="15" uuid="1c3e2510-426c-4b27-8c75-83807c7441c5">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="8.5"/>
+				</textElement>
+				<text><![CDATA[Tên Thương nhân: Công ty]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="7" y="80" width="150" height="15" uuid="bdc05092-6eec-4b27-9935-59e8a1aadea8">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Mã số thuế: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="7" y="93" width="196" height="15" uuid="d18e78bc-ecb6-4ce9-8fb9-6bbca45bf0c3">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Tờ khai hải quan xuất khẩu số: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="498" y="75" width="135" height="15" uuid="b6d5fc26-8da7-412f-98b2-321e92d894ff">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Tiêu chí áp dụng: WO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="498" y="88" width="170" height="15" uuid="831fa2d2-e4a4-465c-9920-22c3a4d6f237">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Tên hàng hóa: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="498" y="101" width="170" height="15" uuid="8ce2382d-cef2-4e32-8bf5-9433f5a9151a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Mã HS của hàng hóa (6 số): ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="498" y="114" width="170" height="15" uuid="419d053f-363c-4cea-82e1-c836f14b45f7">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Số lượng: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="498" y="127" width="170" height="14" uuid="192b4f4b-d8f3-477c-a376-3565022b6035">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Trị giá (FOB): ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="58" y="79" width="80" height="15" uuid="32ac2143-818e-4708-bc1b-5868c99ba320">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="118" y="67" width="80" height="15" uuid="fecf0c29-52c7-45e9-88b0-32958d335967">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm1}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="135" y="92" width="80" height="15" uuid="4165dca7-b6fa-4096-83a8-cdebe48a5c12">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm3}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="554" y="127" width="80" height="15" uuid="0b4c29c8-60ff-42b1-98c2-bb969bd06bff">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm8}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="604" y="113" width="75" height="15" uuid="7ed0f489-165b-4678-bcf6-0aba01f5830b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[đơn vị tính]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="559" y="87" width="80" height="15" uuid="b06bb692-61d0-49dc-85c8-03feae13b0eb">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm5}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="614" y="101" width="80" height="15" uuid="60ed82f3-21c7-497d-9591-0db5c3a345d1">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm6}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="613" y="126" width="75" height="15" uuid="1b0f8125-fbad-499e-976a-339505badccb">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[VND]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="543" y="114" width="80" height="15" uuid="c5c5b8a5-328c-4d88-a0b2-ea2cd7f00b02">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm7}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="85" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<rectangle>
+				<reportElement x="658" y="56" width="67" height="14" uuid="8a1f3208-1168-48c3-8955-0a970d5def53">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="593" y="0" width="132" height="56" uuid="308ba201-4649-4a36-9624-4eb9ac4a68c0">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="454" y="56" width="139" height="14" uuid="f0ee2125-173e-4a95-9cbf-95334a3efcf7">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="210" y="70" width="48" height="15" uuid="6ea081f2-9f21-4811-9075-0f52aa7ee5a4">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="363" y="56" width="91" height="14" uuid="a52da43f-32bb-483d-9dc4-8eae5d1acbe4">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="26" y="0" width="62" height="70" uuid="6ff35119-a56d-4db3-a495-f6178b94994f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="26" y="70" width="62" height="15" uuid="36bf91a5-e923-45b7-8573-f0fa6370e8e0">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="4" y="0" width="22" height="70" uuid="b3e4c149-d36f-4031-8518-c4a5c15a9c0f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="88" y="70" width="59" height="15" uuid="470ed3c2-c76a-46ef-8f83-e76171c87c0f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="88" y="0" width="59" height="70" uuid="4ee9137f-86f0-4e44-bf6e-4890cc28e227">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="305" y="0" width="58" height="70" uuid="ee0294ed-4ec3-4b94-bcc0-67741eaaf100">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="112" y="70" width="12" height="15" uuid="47d24b26-24a7-4bb6-8b01-4a1409cce379">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(3)]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="593" y="70" width="65" height="15" uuid="7b963133-62cc-44c7-8579-ba7727981d5d">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="51" y="70" width="12" height="15" uuid="0ade4417-7f1f-4095-806c-03e6ab059ed7">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(2)]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="4" y="70" width="22" height="15" uuid="f2b1b2eb-fb74-4e5c-af53-58c13d6595e3">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="94" y="28" width="48" height="15" uuid="914aa924-368f-4d88-a549-11ae9b27c17f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Mã HS]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="305" y="70" width="58" height="15" uuid="e3a458e8-9d45-424a-b6bc-1e1bb98c533a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="29" y="22" width="56" height="25" uuid="1daadb8e-81ed-43d7-bf18-893469b0c7c4">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Tên 
+nguyên liệu]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="454" y="70" width="139" height="15" uuid="bc5cdd21-5f25-4251-815c-f9a81abe81cf">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="229" y="70" width="12" height="15" uuid="eaf3b8fe-864a-4677-8d59-92917821fe4d">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(5)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="328" y="70" width="12" height="15" uuid="9db537ed-2432-4d92-a503-79bace5e626b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(7)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="7" y="28" width="17" height="15" uuid="0d3aec5b-c44d-4ccd-95ff-7c6f2ba59697">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[STT]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="147" y="0" width="63" height="70" uuid="1d8c5923-ad4c-4ecc-992d-6ab8d9f60d16">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="618" y="70" width="18" height="15" uuid="ab91c76c-53ea-4bfd-bb6f-548ff6293a72">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(10)]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="363" y="70" width="91" height="15" uuid="cd810201-418e-4a39-a652-ddb47ea2c3d5">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="598" y="5" width="123" height="46" uuid="ada12c73-f826-4ee7-bf88-5863f15f895f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8.5"/>
+					<paragraph lineSpacing="Proportional" lineSpacingSize="0.8"/>
+				</textElement>
+				<text><![CDATA[Hóa đơn giá trị gia tăng,
+Bản khai báo của nhà sản xuất/nhà cung cấp 
+nguyên liệu trong nước]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="258" y="70" width="47" height="15" uuid="47801292-5dcd-4e1b-bf5f-a0d64057db29">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="314" y="23" width="42" height="25" uuid="d07b5601-a761-4734-849f-34a62598498c">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Tổng trị
+giá]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="404" y="70" width="12" height="15" uuid="26bb14c5-00ea-4383-81e3-8d459be4d9ae">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(8)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="275" y="70" width="12" height="15" uuid="36bdfedb-bb51-4768-be2f-eed06e07f3b6">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(6)]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="258" y="0" width="47" height="70" uuid="57eafa23-8378-4198-a667-b8c600d1b42c">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="9" y="70" width="12" height="15" uuid="e1316b1e-82a6-48b8-9780-a4e631ae16d2">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(1)]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="147" y="70" width="63" height="15" uuid="4c85591d-7d7f-4cf8-b3e8-ef94c8d13974">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="392" y="57" width="35" height="12" uuid="fb50a1d1-b496-4dfd-b1b5-52531c2de3e2">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[Tên]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="173" y="70" width="12" height="15" uuid="8912ddb4-08c5-408a-811b-fbdd7f980552">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(4)]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="363" y="0" width="230" height="56" uuid="d6ed08fe-3d0d-4374-84bc-6b6cbf510707">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="593" y="56" width="65" height="14" uuid="e4c98a1d-2244-4655-885d-38aa528621a8">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="658" y="70" width="67" height="15" uuid="bdcb599b-288d-459c-a51b-ede8cb75028c">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="686" y="70" width="20" height="15" uuid="af09eeb9-7b80-4169-8005-2e0597ee5a02">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(11)]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="210" y="0" width="48" height="70" uuid="e962f42f-7dac-4298-ba76-c7730e05330f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="519" y="70" width="12" height="15" uuid="fbdfa091-a1bd-4ae2-a6fd-f9c4fe966cb0">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[(9)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="466" y="57" width="120" height="14" uuid="9d1a2e36-5483-4b48-8f9c-d705a749759a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[Địa chỉ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="261" y="28" width="42" height="16" uuid="5e3e4c30-0034-4373-ae91-4e40e9b65d3c">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Đơn giá]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="149" y="6" width="60" height="60" uuid="69fdeab9-651c-4a08-9332-618dacc7afa4">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8.5"/>
+				</textElement>
+				<text><![CDATA[Nơi khai
+thác/đánh
+bắt/nuôi
+trồng tại
+Việt Nam]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="214" y="18" width="40" height="35" uuid="d13dd5c9-957c-4bcc-8387-93265834a535">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8.5"/>
+				</textElement>
+				<text><![CDATA[Số lượng
+và Đơn
+vị tính]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="607" y="57" width="40" height="14" uuid="eeea4216-b8f6-4801-ab1b-6cddc12cae5f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[Số]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="672" y="57" width="41" height="12" uuid="93de52c6-2feb-438d-9c52-42a3e880fb5a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[Ngày]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="417" y="11" width="124" height="29" uuid="ff5957b0-2ac0-491f-a92e-7c051bf5edf8">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Nhà sản xuất/nhà cung cấp 
+nguyên liệu trong nước]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<subreport>
+				<reportElement x="4" y="0" width="721" height="15" uuid="a19dc2c3-4a6b-4ccf-94db-93c9287ed5e4">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<subreportParameter name="REPORT_CONNECTION">
+					<subreportParameterExpression><![CDATA[$P{REPORT_CONNECTION}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm1">
+					<subreportParameterExpression><![CDATA[$P{i_prm1}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm2">
+					<subreportParameterExpression><![CDATA[$P{i_prm2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm4">
+					<subreportParameterExpression><![CDATA[$P{i_prm4}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm5">
+					<subreportParameterExpression><![CDATA[$P{i_prm5}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm6">
+					<subreportParameterExpression><![CDATA[$P{i_prm6}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm7">
+					<subreportParameterExpression><![CDATA[$P{i_prm7}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="i_prm8">
+					<subreportParameterExpression><![CDATA[$P{i_prm8}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportExpression><![CDATA[$P{i_prm3} + "/templet/3_Annex_DO_sub.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<summary>
+		<band height="187">
+			<staticText>
+				<reportElement x="10" y="14" width="200" height="13" uuid="13c9818b-4b31-400b-aa7a-94de213f5b1a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="8.5" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Kết luận: Hàng hóa đáp ứng tiêu chí “WO”]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="10" y="27" width="486" height="14" uuid="94376374-9aec-45ca-8608-8fb7b53a574f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="8.5" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Công ty cam kết số liệu, thông tin khai báo trên là đúng và chịu trách nhiệm trước pháp luật về số liệu, thông  tin đã khai.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="486" y="72" width="226" height="14" uuid="1b0d7038-04e0-4542-a6c3-4c8f1cbf2616">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8.5" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Người đại diện theo pháp luật của thương nhân]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="486" y="83" width="226" height="14" uuid="cc5846f2-dbeb-4e85-8338-3688f4b724fd"/>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8.5" isBold="false" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[(Ký, đóng dấu, ghi rõ họ, tên)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="114" width="59" height="14" uuid="70a50d44-c13f-44b2-97ec-8fca41a2c5e0">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="8.5" isBold="false" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Ghi chú:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="126" width="714" height="14" uuid="16fb2711-cce0-428a-aa10-b051b9520988">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="8.5" isBold="false"/>
+				</textElement>
+				<text><![CDATA[- Mẫu Bảng kê khai này áp dụng trong trường hợp nguyên liệu được thu mua trong nước để sản xuất ra hàng hóa xuất khẩu và có hóa đơn giá trị gia tăng.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="138" width="714" height="36" uuid="f1c811fa-83a9-41c5-82f6-62a870c898a4">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="8.5" isBold="false"/>
+				</textElement>
+				<text><![CDATA[- Thương nhân nộp bản sao các chứng từ (đóng dấu sao y bản chính): Quy trình sản xuất hàng hóa, Hóa đơn giá trị gia tăng, Giấy chứng nhận đăng ký doanh nghiệp hoặc Giấy phép kinh doanh của nhà sản xuất/nhà cung cấp nguyên liệu trong nước, Bản khai báo của nhà sản xuất/nhà cung cấp nguyên liệu trong nước để đối chiếu với thông tin kê khai tại các cột (8), cột (9), cột (10) và cột (11). ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="486" y="61" width="226" height="14" uuid="206a06fa-004f-435d-b6df-796a033f93ed">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Noto Sans" size="8.5" isBold="false" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[      , ngày           tháng           năm 20      ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="492" y="62" width="50" height="15" uuid="97d21d9e-a18e-4b56-9240-1ffabe913b37">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm9}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="570" y="62" width="30" height="15" uuid="19ab39da-f846-4beb-b1d7-6f1d8e51f2df">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm10}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="618" y="62" width="30" height="15" uuid="8d548821-9b0f-454d-9cef-adadbc0b06df">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm11}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="670" y="62" width="30" height="15" uuid="52db8538-51e6-4208-954a-2fc15e2b37d9">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Noto Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prm12}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

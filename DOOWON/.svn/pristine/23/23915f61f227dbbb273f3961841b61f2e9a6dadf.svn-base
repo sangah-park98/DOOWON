@@ -1,0 +1,524 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ page import="java.util.Date" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%
+    Date today = new Date();
+    SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
+%>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>수출신고현황</title>
+  <script src="/pf/js/function.js"></script>
+  <script src="/pf/js/trade/tradeGap.js?v=<%=fmt.format(today)%>" charset="UTF-8"></script>
+  <script>
+  
+	var corpNo = "${corpNo}";  
+  
+  </script>
+  
+  
+</head>
+<body class="flex flex-col max-h-fit">
+<main class="p-2 grow flex flex-col gap-2">
+  <form class="w-full shrink-0 grid grid-rows-3 grid-cols-[auto_repeat(5,1fr)_auto_repeat(5,1fr)]
+    row-start-1 col-start-1 col-span-2 bg-white dark:bg-slate-800 shadow-sm rounded-lg
+    border border-slate-200 dark:border-slate-700 px-4 py-3 gap-1 z-1 text-base *:text-base
+    items-center">
+    <div class="row-start-1 col-span-6 col-end-13 flex flex-row gap-2 items-end justify-end">
+      <button
+      	type="button"
+      	id="btnSearch"
+      	onclick="fn_searchTradeGap()"
+        class="text-white bg-primary-700 hover:bg-secondary-800 border border-primary-700
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none
+        duration-300 row-start-1">
+        <i class="fa-regular fa-search mr-1"></i>
+        	검색
+      </button>
+      <button
+      	type="button"
+      	onclick="fn_clearTradeGap()"
+        class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300">
+        <i class="fa-regular fa-times mr-1"></i>
+        	초기화
+      </button>
+    </div>
+    <!-- 검색구분 -->
+    <label class="col-start-1 row-start-1 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+      	검색구분
+    </label>
+    <div class="flex flex-row flex-wrap gap-4 col-start-2 col-span-5 row-start-1 items-center *:flex *:flex-row *:items-center *:gap-2 font-medium text-gray-900">
+    <c:if test="${corpNo == '2208121836'}">
+      <label for="default-radio-1">
+        <input
+          type="radio"
+          id="default-radio-1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          value="01"
+          name="tradeGap_srch1"
+          <c:if test="${corpNo == '2208121836'}">checked="checked"</c:if>
+          >
+        <span>한국발 수량비교</span>
+      </label>
+      </c:if>
+      <c:if test="${corpNo == '1248709424'}">
+      <label for="default-radio-2">
+        <input
+          id="default-radio-2"
+          type="radio"
+          value="02"
+          name="tradeGap_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          <c:if test="${corpNo == '1248709424'}">checked="checked"</c:if>
+          >
+        <span>한국발 수량비교</span>
+      </label>
+      <label for="default-radio-3">
+        <input
+          id="default-radio-3"
+          type="radio"
+          value="03"
+          name="tradeGap_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>제3국발 수량비교</span>
+      </label>
+      <label for="default-radio-4">
+        <input
+          id="default-radio-4"
+          type="radio"
+          value="04"
+          name="tradeGap_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>한국, 제3국 수량비교</span>
+      </label>
+      </c:if>
+    <c:if test="${corpNo == '00000000000'}">
+      <label for="default-radio-1">
+        <input
+          type="radio"
+          id="default-radio-1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          value="01"
+          name="tradeGap_srch1"
+          checked="checked"
+          >
+        <span>한국발 수량비교</span>
+      </label>
+      <label for="default-radio-2">
+        <input
+          id="default-radio-2"
+          type="radio"
+          value="02"
+          name="tradeGap_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          >
+        <span>한국발 수량비교</span>
+      </label>
+      <label for="default-radio-3">
+        <input
+          id="default-radio-3"
+          type="radio"
+          value="03"
+          name="tradeGap_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>제3국발 수량비교</span>
+      </label>
+      <label for="default-radio-4">
+        <input
+          id="default-radio-4"
+          type="radio"
+          value="04"
+          name="tradeGap_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>한국, 제3국 수량비교</span>
+      </label>
+      </c:if>
+    </div>
+    <!-- 검색기간 -->
+    <label class="col-start-1 row-start-2 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+      	검색기간
+    </label>
+    <select id="tradeGapDateType" class="row-start-2 col-start-2 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+      <option value="01" selected>신고일자</option>
+      <option value="02">수리일자</option>
+    </select>
+    <!-- Calendar -->
+    <div
+      class="col-start-3 row-start-2 col-span-4 flex flex-wrap md:flex-nowrap items-center gap-1
+    ">
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+         <input type="text" class="form-control band-calendar text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+				id="tradeGap_srch2" name="tradeGap1_date"
+				onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" onkeyUp="fn_dateInputForm($(this))" 
+				placeholder="시작일자" autocomplete="off"> 
+        
+      </div>
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input type="text" class="form-control band-calendar text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+				id="tradeGap_srch3" name="tradeGap2_date"
+				onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" 
+				onkeyUp="fn_dateInputForm($(this))"
+				placeholder="종료일자" autocomplete="off">
+      </div>
+    </div>
+    <!-- Range Button -->
+    <div id="tradeGap_div1" class="col-start-7 row-start-2 col-span-4 flex items-center gap-1">
+      <button
+          type="button"
+          id="today-button"
+          onclick="fn_tradeGapchgDate1()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+       	 당일
+      </button>
+      <button
+          type="button"
+          id="week-button"
+          onclick="fn_tradeGapchgDate2()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+                 이번주
+      </button>
+      <button
+          type="button"
+          id="last-month-button"
+          onclick="fn_tradeGapchgDate3()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+                당월
+      </button>
+      <button
+          type="button"
+          id="this-month-button"
+          onclick="fn_tradeGapchgDate4()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+                전월
+      </button>
+    </div>
+    
+    <!-- 신고번호 -->
+    <label for="n0" class="row-start-3 col-start-1 flex items-center font-medium text-gray-900 pr-2">
+      	품목코드
+    </label>
+    <input type="text" id="tradeGap_srch4" onkeyup="enterkey()" 
+      class="row-start-3 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg
+      focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5"
+      placeholder="품목코드를 입력해주세요.">
+    <!-- Invoice번호 -->
+    <label for="n2" class="row-start-3 col-start-7 flex items-center font-medium text-gray-900 px-2">Invoice번호</label>
+    <input type="text" id="tradeGap_srch5" onkeyup="enterkey()" 
+           class="row-start-3 col-start-8 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+           placeholder="Invoice번호를 입력해주세요.">
+    <!-- <select id="tradeGapSrchType1" style="width:100px;"
+      class="row-start-4 col-start-1 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-1 py-1">
+      <option value="" selected>조건선택</option>
+      <option value="buy_firm">해외거래처</option>
+      <option value="Ta_St_iso">목적국</option>
+      <option value="Exc_Cot">거래구분</option>
+      <option value="Con_MetNm">결제방법</option>
+      <option value="incoterms">인코텀즈</option>
+      <option value="ship_day">선적여부</option>
+      <option value="exp_details">수출이행내역</option>
+      <option value="factory_code">부서코드</option>
+      <option value="sr_ordr">SO</option>
+      <option value="reporter">신고인</option>
+    </select>
+    <input type="text" id="tradeGapSrchText1"
+           class="row-start-4 col-start-2 col-span-5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+      	   onkeyup="enterkey()" placeholder="">
+    <select id="tradeGapSrchType2" style="width:100px;"
+      class="row-start-4 col-start-7 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-1 py-1">
+      <option value="" selected>조건선택</option>
+      <option value="buy_firm">해외거래처</option>
+      <option value="Ta_St_iso">목적국</option>
+      <option value="Exc_Cot">거래구분</option>
+      <option value="Con_MetNm">결제방법</option>
+      <option value="incoterms">인코텀즈</option>
+      <option value="ship_day">선적여부</option>
+      <option value="exp_details">수출이행내역</option>
+      <option value="factory_code">부서코드</option>
+      <option value="sr_ordr">SO</option>
+      <option value="reporter">신고인</option>
+    </select>
+    <input type="text" id="tradeGapSrchText2"
+           class="row-start-4 col-span-5 col-start-8 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+      	   onkeyup="enterkey()" placeholder=""> -->
+      	   
+     <label class="col-start-1 row-start-4 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+      	GAP 발생
+    </label>
+    <div class="flex flex-row flex-wrap gap-4 col-start-2 col-span-5 row-start-4 items-center *:flex *:flex-row *:items-center *:gap-2 font-medium text-gray-900">
+      <label for="default-radio-11">
+        <input
+          type="radio"
+          id="default-radio-11"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          value="01"
+          name="tradeGap_srch6"
+          checked="checked"
+          >
+        <span>전체</span>
+      </label>
+      <label for="default-radio-22">
+        <input
+          id="default-radio-22"
+          type="radio"
+          value="02"
+          name="tradeGap_srch6"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          >
+        <span>Y</span>
+      </label>
+      <label for="default-radio-33">
+        <input
+          id="default-radio-33"
+          type="radio"
+          value="03"
+          name="tradeGap_srch6"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>N</span>
+      </label>
+    </div>   	   
+   
+  </form>
+
+  <div class="flex items-center justify-between w-full shrink-0">
+    <div class="flex items-center gap-4">
+      <h2 id="tradeGapTextView" class="shrink-0 flex items-center gap-1"><i class="fa-duotone fa-chart-network text-primary-900">
+      	</i>
+      </h2>
+	  <p class="card-title inline" style="line-height: 39px">결과: <span id="tradeGapCnt">0</span>
+	  </p>
+    </div>
+    <div class="flex items-center gap-2">
+    	<button
+	      	type="button"
+	      	onclick="fn_tradeGapExcelDownload()"
+	        class="text-white bg-primary-700 hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-2.5 py-1.5 focus:outline-noneduration-300 row-start-1 text-base">
+         <i class="fa-regular fa-download"></i>
+        	Excel 다운로드
+      	</button>
+     <select id="tradeGapPageCnt" name="tradeGapPageCnt"
+      	class="w-36 h-9 text-gray bg-primary-100 hover:bg-primary-200 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded text-base px-2.5 py-1.5 text-center inline-flex items-center border-primary-500 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+        <option value="200" selected>ROWS [200]</option>
+        <option value="50">ROWS [50]</option>
+        <option value="100">ROWS [100]</option>
+        <option value="500">ROWS [500]</option>
+      </select>
+    </div>
+  </div>
+  <!-- /MainTable -->
+  <div id="tradeGapTable" class="grow bg-white shadow-sm rounded-lg border border-slate-200 z-0"></div>
+  
+  
+   <!-- <form
+    class="w-full shrink-0 grid grid-rows-2 grid-cols-[auto_repeat(2,1fr)_auto_repeat(2,1fr)auto_repeat(2,1fr)auto_repeat(2,1fr)] row-start-1 col-start-1 col-span-2 bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-3 gap-1 z-1 text-base *:text-base items-center"
+  >
+    <div class="row-start-1 col-span-6 col-end-13 flex flex-row gap-2 items-end justify-end">
+      <button
+      	type="button"
+      	id="btnSearch"
+      	onclick="fn_searchTradeGapLan()"
+        class="text-white bg-primary-700 hover:bg-secondary-800 border border-primary-700
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none
+        duration-300 row-start-1">
+        <i class="fa-regular fa-search mr-1"></i>
+        	검색
+      </button>
+      <button
+      	type="button"
+      	onclick="fn_clearTradeGapLan()"
+        class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+        focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300">
+        <i class="fa-regular fa-times mr-1"></i>
+        	초기화
+      </button>
+    </div>
+    검색구분
+    <label class="col-start-1 row-start-1 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+      	검색구분
+    </label>
+    <div class="flex flex-row flex-wrap gap-4 col-start-2 col-span-5 row-start-1 items-center *:flex *:flex-row *:items-center *:gap-2 font-medium text-gray-900">
+      <label for="default-radio-1">
+        <input
+          type="radio"
+          id="default-radio-1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          value=""
+          name="tradeGapLan_srch1"
+          checked="checked">
+        <span>전체</span>
+      </label>
+      <label for="default-radio-1">
+        <input
+          type="radio"
+          id="default-radio-1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          value="01"
+          name="tradeGapLan_srch1">
+        <span>수출실적</span>
+      </label>
+      <label for="default-radio-2">
+        <input
+          id="default-radio-2"
+          type="radio"
+          value="02"
+          name="tradeGapLan_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>수입실적</span>
+      </label>
+      <label for="default-radio-6">
+        <input
+          id="default-radio-6"
+          type="radio"
+          value="03"
+          name="tradeGapLan_srch1"
+          class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500
+          dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+        <span>입고실적</span>
+      </label>
+    </div>
+    
+    <label class="col-start-1 row-start-2 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
+      	검색기간
+    </label>
+    <select id="tradeGapDateType" class="row-start-2 col-start-2 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block py-1 px-2.5">
+      <option value="01" selected>기준일자</option>
+    </select>
+    Calendar
+    <div
+      class="col-start-3 row-start-2 col-span-4 flex flex-wrap md:flex-nowrap items-center gap-1
+    ">
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+         <input type="text" class="form-control band-calendar text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+				id="tradeGap_srch2" name="tradeGap1_date"
+				onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" onkeyUp="fn_dateInputForm($(this))" 
+				placeholder="시작일자" autocomplete="off"> 
+        
+      </div>
+      <div class="relative grow">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input type="text" class="form-control band-calendar text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+				id="tradeGap_srch3" name="tradeGap2_date"
+				onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" 
+				onkeyUp="fn_dateInputForm($(this))"
+				placeholder="종료일자" autocomplete="off">
+      </div>
+    </div>
+    Range Button
+    <div id="tradeGap_div1" class="col-start-7 row-start-2 col-span-4 flex items-center gap-1">
+      <button
+          type="button"
+          id="today-button"
+          onclick="fn_tradeGapchgDate1()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+       	 당일
+      </button>
+      <button
+          type="button"
+          id="week-button"
+          onclick="fn_tradeGapchgDate2()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+                 이번주
+      </button>
+      <button
+          type="button"
+          id="last-month-button"
+          onclick="fn_tradeGapchgDate3()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+                당월
+      </button>
+      <button
+          type="button"
+          id="this-month-button"
+          onclick="fn_tradeGapchgDate4()"
+          class="py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border
+          border-primary-200 hover:text-white hover:bg-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100
+          dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white
+          dark:hover:bg-gray-700">
+                전월
+      </button>
+    </div>
+    
+  </form> -->
+  <div class="flex items-center justify-between w-full shrink-0">
+    <div class="flex items-center gap-4">
+      <h2 class="shrink-0 flex items-center gap-1"><i class="fa-duotone fa-chart-network text-primary-900"></i>보정 정보</h2>
+      <p class="card-title inline" style="line-height: 39px">결과:<span id="tradeGapLanPageCnt">0</span>
+      <label for="default-radio-7" style="margin-left:20px;">
+      <input id="default-radio-7" type="radio" name="tradeGapLanType" value="read" checked
+            class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+      <span>읽기</span>
+      </label>
+      <label for="default-radio-9" style="margin-left:20px;">
+      <input id="default-radio-9" type="radio" name="tradeGapLanType" value="enrol"
+            class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+      <span>등록</span>
+      </label>
+    </div>
+    <div class="flex items-center gap-2">
+     <button
+          type="button"
+          id="btnTradeGapLanSave"
+          onclick="fn_tradeGapLanSave()"
+          class="text-white bg-primary-700 hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-2.5 py-1.5 focus:outline-noneduration-300 row-start-1 text-base">
+          <i class="fa-regular fa-floppy-disk"></i>
+          	저장
+        </button>
+    </div>
+    </div>
+    <div id="tradeGapLanTable" class="grow bg-white shadow-sm rounded-lg border border-slate-200 z-0"></div>
+</main>
+</body>
+</html>

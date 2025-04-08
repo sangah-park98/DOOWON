@@ -1,0 +1,360 @@
+package egovframework.pf.shipping.web;
+
+import java.awt.PageAttributes.MediaType;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.ws.rs.core.HttpHeaders;
+
+import org.apache.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import aj.org.objectweb.asm.TypeReference;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.exp.service.SaveExpInvoiceVO;
+import egovframework.pf.shipping.service.ShippingAddressVO;
+import egovframework.pf.shipping.service.ShippingOrderVO;
+import egovframework.pf.shipping.service.ShippingService;
+
+@Controller
+public class ShippingController {
+
+	@Resource(name = "shippingService")
+	private ShippingService shippingService;
+	
+	@RequestMapping(value = "/shipping/shippingView.do")
+	public String shippingView(HttpServletRequest request, Model model) throws Exception {
+		return "shipping/shippingView";
+	}
+	
+	@RequestMapping(value = "/shipping/selectShippingViewList.do", method = RequestMethod.POST)
+	public ModelAndView selectShippingViewList(@RequestBody SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setList(userVO.getCorpNos());
+		}
+		List<?> resultList = shippingService.selectShippingViewList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/shipping/selectShippingDstnList.do")
+	public ModelAndView selectShippingDstnList(@ModelAttribute("ShippingAddressVO") ShippingAddressVO svo, HttpServletRequest request, 
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		svo.setCorpNo(userVO.getCorpNo());
+		List<?> resultList = shippingService.selectShippingDstnList(svo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/shipping/insertAddr.do", method = RequestMethod.POST)
+	public ModelAndView insertAddr(
+	        @ModelAttribute ShippingAddressVO svo, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+
+	    svo.setCorpNo(userVO.getCorpNo());
+	    svo.setId(userVO.getId());
+
+	    shippingService.insertAddr(svo);
+	    ModelAndView mav = new ModelAndView("jsonView", model);
+	    return mav;
+	}
+
+	@RequestMapping(value = "/shipping/deleteAddr.do", method = RequestMethod.POST)
+	@ResponseBody
+	public void deleteAddr(@RequestBody List<ShippingAddressVO> svoList, HttpServletRequest request, ModelMap model) throws Exception {
+	    for (ShippingAddressVO svo : svoList) {
+	        shippingService.deleteAddr(svo);
+	    }
+	}
+
+	@RequestMapping(value = "/shipping/insertShippingTempList.do")
+	@ResponseBody
+	public String insertShippingTempList(@RequestBody List<ShippingOrderVO> voList, HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		SearchVO vo = new SearchVO();
+		vo.setSrch1(voList.get(0).getBlNo());
+		shippingService.insertShippingTempList(voList,userVO);
+		return "success";
+	}
+	
+	@RequestMapping(value = "/shipping/selectShippingTempList.do")
+	public ModelAndView selectShippingTempList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, 
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+		List<?> resultList = shippingService.selectShippingTempList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/shipping/selectShippingOrderSeqList.do")
+	public ModelAndView selectShippingOrderSeqList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, 
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+		List<?> resultList = shippingService.selectShippingOrderSeqList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/shipping/selectCtNoList.do")
+	public ModelAndView selectCtNoList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, 
+			ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setCorpNo(userVO.getCorpNo());
+		List<?> resultList = shippingService.selectCtNoList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+
+	/*@RequestMapping("/shipping/insertShippingReqList.do")
+	public @ResponseBody String insertShippingReqList(@RequestBody String param) throws Exception {
+		System.out.println(param);
+		ShippingOrderVO vo = new ShippingOrderVO();
+		vo.setRptNo(param);
+		return "successs";
+		//return shippingService.insertShippingReqList(param);
+	}*/
+	
+	/*@RequestMapping(value = "/shipping/insertShippingReqList.do", method = RequestMethod.POST)
+	public @ResponseBody String insertShippingReqList(
+	        @RequestParam("sData") String sData,
+	        @RequestParam("files") List<MultipartFile> files, HttpServletResponse response) throws Exception {
+
+	    ObjectMapper objectMapper = new ObjectMapper();
+	    List<Map<String, Object>> reqList = objectMapper.readValue(sData, List.class);
+	    for (MultipartFile fileIn : files) {
+	    	String fileName = fileIn.getOriginalFilename();
+	    	String saveDir = "/home/files";
+	  		File file = new File(saveDir + "/" + fileName);
+	  		fileName = new String(fileName.getBytes("UTF-8"), "ISO-8859-1");
+	  		response.setHeader("Content-Disposition","attachment;filename=\"" + fileName + "\";");
+
+	  		FileInputStream fileInputStream = new FileInputStream(file);
+	  		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+	  		byte b [] = new byte[1024];
+	  		int data = 0;
+
+	  		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
+	  		{
+	  			servletOutputStream.write(b, 0, data);
+	  		}
+	  		servletOutputStream.flush();
+	  		servletOutputStream.close();
+	  		fileInputStream.close();
+	    }
+	    // --------------- 파일 제외 ---------------
+	    for (Map<String, Object> shippingRequest : reqList) {
+	        System.out.println("Shipping Request: " + shippingRequest);
+	    }
+
+	    return "success";
+	}*/
+	
+	
+	@RequestMapping(value = "/shipping/insertShippingReqList.do", method = RequestMethod.POST)
+	public @ResponseBody String insertShippingReqList(
+	        @RequestParam("sData") String sData,
+	        @RequestParam("files") List<MultipartFile> files, HttpServletResponse response) throws Exception {
+
+	    ObjectMapper objectMapper = new ObjectMapper();
+	    List<Map<String, Object>> param = objectMapper.readValue(sData, List.class);
+	    
+	    String saveDir = "/home/files";
+	    for (MultipartFile fileIn : files) {
+	        String fileName = fileIn.getOriginalFilename();
+	        File file = new File(saveDir + "/" + fileName);
+	        fileIn.transferTo(file);
+	    }
+
+	    if (!files.isEmpty()) {
+	        String firstFileName = files.get(0).getOriginalFilename();
+	        File firstFile = new File(saveDir + "/" + firstFileName);
+
+	        response.setHeader("Content-Disposition", "attachment; filename=\"" + firstFileName + "\"");
+	        response.setContentType("application/octet-stream");
+
+	        try (FileInputStream fileInputStream = new FileInputStream(firstFile);
+	             ServletOutputStream servletOutputStream = response.getOutputStream()) {
+	            byte[] buffer = new byte[1024];
+	            int bytesRead;
+	            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+	                servletOutputStream.write(buffer, 0, bytesRead);
+	            }
+	            servletOutputStream.flush();
+	        }
+	    }
+	    // --------------- 파일 제외 ---------------
+	    for (Map<String, Object> reqMap : param) {
+	        System.out.println("param List: " + reqMap);
+	        ShippingOrderVO svo = new ShippingOrderVO();
+			String externalNumber = (String) reqMap.get("externalNumber");
+			String externalInfomation = (String) reqMap.get("externalInfomation");
+			String sDate = (String) reqMap.get("sDate");
+			String sAddr = (String) reqMap.get("sAddr");
+			String eComName = (String) reqMap.get("eComName");
+			String eAddr = (String) reqMap.get("eAddr");
+			String bizNum = (String) reqMap.get("bizNum");
+			String bizName = (String) reqMap.get("bizName");
+			
+			svo.setRptNo(externalNumber);
+			svo.setBlNo(externalInfomation);
+			svo.setFromDt(sDate);
+			svo.setFromAddr(sAddr);
+			svo.setToStaff(eComName);
+			svo.setToAddr(eAddr);
+			svo.setCorpNo(bizNum);
+			svo.setManagerNm(bizName);
+			//-----------------------------------------------------------
+			String ctNo = (String) reqMap.get("ctNo");
+			String toPhnNo = (String) reqMap.get("toPhnNo");
+			String cmpnyNm = (String) reqMap.get("cmpnyNm");
+			String toDt = (String) reqMap.get("toDt");
+			String billEmail = (String) reqMap.get("billEmail");
+			String goodsWeight = (String) reqMap.get("goodsWeight");
+			String mixYn = (String) reqMap.get("mixYn");
+			String fromReq = (String) reqMap.get("fromReq");
+			String fromTime = (String) reqMap.get("fromTime");
+			String fromSpecifics = (String) reqMap.get("fromSpecifics");
+			String toAddr = (String) reqMap.get("toAddr");
+			String fileName = (String) reqMap.get("fileName");
+			int orderSeq = (Integer) reqMap.get("orderSeq");
+			
+			svo.setCtNo(ctNo);
+			svo.setRecvPhnNo(toPhnNo);
+			svo.setCmpnyNm(cmpnyNm);
+			svo.setArriveReqDt(toDt);
+			svo.setBillEmail(billEmail);
+			svo.setGoodsWeight(goodsWeight);
+			svo.setMixYn(mixYn);
+			svo.setFromReq(fromReq);
+			svo.setFromTime(fromTime);
+			svo.setFromSpecifics(fromSpecifics);
+			svo.setArriveAddr(toAddr);
+			svo.setFileName(fileName);
+			svo.setOrderSeq(orderSeq);
+			
+			shippingService.insertShippingReqList(svo);
+			
+	    }
+	    
+	    String targetUrl = "http://localhost:8080/test/recvShippingReqList.do";
+	    RestTemplate restTemplate = new RestTemplate();
+
+	    for (Map<String, Object> reqMap : param) {
+	        reqMap.put("files", files.stream().map(MultipartFile::getOriginalFilename).toArray());
+	        System.out.println("!1111");
+	        
+	        
+	        
+	        String responseFromOtherController = restTemplate.postForObject(targetUrl, reqMap, String.class);
+	        
+	        System.out.println("Response from /test/recvShippingReqList.do: " + responseFromOtherController);
+	    }
+		return targetUrl;
+	}
+	
+
+	
+	@RequestMapping(value = "/test/recvShippingReqList.do", method = RequestMethod.POST)
+	public @ResponseBody String recvShippingReqList(@RequestBody Map<String, Object> reqMap) {
+	    System.out.println("Received param: " + reqMap);
+	    return "success";
+	}
+/*	@RequestMapping("/shipping/insertShippingReqList.do")
+	public @ResponseBody void insertShippingReqList(@RequestBody String param) throws Exception {
+		System.out.println(param);
+		ObjectMapper objectMapper = new ObjectMapper();
+		List<Map<String, Object>> reqList = objectMapper.readValue(param, List.class);
+		for (Map<String, Object> reqMap : reqList) {
+			ShippingOrderVO svo = new ShippingOrderVO();
+			String externalNumber = (String) reqMap.get("externalNumber");
+			String externalInfomation = (String) reqMap.get("externalInfomation");
+			String sDate = (String) reqMap.get("sDate");
+			String sAddr = (String) reqMap.get("sAddr");
+			String eComName = (String) reqMap.get("eComName");
+			String eAddr = (String) reqMap.get("eAddr");
+			String bizNum = (String) reqMap.get("bizNum");
+			String bizName = (String) reqMap.get("bizName");
+			
+			svo.setRptNo(externalNumber);
+			svo.setBlNo(externalInfomation);
+			svo.setFromDt(sDate);
+			svo.setFromAddr(sAddr);
+			svo.setToStaff(eComName);
+			svo.setToAddr(eAddr);
+			svo.setCorpNo(bizNum);
+			svo.setManagerNm(bizName);
+			//-----------------------------------------------------------
+			String ctNo = (String) reqMap.get("ctNo");
+			String toPhnNo = (String) reqMap.get("toPhnNo");
+			String cmpnyNm = (String) reqMap.get("cmpnyNm");
+			String toDt = (String) reqMap.get("toDt");
+			String billEmail = (String) reqMap.get("billEmail");
+			String goodsWeight = (String) reqMap.get("goodsWeight");
+			String mixYn = (String) reqMap.get("mixYn");
+			String fromReq = (String) reqMap.get("fromReq");
+			String fromTime = (String) reqMap.get("fromTime");
+			String fromSpecifics = (String) reqMap.get("fromSpecifics");
+			String toAddr = (String) reqMap.get("toAddr");
+			
+			svo.setCtNo(ctNo);
+			svo.setRecvPhnNo(toPhnNo);
+			svo.setCmpnyNm(cmpnyNm);
+			svo.setArriveReqDt(toDt);
+			svo.setBillEmail(billEmail);
+			svo.setGoodsWeight(goodsWeight);
+			svo.setMixYn(mixYn);
+			svo.setFromReq(fromReq);
+			svo.setFromTime(fromTime);
+			svo.setFromSpecifics(fromSpecifics);
+			svo.setArriveAddr(toAddr);
+			
+			shippingService.insertShippingReqList(svo);
+		}
+		
+	}
+*/
+}

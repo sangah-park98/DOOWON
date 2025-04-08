@@ -1,0 +1,1333 @@
+var importBlHot;
+var importBlSettings;
+var importBlPopupSettings;
+var importBlIndex = 9999;
+var importBlScrollTp = true;
+var importBlData = {};
+var blListHot;
+var uploaderButtonImp;
+var modalCloseImp;
+var dropzone; 
+var formDataBl = new FormData();
+var loadedFiles = [];
+var allCheck = false;
+
+$( document ).ready(function() {
+	 $('.band-calendar').each(function(){ regCal(this) ;})
+	  //캘린더 포맷
+	 $('.datepicker').datepicker("option","dateFormat",calFormat);
+
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	  
+	  $("#importBl_srch2").val(mtoday);
+	  $("#importBl_srch3").val(today);
+	
+	  var importBlElement = document.querySelector('#importBlTable');
+	  var importBlElementContainer = importBlElement.parentNode;
+
+	  importBlHot = new Handsontable(importBlElement, importBlSettings);
+	  
+
+	  $("#importBl_div1").show();
+	  $("#importBl_div2").show();
+	  $("#importBl_div3").hide();
+	  $("#importBl_div4").hide();
+	  $("#btnImportBlSave").hide();
+	  $("#impBlInfo1").hide();
+	  $("#impBlInfo2").hide();
+	  fn_changeImportBl('read');
+	  
+	  //scroll 이벤트
+	  fn_impBlasEventReg();
+	  $("#impBlTextView").text("전체");
+      $("#impBlTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+	  
+	
+	  var blListPopupElement = document.querySelector('#blListPopupTable');
+	  var blListPopupElementContainer = blListPopupElement.parentNode;
+	  blListPopupSettings = fn_handsonGridblListPopupOption();
+	  blListHot = new Handsontable(blListPopupElement, blListPopupSettings);
+	
+});
+/** 이벤트 Start **/
+
+
+$(document).mousedown(function(e){	
+	if(e.target.name == "importBl1_date" || e.target.name == "importBl2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}	
+	}
+});
+
+
+$("input:radio[name=importBl_srch20]").change(function(){
+	$("input[name=importBlType][value=read]").prop("checked", true);
+	fn_changeImportBl("read");
+})
+
+
+//테이블 타입 변경
+$("input[name=importBlType]").change(function(){
+	  fn_changeImportBl($(this).val());
+});
+
+
+$("input[name=importBl_srch1]").change(function(){
+	
+	var selectedValue = $(this).val();
+    if(selectedValue === "01") {
+        $("#impBlTextView").text("전체");
+        $("#impBlTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "02") {
+        $("#impBlTextView").text("통관 진행");
+        $("#impBlTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else {
+        $("#impBlTextView").text("통관 진행 전");
+        $("#impBlTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } 
+});
+
+function fn_impBlchgDate1() {
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var day = date.getDay();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10);
+	  
+	  $("#importBl_srch2").val(today);
+	  $("#importBl_srch3").val(today);
+	  //$("#importBl_srch3").val(today);
+}
+
+function fn_impBlchgDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10);
+	
+	$("#importBl_srch2").val(mtoday);
+	$("#importBl_srch3").val(today);
+}
+function fn_impBlchgDate3() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10);
+	
+	$("#importBl_srch2").val(mtoday);
+	$("#importBl_srch3").val(today);
+}
+function fn_impBlchgDate4() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	  var startDt = new Date();
+	  startDt.setMonth(startDt.getMonth() - 1);
+	  startDt.setDate(1);
+
+	  var endDt = new Date();
+	  endDt.setMonth(endDt.getMonth(), 1);
+	  endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10);
+	var mtoday = endDt.toISOString().substring(0,10);
+	
+	$("#importBl_srch2").val(today);
+	$("#importBl_srch3").val(mtoday);
+}
+
+//정렬항목
+/*$("select[name=alignImportBl]").change(function(){
+	  fn_searchImportBl();
+});
+*/
+//row 수
+$("select[name=importBlPageCnt]").change(function(){
+	  fn_searchImportBl();
+});
+
+$("input[name=ftaCdAll]").change(function(){
+	 if ($(this).prop("checked") == true) {
+		 for(var i=1; i < ftaCdList.match(/,/g).length+2; i++){
+			 $("input[name=ftaCd"+i+"]").prop("checked", true);
+		 }
+	 } else {
+		 for(var i=1; i < ftaCdList.match(/,/g).length+2; i++){
+			 $("input[name=ftaCd"+i+"]").prop("checked", false);
+		 }
+	 }
+});
+
+function fn_impBlasEventReg(){
+	
+ $("#importBlTable .wtHolder").scroll(function(){
+	  	  var scrollTop = $("#importBlTable .wtHolder").scrollTop();
+	  	  var countPerPage = $("#importBlPageCnt option:selected").val();
+	  	  var rowHeight = importBlHot.getRowHeight();
+	  	  
+	  	  var addCnt = 720;
+	  	  if(countPerPage == "50"){
+	  		  addCnt = 720;
+	  	  }else if(countPerPage == "100"){
+	  		  addCnt = 1900;
+	  	  }else if(countPerPage == "200"){
+	  		  addCnt = 4400;
+	  	  }else if(countPerPage == "500"){
+	  		  addCnt = 11800;
+	  	  }
+
+	  	  if(importBlScrollTp && importBlIndex != 9999 && scrollTop >= (countPerPage * importBlIndex * rowHeight) + addCnt){
+	  		  fn_importBlScroll();
+	  	  }
+	  });
+
+}
+//스크롤
+function fn_importBlScroll(){
+	if( $("input[name=importBlType]:checked").val() == "enrol")
+		return;
+	fn_loading(true);
+	importBlScrollTp = false;
+	importBlIndex++;
+
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportBlList.do",
+		data : fn_setImportBlForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	var getData = importBlHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	importBlHot.loadData(meargeJson);
+        	importBlScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+//Popup 테이블 스크롤
+
+//검색
+function fn_searchImportBl(){
+	importBlIndex = 0;
+	$("#impBlSrch2").val($("#importBl_srch2").val());
+	$("#impBlSrch3").val($("#importBl_srch3").val());
+	$("#impBlSrch4").val($("#importBl_srch4").val());
+	$("#impBlSrch5").val($("#importBl_srch5").val());
+
+	var data = fn_setImportBlForm();
+	var valid = fn_validateSearchDate(data["srch2"], data["srch3"]);
+	
+
+	if(valid === "false"){
+		data["srch2"] = null;
+		data["srch3"] = null;
+		$("#importBl_srch2").val("");
+		$("#importBl_srch3").val("");
+		return;
+	} else {
+		data["srch2"] = $("#importBl_srch2").val();
+		data["srch3"] = $("#importBl_srch3").val();
+	}
+	
+	if(data["srch2"] == null || data["srch2"] == "" || data["srch3"] == "" || data["srch3"] == null){
+		alert("날짜를 입력해 주세요.");
+		return;
+	}
+	
+	
+	fn_loading(true);
+
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportBlList.do",
+		data : fn_setImportBlForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        		importBlHot.loadData([]);
+            	importBlHot.loadData(data.resultList);
+            	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+            	$("#importBlCnt").text(totCnt);
+            	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchImportBl();
+    }
+}
+
+//판정 사용 내역 조회
+
+
+//검색조건 생성
+function fn_setImportBlForm(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=importBl_srch1]:checked").val();
+	sData["srch2"] = $("#importBl_srch2").val();
+	sData["srch3"] = $("#importBl_srch3").val();
+	sData["srch4"] = $("#importBl_srch4").val();
+	sData["srch5"] = $("#importBl_srch5").val();
+	sData["srch6"] = $("#importBlDateType option:selected").val();
+	sData["recordCountPerPage"] = $("#importBlPageCnt option:selected").val();
+	sData["pageIndex"] = importBlIndex;
+	return sData;
+};
+
+//검색조건 초기화
+function fn_clearImportBl(){
+	 var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	
+	$("input:radio[name=importBl_srch1][value=01]").prop('checked', true);
+	$("#importBl_srch2").val(mtoday);
+	$("#importBl_srch3").val(today);
+	$("#importBl_srch4").val("");
+	$("#importBl_srch5").val("");
+	$("#importBlDateType").val("01");
+};
+
+
+//테이블 컬럼
+function fn_impBlTableCol(){
+	var tableType = $("input:radio[name=importBlType]:checked").val();
+	// 사용여부
+	var importBl_srch20 = $("input:radio[name=importBl_srch20]:checked").val(); 
+	
+	var chipRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		  // Optionally include `BaseRenderer` which is responsible for
+		  // adding/removing CSS classes to/from the table cells.
+		  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		  td.classList.add('chip-cell');
+		  td.classList.add('text-center');
+		  switch (value) {
+		    case "접수":
+		    case "Y":
+		      td.innerHTML = `<span class="chip chip-blue">${value}</span>`
+		      break
+		    case "수리":
+		      td.innerHTML = `<span class="chip chip-green">${value}</span>`
+		      break
+		    case "N":
+		    case "서류 미비":
+		      td.innerHTML = `<span class="chip chip-red">${value}</span>`
+		      break
+		    case "자수":
+		      td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+		      break
+		    case "":
+	    	  td.innerHTML = `<span>${value}</span>`
+    		  break
+		    default:
+		      td.innerHTML = `<span class="chip chip-primary">${value}</span>`
+		      break
+		  }
+	};
+	
+	var impRequestRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+	    var data = importBlHot.getData();
+	    var valueYn = data[row][1];
+	    var valueYn1 = data[row][2];
+	    var valueYn2 = data[row][6];
+	    var valueYn3 = data[row][7];
+	    if (valueYn3 === 'N') {
+	    	if (valueYn === '' && valueYn1 === '' && valueYn2 != '') {
+	        	var $fileButton = $('<button type="button" class="chip chip-blue" onclick="fn_customsRequest(' + row + ',' + col + ')">통관의뢰</button>');
+	        	$fileButton.css({'float': 'right'});
+	            $(td).empty().html('<div>' + value + "  " + $fileButton[0].outerHTML + '</div>');
+	        } 
+    	} else if (valueYn3 === 'Y' && valueYn === '' && valueYn1 === '' && valueYn2 != '')  {
+    		var $fileButton = $('<button type="button" class="chip" style="background-color: #1e73be; color: white;">통관 진행 중</button>');
+	    	$fileButton.css({'float': 'right'});
+	        $(td).empty().html('<div>' + value + "  " + $fileButton[0].outerHTML + '</div>');
+    	} else {
+            $(td).empty().html('<div>' + value + '</div>');
+        }
+	};
+	
+	var impFileLoadRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+	        var $fileButton;
+	        if (value != '' && value != null) {
+	            $fileButton = $('<i class="fas fa-search search-icon" style="cursor:pointer;" onclick="fn_blFileList('+row+','+col+')"></i>');
+	        } else {
+	            $fileButton = $('<i class="fas fa-plus search-icon" style="cursor:pointer;" onclick="fn_fileUpDown('+row+','+col+')"></i>');
+	        }
+	        $(td).empty().append($fileButton).append("  " + value);
+	};
+	
+
+	this.impBlCol = [
+		{data : 'blno', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rece', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true, renderer : chipRenderer},
+		{data : 'rptNo', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptDay', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'lisDay', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'pdf', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true, renderer : impFileLoadRenderer},
+		{data : 'type', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true, renderer : impRequestRenderer},
+		{data : 'requestYn', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true, renderer : impRequestRenderer}
+	] ;
+}
+//테이블 헤더
+function fn_impBlTableHeader(){
+
+	this.impBlHeader = [
+		"B/L번호","상태",  "신고번호", "신고일자", "수리일자", "PDF", "구분", ""
+	 ] ;
+}
+
+//테이블 히든컬럼
+function fn_impBlTableHidden(){
+	this.impBlHidden = [];
+	this.impBlOrgHidden = [];
+}
+
+
+//table
+function fn_handsonGridImpBlOption(col, header, hidden){
+	var tableType = $("input:radio[name=importBlType]:checked").val();
+
+	importBlSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : [7]
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 550,
+	  rowHeights : 25,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualColumnResize : true,
+	  manualRowMove : true,
+	  manualColumnMove : false,
+	  //dropdownMenu : true,
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+      autoColumnSize : {samplingRatio : 23},
+      mergeCells : false,
+      wordWrap : true,
+      //numeric은 엑셀 copy & paste 에러가 있어 직접 처리해줘야함 아래의 로직이 해당 처리 로직 START
+	};
+
+	return importBlSettings;
+}
+
+
+//검색 그리드
+function fn_searchGridPurchOption(type){
+	if(type){
+		$("#impBlEnrol").show();
+		$("#importBl_div1").show();
+		$("#importBl_div2").show();
+		$("#importBl_div3").hide();
+		$("#importBl_div4").hide();
+		$("#importBl_div12").hide();
+		$("#importBl_div5").show();
+		$("#importBl_div6").show();
+		$("#importBl_div7").show();
+		$("#importBl_div8").show();
+		$("#impBlInfo1").hide();
+		$("#impBlInfo2").hide();
+		$("#docBtn").show();
+	}else{
+		$("#impBlEnrol").hide();
+		$("#importBl_div1").show();
+		$("#importBl_div2").hide();
+		$("#importBl_div3").show();
+		$("#importBl_div4").show();
+		$("#importBl_div5").hide();
+		$("#importBl_div12").hide();
+		$("#importBl_div6").show();
+		$("#importBl_div7").hide();
+		$("#importBl_div8").show();
+		$("#impBlInfo1").show();
+		$("#impBlInfo2").show();
+		$("#docBtn").hide();
+	}
+}
+
+function fn_searchGridPurchOption2(){
+	
+		$("#impBlEnrol").show();
+		$("#importBl_div1").show();
+		$("#importBl_div12").show();
+		$("#importBl_div2").hide();
+		$("#importBl_div3").hide();
+		$("#importBl_div4").hide();
+		$("#importBl_div5").hide();
+		$("#importBl_div6").hide();
+		$("#importBl_div7").hide();
+		$("#importBl_div8").hide();
+		$("#impBlInfo1").hide();
+		$("#impBlInfo2").hide();
+		$("#docBtn").hide();		
+}
+
+//테이블 타입 변경
+function fn_changeImportBl(type){
+
+	var searchTp = $("input:radio[name=importBl_srch1]:checked").val();
+
+	if(type == "edit"){
+			$("#btnImportBlSave").show();
+			$("#impExcel").hide();
+			$("#docBtn").children().hide();
+			fn_changeImportBlType(searchTp);
+	}else if(type == "enrol"){
+			$("#btnImportBlSave").show();
+			$("#impExcel").hide();
+			$("#docBtn").children().hide();
+			fn_changeImportBlType(searchTp);
+	}else{
+			importBlHot.updateSettings({readOnly:true, contextMenu : false});
+			$("#btnImportBlSave").hide();
+			$("#impExcel").show();
+			$("#docBtn").children().show();
+			fn_changeImportBlType(searchTp);
+	}
+};
+
+//검색구분 변경
+function fn_changeImportBlType(type){
+	let impBlCol = new fn_impBlTableCol();
+	let impBlHeader = new fn_impBlTableHeader();
+	let impBlHidden = new fn_impBlTableHidden();
+	
+	
+	
+	var col, header, hidden;
+
+	//$('#alignImportBl option:eq(0)').prop('selected', true);
+
+	//구매원장
+		fn_searchGridPurchOption(true);
+		col = impBlCol.impBlCol;
+		header = impBlHeader.impBlHeader;
+		hidden = impBlHidden.impBlHidden;
+		
+		
+		importBlHot.updateSettings(fn_handsonGridImpBlOption(col, header, hidden));
+	//원산지확인서
+	fn_searchImportBl();
+};
+
+
+
+
+function fn_blFileList(row, col){
+
+	var data = importBlHot.getSourceDataAtRow(row);
+	 
+	$("#blFileListPopUp").modal("show");
+
+    var sData = fn_blForPopup(data);
+    var uploadBlFileListTitle = document.querySelector('.modal-content .blModal-title span');
+    if (uploadBlFileListTitle) {
+    	uploadBlFileListTitle.textContent = "B/L 번호: " + data.blno;
+    }
+    
+    fn_searchBlFilesPopup(sData);
+};
+
+function fn_blForPopup(selectedRow){
+	
+	var sData = {};
+
+	sData["srch1"] = selectedRow["blno"];
+	sData["srch2"] = selectedRow["name"];
+	sData["srch3"] = selectedRow["orgFileName"];
+
+	return sData;
+}
+
+
+// Invoice에 맞는 데이터 띄워주는 함수
+function fn_searchBlFilesPopup(data){
+	
+	fn_loading(true);
+	$.ajax({
+		type : "POST",
+		url : "/export/selectBlFilesList.do",
+		data : data,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	blListHot.loadData([]);
+        	blListHot.loadData(data.impblList);
+			setTimeout(function() {blListHot.render()}, 200);
+			fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+
+function fn_impBlExcelSrch(type){
+	$("#impBlSrch1").val($("input:radio[name=importBl_srch1]:checked").val());
+	if(type == '01'){
+		$("#impBlExTit").val(colPurchLedgrInfo);
+		$("#impBlExCol").val(String([colPlntCd+"*",colVndrCd+"*",colPurchsNo+"*",colSaleOrdr+"*",colItemAllCd+"*",colItemNm,colTaxbilNo,colImportBlDt+"*",colInvoiceNo,
+		     colCustomImpNo,colStndrdNo,colNatCd+"*",colImportBlQty+"*",colUsedQty,colLeftQty,
+		      colInctrm,colPuchaseAmt,colCurrentUnt,colExchngRt,colImportBlAmtVn+"*",colPurchPriceCif])+",");
+		$("#impBlExCd").val("plntCd,vndrCd,importBlNo,importBlOrdr,itemCd,itemNm,taxbilNo,importBlDt,invoiceNo,customImpNo,stndrdNo,natCd,importBlQty,usedQty,leftQty,incoterms,importBlPriceVn,crrncyUnt,exchngRt,importBlPriceFr,importBlCifPrice,");
+		$("#impBlExType").val("cd,cd,cd,cd,cd,text,cd,cd,cd,cd,cd,cd,floatString,floatString,floatString,cd,floatString,cd,floatString,floatString,floatString,");
+	}else if(type == '02'){
+		$("#impBlExTit").val(colOriginCnftmnInfo);
+		$("#impBlExCol").val(String([colPlntCd+"*",colVndrCd+"*",colImportBlNo+"*",colImportBlOrdr+"*",colItemAllCd+"*",colFtaCd+"*",colHsVer,colHsCd,
+			colPsr+"*",colReqDtm,colDocuFile,colOriginYn,colConfmSttus,colRecvDt,colStateMsg+","]));
+		$("#impBlExCd").val("plntCd,vndrCd,importBlNo,importBlOrdr,itemCd,ftaCd,hsVer,hsCd,psrSumry,reqDtm,docuOrgFile,originYn,approvedState,recvDtm,stateMsg,");
+		$("#impBlExType").val("cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,");
+	} else{
+		$("#impBlExTit").val(colImportBlUsed);
+		$("#impBlExCol").val(String([colPlntCd+"*",colVndrCd+"*",colPurchsNo+"*",colSaleOrdr+"*",colItemAllCd+"*",colTaxbilNo,colImportBlDt+"*",colInvoiceNo,
+		     colCustomImpNo,colSalesNo,colUsedQty])+",");
+		$("#impBlExCd").val("plntCd,vndrCd,importBlNo,importBlOrdr,itemCd,taxbilNo,importBlDt,invoiceNo,customImpNo,salesNo,importBlQty,");
+		$("#impBlExType").val("cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,floatString,");
+	}
+
+}
+
+
+
+// 업로드 Modal Action
+uploaderButtonImp = document.querySelector('.upload-button-bl')
+uploaderButtonImp.addEventListener('click', () => {
+loadedFiles = [];
+$("#blNo").val("");
+$("#blRptNo").val("");
+const modalBl = document.querySelector('.modal-popup-bl')
+const uploaderModalBl = document.querySelector('.uploader-modal-bl')
+modalBl.classList.remove('hidden')
+modalBl.classList.add('flex')
+uploaderModalBl.classList.remove('hidden')
+uploaderModalBl.classList.add('block')
+
+const fileList = document.querySelector('.file-list-bl');
+fileList.innerHTML = ''; 
+
+/*const fileList = document.querySelector('.file-list-bl')
+fileList.innerHTML = file.join('')*/
+})
+
+modalCloseImp = document.querySelectorAll('.modal-close')
+modalCloseImp.forEach((el) => {
+el.addEventListener('click', () => {
+ const modalBl = document.querySelector('.modal-popup-bl')
+ //const contactModal = document.querySelector('.contact-modal')
+ const uploaderModalBl = document.querySelector('.uploader-modal-bl')
+ modalBl.classList.remove('flex')
+ modalBl.classList.add('hidden')
+ uploaderModalBl.classList.remove('block')
+ uploaderModalBl.classList.add('hidden')
+ popupState = false
+})
+})
+dropzone = document.getElementById('dropzone-file-bl');
+
+//파일이 추가되었을 때 이벤트 처리
+dropzone.addEventListener('change', (event) => {
+	event.preventDefault(); 
+	const files = event.target.files; // 선택된 파일 객체들
+	
+    Array.from(files).forEach((file) => {
+    	loadedFiles.push(file);
+      });
+	
+    uploadFilesBl(files); // 파일 업로드 함수 호출
+});
+
+dropzone.addEventListener('dragover', (event) => {
+	 event.preventDefault(); 
+});
+  
+dropzone.addEventListener('drop', (event) => {
+	  event.preventDefault(); 
+	  const fileList = event.dataTransfer.files; // Get dropped files
+	  const files = Array.from(fileList); // Convert FileList to array
+	  
+	  Array.from(files).forEach((file) => {
+    	loadedFiles.push(file);
+      });
+	  
+	  uploadFilesBl(files);
+	  
+	  const fileInput = document.getElementById('dropzone-file-bl');
+      fileInput.files = fileList;
+});
+
+ 
+
+function uploadFilesBl(files) {
+	// alert('uploadFilesBl');
+	const fileInput = document.getElementById('dropzone-file-bl');
+	const filess = fileInput.files;
+	
+	const fileListElement = document.querySelector('.file-list-bl');
+//	fileListElement.innerHTML = ''; 
+	const dropzoneFileInput = document.getElementById('dropzone-file-bl');
+    // 기존 파일 목록을 가져옴
+    const existingFiles = Array.from(fileListElement.querySelectorAll('li'));
+    // 현재 날짜를 가져와서 포맷팅
+    const currentDate = new Date();
+    const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+    // 새로운 파일을 기존 목록에 추가
+    files.forEach(file => {
+      const li = document.createElement('li');
+      li.classList.add('flex', 'items-center', 'py-1', 'px-4', 'rounded', 'justify-between', 'hover:bg-gray-100', 'duration-150', 'gap-10');
+      li.innerHTML = `
+        <p class="flex items-end gap-2">
+          <a href="#" target="_blank" class="font-semibold text-xl underline" maxlength='10' style="text-overflow: ellipsis;">${file.name}</a>
+          <span class="text-base pl-3 text-gray-400">${formattedDate}</span>
+          <button type="button" class="delete-button hover:opacity-50 text-rose-600" onclick="deleteFile(event)"><i class="fa-regular fa-trash-can"></i></button>
+        </p>
+        <select class="min-w-40 text-primary-700 bg-primary-50 border border-primary-500 hover:bg-primary-200 focus:ring-4 focus:outline-none focus:ring-primary-400 font-medium rounded-lg text-sm px-3 py-1.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+          <option value="bl">BL</option>
+          <option value="iv">INVOICE</option>
+          <option value="pl">PACKING LIST</option>
+          <option value="ot">RECEIPT</option>
+        </select>
+      `;
+      fileListElement.appendChild(li);
+    });
+  }
+
+// ----------------------돋보기 모달----------------------
+dropzoneImpUpload = document.getElementById('dropzone-file-impUpload');
+
+dropzoneImpUpload.addEventListener('change', (event) => {
+	 event.preventDefault(); 
+	 const files = event.target.files; // 선택된 파일 객체들
+	 Array.from(files).forEach((file) => {
+		 loadedFiles.push(file);
+	 });
+	 
+	 uploadFilesImpBl(files); // 파일 업로드 함수 호출
+});
+
+ 
+dropzoneImpUpload.addEventListener('dragover', (event) => {
+	 event.preventDefault(); 
+});
+ 
+dropzoneImpUpload.addEventListener('drop', (event) => {
+	 event.preventDefault(); 
+	 const fileList = event.dataTransfer.files; 
+	 const files = Array.from(fileList);
+	 Array.from(files).forEach((file) => {
+		 loadedFiles.push(file);
+	 });
+	 
+	 uploadFilesImpBl(files); // 파일 업로드 함수 호출
+	 
+	 const fileInput = document.getElementById('dropzone-file-impUpload');
+	 fileInput.files = fileList;
+});
+
+// [ref] hidden view fileArray
+function uploadViewFiles(files) {
+ 	const fileInput = document.getElementById('dropzone-file-bl');
+	const filess = fileInput.files;
+	const fileListElement = document.querySelector('.file-list');
+	const dropzoneFileInput = document.getElementById('dropzone-file-bl');
+    const existingFiles = Array.from(fileListElement.querySelectorAll('li'));
+    const currentDate = new Date();
+    const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+   
+    // 새로운 파일을 기존 목록에 추가
+    files.forEach(file => {
+      const li = document.createElement('li');
+      li.classList.add('flex', 'items-center', 'py-1', 'px-4', 'rounded', 'justify-between', 'hover:bg-gray-100', 'duration-150', 'gap-10');
+      li.innerHTML = `
+        <p class="flex items-end gap-2">
+          <a href="#" target="_blank" class="font-semibold text-xl underline" maxlength='10' style="text-overflow: ellipsis;">${file.name}</a>
+          <span class="text-base pl-3 text-gray-400">${formattedDate}</span>
+          <button type="button" class="delete-button hover:opacity-50 text-rose-600" onclick="deleteFile(event)"><i class="fa-regular fa-trash-can"></i></button>
+        </p>
+        <select class="min-w-40 text-primary-700 bg-primary-50 border border-primary-500 hover:bg-primary-200 focus:ring-4 focus:outline-none focus:ring-primary-400 font-medium rounded-lg text-sm px-3 py-1.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+          <option value="bl">BL</option>
+          <option value="iv">INVOICE</option>
+          <option value="pl">PACKING LIST</option>
+          <option value="ot">RECEIPT</option>
+        </select>
+      `;
+      fileListElement.appendChild(li);
+    });
+}
+ 
+// 모달 안에서 파일 추가
+function uploadFilesImpBl(files) {
+	 const fileInput = document.getElementById('dropzone-file-impUpload');
+	 const filess = fileInput.files;
+	 const fileListElement = document.querySelector('.file-list-impUpload');
+	 const dropzoneFileInput = document.getElementById('dropzone-file-impUpload');
+	 const existingFiles = Array.from(fileListElement.querySelectorAll('li'));
+	 const currentDate = new Date();
+	 const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+	 files.forEach(file => {
+		    var newRowIdx = blListHot.countRows();
+		    blListHot.alter('insert_row_below', blListHot.countRows(), 1);
+		    const currentDate = new Date();
+		    const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+		    var selectHTML = document.createElement('select');
+		    selectHTML.className = "min-w-30 text-primary-700 bg-primary-50 border border-primary-500 hover:bg-primary-200 focus:ring-4 focus:outline-none focus:ring-primary-400 font-medium rounded-lg text-sm px-3 py-1.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800";
+		    selectHTML.setAttribute('id', 'docuTypeOptionId' + blListHot.countRows());
+		    
+		    var option1 = document.createElement('option');
+		    option1.value = "bl";
+		    option1.text = "BL";
+		    var option2 = document.createElement('option');
+		    option2.value = "ci";
+		    option2.text = "INVOICE";
+		    var option3 = document.createElement('option');
+		    option3.value = "pl";
+		    option3.text = "PACKING LIST";
+		    var option4 = document.createElement('option');
+		    option4.value = "ot";
+		    option4.text = "RECEIPT";
+		    selectHTML.appendChild(option1);
+		    selectHTML.appendChild(option2);
+		    selectHTML.appendChild(option3);
+		    selectHTML.appendChild(option4);
+
+		    blListHot.getCellMeta(newRowIdx, 2).renderer = function(instance, td, row, col, prop, value, cellProperties) {
+		        Handsontable.renderers.HtmlRenderer.apply(this, arguments);
+		        td.appendChild(selectHTML);
+		    };
+		    
+		    blListHot.getCellMeta(newRowIdx, 6).renderer = function(instance, td, row, col, prop, value, cellProperties) {
+               td.innerHTML = '<button type="button" class="delete-button hover:opacity-50 text-rose-600" onclick="deleteBlFileRow('+row+','+col+')"><i class="fa-regular fa-trash-can"></i></button>'; // 새롭게 추가된 파일 삭제
+               td.classList.add('htCenter');
+           };
+		    
+           blListHot.setDataAtCell(newRowIdx, 3, `${file.name}`);
+           blListHot.setDataAtCell(newRowIdx, 4, `${file.name}`);
+           blListHot.setDataAtCell(newRowIdx, 5, formattedDate);
+	 });
+}
+
+
+function deleteFile(event) {
+    const fileElement = event.target.closest('li');
+    if (fileElement) {
+        const ulElement = fileElement.parentNode;
+        const liElements = Array.from(ulElement.children);
+        const index = liElements.indexOf(fileElement);
+        loadedFiles.splice(index, 1);
+        fileElement.remove();
+    }
+}
+
+// 돋보기 모달 안에서 새롭게 파일 추가했을 때 바로 삭제하기
+function deleteBlFileRow(row){
+	var rowData = blListHot.getSourceDataAtRow(row);
+	var fileName = rowData.docuOrgFile;
+	const index = loadedFiles.findIndex(file => file.name === fileName);
+	loadedFiles.splice(index, 1);
+	blListHot.alter('remove_row', row);
+}
+
+// 실제 파일 삭제
+function deleteImpBlFile(row) {
+
+	var rowData = blListHot.getSourceDataAtRow(row);
+ 	var blno = rowData.blno;
+ 	var fileName = rowData.docuOrgFile;
+ 	var uploadDt = rowData.uploadDt;
+ 	
+ 	sData = {};
+	sData["srch2"] = blno;
+	sData["srch3"] = fileName;
+	sData["srch4"] = uploadDt;
+	
+	if (confirm("기존 파일을 삭제하시겠습니까?")) {
+		
+		$.ajax({
+			type : "POST",
+			url : "/import/deleteImpBlFile.do",
+			data : sData,
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			dataType: "json",
+			success: function (data) {
+				blListHot.alter('remove_row', row);
+		        alert('삭제되었습니다.');
+		    },
+		    error: function (xhr, textStatus, errorThrown) {
+		        if (xhr.status == 400) {
+		            alert("에러 발생");
+		            location.href = document.referrer;
+		        } else {
+		            console.log(errorThrown);
+		            alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+		        }
+		    }
+		});
+	} else {return;}
+}
+
+// 모달 안에서 수정 및 삭제와 함께 저장하는 함수
+function fn_fileImpBlSave() {
+ 	
+	var insertImpBlFile = blListHot.getSourceData();
+	var blNo = insertImpBlFile[0].blno;
+	var elements = document.querySelectorAll('[id^="docuTypeOptionId"]');
+	var sData = [];
+	
+	for (var i = 0; i < insertImpBlFile.length; i++) {
+		if(insertImpBlFile[i].blNo == null){
+			sData.push(insertImpBlFile[i]);
+		}
+	}
+	
+	elements.forEach(function(element, index) {
+	    sData[index].docuType = element.value;
+	});
+	
+	const formData = new FormData();
+	
+	for (let i = 0; i < sData.length; i++) {
+
+        if (sData[i].docuType === 'ci') {
+            formData.append('fileIn[]', loadedFiles[i]);
+        } else if (sData[i].docuType === 'pl') {
+            formData.append('filePl[]', loadedFiles[i]);
+        } else if (sData[i].docuType === 'bl') {
+            formData.append('fileBl[]', loadedFiles[i]);
+        } else {
+            formData.append('fileOt[]', loadedFiles[i]);
+        }
+    }
+	
+	formData.append('blNo', blNo );
+	formData.append('blRptNo', '' );
+	
+	$.ajax({
+ 		type: 'POST',
+ 		url: "/import/insertImportFilesInfo.do",
+ 		data: formData,
+ 		beforeSend : function(xmlHttpRequest){
+ 			xmlHttpRequest.setRequestHeader("AJAX", "true");
+ 		},
+ 		dataType: 'json',
+ 		processData: false,
+ 		contentType: false,
+ 		success: function (data) {
+ 			alert('파일이 저장되었습니다.');
+ 		
+ 			var vData = {};
+ 			vData["srch1"] = blNo;
+ 			fn_searchBlFilesPopup(vData);
+ 		
+ 		},
+ 		error: function (e, textStatus, jqXHR) {}
+ 	});
+};
+
+// 새로 파일 업로드 할 때 저장하는 함수
+function fn_fileBlSave(){
+	const fileList = document.querySelectorAll('.file-list-bl li');
+	const fileInput = document.getElementById('dropzone-file-bl');
+	const files = fileInput.files;
+
+
+	// FormData 객체 생성
+	const formData = new FormData();
+
+	const liFileData = Array.from(fileList).map(fileListItem => {
+	    const fileNameElement = fileListItem.querySelector('a');
+	    const fileName = fileNameElement.innerText.trim();
+	    const fileSelectElement = fileListItem.querySelector('select');
+	    const fileType = fileSelectElement.value;
+	    return { fileName, fileType };
+	});
+    
+	let matchingLiData;  
+    for (let i = 0; i < loadedFiles.length; i++) {
+        const fileName = loadedFiles[i].name;
+        matchingLiData = liFileData.find(data => data.fileName === fileName);
+        
+        if (matchingLiData) {
+        	var fileNameWithoutExtension = fileName.split('.').slice(0, -1).join('.');
+            if (fileNameWithoutExtension.startsWith('BL_') && matchingLiData.fileType !== 'bl') {
+                alert('"BL_"로 시작하는 파일은 파일 타입이 BL이어야 합니다.');
+                return;
+            }
+            if (matchingLiData.fileType === 'bl') {
+                formData.append('fileBl[]', loadedFiles[i]);
+            } else if (matchingLiData.fileType === 'pl') {
+                formData.append('filePl[]', loadedFiles[i]);
+            } else if (matchingLiData.fileType === 'iv') {
+                formData.append('fileIn[]', loadedFiles[i]);
+            } else {
+                formData.append('fileOt[]', loadedFiles[i]);
+            }
+        }
+    }
+    
+    formData.append('blNo', $("#blNo").val());
+	formData.append('blRptNo', $("#blRptNo").val());
+    const fileBlEntries = formData.getAll('fileBl[]');
+    if (fileBlEntries.length !== 1) {
+        alert('B/L 파일은 반드시 한 개가 등록되어야 합니다.');
+        return;
+    }
+    
+    const fileBlName = fileBlEntries[0].name;
+    var fileNameWithoutExtension = fileBlName.split('.').slice(0, -1).join('.');
+    
+    if (!(fileNameWithoutExtension.startsWith('BL_') || fileNameWithoutExtension.startsWith('bl_')) && $("#blNo").val() == "") {
+        alert('B/L의 파일명은 "BL_"로 시작되어야 합니다.');
+        return;
+    }
+    if (fileNameWithoutExtension.startsWith('BL_') && (fileNameWithoutExtension.replace('BL_', '').trim() === '') && $("#blNo").val() == "") {
+        alert('B/L의 파일명은 "BL_" 뒤에 B/L 번호를 기재해야 합니다.');
+        return;
+    }
+    
+    var data = importBlHot.getSourceData();
+    for(var i=0; i<data.length; i++){
+    	var blno = data[i]["pdf"];
+		if(blno == fileBlName){
+			alert('해당 B/L 번호로 이미 파일이 등록되어 있습니다.');
+			return;
+		}
+	}
+    
+	$.ajax({
+		type: 'POST',
+		url: "/import/insertImportFilesInfo.do",
+		data: formData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: 'json',
+		processData: false,
+		contentType: false,
+		success: function (data) {
+			alert('파일이 저장되었습니다.');
+			const modalBl = document.querySelector('.modal-popup-bl')
+			const uploaderModalBl = document.querySelector('.uploader-modal-bl')
+			modalBl.classList.remove('flex')
+			modalBl.classList.add('hidden')
+			uploaderModalBl.classList.remove('block')
+			uploaderModalBl.classList.add('hidden')
+			popupState = false
+			 
+			fn_searchImportBl();
+		},
+		error: function (e, textStatus, jqXHR) {}
+	});
+}
+
+
+
+function fn_handsonGridblListPopupOption() {
+    blListPopupSettings = {
+        columns: [
+        	{ data : 'checkBox', type : 'text', className : "htCenter", width: 60, type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},
+        	{ data: 'blno', type: 'text', className: "htCenter", readOnly: true },
+            {
+                data: 'docuType',
+                type: 'text',
+                className: "htCenter",
+                readOnly: true,
+                renderer: function (instance, td, row, col, prop, value, cellProperties) {
+                	 if (value === 'CI') {
+                         td.innerHTML = '<div style="text-align: center;">INVOICE</div>';
+                     } else if (value === 'PL') {
+                         td.innerHTML = '<div style="text-align: center;">Packing List</div>';
+                     } else if (value === 'OT') {
+                         td.innerHTML = '<div style="text-align: center;">Receipt</div>';
+                     } else {
+                         td.innerHTML = '<div style="text-align: center;">B/L</div>';
+                     }
+                }
+            },
+            { data: 'docuOrgFile', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'docuFile', type: 'text', className: "htCenter", readOnly: true },
+            { data: 'uploadDt', type: 'text', className: "htCenter", readOnly: true },
+            {
+                data: 'deleteExistFile', width:50 , readOnly: true,
+                renderer: function(instance, td, row, col, prop, value, cellProperties) {
+                    td.innerHTML = '<button type="button" class="delete-button hover:opacity-50 text-rose-600" onclick="deleteImpBlFile('+row+','+col+')"><i class="fa-regular fa-trash-can"></i></button>'; // 기존 파일 삭제
+                    td.classList.add('htCenter');
+                }
+            },
+            { data: 'docuPath', type: 'text', className: "htCenter", readOnly: true },
+        ],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 250,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["", "B/L 번호", "파일 타입", "파일명",'','업로드 일자', '삭제',''],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        mergeCells: false,
+        allowInsertRow: false,
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [1,4,6,7]},
+        afterGetColHeader: function(col, TH){
+            if(col == 0){
+              TH.innerHTML = "<input type='checkbox' class='checker' id='id_checkAllImpListPopup' onclick='fn_checkAllImpListPopup();'>";
+          }
+        }
+    };
+
+    return blListPopupSettings;
+}
+
+
+function fileBlListClose(){
+	
+	$("#blFileListPopUp").modal("hide");
+}
+
+
+function fn_docuPrintBl() {
+    var downloadFile = blListHot.getSourceData();
+    var blno = downloadFile[0].blno
+    var selectedData = [];
+    var cnt = 0;
+    
+    for (var i = 0; i < downloadFile.length; i++) {
+    	if (downloadFile[i].checkBox === "yes") { 
+    		selectedData.push(downloadFile[i]);
+    		cnt++;
+    	}
+    }
+    
+    if (cnt == 0){
+    	alert("다운로드할 파일을 선택해 주세요.");
+    	return;
+    }
+    if (cnt == 1) {
+        $("#docuFile").val(selectedData[0].docuFile);
+        $("#docuOrgFile").val(selectedData[0].docuOrgFile);
+        document.zipDownForm.action = "/base/downloadFile.do";
+        document.zipDownForm.submit();
+    } else {
+    	$.ajax({
+        type: "POST",
+        url: "/import/downLoadZipFileBlList.do",
+        data: JSON.stringify(selectedData), // 서버로 전송할 데이터
+        contentType: 'application/json', // 데이터 타입 설정
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader("AJAX", "true");
+        },
+        success: function() {
+            
+            $("#zipName").val(blno);
+        	document.zipDownForm.action = "/import/downloadBlFile.do";
+        	document.zipDownForm.submit();
+        },
+        error: function(xhr, status, error) {
+            // 다운로드가 실패했을 때의 처리
+            console.error("다운로드 실패:", error);
+        }
+    });
+  }
+}
+
+
+//파일 업로드 다운로드
+function fn_fileUpDown(row, col){
+	$("#blNo").val("");
+	$("#blRptNo").val("");
+	var rowData = importBlHot.getSourceDataAtRow(row);
+	var blNo = rowData.blno;
+	var rptNo = rowData.rptNo;
+	
+	loadedFiles = [];
+	  const modal = document.querySelector('.modal-popup-bl')
+	  const uploaderModal = document.querySelector('.uploader-modal-bl')
+	  modal.classList.remove('hidden')
+	  modal.classList.add('flex')
+	  uploaderModal.classList.remove('hidden')
+	  uploaderModal.classList.add('block')
+
+	  const fileList = document.querySelector('.file-list-bl')
+	  fileList.innerHTML = '';
+	
+	  $("#blNo").val(blNo);
+	  $("#blRptNo").val(rptNo);
+	
+};
+
+
+function fn_customsRequest(row,col){
+	
+	var rowData = importBlHot.getSourceDataAtRow(row);
+	var blNo = rowData.blno;
+	var cmpnyCd = rowData.type;
+	
+	$.ajax({
+        type: "POST", // 또는 "GET", 폼의 전송 방식에 따라 적절히 설정
+        url: "/import/importSendEmail.do",
+        data: {
+            sendBlNo: blNo,
+            sendCmpnyCd: cmpnyCd
+        },
+        success: function(data) {
+            alert("통관 의뢰가 완료되었습니다.");
+            fn_searchImportBl();
+        },
+        error: function(xhr, status, error) {
+            // 오류가 발생한 경우 수행할 작업
+            console.error("폼 제출 중 오류가 발생했습니다:", error);
+        }
+    });
+}
+
+
+function fn_checkAllImpListPopup(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_checkAllImpListPopup").prop("checked") == false) {
+		check = "yes" ;
+		allCheck = true;
+	} else {
+		check = "no" ;
+		allCheck = false;
+	}
+
+	var data = blListHot.getData();
+
+	for(var i=0; i< data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	blListHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_checkAllImpListPopup").prop("checked", true);
+	} else {
+		$("#id_checkAllImpListPopup").prop("checked", false);
+	}
+}
+
+
+function fn_impPopupDelete () {
+	var rowDataBl = blListHot.getSourceData();
+	var blno = rowDataBl[0].blno;
+	
+    let itemsToDeleteBl = [];
+    var cnt = 0;
+    for (let i = 0; i < rowDataBl.length; i++) {
+        if (rowDataBl[i].checkBox === "yes") {
+        	itemsToDeleteBl.push(rowDataBl[i]);
+        	cnt++;
+        }
+    }
+    if (cnt == 0){
+    	alert("선택된 파일이 없습니다.");
+    	return;
+    }
+    if (confirm("선택한 파일을 삭제하시겠습니까?")) {
+        $.ajax({
+            type: "POST",
+            url: "/import/deleteImpBlFile.do",
+            data: JSON.stringify(itemsToDeleteBl), 
+            contentType: 'application/json', 
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("AJAX", "true");
+            },
+            success: function(data) {
+            	alert('파일이 삭제되었습니다.');
+            	var xData = {};
+            	xData["srch1"] = blno;
+            	fn_searchBlFilesPopup(xData);
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                if (xhr.status == 400) {
+                    alert("에러 발생");
+                    location.href = document.referrer;
+                } else {
+                    console.log(errorThrown);
+                    alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+                }
+            }
+        });
+    }
+}

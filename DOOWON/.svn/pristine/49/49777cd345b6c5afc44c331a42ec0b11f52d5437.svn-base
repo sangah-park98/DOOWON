@@ -1,0 +1,657 @@
+var importUpHot;
+var importUpSettings;
+var importUpPopupSettings;
+var importUpIndex = 9999;
+var importUpScrollTp = true;
+var importUpData = {};
+var incotermsSelect = [];
+
+var numberValidator = function (value, callback) {
+	var tmpStr='';
+	var valueStr = (''+value).replace(/\s/g, '');
+	for(var i = 0 ; i<valueStr.length; i++){
+		tmpStr =valueStr.substring(i, i+1);
+		if(    tmpStr == '0' || tmpStr == '1' || tmpStr == '2'
+                        || tmpStr == '3' || tmpStr == '4' || tmpStr == '5'
+                        || tmpStr == '6' || tmpStr == '7' || tmpStr == '8'
+                        || tmpStr == '9' || tmpStr == ',' || tmpStr == '.'){
+
+		}else{
+			callback(false);
+			break;
+		}
+		callback(true);
+	}
+
+};
+
+$( document ).ready(function() {
+	
+	 $('.band-calendar').each(function(){ regCal(this) ;})
+	  //캘린더 포맷
+	 $('.datepicker').datepicker("option","dateFormat",calFormat);
+
+
+      var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	  
+	  
+	  $("#importUp_srch2").val(mtoday);
+	  $("#importUp_srch3").val(today);
+	
+	  
+	  var importUpElement = document.querySelector('#importUpTable');
+	  var importUpElementContainer = importUpElement.parentNode;
+
+
+	  importUpHot = new Handsontable(importUpElement, importUpSettings);
+
+	  $("#importUp_div1").show();
+	  $("#importUp_div2").show();
+	  $("#importUp_div3").hide();
+	  $("#importUp_div4").hide();
+	  $("#btnImportUpSave").hide();
+	  $("#impUpInfo1").hide();
+	  $("#impUpInfo2").hide();
+	  fn_changeImportUp('read');
+	 
+	  
+	  //scroll 이벤트
+	  fn_impUpasEventReg();
+	  $("#impUpdateTextView").text("전체");
+      $("#impUpdateTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+	  
+	  
+	/*	$("#docBtn").append('<button class="btn btn-primary" style="display: inline-block; padding-right: 10px;	type="button" onclick="fn_DOFtaSelectPopup();">'+""+'</button>');
+	  fn_impUpExcelSrch("01");*/
+	  
+	  
+		/*$("#impUpUseExTit").val(colJdgmntUse);
+		$("#impUpUseExCol").val(String([colItemAllCd,colItemNm,colBuyrNm,colBuyrNo,colJdgmntDt,colUsedQty])+",");
+		$("#impUpUseExCd").val("itemCd,itemNm,buyrNm,salesNo,jdgmntDt,importUpQty,");
+		$("#impUpUseExType").val("cd,cd,cd,cd,cd,floatString,");*/
+	
+
+
+	  $(document).on("click", '.itemCdClass', function(){
+		  alert($(this).index());
+	  });
+});
+/** 이벤트 Start **/
+
+
+$(document).mousedown(function(e){	
+	if(e.target.name == "importUp1_date" || e.target.name == "importUp2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}	
+	}
+});
+
+
+$("input:radio[name=importUp_srch20]").change(function(){
+	$("input[name=importUpType][value=read]").prop("checked", true);
+	fn_changeImportUp("read");
+})
+
+$("input[name=importUp_srch1]").change(function(){
+	
+	var selectedValue = $(this).val();
+    if(selectedValue === "01") {
+        $("#impUpdateTextView").text("전체");
+        $("#impUpdateTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "02") {
+        $("#impUpdateTextView").text("수리");
+        $("#impUpdateTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else {
+        $("#impUpdateTextView").text("미결");
+        $("#impUpdateTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } 
+});
+
+//테이블 타입 변경
+$("input[name=importUpType]").change(function(){
+	  fn_changeImportUp($(this).val());
+});
+
+function fn_chgUpDate1() {
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  var day = date.getDay();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10);
+	  
+	  $("#importUp_srch2").val(today);
+	  $("#importUp_srch3").val(today);
+	  //$("#importUp_srch3").val(today);
+}
+
+function fn_chgUpDate2() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10);
+	
+	$("#importUp_srch2").val(mtoday);
+	$("#importUp_srch3").val(today);
+}
+function fn_chgUpDate3() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10);
+	
+	$("#importUp_srch2").val(mtoday);
+	$("#importUp_srch3").val(today);
+}
+function fn_chgUpDate4() {
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	var day = date.getDay();
+	
+	  var startDt = new Date();
+	  startDt.setDate(1);
+	  startDt.setMonth(startDt.getMonth() - 1);
+
+	  var endDt = new Date();
+	  endDt.setMonth(endDt.getMonth(), 1);
+	  endDt.setDate(endDt.getDate() - 1);
+	
+	var today = startDt.toISOString().substring(0,10);
+	var mtoday = endDt.toISOString().substring(0,10);
+	
+	$("#importUp_srch2").val(today);
+	$("#importUp_srch3").val(mtoday);
+}
+
+//정렬항목
+/*$("select[name=alignImportUp]").change(function(){
+	  fn_searchImportUp();
+});
+*/
+//row 수
+$("select[name=importUpPageCnt]").change(function(){
+	  fn_searchImportUp();
+});
+
+
+function fn_impUpasEventReg(){
+	
+ $("#importUpTable .wtHolder").scroll(function(){
+	  	  var scrollTop = $("#importUpTable .wtHolder").scrollTop();
+	  	  var countPerPage = $("#importUpPageCnt option:selected").val();
+	  	  var rowHeight = importUpHot.getRowHeight();
+	  	  var addCnt = 780;
+	  	  if(countPerPage == "50"){
+	  		  addCnt = 780;
+	  	  }else if(countPerPage == "100"){
+	  		  addCnt = 2030;
+	  	  }else if(countPerPage == "200"){
+	  		  addCnt = 4300;
+	  	  }else if(countPerPage == "500"){
+	  		  addCnt = 12000;
+	  	  }
+
+	  	  if(importUpScrollTp && importUpIndex != 9999 && scrollTop >= (countPerPage * importUpIndex * rowHeight) + addCnt){
+	  		  fn_importUpScroll();
+	  	  }
+	  });
+
+}
+//popUp table scroll 이벤트
+/** 이벤트 End **/
+//스크롤
+function fn_importUpScroll(){
+	if( $("input[name=importUpType]:checked").val() == "enrol")
+		return;
+	fn_loading(true);
+	importUpScrollTp = false;
+	importUpIndex++;
+
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportUpList.do",
+		data : fn_setImportUpForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	var getData = importUpHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	importUpHot.loadData(meargeJson);
+        	importUpScrollTp = true;
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+//Popup 테이블 스크롤
+
+//검색
+function fn_searchImportUp(){
+	importUpIndex = 0;
+	$("#impUpSrch2").val($("#importUp_srch2").val());
+	$("#impUpSrch3").val($("#importUp_srch3").val());
+	$("#impUpSrch4").val($("#importUp_srch4").val());
+	$("#impUpSrch5").val($("#importUp_srch5").val());
+	$("#impUpSrch6").val($("#importUp_srch6").val());
+	$("#impUpSrch7").val($("#importUp_srch7").val());
+
+	var data = fn_setImportUpForm();
+	var valid = fn_validateSearchDate(data["srch2"], data["srch3"]);
+
+	if(valid === "false"){
+		data["srch2"] = null;
+		data["srch3"] = null;
+		$("#importUp_srch2").val("");
+		$("#importUp_srch3").val("");
+		return;
+	} else {
+		data["srch2"] = $("#importUp_srch2").val();
+		data["srch3"] = $("#importUp_srch3").val();
+	}
+	fn_loading(true);
+
+	$.ajax({
+		type : "POST",
+		url : "/import/selectImportUpList.do",
+		data : fn_setImportUpForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        		importUpHot.loadData([]);
+            	importUpHot.loadData(data.resultList);
+            	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+            	$("#importUpCnt").text(totCnt); 
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchImportUp();
+    }
+}
+
+//판정 사용 내역 조회
+
+
+//검색조건 생성
+function fn_setImportUpForm(){
+	var sData = {};
+	sData["srch1"] = $("input:radio[name=importUp_srch1]:checked").val();
+	sData["srch2"] = $("#importUp_srch2").val();
+	sData["srch3"] = $("#importUp_srch3").val();
+	sData["srch4"] = $("#importUp_srch4").val();
+	sData["srch5"] = $("#importUp_srch5").val();
+	sData["srch6"] = $("#importUp_srch6").val();
+	sData["srch7"] = $("#importUp_srch7").val();
+	sData["srch8"] = $("#importUpDateType option:selected").val();
+	sData["recordCountPerPage"] = $("#importUpPageCnt option:selected").val();
+	sData["pageIndex"] = importUpIndex;
+	return sData;
+};
+
+//검색조건 초기화
+function fn_clearImportUp(){
+	  var date = new Date();
+	  var month = date.getMonth();
+	  var dayday = date.getDate();
+	  
+	  var today = new Date().toISOString().substring(0,10);
+	  var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
+	  
+	  
+	
+	$("input:radio[name=importUp_srch1][value=01]").prop('checked', true);
+	$("#importUp_srch2").val(mtoday);
+	$("#importUp_srch3").val(today);
+	$("#importUp_srch4").val("");
+	$("#importUp_srch5").val("");
+	$("#importUp_srch6").val("");
+	$("#importUp_srch7").val("");
+	$("#importUpDateType").val("01");
+};
+
+
+
+//테이블 컬럼   
+function fn_impUpTableCol(){
+	var tableType = $("input:radio[name=importUpType]:checked").val();
+	// 사용여부
+	var importUp_srch20 = $("input:radio[name=importUp_srch20]:checked").val(); 
+	
+	var chipRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+		  // Optionally include `BaseRenderer` which is responsible for
+		  // adding/removing CSS classes to/from the table cells.
+		  Handsontable.renderers.BaseRenderer.apply(this, arguments);
+		  td.classList.add('chip-cell');
+		  td.classList.add('text-center');
+		  switch (value) {
+		    case "접수":
+		    case "Y":
+		      td.innerHTML = `<span class="chip chip-blue">${value}</span>`
+		      break
+		    case "수리":
+		      td.innerHTML = `<span class="chip chip-green">${value}</span>`
+		      break
+		    case "N":
+		    case "서류 미비":
+		      td.innerHTML = `<span class="chip chip-red">${value}</span>`
+		      break
+		    case "자수":
+		      td.innerHTML = `<span class="chip chip-yellow">${value}</span>`
+		    case "기각":
+			  td.innerHTML = `<span class="chip chip-primary">${value}</span>`
+		      break
+		    case "":
+	    	  td.innerHTML = `<span>${value}</span>`
+  		  break
+		    default:
+		      td.innerHTML = `<span class="chip chip-green">${value}</span>`
+		      break
+		  }
+	};
+
+	this.impUpCol = [
+		{data : 'saveCheck', type : 'text', className : "htCenter", width: 60,type: 'checkbox',checkedTemplate: true,uncheckedTemplate: false, readOnly:false},
+		{data : 'rece', className : "htCenter", width: 50, wordWrap: false, readOnly:true,renderer : chipRenderer},
+		{data : 'rptSeq', className : "htCenter",width: 60, wordWrap: false, readOnly:true},
+		{data : 'reasonDoc1', className : "htCenter",width: 230, wordWrap: false, readOnly:true},
+		{data : 'cs', className : "htCenter", width: 90, wordWrap: false, readOnly:true},
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, readOnly:true},
+		{data : 'blno', className : "htCenter", width: 140, wordWrap: false, readOnly:true},
+		{data : 'nabFirm', className : "htCenter", width: 180, wordWrap: false, readOnly:true},
+		{data : 'supFirm', className : "htCenter", width: 250, wordWrap: false, readOnly:true},
+		{data : 'incDay', className : "htCenter", width: 90, wordWrap: false, readOnly:true},
+		{data : 'rptDay', className : "htCenter", width: 90, wordWrap: false, readOnly:true},
+		{data : 'lisDay', className : "htCenter", width: 90, wordWrap: false, readOnly:true},
+		{data : 'excCot', className : "htCenter",width: 160, wordWrap: false, readOnly:true},
+		{data : 'conKiCot', className : "htCenter",width: 90, wordWrap: false, readOnly:true},
+		{data : 'conCod', className : "htCenter", width: 90, wordWrap: false, readOnly:true},
+		{data : 'freKrw', wordWrap: false,width: 90, type:'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'insuKrw', wordWrap: false,width: 90, type:'numeric', className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'totWt', className : "htCenter",width: 100, wordWrap: false, readOnly:true},
+		{data : 'totPackCnt', className : "htCenter",width: 90, wordWrap: false, readOnly:true},
+		{data : 'conCur', className : "htCenter", width: 80, wordWrap: false, readOnly:true},
+		{data : 'conTotAmt', wordWrap: false, type : 'numeric', width: 100, className: 'htRight', numericFormat : {pattern : '0,0'}, readOnly:true },
+		{data : 'mrn', className : "htCenter",width: 100, wordWrap: false, readOnly:true},
+		{data : 'lawCd', className : "htCenter",width: 70, wordWrap: false, readOnly:true},
+		{data : 'supSt', className : "htCenter",width: 70, wordWrap: false, readOnly:true},
+		{data : 'fodMark', className : "htCenter",width: 70, wordWrap: false, readOnly:true},
+		{data : 'oriStPrfYn', className : "htCenter",width: 70, wordWrap: false, readOnly:true,renderer : chipRenderer},
+		{data : 'rmv', className : "htCenter",width: 70, wordWrap: false, readOnly:true,renderer : chipRenderer},
+		{data : 'rptYn', className : "htCenter",width: 120, wordWrap: false, readOnly:true},
+		{data : 'plntCd', className : "htCenter", width: 90, wordWrap: false, readOnly:true},
+		{data : 'prOrdr', className : "htCenter", width: 90, wordWrap: false, readOnly:true}
+		//{data : 'userMemo', width: 300, className : "htLeft", wordWrap: false, readOnly:true},
+		//{data : 'cusMemo', className : "htCenter", wordWrap: false, className : "htCenter", readOnly:true}
+	] ;
+
+
+	//판정 사용 내역 컬럼
+}
+//테이블 헤더
+function fn_impUpTableHeader(){
+	var tableType = $("input:radio[name=importUpType]:checked").val(); //20201221 박은식 테이블 모드 값(plnt 코드, 명 조건문 처리를 위함)
+	// 사용여부
+	this.impUpHeader =  [
+		"importCheck", "상태","차수", "정정사유", "C/S검사", "신고번호", "B/L번호", "납세자", "무역거래처",  "반입일자", "신고일자", "수리일자", "거래구분",
+		"결제방법", "인코텀즈", "운임", "보험료", "총중량", "총포장개수", "통화단위", "신고금액", "화물진행정보", "요건승인", "해외공급자국가부호", "적출국(부호)", "FTA적용여부", "감면여부", "확정신고대상여부", "부서코드", "PO" 
+	 ] ;
+}
+
+//테이블 히든컬럼
+function fn_impUpTableHidden(){
+	var tableType = $("input:radio[name=importUpType]:checked").val();
+	this.impUpHidden = [0];
+
+	this.impUpOrgHidden = [0];
+}
+
+//table
+function fn_handsonGridPurchOption(col, header, hidden){
+	var tableType = $("input:radio[name=importUpType]:checked").val();
+
+	importUpSettings = {
+	  columns : col,
+	  colHeaders : header,
+	  hiddenColumns : {
+    	  copyPasteEnabled : false,
+    	  indicators : false,
+    	  columns : hidden
+      },
+	  stretchH : 'all',
+	  width : '100%',
+	  autoWrapRow : true,
+	  height : 487,
+	  rowHeights : 25,
+	  rowHeaders : true,
+	  columnHeaderHeight : 25,
+	  manualRowResize : true,
+	  manualColumnResize : true,
+	  manualRowMove : true,
+	  manualColumnMove : false,
+	  licenseKey: 'non-commercial-and-evaluation',
+	  //dropdownMenu : true,
+
+	  contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+	  filters : true,
+	  readOnly : (tableType == "read") ? true : false,
+	  allowInsertRow : true,
+	  allowRemoveRow : true,
+	 // columnSorting : {indicator : true},
+      autoColumnSize : {samplingRatio : 23},
+      
+      mergeCells : false,
+      wordWrap : true,
+	};
+
+	return importUpSettings;
+}
+
+
+//검색 그리드
+function fn_searchGridPurchOption(type){
+	if(type){
+		$("#impUpEnrol").show();
+		$("#importUp_div1").show();
+		$("#importUp_div2").show();
+		$("#importUp_div3").hide();
+		$("#importUp_div4").hide();
+		$("#importUp_div12").hide();
+		$("#importUp_div5").show();
+		$("#importUp_div6").show();
+		$("#importUp_div7").show();
+		$("#importUp_div8").show();
+		$("#impUpInfo1").hide();
+		$("#impUpInfo2").hide();
+		$("#docBtn").show();
+	}else{
+		$("#impUpEnrol").hide();
+		$("#importUp_div1").show();
+		$("#importUp_div2").hide();
+		$("#importUp_div3").show();
+		$("#importUp_div4").show();
+		$("#importUp_div5").hide();
+		$("#importUp_div12").hide();
+		$("#importUp_div6").show();
+		$("#importUp_div7").hide();
+		$("#importUp_div8").show();
+		$("#impUpInfo1").show();
+		$("#impUpInfo2").show();
+		$("#docBtn").hide();
+	}
+}
+
+//테이블 타입 변경
+function fn_changeImportUp(type){
+
+	var searchTp = $("input:radio[name=importUp_srch1]:checked").val();
+
+	if(type == "edit"){
+			if(type == "edit" && $('input:radio[name=importUp_srch20]:checked').val() == "Y" && searchTp == "01"){
+				alert(msgUsePurchNonEditMsg);
+				$("input:radio[name=importUpType][value=read]").prop("checked", true);
+				return;
+			}
+			$("#btnImportUpSave").show();
+			$("#impExcel").hide();
+			$("#docBtn").children().hide();
+			fn_changeImportUpType(searchTp);
+	}else if(type == "enrol"){
+		if(type == "enrol" && $('input:radio[name=importUp_srch20]:checked').val() == "Y" && searchTp == "01"){
+			alert(msgUsePurchNonEnrolMsg);
+			$("input:radio[name=importUpType][value=read]").prop("checked", true);
+			return;
+		}
+			$("#btnImportUpSave").show();
+			$("#impExcel").hide();
+			$("#docBtn").children().hide();
+			fn_changeImportUpType(searchTp);
+	}else{
+			importUpHot.updateSettings({readOnly:true, contextMenu : false});
+			$("#btnImportUpSave").hide();
+			$("#impExcel").show();
+			$("#docBtn").children().show();
+			fn_changeImportUpType(searchTp);
+	}
+};
+
+//검색구분 변경
+function fn_changeImportUpType(type){
+	let impUpCol = new fn_impUpTableCol();
+	let impUpHeader = new fn_impUpTableHeader();
+	let impUpHidden = new fn_impUpTableHidden();
+	var col, header, hidden;
+
+	//$('#alignImportUp option:eq(0)').prop('selected', true);
+
+	//구매원장
+		fn_searchGridPurchOption(true);
+		col = impUpCol.impUpCol;
+		header = impUpHeader.impUpHeader;
+		hidden = impUpHidden.impUpHidden;
+		importUpHot.updateSettings(fn_handsonGridPurchOption(col, header, hidden));
+	fn_searchImportUp();
+};
+
+
+
+function fn_impUpExcelSrch(type){
+	$("#impUpSrch1").val($("input:radio[name=importUp_srch1]:checked").val());
+	if(type == '01'){
+		$("#impUpExTit").val(colPurchLedgrInfo);
+		$("#impUpExCol").val(String([colPlntCd+"*",colVndrCd+"*",colPurchsNo+"*",colSaleOrdr+"*",colItemAllCd+"*",colItemNm,colTaxbilNo,colImportUpDt+"*",colInvoiceNo,
+		     colCustomImpNo,colStndrdNo,colNatCd+"*",colImportUpQty+"*",colUsedQty,colLeftQty,
+		      colInctrm,colPuchaseAmt,colCurrentUnt,colExchngRt,colImportUpAmtVn+"*",colPurchPriceCif])+",");
+		$("#impUpExCd").val("plntCd,vndrCd,importUpNo,importUpOrdr,itemCd,itemNm,taxbilNo,importUpDt,invoiceNo,customImpNo,stndrdNo,natCd,importUpQty,usedQty,leftQty,incoterms,importUpPriceVn,crrncyUnt,exchngRt,importUpPriceFr,importUpCifPrice,");
+		$("#impUpExType").val("cd,cd,cd,cd,cd,text,cd,cd,cd,cd,cd,cd,floatString,floatString,floatString,cd,floatString,cd,floatString,floatString,floatString,");
+	}else if(type == '02'){
+		$("#impUpExTit").val(colOriginCnftmnInfo);
+		$("#impUpExCol").val(String([colPlntCd+"*",colVndrCd+"*",colImportUpNo+"*",colImportUpOrdr+"*",colItemAllCd+"*",colFtaCd+"*",colHsVer,colHsCd,
+			colPsr+"*",colReqDtm,colDocuFile,colOriginYn,colConfmSttus,colRecvDt,colStateMsg+","]));
+		$("#impUpExCd").val("plntCd,vndrCd,importUpNo,importUpOrdr,itemCd,ftaCd,hsVer,hsCd,psrSumry,reqDtm,docuOrgFile,originYn,approvedState,recvDtm,stateMsg,");
+		$("#impUpExType").val("cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,");
+	} else{
+		$("#impUpExTit").val(colImportUpUsed);
+		$("#impUpExCol").val(String([colPlntCd+"*",colVndrCd+"*",colPurchsNo+"*",colSaleOrdr+"*",colItemAllCd+"*",colTaxbilNo,colImportUpDt+"*",colInvoiceNo,
+		     colCustomImpNo,colSalesNo,colUsedQty])+",");
+		$("#impUpExCd").val("plntCd,vndrCd,importUpNo,importUpOrdr,itemCd,taxbilNo,importUpDt,invoiceNo,customImpNo,salesNo,importUpQty,");
+		$("#impUpExType").val("cd,cd,cd,cd,cd,cd,cd,cd,cd,cd,floatString,");
+	}
+
+}
+
+function fn_importUpdateExcelDownload(){
+	var type = $("input:radio[name=importUp_srch1]:checked").val();
+	$("#importUpdateForm").html("");
+	$("#importUpdateForm").attr("action","/import/importUpdatedownloadExcel.do");
+	
+	//검색조건
+	$.each(fn_setImportUpForm(),function(attrName,attrValue){
+	 $("#importUpdateForm").append("<input type='hidden' value=" + attrValue + " name=" + attrName + ">");
+	});
+	
+	//엑셀 옵션
+	var exTit = "";
+	var exCol = "";
+	
+	var impUpCol = new fn_impUpTableCol();
+	var impUpHeader = new fn_impUpTableHeader();
+	
+	exCol = fn_getExcelCol(impUpCol.impUpCol); 
+    exTit = fn_getExcelHead(impUpHeader.impUpHeader); 
+    
+    $("#importUpdateForm").append("<input type='hidden' name='exCol' value="+ exCol +">");
+    $("#importUpdateForm").append("<input type='hidden' name='exTit' value="+ exTit +">");
+    $("#importUpdateForm").append("<input type='hidden' name='exType' value="+ type +">");
+    
+	
+    $("#importUpdateForm").submit();
+    
+    function fn_getExcelCol(viewCol){
+        return viewCol.map(item => item['data'] + '|' + item['className'] + '|' + item['width']).join("||");
+    }
+     
+    function fn_getExcelHead(viewHead){
+        var result = [];
+        
+        if(viewHead.length > 1 && typeof(viewHead[0][0]) == 'object') {
+            for(var i=0; i < viewHead.length; i++) {
+                if(i == viewHead.length -1){
+                    result.push(viewHead[i].join("|null||") + "|null");
+                }else {
+                    result.push(viewHead[i].map(item => (item['label'] ? item['label'] : 'null') + '|' + (item['colspan'] ? item['colspan'] : 'null')).join("||"));
+                }
+            }
+            return result.join("|||");
+        }else{
+            return viewHead.join("|null||") + "|null";
+        };
+    }
+}
+
+
+

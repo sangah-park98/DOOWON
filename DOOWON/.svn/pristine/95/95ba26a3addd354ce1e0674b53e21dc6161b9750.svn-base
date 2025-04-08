@@ -1,0 +1,80 @@
+package egovframework.pf.rpt.service.impl;
+
+
+import java.util.List;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.rpt.service.SaveBankInfoVO;
+import egovframework.pf.rpt.service.SaveCalCodeVO;
+import egovframework.pf.rpt.service.SaveCalculateVO;
+import egovframework.rte.psl.dataaccess.mapper.Mapper;
+
+
+
+
+/**
+ * KPI 매퍼 클래스
+ *
+ * @author  이재성
+ * @since 2024.04.04
+ * @version 1.0
+ * @see <pre>
+ *  == 개정이력(Modification Information) ==
+ *
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2024.04.04          	이재성         			최초 생성
+ *
+ * </pre>
+ */
+@Mapper("calculMapper")
+public interface CalculMapper {
+	
+		void insertCalExcel(SaveCalculateVO vo) throws Exception;
+		
+		void insertCalCodeList(SaveCalCodeVO vo) throws Exception;
+		
+		List<?> selectCalculPartnList(SearchVO vo) throws Exception;
+		
+		List<?> selectCalculCodeList(SearchVO vo) throws Exception;
+		
+		List<?> selectCmmnCodeList(SearchVO vo) throws Exception;
+		
+		List<?> selectCalCodeList(SearchVO vo) throws Exception;
+		
+		List<?> selectCalculInfo(SearchVO vo) throws Exception;
+		
+		List<?> selectCalculDetailInfo(SearchVO vo) throws Exception;
+		
+		List<?> selectCalculInfoExp(SearchVO vo) throws Exception;
+		
+		List<?> selectCalculDetailViewInfo(SearchVO vo) throws Exception;
+		
+		List<?> selectCalculDetailViewInfoExp(SearchVO vo) throws Exception;
+		
+		List<?> selectCalculDetailInfo2(SearchVO vo) throws Exception;
+		
+		List<?> selectCalculDetailViewInfo2(SearchVO vo) throws Exception;
+
+		void partnCmpnySave(SearchVO vo) throws Exception;
+		
+		void calCodeSave(SearchVO vo) throws Exception;
+
+		void insertCalExcel2(SaveCalculateVO vo)throws Exception;
+
+		List<?> selectCalculDetailViewInfo3(SearchVO vo)throws Exception;
+
+		List<?> selectCalculInfo2(SearchVO vo)throws Exception;
+
+		List<?> selectBankinoutlView(SearchVO vo)throws Exception;
+
+		void updatetBankInOut(SaveBankInfoVO vo)throws Exception;
+
+		void insertBankInOut(SaveBankInfoVO vo)throws Exception;
+
+		List<?> selectBankEditView(SearchVO vo)throws Exception;
+
+		void savePaymentYn(SearchVO vo)throws Exception;
+
+		void savePaymentYn2(SearchVO vo)throws Exception;
+}

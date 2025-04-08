@@ -1,0 +1,1979 @@
+var itemCode;
+var itemViewHot;
+var itemViewSettings;
+var itemViewPopupSettings;
+var itemViewIndex = 9999;
+var itemViewScrollTp = true;
+var itemMemoHot;
+var itemMemoSettings;
+var itemChkDetailHot;
+var itemChkDetailSettings;
+
+var itemHsCodeDiffTable;
+var itemHsCodeDiffSettings;
+var itemHsCodeDiffPopupSettings;
+var itemHsCodeDiffIndex = 0;
+var itemHsCodeDiffScrollTp = true;
+
+var itemPriceHot;
+var itemPriceSettings;
+
+var itemRptNoHot;
+var itemRptNoTable;
+var itemRptNoSettings;
+var itemRptNoPopupSettings;
+var itemRptNoIndex = 0;
+var itemRptNoScrollTp = true;
+
+var itemLawCdTable;
+var itemLawCdSettings;
+var itemLawCdPopupSettings;
+var itemLawCdIndex = 0;
+var itemLawCdScrollTp = true;
+
+
+$( document ).ready(function() {
+
+	$('.band-calendar').each(function(){ regCal(this) ;})
+    $('.datepicker').datepicker("option","dateFormat",calFormat);
+
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	  
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setMonth(date.getMonth() - 6)).toISOString().substring(0,10);
+	$("#itemView_srch2").val(mtoday);
+	$("#itemView_srch3").val(today);
+	  
+	var itemViewElement = document.querySelector('#itemViewTable');
+	var itemViewElementContainer = itemViewElement.parentNode;
+	itemViewHot = new Handsontable(itemViewElement, itemViewSettings);
+	
+	var itemCodeChkElement = document.querySelector('#itemCodeChkPopupTable');
+	var itemCodeChkElementContainer = itemCodeChkElement.parentNode;
+	itemCodeChkElementSettings = fn_handsonGridItemCodeChkOption();
+	itemCodeChkListHot = new Handsontable(itemCodeChkElement, itemCodeChkElementSettings);
+	
+	var itemMemoElement = document.querySelector('#itemMemoTable');
+	var itemMemoElementContainer = itemMemoElement.parentNode;
+	itemMemoHot = new Handsontable(itemMemoElement, itemMemoSettings);
+	
+	var itemChkDetailElement = document.querySelector('#itemChkDetailTable');
+	var itemChkDetailElementContainer = itemChkDetailElement.parentNode;
+	itemChkDetailHot = new Handsontable(itemChkDetailElement, itemChkDetailSettings);
+	
+	fn_changeItemMemoType('read');
+	
+	itemHsCodeDiffTable = fn_itemMakeHandsonGrid("#itemHsCodeDiffTable", itemHsCodeDiffCol, itemHsCodeDiffHeader, itemHsCodeDiffSettings);
+	
+	var itemPriceElement = document.querySelector('#itemPriceTable');
+	var itemPriceElementContainer = itemPriceElement.parentNode;
+	itemPriceHot = new Handsontable(itemPriceElement, itemPriceSettings);
+	  
+	var itemRptNoElement = document.querySelector('#itemRptNoTable');
+	var itemRptNoElementContainer = itemRptNoElement.parentNode;
+	itemRptNoHot = new Handsontable(itemRptNoElement, itemRptNoSettings);
+	
+	itemLawCdTable = fn_itemMakeHandsonGrid("#itemLawCdTable", itemLawCdCol, itemLawCdHeader, itemLawCdSettings);
+	// view clear
+	itemHsCodeDiffTable.loadData([]);
+	itemPriceHot.loadData([]);
+	itemRptNoHot.loadData([]);
+	itemLawCdTable.loadData([]);
+	
+	fn_changeItemtView('read');
+	$("#itemTextView").text("전체");
+	$("#itemTextView").prepend('<i class="fa-duotone fa-feather text-primary-900"></i>'); 
+  
+	fn_itemViewasEventReg();
+	
+	$(document).on("click", '.itemCdClass', function(){
+		alert($(this).index());
+	});
+	  
+});
+
+$(document).mousedown(function(e){
+	if(e.target.name == "itemView1_date" || e.target.name == "itemView2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}
+	}
+});
+
+// 테이블 타입 변경
+$("input[name=itemViewType]").change(function(){
+	  fn_changeItemtView($(this).val());
+});
+
+// 날짜 설정 
+function fn_chgDate1() {
+    var date = new Date();
+    var sixMonthsAgo = new Date(date);
+    sixMonthsAgo.setMonth(date.getMonth() - 6);
+
+    var today = date.toISOString().substring(0, 10);
+    var sixMonthsAgoFormatted = sixMonthsAgo.toISOString().substring(0, 10);
+
+    $("#itemView_srch2").val(sixMonthsAgoFormatted);
+    $("#itemView_srch3").val(today);
+}
+
+function fn_chgDate2() {
+    var date = new Date();
+    var oneYearAgo = new Date(date);
+    oneYearAgo.setFullYear(date.getFullYear() - 1);
+
+    var today = date.toISOString().substring(0, 10);
+    var oneYearAgoFormatted = oneYearAgo.toISOString().substring(0, 10);
+
+    $("#itemView_srch2").val(oneYearAgoFormatted);
+    $("#itemView_srch3").val(today);
+}
+
+function fn_chgDate3() {
+    var date = new Date();
+    var threeYearsAgo = new Date(date);
+    threeYearsAgo.setFullYear(date.getFullYear() - 3);
+
+    var today = date.toISOString().substring(0, 10);
+    var threeYearsAgoFormatted = threeYearsAgo.toISOString().substring(0, 10);
+
+    $("#itemView_srch2").val(threeYearsAgoFormatted);
+    $("#itemView_srch3").val(today);
+}
+
+function fn_chgDate4() {
+	var endDt = new Date();
+    var fiveYearsAgo = new Date(endDt); 
+
+    fiveYearsAgo.setFullYear(endDt.getFullYear() - 5);
+
+    var today = endDt.toISOString().substring(0, 10);
+    var fiveYearsAgoFormatted = fiveYearsAgo.toISOString().substring(0, 10);
+
+    $("#itemView_srch2").val(fiveYearsAgoFormatted);
+    $("#itemView_srch3").val(today);
+}
+
+function fn_itemViewasEventReg() {
+	$("#itemViewTable .wtHolder").scroll(function(){
+		var scrollTop = $("#itemViewTable .wtHolder").scrollTop();
+  	  	var countPerPage = $("#itemViewPageCnt option:selected").val();
+  	  	var rowHeight = itemViewHot.getRowHeight();
+  	  	var addCnt = 727;
+  	  	if(countPerPage == "50") {
+  		  addCnt = 727;
+  	  	} else if(countPerPage == "100"){
+  		  addCnt = 2040;
+  	  	} else if(countPerPage == "200"){
+  		  addCnt = 3290;
+  	  	} else if(countPerPage == "500"){
+  		  addCnt = 4540;
+  	  	}
+  	  	if (itemViewScrollTp && itemViewIndex != 9999 && scrollTop >= (countPerPage * itemViewIndex * rowHeight) + addCnt){
+  		  fn_itemViewScroll();
+  	  	}
+	});
+}
+
+// 스크롤
+function fn_itemViewScroll(){
+	fn_loading(true);
+	itemViewScrollTp = false;
+	itemViewIndex++;
+
+	$.ajax({
+		 type : "POST",
+		 url : "/item/selectItemViewList.do",
+		 data : fn_setItemViewForm(),
+		 beforeSend : function(xmlHttpRequest){
+			 xmlHttpRequest.setRequestHeader("AJAX", "true");
+		 },
+		 dataType: "json",
+         success : function(data) {
+        	var getData = itemViewHot.getSourceData();
+        	var meargeJson = getData.concat(data.resultList);
+        	itemViewHot.loadData(meargeJson);
+        	itemViewScrollTp = true;
+        	fn_loading(false);
+         },
+         error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+        	}
+         }
+	});
+}
+
+// 중복허용
+function fn_checkboxClick(){
+	var searchTp = $("input:radio[name=itemView_srch1]:checked").val();	
+	fn_changeItemViewType(searchTp);
+}
+
+// 테이블 타입 변경
+function fn_changeItemtView(type){
+	var searchTp = $("input:radio[name=itemView_srch1]:checked").val();
+	itemViewHot.updateSettings({readOnly:true, contextMenu : false});
+	$("#docBtn").children().show();
+	fn_changeItemViewType(searchTp);
+};
+
+// 검색구분 변경
+function fn_changeItemViewType(type){
+	var tableType = $("input:radio[name=itemViewType]:checked").val();
+	
+	let itemViewCol = new fn_itemViewTableCol();
+	let itemViewHeader = new fn_itemViewTableHeader();
+	let itemViewHidden = new fn_itemViewTableHidden();
+	
+	let itemChkDetailCol = new fn_itemChkDetailTableCol();
+	let itemChkDetailHeader = new fn_itemChkDetailTableHeader();
+	let itemChkDetailHidden = new fn_itemChkDetailTableHidden();
+	
+	let itemPriceCol = new fn_itemPriceTableCol();
+	let itemPriceHeader = new fn_itemPriceTableHeader();
+	let itemPriceHidden = new fn_itemPriceTableHidden();
+	
+	let itemRptNoCol = new fn_itemRptNoTableCol();
+	let itemRptNoHeader = new fn_itemRptNoTableHeader();
+	let itemRptNoHidden = new fn_itemRptNoTableHidden();
+	
+	var col, header, hidden, col2, header2, hidden2, col3, header3, hidden3, col4, header4, hidden4;
+
+	col = itemViewCol.itemViewCol;
+	header = itemViewHeader.itemViewHeader;
+	hidden = itemViewHidden.itemViewHidden;
+	
+	col2 = itemPriceCol.itemPriceCol;
+	header2 = itemPriceHeader.itemPriceHeader;
+	hidden2 = itemPriceHidden.itemPriceHidden;
+	
+	col3 = itemRptNoCol.itemRptNoCol;
+	header3 = itemRptNoHeader.itemRptNoHeader;
+	hidden3 = itemRptNoHidden.itemRptNoHidden;
+	
+	col4 = itemChkDetailCol.itemChkDetailCol;
+	header4 = itemChkDetailHeader.itemChkDetailHeader;
+	hidden4 = itemChkDetailHidden.itemChkDetailHidden;
+
+	itemViewHot.updateSettings(fn_handsonGridViewOption(col, header, hidden));
+	itemPriceHot.updateSettings(fn_handsonGridItemPriceOption(col2, header2, hidden2));
+	itemRptNoHot.updateSettings(fn_handsonGridItemRptNoOption(col3, header3, hidden3));
+	itemChkDetailHot.updateSettings(fn_handsonGridItemChkDetailOption(col4, header4, hidden4));
+
+	fn_searchItemView();
+};
+
+function handleSearchTypeChange(){
+	var srchType = $("input:radio[name=itemView_srch1]:checked").val();
+ 
+	if (srchType == '01') {
+		fn_itemRptNoTableCol('01');
+	} else if(srchType == "02") {
+		fn_itemRptNoTableCol('02');
+	} else {
+		fn_itemRptNoTableCol('03');
+	}
+};
+
+// 검색
+function fn_searchItemView(){
+	var selectedValue = $("input[name=itemView_srch1]:checked").val();
+    if(selectedValue === "01") {
+        $("#itemTextView").text("전체");
+        $("#itemTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else if(selectedValue === "02") {
+        $("#itemTextView").text("수입");
+        $("#itemTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    } else {
+        $("#itemTextView").text("수출");
+        $("#itemTextView").prepend('<i class="fa-duotone fa-chart-network text-primary-900"></i>'); 
+    }
+	
+	itemViewIndex = 0;
+	var data = fn_setItemViewForm();
+	var valid = fn_validateSearchDate(data["srch2"], data["srch3"]);
+	
+	if(valid === "false"){
+		data["srch2"] = null;
+		data["srch3"] = null;
+		$("#itemView_srch2").val("");
+		$("#itemView_srch3").val("");
+		return;
+	} else {
+		data["srch2"] = $("#itemView_srch2").val();
+		data["srch3"] = $("#itemView_srch3").val();
+	}
+	
+	if(data["srch2"] == null || data["srch2"] == "" || data["srch3"] == "" || data["srch3"] == null){
+		alert("날짜를 입력해 주세요.");
+		return;
+	}
+	
+	fn_loading(true);
+
+	$.ajax({
+		type : "POST",
+		url : "/item/selectItemViewList.do",
+		data : fn_setItemViewForm(),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+    		itemViewHot.loadData([]);
+        	itemViewHot.loadData(data.resultList);
+        	var totCnt = (data.resultList.length > 0) ? data.resultList[0].cnt : 0;
+        	$("#itemViewCnt").text(totCnt); //검색결과 총 갯수
+        	fn_loading(false);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+        	}
+        }
+	});
+};
+
+function enterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchItemView();
+    }
+}
+
+// 검색조건 생성
+function fn_setItemViewForm(itemCode){
+	var sData = {};
+	
+	var inputVal = $("#itemOutOfRate").val().replace(/[^0-9]/g, '');
+	var selectedValue = $("input[name=itemView_srch1]:checked").val();
+	
+	sData["srch1"] = itemCode;
+	sData["srch2"] = $("#itemView_srch2").val();
+	sData["srch3"] = $("#itemView_srch3").val();
+	sData["srch4"] = inputVal;
+	
+	sData["srchType1"] = $("#itemViewSrchType1 option:selected").val();
+	sData["srchText1"] = $("#itemViewSrchText1").val();
+	sData["srchType2"] = $("#itemViewSrchType2 option:selected").val();
+	sData["srchText2"] = $("#itemViewSrchText2").val();
+	
+	sData["srch10"] = $("#itemView_srch10").val(); // 최초,최종수리일자
+	sData["srch13"] =$("input:checkbox[name=itemView_srch13]:checked").val(); // 중복허용
+	sData["exType"] =$("input:radio[name=itemView_srch1]:checked").val(); // 검색구분
+	sData["srch14"] =$("input:radio[name=itemView_srch4]:checked").val();
+	sData["pageIndex"] = itemViewIndex;
+	
+	return sData;
+};
+
+function fn_clearItemView(){
+	var date = new Date();
+	var month = date.getMonth();
+	var dayday = date.getDate();
+	  
+	var today = new Date().toISOString().substring(0,10);
+	var mtoday = new Date(new Date().setMonth(date.getMonth() - 6)).toISOString().substring(0,10);
+	  
+	$("#itemView_srch2").val(mtoday);
+	$("#itemView_srch3").val(today);
+	$("#itemView_srch10").val("01");
+	
+	$("#itemViewSrchType1").val("");
+	$("#itemViewSrchText1").val("");
+	
+	$("#itemViewSrchType2").val("");
+  	$("#itemViewSrchText2").val("");
+  	$("input[name='itemView_srch4'][value='01']").prop("checked", true);
+    $("input[name='itemView_srch1'][value='01']").prop("checked", true);
+    
+};
+
+function fn_handsonGridViewOption(col, header, hidden){
+	var tableType = $("input:radio[name=itemViewType]:checked").val();
+	itemViewSettings = {
+		columns : col,
+		colHeaders : header,
+		hiddenColumns : {
+			copyPasteEnabled : false,
+			indicators : false,
+			columns : hidden
+		},
+		stretchH : 'all',
+		width : '100%',
+		autoWrapRow : true,
+		height : 280,
+		rowHeights : 25,
+		rowHeaders : true,
+		columnHeaderHeight : 25,
+		manualRowResize : true,
+		manualColumnResize : true,
+		manualRowMove : true,
+		manualColumnMove : false,
+		nestedHeaders: fn_itemViewTableHeader(),
+		licenseKey: 'non-commercial-and-evaluation',
+		contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+		filters : true,
+		readOnly : true,
+		allowInsertRow : true,
+		allowRemoveRow : true,
+		autoColumnSize : {samplingRatio : 23},
+		mergeCells : false,
+		wordWrap : true,
+		afterOnCellMouseDown: function(event, coords) {
+    	    var row = coords.row;
+    	    var col = coords.col;
+    	    if (col === 9 || col === 10) {
+    	        return;
+    	    }
+	        var dataList = itemViewHot.getSourceData(row, 2); 
+	        itemCode = dataList[dataList.length - 1].itemCode;
+	        fn_searchItemHsCodeDiffView(itemCode);
+	        fn_searchItemPriceView(itemCode);
+	        fn_searchItemRptNoView(itemCode);
+	        fn_searchItemLawCdView(itemCode);
+	        fn_itemPriceChart(itemCode);
+    	}
+	};
+	return itemViewSettings;
+}
+
+function fn_itemViewTableHidden(){
+	var tableType = $("input:radio[name=itemViewType]:checked").val();
+	this.itemViewHidden = [11, 12, 13];
+}
+
+function fn_itemViewTableCol(){
+	var searchTp = $("input:radio[name=itemView_srch1]:checked").val();
+	var itemView_srch20 = $("input:radio[name=itemView_srch20]:checked").val(); 
+	
+	var itemCodeChkRenderer = function(instance, td, row, col, _, value) {
+	    Handsontable.dom.empty(td);
+	    td.style.whiteSpace = "nowrap";
+	    if (value === '양호') {
+	        td.style.backgroundColor = '#E8F0EC';
+	        td.style.textAlign = 'center';
+	        td.innerHTML = value;
+	    } else if (value === '점검 완료') {
+	    	td.innerHTML = '점검 완료';
+	        td.style.backgroundColor = '#CCE5FF';
+	        td.style.textAlign = 'center';
+	    } else {
+	        td.style.backgroundColor = '#FFCCCC';
+	        td.style.textAlign = 'center';
+
+	        var buttonHtml = `
+	            <span onclick="fn_itemCodeChk(${row},${col})" style="cursor:pointer;">
+	              	점검 필요
+	            </span>
+	        `;
+	        td.innerHTML += buttonHtml;
+	    } 
+	};
+
+	var itemCodeMemoRenderer = function(instance, td, row, col, _, value) {
+	    Handsontable.dom.empty(td);
+	    td.style.whiteSpace = "nowrap"; // 줄 바꿈 방지
+	    var itemStatus = instance.getSourceDataAtRow(row).itemStatus;
+	    var itemCnt = instance.getSourceDataAtRow(row).itemCnt;
+	    if (itemStatus === "점검 완료" || itemCnt > 0) {
+	        var iconHtml = `
+	            <span onclick="fn_itemCodeMemoList(${row},${col})" class="search-icon"
+	                  style="cursor:pointer; color:#777; padding: 5px 8px; solid #777;">
+	                <i class="fas fa-search" style="font-size:12px; margin-right:4px;"></i>
+	                    점검이력 보기
+	            </span>
+	        `;
+	        td.innerHTML = iconHtml;
+	    } else {
+	        td.innerHTML = '';
+	    }
+	};
+
+	this.itemViewCol = [
+		{data : 'itemCode', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'goodsName', className : "htLeft", width: 280, wordWrap: false, readOnly:true},
+		{data : 'description', className : "htLeft", width: 350, wordWrap: false, readOnly:true},
+		{data : 'qtyUnit', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'price', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'average', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'hs', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'hsCnt', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'lawCd', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'itemStatus', className : "htCenter", width: 120, wordWrap: false, readOnly:true, renderer: itemCodeChkRenderer},
+		{data : 'itemMemo', className : "htCenter", width: 120, wordWrap: false, readOnly:true, renderer:itemCodeMemoRenderer},
+		{data : 'firstLisDay', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'lastLisDay', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'memo', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+	];
+}
+
+function fn_itemViewTableHeader() {
+	return [
+		[{ label: '물품 정보', colspan: 3 }, { label: '거래 현황', colspan: 3 }, { label: 'HS CODE', colspan: 2 }, 
+         { label: '수출입규제대상', colspan: 1 }, { rowspan: 2 }],
+        
+         ["자재코드", "거래품명", "Description(규격, 성분포함)", "거래물량(단위)", "거래금액(화폐)", "평균단가", "HS CODE", "HS CODE 종류", "요건",
+         "관리현황", "점검사항", "최초수리일자", "최종수리일자"]
+    ];
+}
+
+// ITEM 정보 - 점검 필요 팝업
+function fn_itemCodeChk(row, col) {
+	const memoDiv = document.getElementById('memoDiv');
+	memoDiv.innerHTML = `
+	<label for="memo" class="text-sm font-medium text-gray-700">&nbsp;&nbsp;&nbsp;&nbsp;
+    	메모
+    </label>
+    <input type="text" id="memo" class="flex-1 p-2 border rounded-lg focus:ring-primary-500 focus:border-primary-500 text-sm resize-none" rows="1" placeholder="점검 사유를 입력하세요.">
+    `
+	const buttonDiv = document.getElementById('itemchkDoneBtn');
+    buttonDiv.innerHTML = `
+    <div class="flex justify-center items-center gap-4 mt-4">
+        <button type="button" onclick="fn_itemCodeChkDone(${row},${col})"
+		                class="text-primary-500 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+		                    focus:ring-4 focus:ring-secondary-300 font-medium rounded px-4 py-1.5 focus:outline-none duration-300 text-sm">
+            <i class="fa-solid fa-check"></i>
+            	확인
+		</button>
+	</div>
+    `;
+	$("#itemCodeChkPopUp").modal("show");
+	
+	var rowData = itemViewHot.getSourceDataAtRow(row);
+	document.querySelector('.itemCodeChkTitle').textContent = "자재코드: " + rowData.itemCode;
+	var iData = {};
+	iData["srch1"] = rowData.itemCode;
+	
+	$.ajax({
+		type : "POST",
+		url : "/item/selectItemCodeChkList.do",
+		data : iData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	itemCodeChkListHot.loadData([]);
+        	itemCodeChkListHot.loadData(data.resultList);
+			setTimeout(function() {itemCodeChkListHot.render()}, 100);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("에러 발생");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+function fn_handsonGridItemCodeChkOption() {
+	itemCodeChkElementSettings = {
+        columns: [
+        	{data: 'excGname', type: 'text', className: "htCenter", readOnly: true},
+        	{data: 'itemDesc', type: 'text', className: "htCenter", readOnly: true},
+        	{data: 'unit', type: 'text', className: "htCenter", readOnly: true},
+        	{data: 'currency', type: 'text', className: "htCenter", readOnly: true},
+        	{data: 'hs', type: 'text', className: "htCenter", readOnly: true},
+        	],
+        stretchH: 'all',
+        width: '100%',
+        autoWrapRow: true,
+        height: 230,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+        colHeaders: ["거래품명", "Description", "거래단위", "통화단위", "HS CODE"],
+        colWidths: [30, 100, 30, 30],
+        manualRowResize: true,
+        manualColumnResize: true,
+        manualRowMove: true,
+        manualColumnMove: false,
+        contextMenu: false,
+        dropdownMenu: false,
+        filters: true,
+        readOnly: false,
+        columnSorting: { indicator: true },
+        autoColumnSize: { samplingRatio: 23 },
+        hiddenColumns: { copyPasteEnabled: false, indicators: false, columns: [5,6]},
+        mergeCells: false,
+        allowInsertRow: false,
+    };
+    return itemCodeChkElementSettings;
+}
+
+function itemCodeChkClose() {
+    document.activeElement.blur();
+    setTimeout(function () {
+        $("#itemCodeChkPopUp").modal("hide");
+    }, 10);
+}
+
+function fn_itemCodeChkDone(row, col) {
+    var rowData = itemCodeChkListHot.getSourceData();
+    var rowData2 = itemViewHot.getSourceData();
+    var itemStatus = rowData2[row].itemStatus;
+    var hs = rowData2[row].hs;
+    var unit = rowData2[row].unit;
+    var memo = document.getElementById('memo').value;
+    var memoSeq = rowData2[row].memoSeq;
+    var currency = rowData2[row].currency;
+    
+    var iData = rowData.map(function(row) {
+        return {
+            itemStatus: itemStatus,
+            memo: memo,
+            itemCode: row.itemCode,
+            excGname: row.excGname,
+            unit: row.unit,
+            itemDesc: row.itemDesc,
+            currency: row.currency,
+            hs: row.hs,
+            memoSeq : row.memoSeq
+        };
+    });
+    $.ajax({
+        type: "POST",
+        url: "/item/insertItemChkedList.do",
+        data: JSON.stringify(iData),
+        beforeSend: function(xmlHttpRequest) {
+            xmlHttpRequest.setRequestHeader("AJAX", "true");
+        },
+        processData: false,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(data) {
+            if (data.status === "success") {
+                document.activeElement.blur();
+                setTimeout(function () {
+                	itemViewHot.render();
+                    $("#itemCodeChkPopUp").modal("hide");
+                	itemViewHot.setDataAtRowProp(row, "memo", memo);
+                    itemViewHot.setDataAtCell(row, col, "점검 완료");
+                    itemViewHot.getCell(row, col).style.backgroundColor = '#CCE5FF';
+                    itemViewHot.getCell(row, col).style.textAlign = 'center';
+                    
+                }, 10);
+            }
+        },
+        error: function(e, textStatus, errorThrown) {
+            if (e.status == 400) {
+                alert("Your request is up. Please log back in if you wish continue");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert(msgSaveError);
+            }
+        }
+    });
+}
+
+function itemMemoPopUpClose() {
+    document.activeElement.blur();
+    setTimeout(function () {
+        $("#itemMemoPopUp").modal("hide");
+    }, 10);
+}
+
+// 점검 사항 - 메모보기 타입 변경
+function fn_changeItemMemoType(type){
+	var col, header, hidden;
+	let itemMemoCol = new fn_itemMemoTableCol(type);
+	let itemMemoHeader = new fn_itemMemoTableHeader(type);
+	let itemMemoHidden = new fn_itemMemoTableHidden();
+	
+	col = itemMemoCol.itemMemoCol;
+	header = itemMemoHeader.itemMemoHeader;
+	hidden = itemMemoHidden.itemMemoHidden;
+	
+	itemMemoHot.updateSettings(fn_handsonGridItemMemoOption(col, header, hidden));
+};
+
+function fn_itemMemoTableCol(tableType) {
+	var itemChkCmpListViewRenderer = function(instance, td, row, col, _, value) {
+	    Handsontable.dom.empty(td);
+	    td.style.whiteSpace = "nowrap";
+
+        var iconHtml = `
+            <span onclick="fn_itemChkDetailList(${row},${col})" class="search-icon"
+                  style="cursor:pointer; color:#777; padding: 5px 8px; solid #777;">
+                <i class="fas fa-plus" style="font-size:12px; margin-right:4px;"></i>
+                    상세보기
+            </span>
+        `;
+        td.innerHTML = iconHtml;
+        td.style.textAlign = 'center';
+	};
+	
+    if (tableType === "read") {
+        this.itemMemoCol = [
+            {data: 'regDt', type: 'text', className: "htCenter", width: 40, readOnly: true},
+            {data: 'usrNm', type: 'text', className: "htCenter", width: 30, readOnly: true},
+            {data: 'memo', type: 'text', className: "htCenter", width: 120, readOnly: true},
+            {data: '', type: 'text', className: "htCenter", width: 40, readOnly: true, renderer : itemChkCmpListViewRenderer}
+        ];
+    }
+}
+
+function fn_itemMemoTableHeader(tableType) {
+    this.itemMemoHeader = ["점검일자", "점검자", "메모", "점검사항"];
+}
+
+function fn_itemMemoTableHidden(){
+	this.itemMemoHidden = [];
+}
+
+// table
+function fn_handsonGridItemMemoOption(col, header, hidden){
+	var tableType = $("#itemMemoMod:checked").val();
+	itemMemoSettings = {
+		columns : col,
+		colHeaders : header,
+		hiddenColumns : {
+			copyPasteEnabled : false,
+			indicators : false,
+			columns : hidden
+		},
+		stretchH : 'all',
+		width : '100%',
+		autoWrapRow : true,
+		height: 200,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+		manualRowResize : true,
+		manualColumnResize : true,
+		manualRowMove : true,
+		manualColumnResize : true,
+		manualColumnMove : false,
+		licenseKey: 'non-commercial-and-evaluation',
+		// dropdownMenu : true,
+		contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+		filters : true,
+		readOnly : (tableType == "read") ? true : false,
+		allowInsertRow : false,
+		allowRemoveRow : true,
+		// columnSorting : {indicator : true},
+		autoColumnSize : {samplingRatio : 30},
+		mergeCells : false,
+		wordWrap : true,
+		afterChange: function(changes, source) {
+		    /*if (!changes) return;
+		    const hot = this;
+		    
+		    changes.forEach(([row, prop, oldValue, newValue]) => {
+		        if (prop === 'checkBox') {
+		            let isChecked = newValue === 'yes';
+		            tableType = "edit";
+		            hot.setCellMeta(row, 3, 'readOnly', !isChecked);
+		            hot.render();
+		            if (isChecked) {
+		                focusMemoCell(row);
+		            }
+		        }
+		    });*/
+		}
+    };
+    return itemMemoSettings;
+}
+
+//ITEM 정보 - 메모 보기
+function fn_itemCodeMemoList(row, col) {
+    $("#itemMemoPopUp").modal("show");
+    
+    var data = itemViewHot.getSourceDataAtRow(row);
+    itemCode = data.itemCode;
+    hs = data.hs;
+    currency = data.currency;
+    
+    document.querySelector('.itemMemoTitle').textContent = "자재코드: " + itemCode;
+
+    var iData = {};
+    iData["srch1"] = itemCode;
+    iData["srch2"] = hs;
+    iData["srch3"] = currency;
+	
+	$.ajax({
+		type : "POST",
+		url : "/item/selectItemCodeMemoList.do",
+		data : iData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+            itemMemoHot.loadData([]);
+            itemMemoHot.loadData(data.resultList);
+            setTimeout(function() {itemMemoHot.render()}, 200);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("에러 발생");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+/*function fn_itemMemoMod() {
+	var cnt = 0; 
+	var data = itemMemoHot.getSourceData();
+	iData = [];
+	for (var i = 0; i < data.length; i++) {
+		if (data[i]["checkBox"] == "yes") {
+			iData.push(data[i]);
+			cnt++;
+		}
+	}
+	if (cnt == 0){
+    	alert("수정할 메모를 선택해 주세요.");
+    	return;
+    }
+    var iData = data.map((item, index) => ({
+        itemCode: item.itemCode,
+        hs: item.hs,
+        currency: item.currency,
+        memo: item.memo,
+    }));
+
+    $.ajax({
+        type: "POST",
+        url: "/item/updateItemMemoList.do",
+        data: JSON.stringify(iData),
+        beforeSend: function (xmlHttpRequest) {
+            xmlHttpRequest.setRequestHeader("AJAX", "true");
+        },
+        processData: false,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (data) {
+            if (data.status === "success") {
+            	alert('수정되었습니다.')
+                document.activeElement.blur();
+                setTimeout(function () {
+                    $("#itemMemoPopUp").modal("hide");
+                }, 10);
+            }
+        },
+        error: function (e, textStatus, errorThrown) {
+            if (e.status == 400) {
+                alert("Your request is up. Please log back in if you wish to continue");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert(msgSaveError);
+            }
+        }
+    });
+}*/
+
+/*function focusMemoCell(rowIndex) {
+    let colIndex = itemMemoHot.propToCol('memo');
+    itemMemoHot.selectCell(rowIndex, colIndex);
+
+    setTimeout(() => {
+        let editor = itemMemoHot.getActiveEditor();
+        if (editor && editor.TEXTAREA) {
+            let $textarea = $(editor.TEXTAREA);
+            $textarea.addClass("focus:ring-primary-500 focus:border-primary-500 text-sm resize-none");
+            $textarea.focus();
+            
+            let textareaElement = $textarea[0];
+            if (textareaElement) {
+                textareaElement.setSelectionRange(textareaElement.value.length, textareaElement.value.length);
+            }
+        }
+    }, 50);
+}*/
+
+/*function fn_checkItemMemoAll(){
+	var check = "" ;
+	var changeArr = [];
+	if ( $("#id_checkItemMemoAll").prop("checked") == false) {
+		check = "yes" ;
+	} else {
+		check = "no" ;
+	}
+
+	var data = itemMemoHot.getData();
+	for(var i=0; i<data.length; i++){
+		changeArr.push([i,0,check])
+	}
+	itemMemoHot.setDataAtCell(changeArr);
+	if(check == "yes"){
+		$("#id_checkItemMemoAll").prop("checked", true);
+	} else {
+		$("#id_checkItemMemoAll").prop("checked", false);
+	}
+}*/
+
+/*function fn_itemMemoDel() {
+	var cnt = 0; 
+	var data = itemMemoHot.getSourceData();
+	iData = [];
+	for (var i = 0; i < data.length; i++) {
+		if (data[i]["checkBox"] == "yes") {
+			var rowData = data[i];
+			rowData.rowIndex = i;
+			iData.push(data[i]);
+			cnt++;
+		}
+	}
+	if (cnt == 0){
+    	alert("삭제할 메모를 선택해 주세요.");
+    	return;
+    }
+    if (confirm("메모를 삭제하시겠습니까?")) {
+        $.ajax({
+            type: "POST",
+            url: "/item/deleteItemMemoList.do",
+            data: JSON.stringify(iData),
+            beforeSend: function(xmlHttpRequest) {
+                xmlHttpRequest.setRequestHeader("AJAX", "true");
+            },
+            processData: false,
+            contentType: "application/json; charset=utf-8",
+            success: function(data) {
+            	alert('삭제되었습니다.');
+            	setTimeout(function () {
+                    for (let i = 0; i < iData.length; i++) {
+                        let rowIndex = iData[i].rowIndex;
+                        if (typeof rowIndex === 'number' && rowIndex >= 0) {
+                            itemMemoHot.setDataAtRowProp(rowIndex, "memo", "");
+                            itemMemoHot.setDataAtRowProp(rowIndex, "checkBox", "no");
+                        }
+                    }
+                }, 10);
+            },
+            error: function (e, textStatus, errorThrown) {
+                if (e.status == 400) {
+                    alert("Your request is up. Please log back in if you wish to continue");
+                    location.href = document.referrer;
+                } else {
+                    console.log(errorThrown);
+                    alert("An error occurred while saving the data. Please try again later.");
+                }
+            }
+        });
+    }
+}*/
+
+function fn_itemChkDetailList(row, col) {
+    $("#itemChkDetailPopUp").modal("show");
+    
+    var data = itemMemoHot.getSourceDataAtRow(row);
+    itemCode = data.itemCode;
+    document.querySelector('.itemChkDetailTitle').textContent = "자재코드: " + itemCode;
+
+    var dData = {};
+    dData["srch1"] = itemCode;
+	
+	$.ajax({
+		type : "POST",
+		url : "/item/selectItemChkDetailList.do",
+		data : dData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : 'json',
+		async: false,
+        success : function(data) {
+        	itemChkDetailHot.loadData([]);
+        	itemChkDetailHot.loadData(data.resultList);
+        	setTimeout(function() {itemChkDetailHot.render()}, 50);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("에러 발생");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+function fn_itemChkDetailTableCol() {
+    this.itemChkDetailCol = [
+    	{data: 'checkBox', type: 'checkbox', className: "htCenter", width: 20, checkedTemplate: 'yes', uncheckedTemplate: 'no'},
+        {data: 'description', type: 'text', className: "htCenter", width: 140, readOnly: true},
+        {data: 'unit', type: 'text', className: "htCenter", width: 30, readOnly: true},
+        {data: 'currency', type: 'text', className: "htCenter", width: 30, readOnly: true},
+        {data: 'hs', type: 'text', className: "htCenter", width: 40, readOnly: true},
+    ];
+}
+
+function fn_itemChkDetailTableHeader() {
+    this.itemChkDetailHeader = ["", "Description", "거래단위", "통화단위", "HS CODE"];
+}
+
+function fn_itemChkDetailTableHidden(){
+	this.itemChkDetailHidden = [];
+}
+
+// table
+function fn_handsonGridItemChkDetailOption(col, header, hidden){
+	var tableType = $("input:radio[name=itemViewType]:checked").val();
+	itemChkDetailSettings = {
+		columns : col,
+		colHeaders : header,
+		hiddenColumns : {
+			copyPasteEnabled : false,
+			indicators : false,
+			columns : hidden
+		},
+		stretchH : 'all',
+		width : '100%',
+		autoWrapRow : true,
+		height: 200,
+        rowHeights: 25,
+        rowHeaders: true,
+        columnHeaderHeight: 25,
+		manualRowResize : true,
+		manualColumnResize : true,
+		manualRowMove : true,
+		manualColumnResize : true,
+		manualColumnMove : false,
+		licenseKey: 'non-commercial-and-evaluation',
+		contextMenu : (tableType == "enrol") ? ['row_above', 'row_below', '---------', 'undo', 'redo', 'remove_row'] : false,
+		filters : true,
+		readOnly : (tableType == "read") ? true : false,
+		allowInsertRow : false,
+		allowRemoveRow : true,
+		autoColumnSize : {samplingRatio : 30},
+		mergeCells : false,
+		wordWrap : true,
+		afterChange: function(changes, source) {
+			/*if (!changes) return;
+		    const hot = this;
+		    
+		    changes.forEach(([row, prop, oldValue, newValue]) => {
+		        if (prop === 'checkBox') {
+		            let isChecked = newValue === 'yes';
+		            tableType = "edit";
+		            hot.setCellMeta(row, 4, 'readOnly', !isChecked);
+		            hot.render();
+		            if (isChecked) {
+		                focusMemoCell(row);
+		            }
+		        }
+		    });*/
+		}
+    };
+    return itemChkDetailSettings;
+}
+
+function itemDetailPopUpClose() {
+    document.activeElement.blur();
+    setTimeout(function () {
+        $("#itemChkDetailPopUp").modal("hide");
+    }, 10);
+}
+
+function fn_itemChkDetailDel() {
+	var cnt = 0; 
+	var data = itemChkDetailHot.getSourceData();
+	iData = [];
+	for (var i = 0; i < data.length; i++) {
+		if (data[i].checkBox == "yes") {
+			iData.push(data[i]);
+        	cnt++;
+		}
+	}
+	if (cnt == 0){
+    	alert("삭제할 점검이력을 선택해 주세요.");
+    	return;
+    }
+	
+	if (confirm("선택한 점검이력을 삭제하시겠습니까?")) {
+		$.ajax({
+			type : "POST",
+			url : "/item/deleteItemChkDetailList.do",
+			data : JSON.stringify(iData),
+			beforeSend : function(xmlHttpRequest){
+				xmlHttpRequest.setRequestHeader("AJAX", "true");
+			},
+			contentType: "application/json; charset=utf-8",
+			dataType : 'json',
+			async: false,
+	        success : function(data) {
+	        	if (data.status === "success") {
+		        	for (let i = iData.length - 1; i >= 0; i--) {
+		        		itemChkDetailHot.alter('remove_row', iData[i]);
+		            }
+		        	alert('삭제되었습니다.');
+		        	itemDetailPopUpClose();
+		        	fn_searchItemView();
+	        	}
+	        },
+	        error : function(e, textStatus, errorThrown) {
+	        	if(e.status == 400){
+	        		alert("에러 발생");
+	        		location.href = document.referrer;
+	        	} else {
+		        	console.log(errorThrown);
+		        	alert(msgSearchError);
+	        	}
+	        }
+		});
+	}
+}
+
+function fn_searchItemHsCodeDiffView(itemCode) {
+	fn_itemClearTableData();
+    fn_searchWithCallback("/item/selectItemHsCodeDiffList.do", itemHsCodeDiffScrollTp, itemHsCodeDiffIndex, itemHsCodeDiffTable, function() {
+    	var rData = itemHsCodeDiffTable.getSourceData();
+        $.each(rData, function(index, value) {
+            value["__children"] = value["Children"];
+            delete value["Children"];
+        });
+        
+        $("#itemHsCodeDiffTable").html("");
+        itemHsCodeDiffTable = fn_itemMakeHandsonGrid("#itemHsCodeDiffTable", itemHsCodeDiffCol, itemHsCodeDiffHeader, itemHsCodeDiffSettings, {
+			  data: rData,
+			  rowHeaders: true,
+			  nestedRows: true,
+			  bindRowsWithHeaders: 'strict',
+			  licenseKey: 'non-commercial-and-evaluation'
+	    });
+        if (rData.length > 1) {
+        	itemHsCodeDiffTable.getPlugin('nestedRows').collapsingUI.collapseAll();
+        }
+    }, itemCode);
+}
+
+var itemHsCodeDiffCol = [
+	{data: 'itemCode', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'hs', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'goodsName', className: "htLeft", width: 230, wordWrap: false, readOnly:true},
+	{data: 'cmpnyNm', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'rptNo', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'ran', className: "htCenter", width: 50, wordWrap: false, readOnly:true},
+	{data: 'sil', className: "htCenter", width: 50, wordWrap: false, readOnly:true},
+	{data: 'taxKi', className: "htCenter", width: 50, wordWrap: false, readOnly:true},
+	{data: 'gsRate', className: "htRight", width: 50, wordWrap: false, readOnly:true},
+	{data: 'price', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'currency', className: "htCenter", width: 50, wordWrap: false, readOnly:true},
+	{data: 'totTaxSum', className: "htRight", width: 90, wordWrap: false, readOnly:true},
+	{data: 'reporter', className: "htCenter", width: 90, wordWrap: false, readOnly:true}
+];
+
+var itemHsCodeDiffHeader = [
+	"자재코드", "HS CODE", "거래품명", "납세의무자", "신고번호", "란번호", "규격번호",
+	"세종", "세율", "결제금액", "결제통화", "납부세액", "신고인"
+];
+
+function fn_searchWithCallback(url, scrollTp, viewIndex, table, callback, itemCode) {
+	scrollTp = false;
+	
+	$.ajax({
+		type: "POST",
+		url: url,
+		data: fn_setItemViewForm(itemCode),
+		beforeSend: function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+	    success: function(data) {
+	    	var getData = table.getSourceData();
+	    	var meargeJson = getData.concat(data.resultList);
+	    	table.loadData(meargeJson);
+	    	scrollTp = true;
+	    	
+	    	if(typeof(callback) == 'function') {
+	    		callback();
+	    	}
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+}
+
+function fn_itemClearTableData() {
+	itemHsCodeDiffTable.loadData([]);
+	itemLawCdTable.loadData([]);
+}
+
+// 핸더슨 생성 함수
+function fn_itemMakeHandsonGrid(selecor, col, header, settings, customSettings){
+	var viewElement = document.querySelector(selecor);
+    
+    settings = JSON.parse(JSON.stringify(gridDefaultSettings));
+    settings["columns"] = col;
+    settings["colHeaders"] = header;
+    
+    if(customSettings) {
+    	 Object.assign(settings, customSettings);
+    }
+    
+    return new Handsontable(viewElement, settings);
+}
+
+var gridDefaultSettings = {
+	columns: null,
+	colHeaders: null,
+	columnSorting : true,
+	hiddenColumns: {
+		copyPasteEnabled: false,
+		indicators: false,
+		columns: false,
+	},
+	width: '100%',
+	autoWrapRow: true,
+	height: 200,
+	rowHeights: 25,
+	rowHeaders: true,
+	columnHeaderHeight: 25,
+	stretchH: 'all',
+	stretchV: 'all',
+	manualRowResize: true,
+	manualColumnResize: true,
+	manualRowMove: false,
+	manualColumnMove: false,
+	dropdownMenu: false,
+	contextMenu: false,
+	filters: true,
+	readOnly: true,
+	autoColumnSize: {samplingRatio: 23},
+	mergeCells: false,
+	wordWrap: true,
+	afterGetColHeader: function(col, TH){
+	  
+	}
+};
+
+function fn_callAjaxWithCallback(url, callback) {
+	
+	$.ajax({
+		type: "POST",
+		url: url,
+		data: fn_setItemViewForm(),
+		beforeSend: function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+	    success: function(data) {
+	    	if(typeof(callback) == 'function') {
+	    		callback(data);
+	    	}
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+}
+
+function fn_handsonGridItemPriceOption(col, header, hidden){
+	var tableType = $("input:radio[name=importViewType]:checked").val();
+	
+	itemPriceSettings = {
+		columns : col,
+		colHeaders : header,
+		hiddenColumns : {
+			copyPasteEnabled : false,
+			indicators : false,
+			columns : hidden
+		},
+		stretchH : 'all',
+		width : '50%',
+		autoWrapRow : true,
+		height : 85,
+		border : 1,
+		rowHeights : 25,
+		columnHeaderHeight : 20,
+		rowHeaders: false,
+		manualRowResize : true,
+		manualColumnResize : true,
+		manualRowMove : true,
+		manualColumnMove : false,
+		licenseKey: 'non-commercial-and-evaluation',
+		filters : true,
+		readOnly :  true ,
+		allowInsertRow : true,
+		allowRemoveRow : true,
+		 // columnSorting : {indicator : true},
+		autoColumnSize : {samplingRatio : 30},
+	    mergeCells : false,
+	    wordWrap : false,
+		afterOnCellMouseDown : function(event, coords){
+			
+		}
+	};
+	return itemPriceSettings;
+}
+
+function fn_itemPriceTableHidden(){
+	this.itemPriceHidden = [];
+}
+
+// 퐁당퐁당 백그라운드 적용
+/*function styleRenderer(instance, td, row, col, prop, value, cellProperties) {
+    Handsontable.renderers.TextRenderer.apply(this, arguments);
+    td.style.backgroundColor = "#6b6b6b";
+    td.style.color = "white";
+    return td;
+}*/
+
+function fn_itemPriceTableCol(){
+	this.itemPriceCol = [
+		{data : 'category', width: 80, wordWrap: false, readOnly:true, renderer: function (instance, td, row, col, prop, value, cellProperties) {
+		    td.style.backgroundColor = "#6b6b6b";
+		    td.style.color = "#ffffff";
+		    td.style.textAlign = "center";
+		    td.style.fontWeight = "bold";
+		    td.innerHTML = value;
+		    return td;
+		  }},
+		{data : 'itemCode', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'maxPrice', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+		{data : 'minPrice', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+		{data : 'avgPrice', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+	];
+}
+
+function fn_itemPriceTableHeader(){
+	this.itemPriceHeader = ["", "자재코드", "최고단가(KRW)", "최저단가(KRW)", "평균단가(KRW)"];
+}
+
+function fn_searchItemPriceView(itemCode) {
+	$.ajax({
+		type : "POST",
+		url : "/item/selectItemPriceList.do",
+		data : fn_setItemViewForm(itemCode),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+			let concatData = [];
+            if (data.resultList) {
+            	concatData = concatData.concat(data.resultList);
+            }
+            if (data.resultList2) {
+            	concatData = concatData.concat(data.resultList2);
+            }
+            itemPriceHot.loadData(concatData);
+		},
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+};
+
+
+function fn_searchItemOutOfRate(itemCode){
+	let itemOutOfRateVal = document.getElementById('itemOutOfRate').value;
+
+	if (!itemOutOfRateVal) {
+		itemOutOfRateVal = 10;
+	}
+	 
+	if(itemOutOfRateVal > 100 ) { 
+		alert("0~100 이하의 값만 유효합니다.");
+		return false;
+	}
+	
+	$.ajax({
+		type : "POST",
+		url : "/item/selectItemOutOfRateList.do",
+		data : fn_setItemViewForm(itemCode),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	itemRptNoHot.loadData([]);
+        	itemRptNoHot.loadData(data.resultList);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+        	}
+        }
+	});
+};
+
+function enterkey2() {
+	if (window.event.keyCode == 13) {
+		fn_searchItemOutOfRate();
+    }
+}
+
+function fn_itemPriceChart(itemCode) {
+	var type = $("input:radio[name=itemView_srch1]:checked").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/item/selectItemPriceChart.do",
+		data : fn_setItemViewForm(itemCode),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType : "json",
+		success : function(data) {
+			document.querySelector('#itemPriceChart').remove();
+			document.querySelector('.itemPriceChart').innerHTML = '<canvas id="itemPriceChart" height="225"></canvas>';
+
+		    var labelDate = [];  // x축 값 (월별)
+		    var impAvg = [];     // 수입 평균 단가
+		    var expAvg = [];     // 수출 평균 단가
+
+		    if (type == "01") {
+			    for (var i = data.resultList.length - 1; i >= 0; i--) {
+			        labelDate.push(data.resultList[i].date);
+			        impAvg.push(data.resultList[i].impMlyAvg === 0 ? null : data.resultList[i].impMlyAvg);
+			        expAvg.push(data.resultList[i].expMlyAvg === 0 ? null : data.resultList[i].expMlyAvg);
+			    }
+		
+			    var ctx = document.getElementById('itemPriceChart').getContext('2d');
+			    var myChart = new Chart(ctx, {
+			        type: 'line',
+			        data: {
+			            labels: labelDate,
+			            datasets: [
+			                {
+			                    label: '수입 평균단가(KRW)',
+			                    data: impAvg,
+			                    borderColor: 'rgba(255, 99, 132, 1)', // 선 색
+			                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+			                    borderWidth: 1,
+			                    fill: false,
+			                    tension: 0.1,
+			                    spanGaps: true, // 0은 표시X
+			                    steppedLine: 'after' // null이면 꺾지 않음
+			                },
+			                {
+			                    label: '수출 평균단가(KRW)',
+			                    data: expAvg,
+			                    borderColor: 'rgba(54, 162, 235, 1)',
+			                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+			                    borderWidth: 1,
+			                    fill: false,
+			                    tension: 0.1,
+			                    spanGaps: true,
+			                    steppedLine: 'after'
+			                }
+			            ]
+			        },
+			        options: {
+			            responsive: true,
+			            maintainAspectRatio: false,
+			            scales: {
+			                y: {
+			                    beginAtZero: true
+			                }
+			            }
+			        }
+			    });
+			} else if (type == "02") {
+			    for (var i = data.resultList.length - 1; i >= 0; i--) {
+			        labelDate.push(data.resultList[i].date);
+			        impAvg.push(data.resultList[i].impMlyAvg === 0 ? null : data.resultList[i].impMlyAvg);
+			    }
+
+			    var ctx = document.getElementById('itemPriceChart').getContext('2d');
+			    var myChart = new Chart(ctx, {
+			        type: 'line',
+			        data: {
+			            labels: labelDate,
+			            datasets: [
+			                {
+			                    label: '수입 평균단가 (KRW)',
+			                    data: impAvg,
+			                    borderColor: 'rgba(255, 99, 132, 1)', // 선 색
+			                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+			                    borderWidth: 1,
+			                    fill: false,
+			                    tension: 0.1,
+			                    spanGaps: true,
+			                    steppedLine: 'after'
+			                }
+			            ]
+			        },
+			        options: {
+			            responsive: true,
+			            maintainAspectRatio: false,
+			            scales: {
+			                y: {
+			                    beginAtZero: true
+			                }
+			            }
+			        }
+			    });
+			} else {
+			    for (var i = data.resultList.length - 1; i >= 0; i--) {
+			        labelDate.push(data.resultList[i].date);
+			        expAvg.push(data.resultList[i].expMlyAvg === 0 ? null : data.resultList[i].expMlyAvg);
+			    }
+
+			    var ctx = document.getElementById('itemPriceChart').getContext('2d');
+			    var myChart = new Chart(ctx, {
+			        type: 'line',
+			        data: {
+			            labels: labelDate,
+			            datasets: [
+			                {
+			                    label: '수출 평균단가 (KRW)',
+			                    data: expAvg,
+			                    borderColor: 'rgba(54, 162, 235, 1)',
+			                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+			                    borderWidth: 1,
+			                    fill: false,
+			                    tension: 0.1,
+			                    spanGaps: true,
+			                    steppedLine: 'after'
+			                }
+			            ]
+			        },
+			        options: {
+			            responsive: true,
+			            maintainAspectRatio: false,
+			            scales: {
+			                y: {
+			                    beginAtZero: true
+			                }
+			            }
+			        }
+			    });
+			}
+		},
+		error : function(e, textStatus, errorThrown) {
+			if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+				console.log(errorThrown);
+				alert(msgSearchError);
+        	}
+		}
+	});
+}
+
+function fn_handsonGridItemRptNoOption(col, header, hidden){
+	var tableType = $("input:radio[name=importViewType]:checked").val();
+	
+	itemRptNoSettings = {
+		columns : col,
+		colHeaders : header,
+		hiddenColumns : {
+			copyPasteEnabled : false,
+			indicators : false,
+			columns : hidden
+		},
+		stretchH : 'all',
+		width : '100%',
+		autoWrapRow : true,
+		height : 200,
+		border : 1,
+		rowHeights : 25,
+		columnHeaderHeight : 20,
+		rowHeaders: true,
+		manualRowResize : true,
+		manualColumnResize : true,
+		manualRowMove : true,
+		manualColumnMove : false,
+		licenseKey: 'non-commercial-and-evaluation',
+		filters : true,
+		readOnly :  true ,
+		allowInsertRow : true,
+		allowRemoveRow : true,
+		 // columnSorting : {indicator : true},
+		autoColumnSize : {samplingRatio : 23},
+	    mergeCells : false,
+	    wordWrap : true,
+		afterOnCellMouseDown : function(event, coords){
+			
+		}
+	};
+	return itemRptNoSettings;
+}
+
+function fn_itemRptNoTableHidden(){
+	this.itemRptNoHidden = [];
+}
+
+function fn_itemRptNoTableCol(){
+	var searchTp = $("input:radio[name=itemView_srch1]:checked").val();
+	// console.log(searchTp);
+	this.itemRptNoCol =(searchTp == "01") ? [
+		{data : 'nabFirm', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'blNo', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'rptNo', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'ran', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'sil', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'lisDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'itemCode', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'upi', className : "htCenter", width: 80, wordWrap: false, readOnly:true},
+		{data : 'ut', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'conKi', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'supFirm', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'currency', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'wonPrice', className : "htCenter", width: 90, wordWrap: false, readOnly:true},
+		{data : 'avgPrice', className : "htCenter", width: 90, wordWrap: false, readOnly:true},
+		{data : 'unitDiff', className : "htCenter", width: 90, wordWrap: false, readOnly:true}
+		
+	]: (searchTp == "02") ? [
+		{data : 'nabFirm', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'blNo', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+		{data : 'rptNo', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+		{data : 'ran', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'sil', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'lisDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'itemCode', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'upi', className : "htCenter", width: 80, wordWrap: false, readOnly:true},
+		{data : 'ut', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'conKi', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'supFirm', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'currency', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'wonPrice', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'avgPrice', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'unitDiff', className : "htCenter", width: 100, wordWrap: false, readOnly:true}
+		
+	]:[
+		{data : 'expFirm', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'blNo', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+		{data : 'rptNo', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+		{data : 'ran', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'sil', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'expLisDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'itemCode', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'price', className : "htCenter", width: 80, wordWrap: false, readOnly:true},
+		{data : 'ut', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'conMet', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'buyFirm', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'currency', className : "htCenter", width: 50, wordWrap: false, readOnly:true},
+		{data : 'wonPrice', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'avgPrice', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'unitDiff', className : "htCenter", width: 100, wordWrap: false, readOnly:true}
+	];
+}
+
+function fn_itemRptNoTableHeader(){
+	this.itemRptNoHeader = [
+		"납세의무자", "B/L번호", "신고번호", "란번호", "규격번호", "수리일자", "자재코드", 
+		"신고단가", "신고단위", "결제방법", "해외거래처", "결제통화", "원화단가", "평균단가", "단가차이(평균)"
+	];
+}
+
+function fn_searchItemRptNoView(itemCode) {
+	$.ajax({
+		type : "POST",
+		url : "/item/selectItemRptNoList.do",
+		data : fn_setItemViewForm(itemCode),
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+		success : function(data) {
+			fn_searchItemOutOfRate(itemCode);
+			itemRptNoHot.loadData([]);
+			itemRptNoHot.loadData(data.resultList);
+		},
+	    error : function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+	    	}
+	    }
+	});
+};
+
+function fn_searchItemLawCdView(itemCode) {
+    fn_itemClearTableData();
+    
+    fn_searchWithCallback("/item/selectItemLawCdList.do", itemLawCdScrollTp, itemLawCdIndex, itemLawCdTable, function() {
+        var rData = itemLawCdTable.getSourceData();
+        $.each(rData, function(index, value) {
+            if (index === 0 && value["Children1"] && Array.isArray(value["Children1"]) && value["Children1"].length > 0) {
+                value["__children"] = value["Children1"];
+                delete value["Children1"];
+            }
+
+            if (index === 1 && value["Children2"] && Array.isArray(value["Children2"]) && value["Children2"].length > 0) {
+                value["__children"] = value["Children2"];
+                delete value["Children2"];
+            }
+
+        });
+
+        $("#itemLawCdTable").html("");
+        itemLawCdTable = fn_itemMakeHandsonGrid("#itemLawCdTable", itemLawCdCol, itemLawCdHeader, itemLawCdSettings, {
+            data: rData,
+            rowHeaders: true,
+            nestedRows: true, // '+'
+            bindRowsWithHeaders: 'strict',
+            licenseKey: 'non-commercial-and-evaluation'
+        });
+
+        if (rData.length > 1) {
+            itemLawCdTable.getPlugin('nestedRows').collapsingUI.collapseAll();
+        }
+    }, itemCode);
+}
+
+var itemLawCdCol = [
+	{data: 'itemCode', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'hs', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'goodsName', className: "htLeft", width: 230, wordWrap: false, readOnly:true},
+	{data: 'cmpnyNm', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'cont', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'includeCnt', className: "htCenter", width: 50, wordWrap: false, readOnly:true},
+	{data: 'excludeCnt', className: "htCenter", width: 50, wordWrap: false, readOnly:true},
+	{data: 'rptNo', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'ranNo', className: "htCenter", width: 50, wordWrap: false, readOnly:true},
+	{data: 'sil', className: "htCenter", width: 50, wordWrap: false, readOnly:true},
+	{data: 'document', className: "htRight", width: 50, wordWrap: false, readOnly:true},
+	{data: 'approvalNo', className: "htRight", width: 50, wordWrap: false, readOnly:true},
+	{data: 'excludeCd', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'excludeReason', className: "htCenter", width: 50, wordWrap: false, readOnly:true},
+	{data: 'reporter', className: "htCenter", width: 90, wordWrap: false, readOnly:true}
+];
+
+var itemLawCdHeader = [
+	"자재코드", "HS CODE", "거래품명", "납세의무자", "세관장확인대상", "요건적용", "요건비대상",
+	"신고번호", "란번호", "규격번호", "요건서류명", "승인번호", "비대상코드", "비대상사유", "신고인"
+];
+
+
+function fn_itemViewExcelDownload(){
+	if(!confirm('Excel 다운로드 작업을 시작하시겠습니까?\n수집량에 따라 시간이 다소 소요될 수 있습니다.\n작업이 완료되면 다운로드 창에서 확인하실 수 있습니다.')) return;
+	fn_loading(true);
+	
+	var searchType = $("input:radio[name=itemView_srch1]:checked").val();
+	var exTitArr = [];
+	var exTit = "";
+	var exColArr = [];
+	var exCol = "";
+    var exTitDivArr = [];
+    var exTitDiv = "";
+	
+	let itemViewCol = new fn_itemViewTableCol();
+    let itemViewHeader = new fn_itemViewTableHeader();
+	exColArr.push(fn_getExcelCol(itemViewCol.itemViewCol));
+	exTitArr.push(fn_getExcelHead(itemViewHeader));
+	
+	exColArr.push(fn_getExcelCol(itemHsCodeDiffCol));
+	exTitArr.push(fn_getExcelHead(itemHsCodeDiffHeader));
+	
+	let itemRptNoCol = new fn_itemRptNoTableCol();
+	let itemRptNoHeader = new fn_itemRptNoTableHeader();
+	exColArr.push(fn_getExcelCol(itemRptNoCol.itemRptNoCol));
+	exTitArr.push(fn_getExcelHead(itemRptNoHeader.itemRptNoHeader));
+
+	exColArr.push(fn_getExcelCol(itemLawCdCol));
+	exTitArr.push(fn_getExcelHead(itemLawCdHeader));
+ 	exCol = exColArr.join("|||");
+	exTit = exTitArr.join("||||");
+	
+	var fileName = "";
+	var divName = ""; 
+    switch (searchType) {
+        case "01":
+        	fileName = "ITEM정보(전체)";
+        	divName = "ITEM정보(전체)";
+            break;
+        case "02":
+        	fileName = "ITEM정보(수입)";
+        	divName = "ITEM정보(수입)";
+            break;
+        case "03":
+        	fileName = "ITEM정보(수출)";
+        	divName = "ITEM정보(수출)";
+            break;
+        default:
+        	fileName = "ITEM정보(전체)";
+        	divName = "ITEM정보(전체)";
+    }
+    exTitDiv = `1|${divName}||2|세번적용내역||3|단가-신고내역||4|요건적용여부`;
+    var parameters = {exCol : "", exTit: "", exTitDiv: "", exType: "", srch40: ""};
+	
+    $.each(fn_setItemViewForm(itemCode), function(attrName, attrValue){
+    	parameters[attrName] = attrValue;
+    });
+	
+	parameters.exCol = exCol.replace(/ /g,"_");
+	parameters.exTit = exTit.replace(/ /g,"_");
+	parameters.exTitDiv = exTitDiv.replace(/ /g,"_");
+	parameters.exType = searchType;
+	parameters.srch40 = fileName;
+		
+	$.ajax({
+		url: "/item/itemViewExcelDownload.do",
+		data: parameters,
+		type: 'POST',
+		cache: false,
+		timeout: 200000,
+		xhrFields: {
+			responseType: "blob",
+		},
+	    success: function(blob, status, xhr) {
+	    	try {
+	    		var fileName = "";
+				var disposition = xhr.getResponseHeader("Content-Disposition");
+
+			    if (disposition && disposition.indexOf("attachment") !== -1) {
+			      	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+			         var matches = filenameRegex.exec(disposition);
+			         if (matches != null && matches[1]) {
+			        	 fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+			         }
+			    }
+
+			    if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+			    	window.navigator.msSaveOrOpenBlob(blob, fileName);
+			    } else {
+		           var URL = window.URL || window.webkitURL;
+		           var downloadUrl = URL.createObjectURL(blob);
+
+		           if (fileName) {
+		        	   var a = document.createElement("a");
+			           if (a.download === undefined) {
+			        	   window.location.href = downloadUrl;
+			           } else {
+		                   a.href = downloadUrl;
+		                   a.download = fileName;
+		                   document.body.appendChild(a);
+		                   a.click();
+			           }
+		           } else {
+		               window.location.href = downloadUrl;
+		           }
+			   }
+			   fn_loading(false);
+			} catch (e) {
+				console.log(e);
+				fn_loading(false);
+			};
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+}
+
+
+function fn_getExcelCol(viewCol) {
+	return viewCol.map(item => item['data'] + '|' + item['className'] + '|' + item['width']).join("||");
+}
+
+function fn_getExcelHead(viewHead){
+	var result = [];
+	
+	if(viewHead.length > 1 && typeof(viewHead[0][0]) == 'object') {
+		for(var i=0; i < viewHead.length; i++) {
+			if(i == viewHead.length -1){
+				result.push(viewHead[i].join("|null||") + "|null");
+			} else{
+				result.push(viewHead[i].map(item => (item['label'] ? item['label'] : 'null') + '|' + (item['colspan'] ? item['colspan'] : 'null')).join("||"));
+			}
+		}
+		return result.join("|||");
+	} else{
+		return viewHead.join("|null||") + "|null";
+	};
+}
+
+function fn_setComma(num) {
+	return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function fn_removeComma(num) {
+	if(num) {
+		return parseInt(num.replace(/,/g, ""));
+	} else {
+		return num;
+	}
+}
+
+function fn_dynamicColors(cnt) {
+	if(!cnt) {
+		var r = Math.floor(Math.random() * 127 + 128);
+	    var g = Math.floor(Math.random() * 127 + 128);
+	    var b = Math.floor(Math.random() * 127 + 128);
+	    return "rgb(" + r + "," + g + "," + b + ")";
+	}
+	
+	var result = [];
+	
+	for(var i=0; i < cnt; i++) {
+		var r = Math.floor(Math.random() * 127 + 128);
+	    var g = Math.floor(Math.random() * 127 + 128);
+	    var b = Math.floor(Math.random() * 127 + 128);
+	    result.push("rgb(" + r + "," + g + "," + b + ")");
+	}
+    
+	return result;
+};
+
+function fn_skipped(ctx, value){
+	return ctx.p0.skip || ctx.p1.skip ? value : undefined;
+}
+
+var numberValidator = function (value, callback) {
+	var tmpStr='';
+	var valueStr = (''+value).replace(/\s/g, '');
+	for(var i = 0 ; i<valueStr.length; i++){
+		tmpStr =valueStr.substring(i, i+1);
+		if(    tmpStr == '0' || tmpStr == '1' || tmpStr == '2'
+            || tmpStr == '3' || tmpStr == '4' || tmpStr == '5'
+            || tmpStr == '6' || tmpStr == '7' || tmpStr == '8'
+            || tmpStr == '9' || tmpStr == ',' || tmpStr == '.'){
+		}else{
+			callback(false);
+			break;
+		}
+		callback(true);
+	}
+};

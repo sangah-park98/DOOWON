@@ -1,0 +1,1120 @@
+package egovframework.pf.docu.web;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.ws.rs.core.HttpHeaders;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.docu.service.SaveDocuFileVO;
+import egovframework.pf.docu.service.pfDocumentService;
+import egovframework.pf.exp.web.ZipDocuFileDownload;
+import egovframework.pf.exp.web.ZipFileDownload;
+
+/**
+ * @Class Name : PurchaseController.java
+ * @Description : 구매원장 컨트롤러
+ * @Modification Information
+ * @
+ * @  수정일          수정자               수정내용
+ * @ ---------        ----------     -------------------------------
+ * @ 2020.01.10		심창무               최초생성
+ *
+ * @author 심창무
+ * @since 2020.01.10
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by MOPAS All right reserved.
+ */
+
+@Controller
+public class DocumentController {
+
+	@Resource(name = "pfDocumentService")
+	private pfDocumentService pfdocumentService;
+	
+	// 서류관리 페이지 호출
+	@RequestMapping(value = "/docu/documentView.do")
+	public String documentView(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		// model.addAttribute("writable","Y".equals(userVO.getAdminYn())?"Y":documentService.selectWriteCheck(request.getServletPath(), userVO));
+		SearchVO vo = new SearchVO();
+		String lang = userVO.getLang();
+		vo.setLang(lang);
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+		vo.setCorpNo(userVO.getCorpNo());
+		model.addAttribute("lang", lang);
+		model.addAttribute("userCmpnyCd", userVO.getCmpnyCd());
+		model.addAttribute("corpNo", userVO.getCorpNo());
+		System.out.println("서류 회사명: " + userVO.getCorpNo());
+		return "document/documentView";
+	}
+	
+	@RequestMapping(value = "/document/selectDocuImpModalUpdateList.do")
+	public ModelAndView selectDocuImpModalUpdateList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		
+		System.out.println(vo.getSrch1());
+		System.out.println(vo.getSrch2());
+		
+		List<?> resultList = null;
+		resultList = pfdocumentService.selectDocuImpModalUpdateList(vo);
+		ModelAndView mav = new ModelAndView("jsonView");
+	    mav.addObject("resultList", resultList);
+
+	    return mav;
+	}
+	
+	@RequestMapping(value = "/document/dropDocuImpModalFile.do", method = RequestMethod.POST)
+	@ResponseBody
+	public ModelAndView dropDocuImpModalFile(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		
+		pfdocumentService.dropDocuImpModalFile(vo);
+		model.addAttribute("SaveStatus", "SaveStatus");
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+		
+	}
+	
+	@RequestMapping(value = "/document/selectDocuExpModalUpdateList.do")
+	public ModelAndView selectDocuExpModalUpdateList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		
+		List<?> resultList = null;
+		resultList = pfdocumentService.selectDocuExpModalUpdateList(vo);
+		ModelAndView mav = new ModelAndView("jsonView");
+	    mav.addObject("resultList", resultList);
+
+	    return mav;
+	}
+	
+	@RequestMapping(value = "/document/dropDocuExpModalFile.do", method = RequestMethod.POST)
+	@ResponseBody
+	public ModelAndView dropDocuExpModalFile(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		
+		pfdocumentService.dropDocuExpModalFile(vo);
+		model.addAttribute("SaveStatus", "SaveStatus");
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+		
+	}
+	
+	// 서류관리 수입 데이터 리스트 불러오기
+	@RequestMapping(value = "/document/selectDocumentImpViewList.do")
+	public ModelAndView selectDocumentImpViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCmpnyCd(userVO.getCmpnyCd());
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+		
+		List<?> resultList = null;
+		
+		resultList = pfdocumentService.selectDocumentImpViewList(vo);
+		ModelAndView mav = new ModelAndView("jsonView");
+	    mav.addObject("resultList", resultList);
+
+	    return mav;
+	    
+	}
+	
+	// 서류관리 수출 데이터 리스트 불러오기
+	@RequestMapping(value = "/document/selectDocumentExpViewList.do")
+	public ModelAndView selectDocumentExpViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setCmpnyCd(userVO.getCmpnyCd());
+			vo.setCorpNo(userVO.getCorpNo());
+		}
+		List<?> resultList = null;
+		
+		resultList = pfdocumentService.selectDocumentExpViewList(vo);
+		ModelAndView mav = new ModelAndView("jsonView");
+		mav.addObject("resultList", resultList);
+		
+		return mav;
+	}
+	
+	// 서류 업로드 저장하기
+	@RequestMapping(value = "/document/insertDocuFilesInfo.do")
+	public ModelAndView insertDocuFilesInfo(
+					@RequestParam("fileBL[]") MultipartFile[] filesBl,
+					@RequestParam("fileDC[]") MultipartFile[] filesDc,
+					@RequestParam("fileUC[]") MultipartFile[] filesUc,
+					@RequestParam("fileCI[]") MultipartFile[] filesCi,
+					@RequestParam("filePL[]") MultipartFile[] filesPl,
+					@RequestParam("fileCO[]") MultipartFile[] filesCo,
+					@RequestParam("fileRQ[]") MultipartFile[] filesRq,
+					@RequestParam("fileAC[]") MultipartFile[] filesAc,
+					@RequestParam("fileCB[]") MultipartFile[] filesCb,
+					@RequestParam("fileOT[]") MultipartFile[] filesOt,
+					@RequestParam("docuRptNo") String docuRptNo,
+					@RequestParam("docuType") String docuType,
+					@RequestParam("docuBlNo") String docuBlNo,
+					@RequestParam("docuInvoiceNo") String docuInvoiceNo,
+					 HttpServletRequest request, ModelMap model
+		) throws Exception {
+		
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		System.out.println("docuBlNo: " + docuBlNo);
+		String cmpnyCd = userVO.getCmpnyCd();
+		String regId = userVO.getId();
+		if (docuType.equals("02")) { // imp
+		
+			for (MultipartFile file : filesBl) {
+				  
+				System.out.println("Received file Bl: " + file.getOriginalFilename());
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("BL");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setBlNo(docuBlNo);
+				
+				pfdocumentService.insertImpDocuFilesInfo(vo);
+		    }
+			
+			for (MultipartFile file : filesDc) {
+				
+				System.out.println("Received file Dc: " + file.getOriginalFilename());
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("DC");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setBlNo(docuBlNo);
+				
+				pfdocumentService.insertImpDocuFilesInfo(vo);
+			}
+			
+			for (MultipartFile file : filesUc) {
+				  
+				System.out.println("Received file Uc: " + file.getOriginalFilename());
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("UC");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setBlNo(docuBlNo);
+				
+				pfdocumentService.insertImpDocuFilesInfo(vo);
+		    }
+			
+			for (MultipartFile file : filesCi) {
+			    System.out.println("Received file In: " + file.getOriginalFilename());
+			  	String name = file.getName();
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("CI");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setBlNo(docuBlNo);
+				
+				pfdocumentService.insertImpDocuFilesInfo(vo);
+			 }
+			
+			 for (MultipartFile file : filesPl) {
+			    System.out.println("Received file Pl: " + file.getOriginalFilename());
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("PL");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setBlNo(docuBlNo);
+				
+				pfdocumentService.insertImpDocuFilesInfo(vo);
+			 }
+			 
+			 for (MultipartFile file : filesCo) {
+			    System.out.println("Received file Re: " + file.getOriginalFilename());
+			  	String name = file.getName();
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("CO");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setBlNo(docuBlNo);
+				
+				pfdocumentService.insertImpDocuFilesInfo(vo);
+			 } 
+			 
+			 for (MultipartFile file : filesRq) {
+			     System.out.println("Received file Rq: " + file.getOriginalFilename());
+			  	 String name = file.getName();
+				 String fileName = file.getOriginalFilename();
+				 String directory = "/home/files";
+				 String filepath = Paths.get(directory, fileName).toString();
+				 BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				 stream.write(file.getBytes());
+				 stream.close();
+				
+				 SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				 Calendar date = Calendar.getInstance();
+				 String uploadDt = sdf.format(date.getTime());
+				 SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				 Calendar date2 = Calendar.getInstance();
+				 String regDt = sdf2.format(date2.getTime());
+				
+				 vo.setOrgFileName(fileName);
+				 vo.setDocuType("RQ");
+				 vo.setFileName(fileName);
+				 vo.setUploadDt(uploadDt);
+				 vo.setRegDt(regDt);
+				 vo.setRegId(regId);
+				 vo.setCmpnyCd(cmpnyCd);
+				 vo.setRptNo(docuRptNo);
+				 vo.setBlNo(docuBlNo);
+				 
+				 pfdocumentService.insertImpDocuFilesInfo(vo);
+			  }
+			 for (MultipartFile file : filesCb) {
+				 System.out.println("Received file Cb: " + file.getOriginalFilename());
+				 String name = file.getName();
+				 String fileName = file.getOriginalFilename();
+				 String directory = "/home/files";
+				 String filepath = Paths.get(directory, fileName).toString();
+				 BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				 stream.write(file.getBytes());
+				 stream.close();
+				 
+				 SaveDocuFileVO vo = new SaveDocuFileVO();
+				 
+				 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				 Calendar date = Calendar.getInstance();
+				 String uploadDt = sdf.format(date.getTime());
+				 SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				 Calendar date2 = Calendar.getInstance();
+				 String regDt = sdf2.format(date2.getTime());
+				 
+				 vo.setOrgFileName(fileName);
+				 vo.setDocuType("CB");
+				 vo.setFileName(fileName);
+				 vo.setUploadDt(uploadDt);
+				 vo.setRegDt(regDt);
+				 vo.setRegId(regId);
+				 vo.setCmpnyCd(cmpnyCd);
+				 vo.setRptNo(docuRptNo);
+				 vo.setBlNo(docuBlNo);
+				 
+				 pfdocumentService.insertImpDocuFilesInfo(vo);
+			 }
+			 for (MultipartFile file : filesOt) {
+				 System.out.println("Received file Rq: " + file.getOriginalFilename());
+				 String name = file.getName();
+				 String fileName = file.getOriginalFilename();
+				 String directory = "/home/files";
+				 String filepath = Paths.get(directory, fileName).toString();
+				 BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				 stream.write(file.getBytes());
+				 stream.close();
+				 
+				 SaveDocuFileVO vo = new SaveDocuFileVO();
+				 
+				 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				 Calendar date = Calendar.getInstance();
+				 String uploadDt = sdf.format(date.getTime());
+				 SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				 Calendar date2 = Calendar.getInstance();
+				 String regDt = sdf2.format(date2.getTime());
+				 
+				 vo.setOrgFileName(fileName);
+				 vo.setDocuType("OT");
+				 vo.setFileName(fileName);
+				 vo.setUploadDt(uploadDt);
+				 vo.setRegDt(regDt);
+				 vo.setRegId(regId);
+				 vo.setCmpnyCd(cmpnyCd);
+				 vo.setRptNo(docuRptNo);
+				 vo.setBlNo(docuBlNo);
+				 
+				 pfdocumentService.insertImpDocuFilesInfo(vo);
+			 }
+	
+			  for (MultipartFile file : filesAc) {
+			     System.out.println("Received file Ac: " + file.getOriginalFilename());
+				 String fileName = file.getOriginalFilename();
+				 String directory = "/home/files";
+				 String filepath = Paths.get(directory, fileName).toString();
+				 BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				 stream.write(file.getBytes());
+				 stream.close();
+				
+				 SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				 Calendar date = Calendar.getInstance();
+				 String uploadDt = sdf.format(date.getTime());
+				 SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				 Calendar date2 = Calendar.getInstance();
+				 String regDt = sdf2.format(date2.getTime());
+				
+				 vo.setOrgFileName(fileName);
+				 vo.setDocuType("AC");
+				 vo.setFileName(fileName);
+				 vo.setUploadDt(uploadDt);
+				 vo.setRegDt(regDt);
+				 vo.setRegId(regId);
+				 vo.setCmpnyCd(cmpnyCd);
+				 vo.setRptNo(docuRptNo);
+				 vo.setBlNo(docuBlNo);
+				
+				 pfdocumentService.insertImpDocuFilesInfo(vo);
+			  }
+			  
+		} else if(docuType.equals("03")) { // exp
+			for (MultipartFile file : filesBl) {
+				System.out.println("exp_Bl: " + file.getOriginalFilename());
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("BL");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setInvoiceNo(docuInvoiceNo);
+				
+				pfdocumentService.insertExpDocuFilesInfo(vo);
+		    }
+			
+			for (MultipartFile file : filesDc) {
+				
+				System.out.println("exp_Dc: " + file.getOriginalFilename());
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("DC");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setInvoiceNo(docuInvoiceNo);
+				
+				pfdocumentService.insertExpDocuFilesInfo(vo);
+			}
+			
+			for (MultipartFile file : filesUc) {
+				
+				System.out.println("exp_Uc: " + file.getOriginalFilename());
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("UC");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setInvoiceNo(docuInvoiceNo);
+				
+				pfdocumentService.insertExpDocuFilesInfo(vo);
+			}
+			
+			for (MultipartFile file : filesCi) {
+			    System.out.println("exp_In: " + file.getOriginalFilename());
+			  	String name = file.getName();
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("CI");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setInvoiceNo(docuInvoiceNo);
+				
+				pfdocumentService.insertExpDocuFilesInfo(vo);
+			 }
+			
+			 for (MultipartFile file : filesPl) {
+			    System.out.println("exp_Pl: " + file.getOriginalFilename());
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("PL");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setInvoiceNo(docuInvoiceNo);
+				
+				pfdocumentService.insertExpDocuFilesInfo(vo);
+			 }
+			 
+			 for (MultipartFile file : filesCo) {
+			    System.out.println("exp_Re: " + file.getOriginalFilename());
+			  	String name = file.getName();
+				String fileName = file.getOriginalFilename();
+				String directory = "/home/files";
+				String filepath = Paths.get(directory, fileName).toString();
+				BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				stream.write(file.getBytes());
+				stream.close();
+				
+				SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				Calendar date = Calendar.getInstance();
+				String uploadDt = sdf.format(date.getTime());
+				SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				Calendar date2 = Calendar.getInstance();
+				String regDt = sdf2.format(date2.getTime());
+				
+				vo.setOrgFileName(fileName);
+				vo.setDocuType("CO");
+				vo.setFileName(fileName);
+				vo.setUploadDt(uploadDt);
+				vo.setRegDt(regDt);
+				vo.setRegId(regId);
+				vo.setCmpnyCd(cmpnyCd);
+				vo.setRptNo(docuRptNo);
+				vo.setInvoiceNo(docuInvoiceNo);
+				
+				pfdocumentService.insertExpDocuFilesInfo(vo);
+			 } 
+			 
+			 for (MultipartFile file : filesRq) {
+			     System.out.println("exp_Rq: " + file.getOriginalFilename());
+			  	 String name = file.getName();
+				 String fileName = file.getOriginalFilename();
+				 String directory = "/home/files";
+				 String filepath = Paths.get(directory, fileName).toString();
+				 BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				 stream.write(file.getBytes());
+				 stream.close();
+				
+				 SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				 Calendar date = Calendar.getInstance();
+				 String uploadDt = sdf.format(date.getTime());
+				 SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				 Calendar date2 = Calendar.getInstance();
+				 String regDt = sdf2.format(date2.getTime());
+				
+				 vo.setOrgFileName(fileName);
+				 vo.setDocuType("RQ");
+				 vo.setFileName(fileName);
+				 vo.setUploadDt(uploadDt);
+				 vo.setRegDt(regDt);
+				 vo.setRegId(regId);
+				 vo.setCmpnyCd(cmpnyCd);
+				 vo.setRptNo(docuRptNo);
+				 vo.setInvoiceNo(docuInvoiceNo);
+				 
+				 pfdocumentService.insertExpDocuFilesInfo(vo);
+			  }
+			 for (MultipartFile file : filesCb) {
+				 System.out.println("exp_Cb: " + file.getOriginalFilename());
+				 String name = file.getName();
+				 String fileName = file.getOriginalFilename();
+				 String directory = "/home/files";
+				 String filepath = Paths.get(directory, fileName).toString();
+				 BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				 stream.write(file.getBytes());
+				 stream.close();
+				 
+				 SaveDocuFileVO vo = new SaveDocuFileVO();
+				 
+				 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				 Calendar date = Calendar.getInstance();
+				 String uploadDt = sdf.format(date.getTime());
+				 SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				 Calendar date2 = Calendar.getInstance();
+				 String regDt = sdf2.format(date2.getTime());
+				 
+				 vo.setOrgFileName(fileName);
+				 vo.setDocuType("CB");
+				 vo.setFileName(fileName);
+				 vo.setUploadDt(uploadDt);
+				 vo.setRegDt(regDt);
+				 vo.setRegId(regId);
+				 vo.setCmpnyCd(cmpnyCd);
+				 vo.setRptNo(docuRptNo);
+				 vo.setInvoiceNo(docuInvoiceNo);
+				 
+				 pfdocumentService.insertExpDocuFilesInfo(vo);
+			 }
+			 for (MultipartFile file : filesOt) {
+				 System.out.println("exp_Rq: " + file.getOriginalFilename());
+				 String name = file.getName();
+				 String fileName = file.getOriginalFilename();
+				 String directory = "/home/files";
+				 String filepath = Paths.get(directory, fileName).toString();
+				 BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				 stream.write(file.getBytes());
+				 stream.close();
+				 
+				 SaveDocuFileVO vo = new SaveDocuFileVO();
+				 
+				 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				 Calendar date = Calendar.getInstance();
+				 String uploadDt = sdf.format(date.getTime());
+				 SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				 Calendar date2 = Calendar.getInstance();
+				 String regDt = sdf2.format(date2.getTime());
+				 
+				 vo.setOrgFileName(fileName);
+				 vo.setDocuType("OT");
+				 vo.setFileName(fileName);
+				 vo.setUploadDt(uploadDt);
+				 vo.setRegDt(regDt);
+				 vo.setRegId(regId);
+				 vo.setCmpnyCd(cmpnyCd);
+				 vo.setRptNo(docuRptNo);
+				 vo.setInvoiceNo(docuInvoiceNo);
+				 
+				 pfdocumentService.insertExpDocuFilesInfo(vo);
+			 }
+	
+			  for (MultipartFile file : filesAc) {
+			     System.out.println("exp_Ac: " + file.getOriginalFilename());
+				 String fileName = file.getOriginalFilename();
+				 String directory = "/home/files";
+				 String filepath = Paths.get(directory, fileName).toString();
+				 BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+				 stream.write(file.getBytes());
+				 stream.close();
+				
+				 SaveDocuFileVO vo = new SaveDocuFileVO();
+				
+				 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				 Calendar date = Calendar.getInstance();
+				 String uploadDt = sdf.format(date.getTime());
+				 SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+				 Calendar date2 = Calendar.getInstance();
+				 String regDt = sdf2.format(date2.getTime());
+				
+				 vo.setOrgFileName(fileName);
+				 vo.setDocuType("AC");
+				 vo.setFileName(fileName);
+				 vo.setUploadDt(uploadDt);
+				 vo.setRegDt(regDt);
+				 vo.setRegId(regId);
+				 vo.setCmpnyCd(cmpnyCd);
+				 vo.setRptNo(docuRptNo);
+				 vo.setInvoiceNo(docuInvoiceNo);
+				
+				 pfdocumentService.insertExpDocuFilesInfo(vo);
+			  }
+		} else {}
+		
+	ModelAndView mav = new ModelAndView("jsonView", model);
+	return mav ;
+	} 
+	
+	// ResponseEntity<String> String 반환값 처리를 위함   * ex. "success" or "fail"
+	// 서류 다운로드
+	@PostMapping(value = "/document/downLoadZipFileDocuList.do")
+	public ResponseEntity<String> downLoadZipFileDocuList(@RequestBody List<ZipDocuFileDownload> downloadFile,
+	        @ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model,
+	        HttpServletResponse response) throws Exception {
+	    System.out.println("---------------downLoadZipFileDocuList---------------");
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    vo.setLang(userVO.getLang());
+	    vo.setCmpnyCd(userVO.getCmpnyCd());
+	    vo.setCorpNo(userVO.getCorpNo());
+	    
+	    List<?> resultList = null;
+	    for (ZipDocuFileDownload zipFile : downloadFile) {
+	    	List<ZipDocuFileDownload> zipFiles = new ArrayList<>(); //선택한 파일을 확인하기 위한 새로운 배열 선언
+	    	Map<String, Object> paramMap = new HashMap<>();
+	    	System.out.println(zipFile.getRptNo());
+	    	System.out.println(zipFile.getMgCode());
+	    	System.out.println(zipFile.getBlno());
+	    	// System.out.println(zipFile.getCi()); // true Or false
+	    	zipFiles.add(zipFile); //다운로드 시도할 신고번호를 paramMap 오브젝트에 넣기 위해 배열에 추가
+	    
+	    paramMap.put("zipFiles", zipFiles);
+	    System.out.println(paramMap);
+	    resultList = pfdocumentService.selectDownloadFileList(paramMap); 
+	    System.out.println("resultList : " + resultList);
+	    
+	    if(resultList.size() == 0) {
+	    	return ResponseEntity.status(HttpStatus.OK).body("fail");
+	    }
+	    List<String> docuOrgFiles = new ArrayList<>();
+	    List<String> saveDir = new ArrayList<>();
+	        for (Object result : resultList) { // 조회된 결과 값이 있을 경우 zip 파일을 만들기 위한 파일명, 파일경로를 배열로 처리
+	        	@SuppressWarnings("unchecked")
+	        	Map<String, Object> resultMap = (Map<String, Object>) result;
+	        	String docuOrgFile = (String) resultMap.get("docuOrgFile");
+	        	String docuPath = (String) resultMap.get("docuPath");
+	        	docuOrgFiles.add(docuOrgFile);
+        		saveDir.add(docuPath);
+	        }
+	        System.out.println("docuOrgFiles: " + docuOrgFiles);
+	        System.out.println("docuOrgFilesSize: " + docuOrgFiles.size());
+	        System.out.println("docuPath: " + saveDir);
+	        
+	        String zipFileName;
+	        if (zipFile.getBlno() != null && !zipFile.getBlno().isEmpty()) {
+	        	zipFileName = zipFile.getBlno() + "_" + zipFile.getRptNo() + ".zip";
+	        } else if (zipFile.getMgCode() != null && !zipFile.getMgCode().isEmpty()) {
+	        	zipFileName = zipFile.getMgCode() + "_" + zipFile.getRptNo() + ".zip";
+	        } else {
+	        	zipFileName = zipFile.getRptNo() + ".zip";
+	        }
+	        
+	        System.out.println("파일명: " + zipFileName);
+	        createZipFile(docuOrgFiles, zipFileName, saveDir); // 선언된 배열 zip 파일로 만들기
+	    }
+	        return ResponseEntity.status(HttpStatus.OK).body("success");
+	    }
+	    
+
+	private void createZipFile(List<String> docuOrgFiles, String zipFileName, List<String> saveDir) throws IOException {
+	    String zipFilePath = "/home/files" + File.separator + zipFileName;
+	    try (FileOutputStream fos = new FileOutputStream(zipFilePath);
+	         ZipOutputStream zos = new ZipOutputStream(fos)) {
+	        
+	        for (int i = 0; i < docuOrgFiles.size(); i++) {
+	        	String fileName = docuOrgFiles.get(i);
+	        	String saveDir2 = saveDir.get(i);
+	        	File file = new File(saveDir2 + File.separator + fileName);
+	            if (file.exists()) {
+	                byte[] buffer = new byte[1024];
+	                FileInputStream fis = new FileInputStream(file);
+	                zos.putNextEntry(new ZipEntry(fileName));
+	                int length;
+	                while ((length = fis.read(buffer)) > 0) {
+	                    zos.write(buffer, 0, length);
+	                }
+	                zos.closeEntry();
+	                fis.close();
+	            }
+			}
+	    }
+	}
+	
+	@RequestMapping(value = "/docu/downloadDocuFile.do")
+  	public void downloadDocuFile(
+  			HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String zipName = request.getParameter("zipDownloadName");
+		System.out.println("zipName: " + zipName);
+  		String saveDir = "/home/files";
+  		File file = new File(saveDir + "/" + zipName + ".zip");
+  		response.setHeader("Content-Disposition","attachment;filename=\"" + zipName + ".zip\";");
+
+  		FileInputStream fileInputStream = new FileInputStream(file);
+  		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+  		byte b [] = new byte[1024];
+  		int data = 0;
+
+  		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
+  		{
+  			servletOutputStream.write(b, 0, data);
+  		}
+
+  		servletOutputStream.flush();
+  		servletOutputStream.close();
+  		fileInputStream.close();
+  	}
+	
+	@PostMapping(value = "/document/downloadFileZip.do")
+	public void downloadFileZip(@RequestBody List<ZipFileDownload> downloadFile,
+			@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model,
+			HttpServletResponse response) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+
+		String saveDir = "/home/files";
+		String zipFileName = downloadFile.get(0).getBlno() + "_" + downloadFile.get(0).getRptNo() + ".zip";
+
+		try {
+			FileOutputStream fos = new FileOutputStream(saveDir + File.separator + zipFileName);
+            ZipOutputStream zipOut = new ZipOutputStream(fos);
+
+            // 파일 목록을 순회하며 압축 파일에 추가
+            for (ZipFileDownload file : downloadFile) {
+                addFileToZip(saveDir, file.getDocuFile(), zipOut);
+            }
+	            zipOut.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			
+		}
+	}
+	
+	@RequestMapping(value = "/document/deleteDocuFile.do", method = RequestMethod.POST)
+	@ResponseBody
+	public ModelAndView deleteDocuFile(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		
+		System.out.println(vo.getSrch2());
+		System.out.println(vo.getSrch6());
+		
+		pfdocumentService.deleteDocuFile(vo);
+		model.addAttribute("SaveStatus", "SaveStatus");
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/document/docuPopupDeleteList.do", method = RequestMethod.POST)
+	@ResponseBody
+	public ModelAndView docuPopupDeleteList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		
+		System.out.println(vo.getSrch2());
+		System.out.println(vo.getSrch6());
+		
+		pfdocumentService.docuPopupDeleteList(vo);
+		model.addAttribute("SaveStatus", "SaveStatus");
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	
+	@PostMapping(value = "/document/docuDownLoadZipFileList.do")
+	public void docuDownLoadZipFileList(@RequestBody List<ZipFileDownload> downloadFile,
+			@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model,
+			HttpServletResponse response) throws Exception {
+		System.out.println("docuDownLoadZipFileList-------------------");
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setLang(userVO.getLang());
+		vo.setCmpnyCd(userVO.getCmpnyCd());
+
+		String saveDir = "/home/files";
+		String zipFileName = downloadFile.get(0).getBlno() + ".zip";
+
+		try {
+			FileOutputStream fos = new FileOutputStream(saveDir + File.separator + zipFileName);
+            ZipOutputStream zipOut = new ZipOutputStream(fos);
+
+            // 파일 목록을 순회하며 압축 파일에 추가
+            for (ZipFileDownload file : downloadFile) {
+                addFileToZip(saveDir, file.getDocuFile(), zipOut);
+            }
+	            // ZIP 출력 스트림 닫기
+	            zipOut.close();
+	            
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			
+		}
+	}
+	
+	private void addFileToZip(String directoryPath, String fileName, ZipOutputStream zipOut) throws IOException {
+        File file = new File(directoryPath, fileName);
+        FileInputStream fis = new FileInputStream(file);
+        ZipEntry zipEntry = new ZipEntry(fileName);
+        zipOut.putNextEntry(zipEntry);
+
+        byte[] bytes = new byte[1024];
+        int length;
+        while ((length = fis.read(bytes)) >= 0) {
+            zipOut.write(bytes, 0, length);
+        }
+
+        fis.close();
+    }
+	
+	@RequestMapping(value = "/document/docuAddToZipFileList.do")
+  	public void docuAddToZipFileList(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  		String zipName = request.getParameter("zipName");
+  		System.out.println("zipName : " + zipName);
+  		String saveDir = "/home/files";
+  		File file = new File(saveDir + "/" + zipName + ".zip");
+  		response.setHeader("Content-Disposition","attachment;filename=\"" + zipName + ".zip\";");
+
+  		FileInputStream fileInputStream = new FileInputStream(file);
+  		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+  		byte b [] = new byte[1024];
+  		int data = 0;
+
+  		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
+  		{
+  			servletOutputStream.write(b, 0, data);
+  		}
+
+  		servletOutputStream.flush();
+  		servletOutputStream.close();
+  		fileInputStream.close();
+  	}
+	
+	
+	@RequestMapping(value = "/base/downloadFile.do")
+	public void downloadFile(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String docuFile = request.getParameter("docuFile");
+		String docuOrgFile = request.getParameter("docuOrgFile");
+
+		String saveDir = "/home/files";
+		File file = new File(saveDir + "/" + docuFile);
+		docuOrgFile = new String(docuOrgFile.getBytes("UTF-8"), "ISO-8859-1");
+		response.setHeader("Content-Disposition","attachment;filename=\"" + docuOrgFile + "\";");
+
+		FileInputStream fileInputStream = new FileInputStream(file);
+		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+		byte b [] = new byte[1024];
+		int data = 0;
+
+		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
+		{
+			servletOutputStream.write(b, 0, data);
+		}
+
+		servletOutputStream.flush();
+		servletOutputStream.close();
+		fileInputStream.close();
+	}
+
+}

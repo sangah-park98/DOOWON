@@ -1,0 +1,106 @@
+package egovframework.pf.api.service.impl;
+
+import java.util.ArrayList;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
+import egovframework.pf.api.service.ApiShippingService;
+import egovframework.pf.shipping.service.ShippingOrderVO;
+import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
+
+@Service("apiShippingService")
+@Repository
+public class ApiShippingServiceImpl extends EgovAbstractServiceImpl implements ApiShippingService {
+
+	private int totalCnt;
+	private int successCnt;
+	private ArrayList<String> reasonList;
+	private Gson gson;
+
+	@Resource(name="apiShippingMapper")
+	private ApiShippingMapper apiShippingMapper;
+
+	@Override
+	public String stateChange(ShippingOrderVO svo) throws Exception {
+		ArrayList<String> msg = new ArrayList<>();
+	    int updateCount = apiShippingMapper.stateChange(svo);
+	    if (updateCount > 0) {
+	        return "true";
+	        //String result = "true";
+	        //msg.add("성공");
+	        //return resultToJSON(result, msg);
+	    } else {
+	        return "No changes made";
+	    }
+	}
+	
+	@Override
+	public String arrangeAlloc(ShippingOrderVO svo) throws Exception {
+		ArrayList<String> msg = new ArrayList<>();
+	    int updateCount = apiShippingMapper.arrangeAlloc(svo);
+	    if (updateCount > 0) {
+	        return "true";
+	    } else {
+	        return "No changes made";
+	    }
+	}
+	
+	@Override
+	public String allocCancel(ShippingOrderVO svo) throws Exception {
+		ArrayList<String> msg = new ArrayList<>();
+	    int updateCount = apiShippingMapper.allocCancel(svo);
+	    if (updateCount > 0) {
+	        return "true";
+	    } else {
+	        return "No changes made";
+	    }
+	}
+
+	@Override
+	public String orderCancel(ShippingOrderVO svo) throws Exception {
+		ArrayList<String> msg = new ArrayList<>();
+	    int updateCount = apiShippingMapper.orderCancel(svo);
+	    if (updateCount > 0) {
+	        return "true";
+	    } else {
+	        return "No changes made";
+	    }
+	}
+
+	
+	private String resultToJSON(String result, ArrayList<String> msg)
+	{
+		JsonObject object = new JsonObject();
+    	JsonArray array = new JsonArray();
+    	for(String reason : msg)
+    	{
+    		JsonObject descriptionObject = new JsonObject();	
+    		descriptionObject.addProperty("reason", reason);
+    		array.add(descriptionObject);
+    	}
+    	object.add("description", array);
+    	
+    	result = gson.toJson(object);
+    	System.out.println(result);
+		return result;
+	}
+
+	@Override
+	public String stateOrderAdd(ShippingOrderVO svo) throws Exception {
+		ArrayList<String> msg = new ArrayList<>();
+	    int updateCount = apiShippingMapper.orderAdd(svo);
+	    if (updateCount > 0) {
+	        return "true";
+	    } else {
+	        return "No changes made";
+	    }
+	}
+
+}

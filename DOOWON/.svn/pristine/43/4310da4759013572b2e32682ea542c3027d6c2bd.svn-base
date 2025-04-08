@@ -1,0 +1,1475 @@
+package egovframework.pf.imp.web;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormat;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFDataFormat;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
+import egovframework.pf.cmmn.service.CmmnService;
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.pf.exp.service.SaveExpFileVO;
+import egovframework.pf.exp.web.ZipFileDownload;
+import egovframework.pf.imp.service.ImportService;
+import egovframework.pf.member.utill.EmailUtill;
+import egovframework.pf.util.ExcelUtil;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+// 대용량 엑셀
+import org.apache.poi.ss.SpreadsheetVersion;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.xssf.streaming.SXSSFCell;
+import org.apache.poi.xssf.streaming.SXSSFRow;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+
+@Controller
+public class ImportController {
+
+	@Resource(name = "CmmnService")
+	private CmmnService CmmnService;
+	
+	@Resource(name = "importService")
+	private ImportService importService;
+	
+	//수입신고현황 호출
+	@RequestMapping(value = "/import/importView.do")
+	public String importView(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		model.addAttribute("grpCd", userVO.getGrpCd());
+		return "import/importView";
+	}
+	
+	//수입신고정정 호출
+	@RequestMapping(value = "/import/importUpdate.do")
+	public String importUpdate(HttpServletRequest request, Model model) throws Exception {
+		return "import/importUpdate";
+	}
+	
+	//BL 등록 호출
+	@RequestMapping(value = "/import/importBl.do")
+	public String importBl(HttpServletRequest request, Model model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		model.addAttribute("corpNos", userVO.getCorpNos());
+		return "import/importBl";
+	}
+	
+	@RequestMapping(value = "/import/selectImpTodayViewList.do", method = RequestMethod.POST)
+	public ModelAndView selectImpTodayViewList(@RequestBody SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    if (!userVO.getCorpNo().equals("00000000000")) {
+	        vo.setList(userVO.getCorpNos());
+	    }
+
+	    List<?> resultList = null;
+
+	    if (vo.getSrch7() != null) {
+	        resultList = importService.selectImpTodayInclOthViewList(vo);
+	    } else {
+	        resultList = importService.selectImpTodayViewList(vo);
+	    }
+	    model.addAttribute("resultList", resultList);
+	    ModelAndView mav = new ModelAndView("jsonView", model);
+	    return mav;
+	}
+
+	@RequestMapping(value = "/import/selectImportViewList.do", method = RequestMethod.POST)
+	public ModelAndView selectImportViewList(@RequestBody SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setList(userVO.getCorpNos());
+		}
+		List<?> resultList = importService.selectImportViewList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/import/selectImpDetailProgress.do", method = RequestMethod.POST)
+	public ModelAndView selectImpDetailProgress(@RequestBody SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		vo.setSrch1(userVO.getCorpNo());
+		
+		List<?> resultList = importService.selectImpDetailProgress(vo);
+		
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/import/selectImpShipViewList.do")
+	public ModelAndView selectImpShipViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		List<?> cargMtNo = importService.selectCargMtNo(vo);
+		// System.out.println(cargMtNo);
+		vo.setSrch12(importService.selectOrderId(vo));
+		List<?> resultList = importService.selectImpShipViewList(vo);
+		
+		List<Map<String, String>> resultList2 = new ArrayList<>();
+		for (Object obj : cargMtNo) {
+		    EgovMap map = (EgovMap) obj;
+		    JsonNode callImpUnipassApi = callImpUnipassApi((String) map.get("cargMtNo"));
+
+		    if (callImpUnipassApi == null || !callImpUnipassApi.has("cargCsclPrgsInfoDtlQryVo") || !callImpUnipassApi.get("cargCsclPrgsInfoDtlQryVo").isArray()) {
+		        continue;
+		    } else {
+		        JsonNode cargCsclPrgsInfoDtlQryVoArr = callImpUnipassApi.get("cargCsclPrgsInfoDtlQryVo");
+		        if (cargCsclPrgsInfoDtlQryVoArr.isArray()) {
+		            for (JsonNode node : cargCsclPrgsInfoDtlQryVoArr) {
+		            	Map<String, String> dataMap = new HashMap<>();
+	                    node.fields().forEachRemaining(entry -> {
+	                        String fieldName = entry.getKey();
+	                        String fieldValue = entry.getValue().asText();
+	                        dataMap.put(fieldName, fieldValue);
+	                        
+	                    });
+	                    String pckGcnt = dataMap.getOrDefault("pckGcnt", "");
+	                    String pckUt = dataMap.getOrDefault("pckUt", "");
+	                    String wght = dataMap.getOrDefault("wght", "");
+	                    String wghtUt = dataMap.getOrDefault("wghtUt", "");
+	                    String prcsDttm = dataMap.getOrDefault("prcsDttm", "");
+	                    
+	                    if (!pckGcnt.isEmpty() && !pckUt.isEmpty()) {
+	                        dataMap.put("packCnt", pckGcnt + " " + pckUt);
+	                    }
+	                    if (!wght.isEmpty() && !wghtUt.isEmpty()) {
+	                        try {
+	                            DecimalFormat numberFormat = new DecimalFormat("#,##0.0");
+	                            double weightValue = Double.parseDouble(wght);
+	                            String formattedWeight = numberFormat.format(weightValue);
+	                            dataMap.put("weightCnt", formattedWeight + " " + wghtUt);
+	                        } catch (NumberFormatException e) {
+	                            dataMap.put("weightCnt", wght + " " + wghtUt);
+	                        }
+	                    }
+	                    if (!prcsDttm.isEmpty()) {
+	                        try {
+	                            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+	                            SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	                            Date date = inputFormat.parse(prcsDttm);
+	                            String formattedDate = outputFormat.format(date);
+	                            dataMap.put("prcsDttm", formattedDate);
+	                        } catch (Exception e) {
+	                            dataMap.put("prcsDttm", prcsDttm);
+	                        }
+	                    }
+	                    resultList2.add(dataMap);
+	                }
+	            }
+	        }
+	    }
+	    ModelAndView mav = new ModelAndView("jsonView");
+	    mav.addObject("resultList", resultList);
+	    mav.addObject("resultList2", resultList2);
+		return mav ;
+	}
+	
+	private JsonNode callImpUnipassApi(String cargMtNo) {
+		if(cargMtNo == null || "".equals(cargMtNo)) {
+			return null;
+		}
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE + ";charset=UTF-8");
+			URI uri = UriComponentsBuilder.fromHttpUrl("https://unipass.customs.go.kr:38010/ext/rest/cargCsclPrgsInfoQry/retrieveCargCsclPrgsInfo")
+					.queryParam("crkyCn", "p240e234w064g101l050r050p0")
+					.queryParam("cargMtNo", cargMtNo)
+					.build()
+					.encode("UTF-8")
+					.toUri();	
+			
+			HttpComponentsClientHttpRequestFactory httpRequestFactory = new HttpComponentsClientHttpRequestFactory();
+	        httpRequestFactory.setConnectTimeout(5000);
+	        httpRequestFactory.setReadTimeout(5000);
+	        
+	        RestTemplate restTpl = new RestTemplate(httpRequestFactory);
+	        HttpEntity<?> entity = new HttpEntity<>(headers);
+			
+	        restTpl.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+	        ResponseEntity<String>  responseEntity = restTpl.exchange(uri.toString(), HttpMethod.GET, entity, String.class);
+	        //System.out.println("API value: " + responseEntity.getBody());
+	        
+	        if(responseEntity.getStatusCodeValue() == 200) {
+	        	XmlMapper xmlMapper = new XmlMapper();
+	        	String str = responseEntity.getBody().toString();
+	        	JsonNode node = xmlMapper.readValue(str, new TypeReference<JsonNode>() { });
+	        	return node;
+	        } else {
+	        	return null;
+	        }
+		} catch (Exception e) {e.printStackTrace();return null;}
+	}
+	
+	@RequestMapping(value = "/import/selectImportViewLanList.do")
+	public ModelAndView selectImportViewLanList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		List<?> resultList = importService.selectImportViewLanList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	public ModelAndView selectImportViewLanListExcel(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		List<?> resultList = importService.selectImportViewLanListExcel(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/import/selectImportViewSpecList.do")
+	public ModelAndView selectImportViewSpecList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		List<?> resultList = importService.selectImportViewSpecList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	public ModelAndView selectImportViewSpecListExcel(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		List<?> resultList = importService.selectImportViewSpecListExcel(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/import/selectImportUpList.do")
+	public ModelAndView selectImportUpdateList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setList(userVO.getCorpNos());
+		}
+		List<?> resultList = importService.selectImportUpdateList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/import/selectImpDtlUpdViewList.do")
+	public ModelAndView selectImpDtlUpdViewList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setList(userVO.getCorpNos());
+		}
+		List<?> resultList = importService.selectImpDtlUpdViewList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/import/selectImportBlList.do")
+	public ModelAndView selectImportBlList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		if(!userVO.getCorpNo().equals("00000000000")) {
+			vo.setList(userVO.getCmpnyCds());
+		}
+		List<?> resultList = importService.selectImportBlList(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	private String extractBlNumber(String orgFileName) {
+		if (orgFileName != null && !orgFileName.isEmpty()) {
+			String fileNameWithoutExtension = orgFileName.substring(0, orgFileName.lastIndexOf('.'));
+			return fileNameWithoutExtension.substring(fileNameWithoutExtension.indexOf("BL_") + 3);
+		}
+		return "";
+	}
+	
+	@RequestMapping(value = "/import/insertImportFilesInfo.do")
+	public ModelAndView insertImportFilesInfo(
+									@RequestParam("fileBl[]") MultipartFile[] filesBl,
+									@RequestParam("fileIn[]") MultipartFile[] filesIn,
+									@RequestParam("filePl[]") MultipartFile[] filesPl,
+									@RequestParam("fileOt[]") MultipartFile[] filesOt,
+									@RequestParam("blNo") String bl,
+									@RequestParam("blRptNo") String blRpt,
+									 HttpServletRequest request, ModelMap model
+									 ) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		String blNo = "";
+		String cmpnyCd = userVO.getCmpnyCd();
+		String regId = userVO.getId();
+		String expBlNumber =""; 
+		System.out.println("bl: " + bl);
+		System.out.println("blRpt: " + blRpt);
+		
+		
+		for (MultipartFile file : filesBl) {
+			  	
+            System.out.println("Received file Bl: " + file.getOriginalFilename());
+            String name = file.getOriginalFilename();
+			String fileName = UUID.randomUUID().toString();
+			expBlNumber = extractBlNumber(name);
+			String directory = "/home/files";
+			String filepath = Paths.get(directory, fileName).toString();
+			BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+			stream.write(file.getBytes());
+			stream.close();
+			
+			SaveExpFileVO vo = new SaveExpFileVO();
+			
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+			Calendar date = Calendar.getInstance();
+			String uploadDt = sdf.format(date.getTime());
+			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+			Calendar date2 = Calendar.getInstance();
+			String regDt = sdf2.format(date2.getTime());
+			
+			vo.setOrgFileName(name);
+			vo.setName("BL");
+			vo.setFileName(fileName);
+			if(bl.equals("")) {
+				blNo = expBlNumber;
+			} else {
+				blNo = bl;
+			}
+			vo.setBl(blNo);
+			vo.setRptNo(blRpt);
+			vo.setBl(blNo);
+			vo.setUploadDt(uploadDt);
+			vo.setRegDt(regDt);
+			vo.setRegId(regId);
+			vo.setCmpnyCd(cmpnyCd);
+			
+			importService.insertImportFilesInfo(vo);
+	    }
+		for (MultipartFile file : filesIn) {
+		    System.out.println("Received file In: " + file.getOriginalFilename());
+		    String name = file.getOriginalFilename();
+			String fileName = UUID.randomUUID().toString();
+			String directory = "/home/files";
+			String filepath = Paths.get(directory, fileName).toString();
+			BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+			stream.write(file.getBytes());
+			stream.close();
+			
+			SaveExpFileVO vo = new SaveExpFileVO();
+			
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+			Calendar date = Calendar.getInstance();
+			String uploadDt = sdf.format(date.getTime());
+			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+			Calendar date2 = Calendar.getInstance();
+			String regDt = sdf2.format(date2.getTime());
+			
+			vo.setOrgFileName(name);
+			vo.setName("CI");
+			vo.setFileName(fileName);
+			if(bl.equals("")) {
+				blNo = expBlNumber;
+			} else {
+				blNo = bl;
+			}
+			vo.setBl(blNo);
+			vo.setRptNo(blRpt);
+			vo.setUploadDt(uploadDt);
+			vo.setRegDt(regDt);
+			vo.setRegId(regId);
+			vo.setCmpnyCd(cmpnyCd);
+			
+			importService.insertImportFilesInfo(vo);
+			
+		}
+		for (MultipartFile file : filesPl) {
+		    System.out.println("Received file Pl: " + file.getOriginalFilename());
+		    String name = file.getOriginalFilename();
+			String fileName = UUID.randomUUID().toString();
+			String directory = "/home/files";
+			String filepath = Paths.get(directory, fileName).toString();
+			BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+			stream.write(file.getBytes());
+			stream.close();
+			
+			SaveExpFileVO vo = new SaveExpFileVO();
+			
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+			Calendar date = Calendar.getInstance();
+			String uploadDt = sdf.format(date.getTime());
+			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+			Calendar date2 = Calendar.getInstance();
+			String regDt = sdf2.format(date2.getTime());
+			
+			vo.setOrgFileName(name);
+			vo.setName("PL");
+			vo.setFileName(fileName);
+			if(bl.equals("")) {
+				blNo = expBlNumber;
+			} else {
+				blNo = bl;
+			}
+			vo.setBl(blNo);
+			vo.setRptNo(blRpt);
+			vo.setUploadDt(uploadDt);
+			vo.setRegDt(regDt);
+			vo.setRegId(regId);
+			vo.setCmpnyCd(cmpnyCd);
+			
+			importService.insertImportFilesInfo(vo);
+		 }
+		 for (MultipartFile file : filesOt) {
+		    System.out.println("Received file Re: " + file.getOriginalFilename());
+		    String name = file.getOriginalFilename();
+			String fileName = UUID.randomUUID().toString();
+			String directory = "/home/files";
+			String filepath = Paths.get(directory, fileName).toString();
+			BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filepath)));
+			stream.write(file.getBytes());
+			stream.close();
+			
+			SaveExpFileVO vo = new SaveExpFileVO();
+			
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+			Calendar date = Calendar.getInstance();
+			String uploadDt = sdf.format(date.getTime());
+			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+			Calendar date2 = Calendar.getInstance();
+			String regDt = sdf2.format(date2.getTime());
+			
+			vo.setOrgFileName(name);
+			vo.setName("OT");
+			vo.setFileName(fileName);
+			if(bl.equals("")) {
+				blNo = expBlNumber;
+			} else {
+				blNo = bl;
+			}
+			vo.setBl(blNo);
+			vo.setRptNo(blRpt);
+			vo.setUploadDt(uploadDt);
+			vo.setRegDt(regDt);
+			vo.setRegId(regId);
+			vo.setCmpnyCd(cmpnyCd);
+			
+			importService.insertImportFilesInfo(vo);
+		 }
+
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+
+	@RequestMapping(value = "/export/selectBlFilesList.do")
+	public ModelAndView selectBlFilesList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request,
+			ModelMap model) throws Exception {
+		List<?> impblList = importService.selectBlFilesList(vo);
+		model.addAttribute("impblList", impblList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+	
+	@PostMapping(value = "/import/downLoadZipFileBlList.do")
+	public void downLoadZipFileBlList(@RequestBody List<ZipFileDownload> downloadFile,
+			@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model,
+			HttpServletResponse response) throws Exception {
+		System.out.println("-----------downLoadZipFileBlList-----------");
+		String saveDir = "/home/files";
+		String saveDir2 = "";
+		String zipFileName = downloadFile.get(0).getBlno() + ".zip";
+
+		try {
+			FileOutputStream fos = new FileOutputStream(saveDir + File.separator + zipFileName);
+			ZipArchiveOutputStream zipOut = new ZipArchiveOutputStream(fos);
+
+            // 파일 목록을 순회하며 압축 파일에 추가
+            for (ZipFileDownload file : downloadFile) {
+            	saveDir2 = file.getDocuPath();
+                addFileToZip(saveDir2, file.getDocuFile(), zipOut, file.getDocuOrgFile());
+            }
+	            // ZIP 출력 스트림 닫기
+	            zipOut.close();
+	            
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			
+		}
+	}
+	
+	// 파일을 ZIP 파일에 추가하는 메서드
+	private void addFileToZip(String directoryPath, String fileName, ZipArchiveOutputStream zipOut, String fileOrgName) throws IOException {
+	    String docuFile = fileName;
+	    String docuOrgFile = fileOrgName;
+
+	    File file = new File(directoryPath, docuFile);
+	    FileInputStream fis = new FileInputStream(file);
+
+	    // 한글 파일명을 UTF-8로 인코딩
+	    ZipArchiveEntry zipEntry = new ZipArchiveEntry(file, docuOrgFile);
+	    zipOut.putArchiveEntry(zipEntry);
+
+	    byte[] bytes = new byte[1024];
+	    int length;
+	    while ((length = fis.read(bytes)) >= 0) {
+	        zipOut.write(bytes, 0, length);
+	    }
+
+	    zipOut.closeArchiveEntry();
+	    fis.close();
+	}
+
+    //파일 다운로드
+  	@RequestMapping(value = "/import/downloadBlFile.do")
+  	public void downloadFile(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  		String zipName = request.getParameter("zipName");
+  		System.out.println("zipName : " + zipName);
+  		String saveDir = "/home/files";
+  		File file = new File(saveDir + "/" + zipName + ".zip");
+  		response.setHeader("Content-Disposition","attachment;filename=\"" + zipName + ".zip\";");
+
+  		FileInputStream fileInputStream = new FileInputStream(file);
+  		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+  		byte b [] = new byte[1024];
+  		int data = 0;
+
+  		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
+  		{
+  			servletOutputStream.write(b, 0, data);
+  		}
+
+  		servletOutputStream.flush();
+  		servletOutputStream.close();
+  		fileInputStream.close();
+  	}
+  	
+	@RequestMapping(value = "/import/importSendEmail.do")
+  	public void importSendEmail(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  		String sendBlNo = request.getParameter("sendBlNo");
+  		String sendCmpnyCd = request.getParameter("sendCmpnyCd");
+  		System.out.println("sendBlNo : " + sendBlNo);
+  		System.out.println("sendCmpnyCd : " + sendCmpnyCd);
+  		SearchVO vo = new SearchVO();
+  		vo.setSrch1(sendBlNo);
+  		vo.setSrch2(sendCmpnyCd);
+  		
+  		String sendEmail = "";
+  				
+  		/*sendEmail =  importService.impSendEmail(vo);
+  		if(sendEmail == null ) {
+  			sendEmail = "isseo@kordsystems.com";
+  		}*/
+  		
+  		importService.impRequestBl(vo);
+  		List<?> impblList = importService.selectBlFilesList(vo);
+  		
+  		String saveDir = "/home/files";
+  		String saveDir2 = "";
+		String zipFileName = sendBlNo + ".zip";
+
+		try {
+			FileOutputStream fos = new FileOutputStream(saveDir + File.separator + zipFileName);
+			ZipArchiveOutputStream zipOut = new ZipArchiveOutputStream(fos);
+            
+            for (Object obj : impblList) {
+     			 if (obj instanceof Map) {
+     		        Map<?, ?> map = (Map<?, ?>) obj;
+     		        String docuPath = (String) map.get("docuPath");
+     		        String docuFile = (String) map.get("docuFile");
+     		        String docuOrgFile = (String) map.get("docuOrgFile");
+     		        saveDir2 = docuPath;
+     		        addFileToZip(saveDir2, docuFile, zipOut, docuOrgFile);
+     		    }
+     		}
+	            zipOut.close();
+	            
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {}
+  		 
+  		EmailUtill.sendEmailWithFile(sendBlNo, sendCmpnyCd, "ioom@kordsystems.com", "IMPORT", null, "kr", zipFileName);
+  	}
+	
+	@RequestMapping(value = "/import/saveImportMemo.do", method = RequestMethod.POST)
+	@ResponseBody
+	public ModelAndView saveImportMemo(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		importService.saveImpMemo(vo);
+		model.addAttribute("SaveStatus", "success");
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	// 수입신고현황 rptNo fileList popUp
+	@RequestMapping(value = "/import/selectImpViewFilesList.do")
+	public ModelAndView selectImpViewFilesList(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request,
+			ModelMap model) throws Exception {
+		List<?> impViewList = importService.selectImpViewFilesList(vo);
+		model.addAttribute("impViewList", impViewList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav;
+	}
+		
+	@PostMapping(value = "/import/impViewZipCreate.do")
+	public void impViewZipCreate(@RequestBody List<ZipFileDownload> downloadFile,
+	        @ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model,
+	        HttpServletResponse response) throws Exception {
+	    System.out.println("---------------impViewZipCreate---------------");
+		String saveDir = "/home/files";
+		String saveDir2 = "";
+		String zipFileName = downloadFile.get(0).getBlno() + "_" + downloadFile.get(0).getRptNo() + ".zip";
+		
+		try {
+			FileOutputStream fos = new FileOutputStream(saveDir + File.separator + zipFileName);
+			ZipArchiveOutputStream zipOut = new ZipArchiveOutputStream(fos);
+
+            for (ZipFileDownload file : downloadFile) {
+        		saveDir2 = file.getDocuPath();
+                addFileToZip(saveDir2, file.getDocuFile(), zipOut, file.getDocuOrgFile());
+            }
+	        zipOut.close();
+	            
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {}
+	}
+		
+	@RequestMapping(value = "/import/downloadImpViewFile.do")
+  	public void downloadImpViewFile(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  		String zipName = request.getParameter("impViewZipDown"); 
+  		System.out.println("zipName : " + zipName);
+  		String saveDir = "/home/files";
+  		File file = new File(saveDir + "/" + zipName + ".zip");
+  		response.setHeader("Content-Disposition","attachment;filename=\"" + zipName + ".zip\";");
+
+  		FileInputStream fileInputStream = new FileInputStream(file);
+  		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+  		byte b [] = new byte[1024];
+  		int data = 0;
+
+  		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
+  		{
+  			servletOutputStream.write(b, 0, data);
+  		}
+
+  		servletOutputStream.flush();
+  		servletOutputStream.close();
+  		fileInputStream.close();
+  	}
+	
+	@RequestMapping(value = "/import/importUpdateDownloadExcel.do")
+	public ModelAndView importUpdateDownloadExcel(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    ModelAndView mv = new ModelAndView("jsonView");
+	    String resultCode = "200";
+
+	    try {
+	        ModelAndView dataMv = new ModelAndView();
+	        List<?> resultList = new ArrayList<>();
+
+	        XSSFWorkbook workBook = new XSSFWorkbook();
+	        String[] colUnion = {};
+	        String[] haedUnion = {};
+	        String[] divUnion = {};
+	        int unionIdx = 0;
+
+	        colUnion = vo.getExCol().split("\\|\\|\\|");
+	        haedUnion = vo.getExTit().split("\\|\\|\\|\\|");
+	        divUnion = vo.getExTitDiv().split("\\|\\|", -1);
+	        
+	        String sheetName;
+	        String name;
+	        switch (vo.getExType()) {
+	            case "01":
+	                sheetName = "수입신고정정(전체)";
+	                name = "수입신고정정(전체)";
+	                break;
+	            case "02":
+	                sheetName = "수입신고정정(수리)";
+	                name = "수입신고정정(수리)";
+	                break;
+	            case "03":
+	                sheetName = "수입신고정정(미결)";
+	                name = "수입신고정정(미결)";
+	                break;
+	            default:
+	                sheetName = "수입신고정정(전체)";
+	                name = "수입신고정정(전체)";
+	                break;
+	        }
+
+	        // 테두리 스타일 생성
+	        XSSFCellStyle borderStyle = workBook.createCellStyle();
+	        borderStyle.setBorderTop(BorderStyle.THIN);
+	        borderStyle.setBorderBottom(BorderStyle.THIN);
+	        borderStyle.setBorderLeft(BorderStyle.THIN);
+	        borderStyle.setBorderRight(BorderStyle.THIN);
+
+	        for (String div : divUnion) {
+	            String divIdx = div.split("\\|")[0];
+	            String divName = div.split("\\|")[1];
+	            Boolean summary = false;
+	            ArrayList<Double> summaryDats = null;
+
+	            XSSFSheet sheet = ExcelUtil.createSheetWithTitleRow(workBook, divName, colUnion[unionIdx].split("\\|\\|").length);
+	            SearchVO sheetSearchVo = new SearchVO();
+
+	            sheetSearchVo.setList(userVO.getCorpNos());
+	            sheetSearchVo.setRecordCountPerPage(99999999);
+	            sheetSearchVo.setStartPage(0);
+
+	            sheetSearchVo.setSrch1((String) vo.getSrch1());
+	            sheetSearchVo.setSrch2((String) vo.getSrch2());
+	            sheetSearchVo.setSrch3((String) vo.getSrch3());
+	            sheetSearchVo.setSrch4((String) vo.getSrch4());
+	            sheetSearchVo.setSrch5((String) vo.getSrch5());
+	            sheetSearchVo.setSrch6((String) vo.getSrch6());
+	            sheetSearchVo.setSrch8((String) vo.getSrch8());
+
+
+                dataMv = this.selectImportUpdateList(sheetSearchVo, request, new ModelMap());
+                resultList = (List<?>) dataMv.getModel().get("resultList");
+                
+                summary = true;
+				ArrayList<String> conts = new ArrayList<String>();
+				conts.add("1");
+				sheetSearchVo.setExCol(colUnion[unionIdx]);
+				sheetSearchVo.setExTit(haedUnion[unionIdx]);
+				sheet = ExcelUtil.createMainTable(sheet, resultList, sheetSearchVo);
+				
+				unionIdx++;
+			}
+
+	        int sheetCnt = workBook.getNumberOfSheets();
+	        SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	        Date now = new Date();
+	        String nowTime = sdf1.format(now);
+
+	        for (int i = 0; i < sheetCnt; i++) {
+	            XSSFSheet tempSheet = workBook.getSheetAt(i);
+	            int columnToHide = 18;
+	            tempSheet.setColumnHidden(columnToHide, true); //SN 히든
+	            int cellCnt = tempSheet.getPhysicalNumberOfRows();
+
+	            for (int j = 1; j < cellCnt; j++) {
+	                tempSheet.autoSizeColumn(j);
+	            }
+
+	            tempSheet.createRow(tempSheet.getLastRowNum() + 1);
+	            XSSFRow row = tempSheet.createRow(tempSheet.getLastRowNum() + 1);
+	            XSSFCell cell = row.createCell(0);
+	            cell.setCellValue(nowTime);
+	        }
+
+	        int cnt = 0;
+	        String ExcelTitle = "";
+	        if (userVO.getCorpNos().size() > 1) {
+	            cnt = userVO.getCorpNos().size() - 1;
+	            ExcelTitle = userVO.getCmpnyCd() + " 외 " + cnt + "개";
+	        } else {
+	            ExcelTitle = userVO.getCmpnyCd();
+	        }
+	        String finalTitle = ExcelTitle.concat(" ").concat(name).concat("_");
+	        ExcelUtil.generateExcelFile(workBook, finalTitle, response);
+	        //ExcelUtil.generateExcelFile(workBook, ExcelTitle.concat(" ").concat(vo.getSrch40().replace("_", " ")), response);
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+
+	    mv.addObject("resultCode", resultCode);
+	    return mv;
+	}
+	
+	@RequestMapping(value = "/import/deleteImpBlFile.do", method = RequestMethod.POST)
+	@ResponseBody
+	public void deleteImpBlFile(@RequestBody List<ZipFileDownload> downloadFile, HttpServletRequest request, ModelMap model) throws Exception {
+		SearchVO vo = new SearchVO();
+		for (ZipFileDownload file : downloadFile) {
+			vo.setSrch1(file.getDocuFile());
+			vo.setSrch2(file.getDocuOrgFile());
+			vo.setSrch3(file.getDocuPath());
+			vo.setSrch4(file.getUploadDt());
+			
+			importService.deleteImpBlFile(vo);
+		}
+	}
+		
+	@RequestMapping(value = "/import/importDownloadExcel.do")
+	public ModelAndView importDownloadExcel(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    ModelAndView mv = new ModelAndView("jsonView");
+	    String resultCode = "200";
+
+	    try {
+	        ModelAndView dataMv = new ModelAndView();
+	        List<?> resultList = new ArrayList<>();
+
+	        XSSFWorkbook workBook = new XSSFWorkbook();
+	        String[] colUnion = {};
+	        String[] haedUnion = {};
+	        String[] divUnion = {};
+	        int unionIdx = 0;
+
+	        colUnion = vo.getExCol().split("\\|\\|\\|");
+	        haedUnion = vo.getExTit().split("\\|\\|\\|\\|");
+	        divUnion = vo.getExTitDiv().split("\\|\\|", -1);
+
+	        // 테두리 스타일 생성
+	        XSSFCellStyle borderStyle = workBook.createCellStyle();
+	        borderStyle.setBorderTop(BorderStyle.THIN);
+	        borderStyle.setBorderBottom(BorderStyle.THIN);
+	        borderStyle.setBorderLeft(BorderStyle.THIN);
+	        borderStyle.setBorderRight(BorderStyle.THIN);
+
+	        for (String div : divUnion) {
+	            String divIdx = div.split("\\|")[0];
+	            String divName = div.split("\\|")[1];
+	            Boolean summary = false;
+	            ArrayList<Double> summaryDats = null;
+
+	            XSSFSheet sheet = ExcelUtil.createSheetWithTitleRow(workBook, divName, colUnion[unionIdx].split("\\|\\|").length);
+	            SearchVO sheetSearchVo = new SearchVO();
+
+	            sheetSearchVo.setList(userVO.getCorpNos());
+	            sheetSearchVo.setRecordCountPerPage(99999999);
+	            sheetSearchVo.setStartPage(0);
+
+	            sheetSearchVo.setSrch1((String) vo.getSrch1());
+	            sheetSearchVo.setSrch2((String) vo.getSrch2());
+	            sheetSearchVo.setSrch3((String) vo.getSrch3());
+	            sheetSearchVo.setSrch4((String) vo.getSrch4());
+	            sheetSearchVo.setSrch5((String) vo.getSrch5());
+	            sheetSearchVo.setSrch6((String) vo.getSrch6());
+	            sheetSearchVo.setSrch8((String) vo.getSrch8());
+
+
+                dataMv = this.selectImportViewList(sheetSearchVo, request, new ModelMap());
+                resultList = (List<?>) dataMv.getModel().get("resultList");
+                summary = true;
+				ArrayList<String> conts = new ArrayList<String>();
+				conts.add("1");
+				sheetSearchVo.setExCol(colUnion[unionIdx]);
+				sheetSearchVo.setExTit(haedUnion[unionIdx]);
+				sheet = ExcelUtil.createMainTable(sheet, resultList, sheetSearchVo);
+				
+				unionIdx++;
+			}
+
+	        int sheetCnt = workBook.getNumberOfSheets();
+	        SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	        Date now = new Date();
+	        String nowTime = sdf1.format(now);
+
+	        for (int i = 0; i < sheetCnt; i++) {
+	            XSSFSheet tempSheet = workBook.getSheetAt(i);
+	            int columnToHide = 1;
+	            tempSheet.setColumnHidden(columnToHide, true);
+
+	            int cellCnt = tempSheet.getPhysicalNumberOfRows();
+	            for (int j = 1; j < cellCnt; j++) {
+	                tempSheet.autoSizeColumn(j);
+	            }
+
+	            tempSheet.createRow(tempSheet.getLastRowNum() + 1);
+	            XSSFRow row = tempSheet.createRow(tempSheet.getLastRowNum() + 1);
+	            XSSFCell cell = row.createCell(0);
+	            cell.setCellValue(nowTime);
+	        }
+
+	        int cnt = 0;
+	        String ExcelTitle = "";
+	        if (userVO.getCorpNos().size() > 1) {
+	            cnt = userVO.getCorpNos().size() - 1;
+	            ExcelTitle = userVO.getCmpnyCd() + " 외 " + cnt + "개";
+	        } else {
+	            ExcelTitle = userVO.getCmpnyCd();
+	        }
+	        ExcelUtil.generateExcelFile(workBook, ExcelTitle.concat(" ").concat(vo.getSrch40().replace("_", " ")), response);
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+
+	    mv.addObject("resultCode", resultCode);
+	    return mv;
+	}
+		
+	@RequestMapping(value = "/import/selectImpDetailView.do")
+	public ModelAndView selectImpDetailView(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, ModelMap model) throws Exception {
+		List<?> resultList = importService.selectImpDetailView(vo);
+		model.addAttribute("resultList", resultList);
+		ModelAndView mav = new ModelAndView("jsonView", model);
+		return mav ;
+	}
+	
+	@RequestMapping(value = "/import/impDetailExcelDown.do")
+	public ModelAndView impDetailExcelDown(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	    HttpSession httpSession = request.getSession(true);
+	    UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+	    ModelAndView mv = new ModelAndView("jsonView");
+	    String resultCode = "200";
+	    int colSize = 0;
+	    try {
+	    	importService.deleteExcelStatus();
+	    	
+	        ModelAndView dataMv = new ModelAndView();
+	        List<?> resultList = new ArrayList<>();
+	        
+	        String tempDir;
+	        String os = System.getProperty("os.name").toLowerCase();
+
+	        if (os.contains("win")) {
+	            tempDir = "C:\\home\\files";  // Windows
+	        } else {
+	            tempDir = "/home/files";  // Linux, macOS 등
+	        }
+
+	        System.setProperty("java.io.tmpdir", tempDir);
+	        
+	        SXSSFWorkbook workBook = new SXSSFWorkbook(1000);
+	        workBook.setCompressTempFiles(true);  // 임시 파일 압축
+
+	        String[] colUnion = {};
+	        String[] haedUnion = {};
+	        String[] divUnion = {};
+	        int unionIdx = 0;
+
+	        colUnion = vo.getExCol().split("\\|\\|\\|");
+	        haedUnion = vo.getExTit().split("\\|\\|\\|\\|");
+	        divUnion = vo.getExTitDiv().split("\\|\\|", -1);
+
+	        CellStyle borderStyle = workBook.createCellStyle();
+	        borderStyle.setBorderTop(BorderStyle.THIN);
+	        borderStyle.setBorderBottom(BorderStyle.THIN);
+	        borderStyle.setBorderLeft(BorderStyle.THIN);
+	        borderStyle.setBorderRight(BorderStyle.THIN);
+
+	        CellStyle numberStyle = workBook.createCellStyle();
+	        DataFormat dataFormat = workBook.createDataFormat();
+	        numberStyle.setDataFormat(dataFormat.getFormat("#,##0.00"));
+
+	        // 숫자 + 테두리
+	        CellStyle combinedStyle = workBook.createCellStyle();
+	        combinedStyle.cloneStyleFrom(numberStyle); 
+	        combinedStyle.setBorderTop(BorderStyle.THIN);
+	        combinedStyle.setBorderBottom(BorderStyle.THIN);
+	        combinedStyle.setBorderLeft(BorderStyle.THIN);
+	        combinedStyle.setBorderRight(BorderStyle.THIN);
+
+	        for (String div : divUnion) {
+	            String divIdx = div.split("\\|")[0];
+	            String divName = div.split("\\|")[1];
+	            colSize = colUnion[unionIdx].split("\\|\\|").length;
+	            SXSSFSheet sheet = ExcelUtil.createSheetWithTitleRow(workBook, divName, colSize);
+	            
+            	// 열 너비 자동 조정
+	            for (int j = 1; j < colSize; j++) {
+	            	sheet.trackColumnForAutoSizing(j);
+	            	sheet.autoSizeColumn(j);
+	            }	            
+	            
+	            SearchVO sheetSearchVo = new SearchVO();
+
+	            sheetSearchVo.setList(userVO.getCorpNos());
+	            sheetSearchVo.setRecordCountPerPage(99999999);
+	            sheetSearchVo.setStartPage(0);
+
+	            sheetSearchVo.setSrch1((String) vo.getSrch1());
+	            sheetSearchVo.setSrch2((String) vo.getSrch2());
+	            sheetSearchVo.setSrch3((String) vo.getSrch3());
+
+	            if ("01".equals(vo.getExType())) {
+
+	                switch (divIdx) {
+	                    case "1":
+	                        dataMv = this.selectImpDetailView(sheetSearchVo, request, new ModelMap());
+	                        resultList = (List<?>) dataMv.getModel().get("resultList");
+	                        break;
+	                    default:
+	                        break;
+	                }
+	            }
+
+	            ArrayList<String> conts = new ArrayList<String>();
+	            conts.add("1");
+	            sheetSearchVo.setExCol(colUnion[unionIdx]);
+	            sheetSearchVo.setExTit(haedUnion[unionIdx]);
+	            
+	            sheet = createMainTableDetail(sheet, resultList, sheetSearchVo, userVO.getCorpNo(), userVO.getId());
+	        
+	            unionIdx++;
+	        }
+
+	        int sheetCnt = workBook.getNumberOfSheets();
+	        SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	        Date now = new Date();
+	        String nowTime = sdf1.format(now);
+
+	        for (int i = 0; i < sheetCnt; i++) {
+	            SXSSFSheet tempSheet = workBook.getSheetAt(i);
+	            int cellCnt = tempSheet.getPhysicalNumberOfRows();
+
+	            for (int j = 1; j < colSize; j++) {
+	            	tempSheet.trackColumnForAutoSizing(j);
+	                tempSheet.autoSizeColumn(j);
+	            }
+
+	            tempSheet.createRow(tempSheet.getLastRowNum() + 1);
+	            SXSSFRow row = tempSheet.createRow(tempSheet.getLastRowNum() + 1);
+	            SXSSFCell cell = row.createCell(0);
+	            cell.setCellValue(nowTime);
+	        }
+
+	        int cnt = 0;
+	        String ExcelTitle = "";
+	        if (userVO.getCorpNos().size() > 1) {
+	            cnt = userVO.getCorpNos().size() - 1;
+	            ExcelTitle = userVO.getCmpnyCd() + " 외 " + cnt + "개";
+	        } else {
+	            ExcelTitle = userVO.getCmpnyCd();
+	        }
+	        ExcelUtil.generateExcelFile(workBook, ExcelTitle.concat(" ").concat(vo.getSrch40().replace("_", " ")), response);
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+
+	    mv.addObject("resultCode", resultCode);
+	    return mv;
+	}
+	
+	public XSSFSheet createMainTableDetail(XSSFSheet sheet, List<?> resultList, SearchVO vo, String cmpnyCd) throws Exception {
+		
+		XSSFWorkbook wb = sheet.getWorkbook();
+		XSSFRow row = sheet.createRow(sheet.getLastRowNum() + 1);
+		XSSFCell cell = null;
+		XSSFCellStyle headerStyle = createHeaderCellStyle(wb);
+		XSSFCellStyle dataStyleCenter = createDataCellStyle(wb, HorizontalAlignment.CENTER);
+		XSSFCellStyle dataStyleLeft = createDataCellStyle(wb, HorizontalAlignment.LEFT);
+		XSSFCellStyle dataStyleRight = createDataCellStyle(wb, HorizontalAlignment.RIGHT);
+		XSSFDataFormat df = wb.createDataFormat();
+		
+		// 헤더부
+		for (String str : vo.getExTit().split("\\|\\|\\|")) {
+			String[] header = str.split("\\|\\|");
+			row = sheet.createRow(sheet.getLastRowNum() + 1);
+			row.setHeight((short) 400);
+			
+			XSSFCell firstCell = row.createCell(0);
+			
+			firstCell.setCellStyle(headerStyle);
+			
+			for (String headerOptions : header) {
+				String[] valueAndOption = headerOptions.split("\\|");
+				valueAndOption[1] = "".equals(valueAndOption[1]) ? "0" : valueAndOption[1];
+				
+				cell = row.createCell(row.getLastCellNum());
+				
+				cell.setCellStyle(headerStyle);
+				cell.setCellValue("null".equals(valueAndOption[0]) ? "" : valueAndOption[0]);
+				sheet.setColumnWidth(cell.getColumnIndex(), 5000);
+				
+				int mergeCnt = 0;
+				
+				if (!"null".equals(valueAndOption[1])) {
+					mergeCnt = Integer.parseInt(valueAndOption[1]);
+				}
+				
+				if (mergeCnt > 1) {
+					int startIdx = cell.getColumnIndex();
+					
+					for (int i = 0; i < (mergeCnt - 1); i++) {
+						cell = row.createCell(row.getLastCellNum());
+						cell.setCellStyle(headerStyle);
+					}
+					
+					sheet.addMergedRegion(new CellRangeAddress(row.getRowNum(), row.getRowNum(), startIdx, cell.getColumnIndex()));
+				}
+			}
+		}
+		
+		// 데이터부
+		if (resultList == null || resultList.size() < 1) {
+			row = sheet.createRow(sheet.getLastRowNum() + 1);
+			cell = row.createCell(0);
+			cell.setCellValue("조회된 데이터가 없습니다.");
+		}
+		
+		String[] colOptios = vo.getExCol().split("\\|\\|");
+		boolean completeSetWidth = false;
+		int rowNum = 1;
+		
+		for (Object result : resultList) {
+			EgovMap map = (EgovMap) result;
+			row = sheet.createRow(sheet.getLastRowNum() + 1);
+			
+			XSSFCell firstCell = row.createCell(0);
+			firstCell.setCellStyle(dataStyleCenter);
+			firstCell.setCellValue(String.valueOf(rowNum));
+			
+			sheet.setColumnWidth(0, 1200);
+			
+			for (String options : colOptios) {
+				String[] attrs = options.split("\\|");
+				cell = row.createCell(row.getLastCellNum());
+				
+				switch (attrs[1]) {
+				case "htCenter":
+					cell.setCellStyle(dataStyleCenter);
+					cell.setCellValue(map.containsKey(attrs[0]) ? String.valueOf(map.get(attrs[0])) : "");
+					break;
+				case "htLeft":
+					cell.setCellStyle(dataStyleLeft);
+					cell.setCellValue(map.containsKey(attrs[0]) ? String.valueOf(map.get(attrs[0])) : "");
+					break;
+				case "htRight":
+					String rightVal = map.containsKey(attrs[0]) ? String.valueOf(map.get(attrs[0])) : "";
+					Double dVal = (double) 0;
+					
+					if (rightVal.contains("%")) {
+						rightVal = rightVal.replaceAll("%", "");
+						rightVal = StringUtils.isNotEmpty(rightVal) ? rightVal : "0";
+						cell.setCellStyle(dataStyleRight);
+						cell.setCellType(CellType.NUMERIC);
+						cell.setCellValue(Double.parseDouble(rightVal) / 100);
+					} else {
+						rightVal = rightVal.replaceAll(",", "");
+						dVal = Double.parseDouble(StringUtils.isNotEmpty(rightVal) ? rightVal : "0");
+						cell.setCellStyle(dataStyleRight);
+						cell.setCellType(CellType.NUMERIC);
+						cell.setCellValue(dVal);
+					}
+					break;
+				}
+				
+				if (!completeSetWidth) {
+					if ("htCenter".equals(attrs[1])) {
+						sheet.setColumnWidth(cell.getColumnIndex(), 4000);
+					} else if ("htLeft".equals(attrs[1])) {
+						sheet.setColumnWidth(cell.getColumnIndex(), 8000);
+					} else if ("htRight".equals(attrs[1])) {
+						sheet.setColumnWidth(cell.getColumnIndex(), 5000);
+					}
+				}
+			}
+			
+			completeSetWidth = true;
+			
+			
+//			int jobCnt = sheet.getPhysicalNumberOfRows() - 3;
+			int jobCnt = rowNum;
+			int totCnt = resultList.size();
+			
+			if (jobCnt%1000 == 0 && jobCnt == totCnt)
+			{
+				SearchVO svo = new SearchVO();
+//				int jobCnt = sheet.getPhysicalNumberOfRows() - 3;
+//				int totCnt = resultList.size();
+				String CorpNo = cmpnyCd;
+				
+				svo.seteExcelBuffer(jobCnt);
+				svo.setsExcelBuffer(totCnt);
+				svo.setCmpnyCd(CorpNo);
+				// --------------------------------
+				importService.insertExcelStatus(svo);				
+			}
+
+			rowNum++;
+		}
+		
+		return sheet;
+	}
+	
+	public SXSSFSheet createMainTableDetail(SXSSFSheet sheet, List<?> resultList, SearchVO vo, String cmpnyCd, String id) throws Exception {
+		
+		SXSSFWorkbook wb = sheet.getWorkbook();
+		SXSSFRow row = sheet.createRow(sheet.getLastRowNum() + 1);
+		SXSSFCell cell = null;
+		CellStyle headerStyle = createHeaderCellStyle(wb);
+		CellStyle dataStyleCenter = createDataCellStyle(wb, HorizontalAlignment.CENTER);
+		CellStyle dataStyleLeft = createDataCellStyle(wb, HorizontalAlignment.LEFT);
+		CellStyle dataStyleRight = createDataCellStyle(wb, HorizontalAlignment.RIGHT);
+		DataFormat df = wb.createDataFormat();
+		
+		// 헤더부
+		for (String str : vo.getExTit().split("\\|\\|\\|")) {
+			String[] header = str.split("\\|\\|");
+			row = sheet.createRow(sheet.getLastRowNum() + 1);
+			row.setHeight((short) 400);
+			
+			SXSSFCell firstCell = row.createCell(0);
+			
+			firstCell.setCellStyle(headerStyle);
+			
+			for (String headerOptions : header) {
+				String[] valueAndOption = headerOptions.split("\\|");
+				valueAndOption[1] = "".equals(valueAndOption[1]) ? "0" : valueAndOption[1];
+				
+				cell = row.createCell(row.getLastCellNum());
+				
+				cell.setCellStyle(headerStyle);
+				cell.setCellValue("null".equals(valueAndOption[0]) ? "" : valueAndOption[0]);
+				sheet.setColumnWidth(cell.getColumnIndex(), 5000);
+				
+				int mergeCnt = 0;
+				
+				if (!"null".equals(valueAndOption[1])) {
+					mergeCnt = Integer.parseInt(valueAndOption[1]);
+				}
+				
+				if (mergeCnt > 1) {
+					int startIdx = cell.getColumnIndex();
+					
+					for (int i = 0; i < (mergeCnt - 1); i++) {
+						cell = row.createCell(row.getLastCellNum());
+						cell.setCellStyle(headerStyle);
+					}
+					
+					sheet.addMergedRegion(new CellRangeAddress(row.getRowNum(), row.getRowNum(), startIdx, cell.getColumnIndex()));
+				}
+			}
+		}
+		
+		// 데이터부
+		if (resultList == null || resultList.size() < 1) {
+			row = sheet.createRow(sheet.getLastRowNum() + 1);
+			cell = row.createCell(0);
+			cell.setCellValue("조회된 데이터가 없습니다.");
+		}
+		
+		String[] colOptios = vo.getExCol().split("\\|\\|");
+		boolean completeSetWidth = false;
+		int rowNum = 1;
+		
+        CellStyle numberStyle = wb.createCellStyle();
+        DataFormat dataFormat = wb.createDataFormat();
+        numberStyle.setDataFormat(dataFormat.getFormat("#,##0.00"));				
+		
+        CellStyle combinedStyle = wb.createCellStyle();
+        combinedStyle.cloneStyleFrom(numberStyle); 
+        combinedStyle.setBorderTop(BorderStyle.THIN);
+        combinedStyle.setBorderBottom(BorderStyle.THIN);
+        combinedStyle.setBorderLeft(BorderStyle.THIN);
+        combinedStyle.setBorderRight(BorderStyle.THIN);		
+		
+		for (Object result : resultList) {
+			EgovMap map = (EgovMap) result;
+			row = sheet.createRow(sheet.getLastRowNum() + 1);
+			
+			SXSSFCell firstCell = row.createCell(0);
+			firstCell.setCellStyle(dataStyleCenter);
+			firstCell.setCellValue(String.valueOf(rowNum));
+			
+			sheet.setColumnWidth(0, 1200);
+			
+			for (String options : colOptios) {
+				String[] attrs = options.split("\\|");
+				cell = row.createCell(row.getLastCellNum());
+
+				switch (attrs[1]) {
+				case "htCenter":
+					cell.setCellStyle(dataStyleCenter);
+					cell.setCellValue(map.containsKey(attrs[0]) ? String.valueOf(map.get(attrs[0])) : "");
+					break;
+				case "htLeft":
+					cell.setCellStyle(dataStyleLeft);
+					cell.setCellValue(map.containsKey(attrs[0]) ? String.valueOf(map.get(attrs[0])) : "");
+					break;
+				case "htRight":
+					String rightVal = map.containsKey(attrs[0]) ? String.valueOf(map.get(attrs[0])) : "";
+					Double dVal = (double) 0;
+					
+					if (rightVal.contains("%")) {
+						rightVal = rightVal.replaceAll("%", "");
+						rightVal = StringUtils.isNotEmpty(rightVal) ? rightVal : "0";
+						cell.setCellStyle(dataStyleRight);
+						cell.setCellType(CellType.NUMERIC);
+						cell.setCellStyle(combinedStyle);
+						cell.setCellValue(Double.parseDouble(rightVal) / 100);
+					} else {
+						rightVal = rightVal.replaceAll(",", "");
+						dVal = Double.parseDouble(StringUtils.isNotEmpty(rightVal) ? rightVal : "0");
+						cell.setCellStyle(dataStyleRight);
+						cell.setCellType(CellType.NUMERIC);
+						cell.setCellStyle(combinedStyle);
+						cell.setCellValue(dVal);
+					}
+					break;
+				}
+				
+				if (!completeSetWidth) {
+					if ("htCenter".equals(attrs[1])) {
+						sheet.setColumnWidth(cell.getColumnIndex(), 4000);
+					} else if ("htLeft".equals(attrs[1])) {
+						sheet.setColumnWidth(cell.getColumnIndex(), 8000);
+					} else if ("htRight".equals(attrs[1])) {
+						sheet.setColumnWidth(cell.getColumnIndex(), 5000);
+					}
+				}
+			}
+			
+			completeSetWidth = true;
+
+			int jobCnt = rowNum;
+			int totCnt = resultList.size();
+			
+			if (jobCnt == 1 || jobCnt%1000 == 0 || jobCnt == totCnt)
+			{
+				SearchVO svo = new SearchVO();
+				String CorpNo = cmpnyCd;
+				
+				svo.seteExcelBuffer(jobCnt);
+				svo.setsExcelBuffer(totCnt);
+				svo.setCmpnyCd(CorpNo);
+				svo.setId(id);
+				// --------------------------------
+				importService.insertExcelStatus(svo);				
+			}
+			rowNum++;
+		}
+		
+		return sheet;
+	}	
+	
+	private static XSSFCellStyle createHeaderCellStyle(XSSFWorkbook wb) {
+	    XSSFCellStyle style = wb.createCellStyle();
+	    XSSFFont font = wb.createFont();
+	
+	    font.setFontHeightInPoints((short) 10);
+	    font.setFontName("맑은 고딕");
+	    font.setBold(true);
+	
+	    style.setAlignment(HorizontalAlignment.CENTER);
+	    style.setVerticalAlignment(VerticalAlignment.CENTER);
+	    style.setBorderTop(BorderStyle.THIN);
+	    style.setBorderRight(BorderStyle.THIN);
+	    style.setBorderBottom(BorderStyle.THIN);
+	    style.setBorderLeft(BorderStyle.THIN);
+	    style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+	    style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+	    style.setFont(font);
+	
+	    return style;
+	}
+	
+	private static CellStyle createHeaderCellStyle(SXSSFWorkbook wb) {
+	    CellStyle style = wb.createCellStyle();
+	    Font font = wb.createFont();
+	
+	    font.setFontHeightInPoints((short) 10);
+	    font.setFontName("맑은 고딕");
+	    font.setBold(true);
+	
+	    style.setAlignment(HorizontalAlignment.CENTER);
+	    style.setVerticalAlignment(VerticalAlignment.CENTER);
+	    style.setBorderTop(BorderStyle.THIN);
+	    style.setBorderRight(BorderStyle.THIN);
+	    style.setBorderBottom(BorderStyle.THIN);
+	    style.setBorderLeft(BorderStyle.THIN);
+	    style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+	    style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+	    style.setFont(font);
+	
+	    return style;
+	}
+	
+	private static XSSFCellStyle createDataCellStyle(XSSFWorkbook wb, HorizontalAlignment alignment) {
+        XSSFCellStyle style = wb.createCellStyle();
+        XSSFFont font = wb.createFont();
+
+        font.setFontHeightInPoints((short) 10);
+        font.setFontName("맑은 고딕");
+
+        style.setAlignment(alignment);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setFont(font);
+
+        return style;
+    }
+	
+	private static CellStyle createDataCellStyle(SXSSFWorkbook wb, HorizontalAlignment alignment) {
+		CellStyle style = wb.createCellStyle();
+        Font font = wb.createFont();
+
+        font.setFontHeightInPoints((short) 10);
+        font.setFontName("맑은 고딕");
+
+        style.setAlignment(alignment);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setFont(font);
+
+        return style;
+    }	
+		
+}

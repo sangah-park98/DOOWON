@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.shipping.service.impl.ShippingMapper">
+
+	<select id="selectShippingViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			'' as orderType,
+			rpt_no,
+			bl_no,
+			order_seq,
+			'' as orderStaff,
+			'' as orderPhnNo,
+			car_number,
+			driver_name,
+			driver_phn_no,
+			'' as driverRegDt,
+			from_dt,
+			'' as arriveDt,
+			'' as toDtEnd,
+			to_addr,
+			to_name,
+			to_phn_no,
+			estimated_charge,
+			fixed_charge
+		FROM shipping_order
+		WHERE 1=1
+	</select>
+	
+	<select id="selectShippingDstnList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			addr_nm,
+			phn_no,
+			base_addr,
+			dtls_addr 
+		FROM shipping_address;
+	</select>
+	
+	<insert id="insertAddr" parameterType="egovframework.pf.shipping.service.ShippingAddressVO">
+		INSERT INTO
+		shipping_address(
+			id,
+			corp_no,
+			addr_nm,
+			phn_no, 
+			zip_code,
+			base_addr,
+			dtls_addr,
+			reg_dt
+		)
+		VALUES(
+			#{id},
+			#{corpNo},
+			#{addrNm},
+			#{phnNo},
+			#{zipCode},
+			#{baseAddr},
+			#{dtlsAddr},
+			DATE_FORMAT(NOW(), '%Y%m%d')
+		)
+	</insert>
+	
+	<delete id="deleteAddr" parameterType="egovframework.pf.shipping.service.ShippingAddressVO">
+		DELETE FROM shipping_address
+		WHERE 1=1
+		AND addr_nm = #{addrNm}
+		AND phn_no = #{phnNo}
+	</delete>
+	
+	<insert id="insertShippingTempList" parameterType="egovframework.pf.shipping.service.ShippingAddressVO">
+		INSERT INTO shipping_order_temp(
+			order_seq,
+			corp_no,
+		 	rpt_no,
+		 	bl_no,
+		 	ct_no,
+		 	from_specifics,
+		 	from_dt,
+		 	from_time,
+		 	from_addr,
+		 	to_dt,
+		 	to_time,
+		 	goods_name,
+		 	mix_yn,
+		 	from_req,
+		 	to_staff,
+		 	to_phn_no,
+		 	to_addr,
+		 	consignor_name,
+		 	consignor_code,
+		 	consignor_staff,
+		 	consignor_email,
+		 	reg_dt,
+		 	reg_id
+		)VALUES(
+			#{orderSeq},
+			#{corpNo},
+			#{rptNo},
+			#{blNo},
+			#{ctNo},
+			#{fromSpecifics},
+			#{fromDt},
+			#{fromTime},
+			#{fromAddr},
+			#{toDt},
+			#{toTime},
+			#{goodsName},
+			#{mixYn},
+			#{fromReq},
+			#{toStaff},
+			#{toPhnNo},
+			#{toAddr},
+			#{consignorName},
+			#{consignorCode},
+			#{consignorStaff},
+			#{consignorEmail},
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		#{regId}
+	  	) ON DUPLICATE KEY UPDATE
+	  		ct_no = #{ctNo},
+		    from_specifics = #{fromSpecifics},
+		    from_dt = #{fromDt},
+		    from_time = #{fromTime},
+		    from_addr = #{fromAddr},
+		    to_dt = #{toDt},
+		    to_time = #{toTime},
+		    goods_name = #{goodsName},
+		    mix_yn = #{mixYn},
+		    from_req = #{fromReq},
+		    to_staff = #{toStaff},
+		    to_phn_no = #{toPhnNo},
+		    to_addr = #{toAddr},
+		    consignor_name = #{consignorName},
+		    consignor_code = #{consignorCode},
+		    consignor_staff = #{consignorStaff},
+		    consignor_email = #{consignorEmail},
+		    edt_dt = DATE_FORMAT(NOW(), '%Y%m%d'),
+		    edt_id = #{regId}
+	</insert>
+		
+	<select id="selectShippingTempList" parameterType="searchVO" resultType="egovMap">
+		SELECT * FROM shipping_order_temp
+		WHERE rpt_no = #{srch1} AND bl_no = #{srch2};
+	</select>
+	
+	<select id="selectShippingOrderSeqList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			order_seq,
+			ct_no,
+			from_req,
+			'' as toDtEnd
+		FROM shipping_order
+		WHERE rpt_no = #{srch1} AND bl_no = #{srch2};
+	</select>
+	
+</mapper>

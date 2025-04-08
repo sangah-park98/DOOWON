@@ -1,0 +1,1006 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ page import="java.util.Date" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%
+    Date today = new Date();
+    SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
+%>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>수출 Invoice 생성 2</title>
+  <script src="/pf/js/function.js"></script>
+  <script src="/pf/js/export/exportMakeIn2.js?v=<%=fmt.format(today)%>" charset="UTF-8"></script>
+  <script type="module" crossorigin src="/pf/assets/dropdown-init.js"></script>
+</head>
+<body class="flex flex-col max-h-fit">
+ <main class="p-2 grow flex flex-col gap-2">
+    <h2 class="shrink-0 flex items-center gap-1"><i class="fa-duotone fa-box-open-full text-primary-900"></i>INVOICE 생성</h2>
+    <form onkeydown="return preventFormSubmit(event)"
+      class="w-full shrink-0 grid grid-rows-13 grid-cols-12 auto-rows-auto
+      dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700
+      px-4 py-3 gap-1 z-1 text-base *:text-base items-start">
+      <div class="group row-span-2 col-span-6 flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+     </div>
+      <div class="row-span-2 col-start-7 col-span-6 flex flex-col items-end gap-1 p-1 rounded">
+      <button
+          type="button" 
+          onclick="fn_loadDataList2()"
+          class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+          focus:ring-4 focus:ring-secondary-300 font-medium rounded w-1/6 px-5 py-2 focus:outline-none duration-300">
+		  <i class="fa-solid fa-chevron-right"></i>
+          	불러오기
+        </button>
+      </div>
+      
+        <div class="group row-start-3 row-span-2 col-span-6 flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="exporter" class="text-lg font-semibold text-gray-900">
+          * Shipper / Exporter
+        </label>
+        <textarea type="text" id="exporter" style="resize: none"
+		    class="w-full h-32 bg-gray-50 border border-gray-300 text-gray-900
+		    rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+		    placeholder="Seller / Exporter"
+		    oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')"></textarea>
+      </div>
+       <div class="row-span-2 col-start-7 col-span-3 flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="ciNo" class="text-lg font-semibold text-gray-900">
+          * Invoice No
+        </label>
+        <input type="text" id="ciNo" oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')"
+          class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+          placeholder="Invoice No"
+        >
+      </div>
+      <div class="row-span-2 col-start-10 col-span-3 flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+      <div class="w-full flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+       <label for="invoiceDate" class="text-lg font-semibold text-gray-900">
+            * Invoice Date
+       </label>
+      <div class="relative">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+         <input type="text" class="form-control band-calendar text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+				id="invoiceDate" name="exportInvoice_date"
+				onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" onkeyUp="fn_dateInputForm($(this))" 
+				placeholder="Invoice Date" autocomplete="off">   
+      	</div>
+      </div>
+    </div>
+      
+      <div class="group row-start-5 row-span-2 col-span-6 flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+		  <label for="consignee" class="text-lg font-semibold text-gray-900">
+		    * Consignee
+		  </label>
+		  <textarea type="text" id="consignee" style="resize: none"
+		    class="w-full h-32 bg-gray-50 border border-gray-300 text-gray-900
+		    rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+		    placeholder="Consignee"
+		    oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')"></textarea>
+		</div>
+		<div class="row-span-2 col-start-7 col-span-6 flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="references" class="text-lg font-semibold text-gray-900">
+          Other references
+        </label>
+        <input type="text" id="otherReferences"
+          class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+          placeholder="Other references"
+        >
+      </div>
+		
+      <div class="group row-start-7 row-span-2 col-start-1 col-span-6 flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="buyer" class="text-lg font-semibold text-gray-900">
+          * Buyer / Importer
+        </label>
+        <textarea type="text" id="importer" style="resize: none"
+		    class="w-full h-32 bg-gray-50 border border-gray-300 text-gray-900
+		    rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+		    placeholder="Buyer / Importer"
+		    oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')"></textarea>
+      </div>
+      <div class="row-span-2 col-start-7 col-span-6 flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="origin" class="text-lg font-semibold text-gray-900">
+          * Country of origin
+        </label>
+        <div class="relative w-full col-span-2">
+            <button
+              id="originButton0"
+              data-dropdown-toggle="originSearch0"
+              data-dropdown-placement="bottom"
+              onclick="fn_nation(0)"
+              class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              type="button">
+              Country of origin
+              <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+              </svg>
+            </button>
+            <div id="originSearch0" class="w-full z-10 hidden bg-white border rounded-lg shadow-xl dark:bg-gray-700 overflow-auto">
+                <div class="p-3">
+                  <label for="origin-group-search" class="sr-only">Search</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                      <svg class="w-4 h-4 text-grq-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                      </svg>
+                    </div>
+                    <input type="text" id="originSrch0" onkeyup="enterOrigin(0)"
+						   class="w-full block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+                  </div>
+                </div>
+                <ul class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto" aria-labelledby="termsOfTradeButton">
+          		  <li>
+            	    <button 
+              		   class="block ps-2 hover:bg-gray-100 dark:hover:bg-gray-600 py-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300 text-left">
+            	    </button>
+          		  </li>
+      			</ul>
+            </div>
+          </div>
+      </div>
+        <div class="group row-start-9 row-span-2 col-span-3 flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+		  <label for="lcNo" class="text-lg font-semibold text-gray-900">
+		    L/C No
+		  </label>
+		  <input type="text" id="lcNo"
+          class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+          placeholder="L/C No"
+        >
+		</div>
+       <div class="row-span-2 col-start-4 col-span-3 flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+		 <div class="w-full flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+		 <label for="lcDate" class="text-lg font-semibold text-gray-900">
+            L/C Date
+       </label>
+      <div class="relative">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+         <input type="text" class="form-control band-calendar text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+				id="lcDate" name="exportLc_date"
+				onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" onkeyUp="fn_dateInputForm($(this))" 
+				placeholder="L/C Date" autocomplete="off">   
+      </div>
+      </div>
+	</div>
+       
+     
+      <!-- line -->
+      <div class="col-span-12 w-full gap-1 p-1  border-b"></div>
+      <div class="group row-start-7 row-span-2 col-span-6 flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+		  <label for="transport" class="text-lg font-semibold text-gray-900">
+		    Mode of transport
+		  </label>
+	    <input type="text" id="transport"
+          class="col-span-2 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+          placeholder="Mode of transport"
+        >
+		</div>
+		
+       <div class="h-full row-start-9 row-span-2 col-start-1 col-span-6 flex items-end">
+        <div class="w-full flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+          <label for="vessel" class="text-lg font-semibold text-gray-900">
+            * Vessel name
+          </label>
+          <input type="text" id="vessel"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 
+            rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Vessel name"
+            pattern="[a-zA-Z0-9]"
+            oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')"
+          >
+        </div>
+      </div>
+      <div class="row-span-2 col-start-7 col-span-6 flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="incoterms" class="text-lg font-semibold text-gray-900">
+          * Incoterms value
+        </label>
+         <div class="relative w-full col-span-2">
+          <button
+            id="incoterms"
+            onclick="fn_incoterms()"
+            data-dropdown-toggle="incotermsSearch2"
+            data-dropdown-placement="bottom"
+            class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+            type="button"
+          >
+            Incoterms value
+            <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+            </svg>
+          </button>
+          <div id="incotermsSearch2" class="z-10 hidden bg-white border rounded-lg shadow-xl w-full dark:bg-gray-700 overflow-auto">
+            <div class="p-3">
+              <label for="tot-group-search" class="sr-only">Search</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                  <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                  </svg>
+                </div>
+                <input type="text" id="incotermsSrch2" onkeyUp="enterkeyIncoterms()" class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Search">
+              </div>
+            </div>
+            <ul class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto" aria-labelledby="termsOfTradeButton">
+                <li>
+                  <button 
+                  	class="block ps-2 hover:bg-gray-100 dark:hover:bg-gray-600 w-full py-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300 text-left">
+                  </button>
+                </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+       <div class="h-full row-start-11 row-span-2 col-start-1 col-span-6 flex items-end">
+        <div class="w-full flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+          <label for="voyaNo" class="text-lg font-semibold text-gray-900">
+            Voyage No
+          </label>
+          <input type="text" id="voyageNo"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 
+            rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Voyage No"
+            pattern="[a-zA-Z0-9]"
+            oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')"
+          >
+        </div>
+      </div>
+      
+       <div class="row-span-1 col-start-7 col-span-6 flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="location" class="text-lg font-semibold text-gray-900">
+          * Location name
+        </label>
+        <input type="text" id="location"
+          class="col-span-2 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+          placeholder="Location name"
+        >
+      </div>
+     
+      <div
+	      class="h-full row-start-13 row-span-2 col-start-1 col-span-6 flex items-end">
+	      <div class="w-full flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+       <label for="departureDate" class="text-lg font-semibold text-gray-900">
+           * Departure date
+       </label>
+      <div class="relative">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+          </svg>
+        </div>
+        <input type="text" class="form-control band-calendar text-base bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full ps-10 py-1 px-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+				id="departureDate" name="exportDeparture_date"
+				onKeypress="javascript:if(event.keyCode==13) {$('.calendar-popup-container').removeClass('calendar-popup-container_active'); $(this).blur()}" onkeyUp="fn_dateInputForm($(this))" 
+				placeholder="Departure date" autocomplete="off">   
+      </div>
+      </div>
+    </div>
+      
+         <!-- Loading Port -->
+       <div class="h-full row-start-15 row-span-2 col-start-1 col-span-6 flex items-end">
+        <div class="w-full flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+          <label for="loadingPort" class="text-lg font-semibold text-gray-900">
+             * Loading port
+          </label>
+          <div class="relative w-full col-span-2">
+            <button
+              id="loadingPort"
+              onclick="fn_loadingPort()"
+              data-dropdown-toggle="loadingPortSearch2"
+              data-dropdown-placement="bottom"
+              class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              type="button" 
+            >
+              Loading Port
+              <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+              </svg>
+            </button>
+            <div id="loadingPortSearch2" class="z-10 hidden bg-white border rounded-lg shadow-xl w-full dark:bg-gray-700 overflow-auto">
+                <div class="p-3">
+                  <label for="final-group-search" class="sr-only">Search</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                      <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                      </svg>
+                    </div>
+                    <input type="text" id="loadPortSrch2" onkeyUp="enterkeyLoadPort2(event)" class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+                  </div>
+                </div>
+                <ul class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto" aria-labelledby="finalSearch"></ul>
+            </div>
+          </div>
+        </div>
+      </div> 
+     
+      <div class="row-span-1 col-start-7 col-span-6 flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <div class="w-full flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+          <label for="discharge" class="text-lg font-semibold text-gray-900">
+            * Place of discharge
+          </label>
+          <input type="text" id="discharge"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 
+            rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Place of discharge"
+            pattern="[a-zA-Z0-9]"
+            oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')"
+          >
+        </div>
+      </div>
+      <div class="h-full row-start-17 row-span-2 col-start-1 col-span-6 flex items-end">
+        <div class="w-full flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+          <label for="transhipment" class="text-lg font-semibold text-gray-900">
+            * Place of transhipment
+          </label>
+          <input type="text" id="transhipment"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 
+            rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Place of transhipment"
+            pattern="[a-zA-Z0-9]"
+            oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')"
+          >
+        </div>
+      </div>
+      <div class="row-span-1 col-start-7 col-span-6 flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+          <label for="delivery" class="text-lg font-semibold text-gray-900">
+            * Place of delivery
+          </label>
+          <input type="text" id="delivery"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 
+            rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Place of delivery"
+            pattern="[a-zA-Z0-9]"
+            oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')">
+      </div>
+      <div class="h-full row-start-19 row-span-2 col-start-1 col-span-6 flex items-end">
+        <div class="w-full flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+          <label for="freightMethod" class="text-lg font-semibold text-gray-900">
+            * Freight payment Method
+          </label>
+          <input type="text" id="freightMethod"
+            class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 
+            rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Freight payment Method"
+            pattern="[a-zA-Z0-9]"
+            oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')">
+        </div>
+      </div>
+      <div class="row-span-1 col-start-7 col-span-6 flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="conditions" class="text-lg font-semibold text-gray-900">
+          Payment conditions
+        </label>
+        <div class="relative w-full col-span-2">
+            <button
+              id="conditions"
+              onclick="fn_conditions()"
+              data-dropdown-toggle="conditionsSearch"
+              data-dropdown-placement="bottom"
+              class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              type="button" 
+            >
+              Payment conditions
+              <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+              </svg>
+            </button>
+            <div id="conditionsSearch" class="z-10 hidden bg-white border rounded-lg shadow-xl w-full dark:bg-gray-700 overflow-auto">
+                <div class="p-3">
+                  <label for="final-group-search" class="sr-only">Search</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                      <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                      </svg>
+                    </div>
+                    <input type="text" id="conditionsSrch" onkeyUp="enterkeyConditions(event)" class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+                  </div>
+                </div>
+                <ul class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto" aria-labelledby="finalSearch"></ul>
+            </div>
+          </div>
+        <!-- <input type="text" id="conditions"
+          class="col-span-2 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+          placeholder="Payment conditions"
+        > -->
+      </div>
+      
+	 <!--  <div class="h-full row-span-2 col-start-1 col-span-6 flex items-end">
+  	    <div class="w-full flex flex-col gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+	      <label for="finalDestination" class="text-lg font-semibold text-gray-900">
+	      * Final destination
+	      </label>
+          <div class="relative w-full col-span-2">
+		      <button
+		        id="finalDestination"
+		        onclick="fn_finalPopup2()"
+		        class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+		        type="button">
+		        Final destination
+		        <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+		          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+		        </svg>
+		      </button>
+	      <div id="popup2" class="hidden absolute top-0 left-0 right-0 bottom-0 bg-white border rounded-lg shadow-xl dark:bg-gray-700 overflow-auto">
+	        <div class="p-3">
+	          <label for="final-group-search" class="sr-only">Search</label>
+	          <div class="relative">
+	            <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+	              <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+	                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+	              </svg>
+	            </div>
+	          </div>
+	        </div>
+		        <ul 
+		        	class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto">
+		        </ul>
+		      </div>
+		    </div>
+		  </div>
+		</div> -->
+		
+		
+		  <div class="modal fade fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center duration-300" id="ciFinalDestinationPopUp" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" style="display: none; ">
+	 <div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+		<div class="modal-dialog modal-xl" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width:800px;" >
+			<div class="modal-content bg-white shadow-lg relative rounded min-w-80 overflow-hidden">
+				<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center justify-between">
+					<h4 class="modal-title">
+						<span>Final Destination</span>
+					</h4>
+					<button type="button" onclick="finalPopupClose2()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+				</div>
+			    <div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center justify-between">
+					<div class="p-3" style="width: 300px;" align="center">
+		                <label for="currency-group-search" class="sr-only">Search</label>
+		                <div class="relative">
+		                  <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+		                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+		                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+		                    </svg>
+		                  </div>
+		                  <input type="text" id="finalSrch2" onkeyup="enterkeyFinal2()" class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+		                </div>
+	              	</div>
+				  </div>
+				  <div class="modal-body">
+					<div id="finalPopupTable" class="grow bg-white shadow-sm h-full max-h-[100rem] rounded-lg border border-slate-200 z-0"></div>
+				 </div> 
+		    </div>
+	   </div>
+  </div>
+	  
+      <!-- line -->
+      <div class="col-span-12 pt-1 mx-2 mb-1 border-b"></div>
+      <!-- Table Input Form -->
+      <div id="addCIRow" class="col-span-12 grid grid-cols-[3fr_1fr_1fr_3.5fr_1fr_4fr_1fr_1.6fr_1.6fr_1.6fr_0.4fr_1fr] auto-rows-auto gap-1 pb-2">
+        <!-- Labels -->
+        <h2 class="text-lg font-semibold text-gray-900 p-1">Line No</h2>
+        <h2 class="text-lg font-semibold text-gray-900 p-1">* Item Code</h2>
+        <h2 class="text-lg font-semibold text-gray-900 p-1">* HS Code</h2>
+        <h2 class="text-lg font-semibold text-gray-900 p-1">* Specification of commodities</h2>
+        <h2 class="text-lg font-semibold text-gray-900 p-1">* Packing No</h2>
+        <h2 class="text-lg font-semibold text-gray-900 p-1">* Quantity</h2>
+        <h2 class="text-lg font-semibold text-gray-900 p-1">* Unit of Qty</h2>
+        <h2 class="text-lg font-semibold text-gray-900 p-1">* Unit Price</h2>
+        <h2 class="text-lg font-semibold text-gray-900 p-1">* Amount of price</h2>
+        <h2 class="text-lg font-semibold text-gray-900 p-1"></h2>
+        <!-- Table Inputs -->
+         <div class="px-1">
+          <input
+            type="text"
+            id="lineNo0"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block text-center px-2.5 py-1"
+            value="1"
+            readonly
+          >
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="itemCode0"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Item Code"
+            style="text-align: center; placeholder-text-align: left"
+          >
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="hsCode0"
+            oninput="formatPhoneNumber(this)"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="HS Code"
+            style="text-align: center; placeholder-text-align: left;"
+          >
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="specification0"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Specification of commodities"
+          >
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="packingNo0"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            placeholder="Packing No"
+            style="text-align: center; placeholder-text-align: left;"
+          >
+        </div>
+        <div class="px-1">
+          <div class="relative w-full col-span-2">
+            <input
+            type="text"
+            id="quantity0"
+            onkeyup="quantitySum()"
+            oninput="formatNumber(this)"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            style="text-align: right;"
+            placeholder="Quantity"
+          >
+          </div>
+        </div>
+        <div class="px-1">
+        <button
+              id="unitOfQty0"
+              onclick="fn_unitOfQty(0)"
+              data-dropdown-toggle="unitOfQtySearch0"
+              data-dropdown-placement="bottom"
+              class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              type="button">
+              Unit of Qty
+              <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+              </svg>
+            </button>
+            <div id="unitOfQtySearch0" class="z-10 hidden bg-white border rounded-lg shadow-xl dark:bg-gray-700 overflow-auto">
+                <div class="p-3">
+                  <label for="uom-group-search" class="sr-only">Search</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                      <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                      </svg>
+                    </div>
+                    <input type="text" id="unitOfQtySrch0" onkeyup="enterkeyUnitOfQty(0)" 
+                    	   class="w-full block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+                  </div>
+                </div>
+                <ul class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto" aria-labelledby="unitOfQtyButton">
+          			<li>
+            		  <button 
+              			class="block ps-2 hover:bg-gray-100 dark:hover:bg-gray-600 w-full py-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300 text-left">
+            		  </button>
+                    </li>
+      			</ul>
+            </div>
+          </div>
+        <div class="px-1">
+          <div class="relative w-full col-span-2">
+            <input
+            type="text"
+            id="unitPrice0"
+            onkeyup="unitPriceSum()"
+            oninput="formatNumber(this)"
+            class="col-span-1 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            style="text-align: right;"
+            placeholder="Unit price"
+          >
+          </div>
+        </div>
+        <div class="px-1">
+          <input
+            type="text"
+            id="amountOfPrice0"
+            onkeyup="amountOfPriceTotal()"
+           	oninput="formatNumber(this)"
+            class="col-span-2 w-full h-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+            style="text-align: right;"
+            placeholder="Amount of Price">
+        </div> 
+        <div class="flex items-center justify-center">
+          	<button type="button" 
+          			onclick="addCIRow()"
+          			class="p-1.5 text-white flex items-center justify-center bg-indigo-600 rounded-lg hover:opacity-50 duration-200"><i class="fa-solid fa-plus"></i>
+          	</button>
+          </div>
+      </div>
+      
+      <div class="col-span-12 grid add grid-cols-[3fr_1fr_1fr_3.5fr_1fr_4fr_1fr_1.6fr_1.6fr_1.6fr_0.4fr_1fr] auto-rows-auto gap-1 pb-2">
+      
+      </div>
+      
+      
+      <div class="group row-span-3 col-span-4 flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="weight" class="text-lg font-semibold text-gray-900">
+          * Total weight
+        </label>
+        <div class="w-full shrink-0 grid grid-rows-2 grid-cols-12 auto-rows-auto">
+	       <div class="group row-span-2 col-start-1 col-span-6 flex flex-col gap-1 p-1">
+		        <label for="grossWeight" class="text-lg font-semibold text-gray-900">
+		          * Gross weight
+		        </label>
+		        <input type="text" id="grossWeight" oninput="formatNumber(this)"
+		          style="text-align: right;"
+		          class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+		          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+		          placeholder="Gross weight" pattern="[a-zA-Z0-9]" oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')">
+	        </div>
+	        <div class="group row-span-2 col-start-7 col-span-6 flex flex-col gap-1 p-1">
+		        <label for="netWeight" class="text-lg font-semibold text-gray-900">
+		          * Net weight
+		        </label>
+		        <input type="text" id="netWeight" oninput="formatNumber(this)"
+		          style="text-align: right;"
+		          class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+		          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+		          placeholder="Net weight" pattern="[a-zA-Z0-9]" oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')">
+	       </div>
+        </div>
+     </div>
+
+     <div class="group row-span-3 col-span-4 flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="" class="text-lg font-semibold text-gray-900">
+          * Total amount of price
+        </label>
+        <div class="w-full shrink-0 grid grid-rows-2 grid-cols-12 auto-rows-auto">
+	        <div class="group row-span-2 col-start-1 col-span-6 flex flex-col gap-1 p-1">
+		        <label for="currency" class="text-lg font-semibold text-gray-900">
+		          * Currency code
+		        </label>
+		        <div class="relative col-span-2">
+		          <button
+		            id="currencyButton0"
+		            onclick="fn_currency(0)"
+		            data-dropdown-toggle="currencySearch0"
+		            data-dropdown-placement="bottom"
+		            class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+		            type="button">
+		            Currency
+		            <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+		              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+		            </svg>
+		          </button>
+		          <div id="currencySearch0" class="w-full z-10 hidden bg-white border rounded-lg shadow-xl dark:bg-gray-700 overflow-auto">
+		              <div class="p-3">
+		                <label for="currency-group-search" class="sr-only">Search</label>
+		                <div class="relative">
+		                  <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+		                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+		                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+		                    </svg>
+		                  </div>
+		                  <input type="text" id="currencySrch0" onkeyup="enterkeyCurrency(0)" class="w-full block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+		                </div>
+		              </div>
+		              <ul class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto" aria-labelledby="termsOfTradeButton">
+		          		<li>
+		            	  <button 
+		              		class="block ps-2 hover:bg-gray-100 dark:hover:bg-gray-600 py-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300 text-left">
+		                  </button>
+		                </li>
+		      		</ul>
+		          </div>
+		        </div>
+	        </div>
+	        <div class="group row-span-2 col-start-7 col-span-6 flex flex-col gap-1 p-1">
+	        <label class="text-lg font-semibold text-gray-900">
+	          Total amount
+	        </label>
+	        <input type="text" id="totalAmount"
+	          style="text-align: right;"
+	          class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+	          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+	          placeholder="Total amount" pattern="[a-zA-Z0-9]" oninput="formatNumber(this)"
+	        >
+	        </div>
+        </div>
+     </div>
+
+     <div class="group row-span-3 col-span-4 flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="" class="text-lg font-semibold text-gray-900">
+          * Cost details
+        </label>
+        <div class="w-full shrink-0 grid grid-rows-2 grid-cols-12 auto-rows-auto">
+	        <div class="group row-span-2 col-start-1 col-span-6 flex flex-col gap-1 p-1">
+	        <label for="freigh" class="text-lg font-semibold text-gray-900">
+	          Freigh
+	        </label>
+	        <input type="text" id="freigh"
+	          class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+	          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+	          placeholder="Freigh" pattern="[a-zA-Z0-9]" oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+	        >
+	        </div>
+	        <div class="group row-span-2 col-start-7 col-span-6 flex flex-col gap-1 p-1">
+	        <label for="insurance" class="text-lg font-semibold text-gray-900">
+	          Insurance
+	        </label>
+	        <input type="text" id="insurance"
+	          class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+	          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+	          placeholder="Insurance" pattern="[a-zA-Z0-9]" oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')">
+	        </div>
+         </div>
+       </div>
+
+      <div class="group row-span-3 col-span-12 flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+        <label for="" class="text-lg font-semibold text-gray-900">
+          * Packing details
+        </label>
+        <div class="w-full shrink-0 grid grid-rows-2 grid-cols-12 auto-rows-auto">
+	        <div class="group row-span-2 col-start-1 col-span-4 flex flex-col gap-1 p-1">
+		        <label for="" class="text-lg font-semibold text-gray-900">
+		          Package code
+		        </label>
+          <div class="relative w-full">
+            <button
+              id="packageCode"
+              onclick="fn_totCnt()"
+              data-dropdown-toggle="packSearch"
+              data-dropdown-placement="bottom"
+              class="h-10 w-full text-primary-900 border border-primary-700 hover:text-white bg-primary-100 hover:bg-primary-500 focus:ring focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-between dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              type="button"
+            >
+              	Package code
+              <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+              </svg>
+            </button>
+            <div id="packSearch" class="z-10 hidden bg-white border rounded-lg shadow-xl w-full dark:bg-gray-700 overflow-auto">
+                <div class="p-3">
+                  <label for="pl-group-search" class="sr-only">Search</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                      <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                      </svg>
+                    </div>
+                    <input type="text" id="packSrch1" onkeyUp="enterkeytotCnt()" class="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="search">
+                  </div>
+                  	<ul class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200 max-h-40 overflow-auto" aria-labelledby="finalSearch">
+          			</ul>
+                   </div>
+	            </div>
+	          </div>
+	        </div>
+	        <div class="group row-span-2 col-start-5 col-span-4 flex flex-col gap-1 p-1">
+	        <label for="packageName" class="text-lg font-semibold text-gray-900">
+		          Package name
+		        </label>
+		        <input type="text" id="packageName"
+		          class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+		          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+		          placeholder="Package name" pattern="[a-zA-Z0-9]" oninput="this.value = this.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '')">
+	        </div>
+	        <div class="group row-span-2 col-start-9 col-span-4 flex flex-col gap-1 p-1">
+		        <label for="totalPackages" class="text-lg font-semibold text-gray-900">
+		          Total packages
+		        </label>
+		        <input type="text" id="totalPackages"
+		          class="w-full h-10 bg-gray-50 border border-gray-300 text-gray-900
+		          rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+		          placeholder="Total packages" pattern="[a-zA-Z0-9]" oninput="formatNumber(this)">
+	       </div>
+        </div>
+      </div>
+      
+      <div class="flex gap-2 items-end justify-between col-span-12 pt-3 border-t mt-3">
+       <div class="flex flex-col items-start justify-start gap-1 p-1 focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-50 rounded">
+		  <label for="comments" class="text-lg font-semibold text-gray-900">
+		    &nbsp;&nbsp;&nbsp;&nbsp;Comments 
+		  </label>
+		  <textarea name="comments" id="comments" style="resize: none; width:1200px; height:100px;" 
+		    class="w-full h-32 bg-gray-50 border border-gray-300 text-gray-900
+		    rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-2.5 py-1"
+		    placeholder="Comments"
+		  ></textarea>
+		</div> 
+      <div class="flex">
+        <button type="button"
+          onclick="fn_makeCIpreview2()"
+          class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+          focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300">
+          <i class="fa-regular fa-search mr-1"></i>
+          	미리보기
+        </button>&nbsp;&nbsp;
+        <button
+          type="button"
+          onclick="fn_saveTempExpMakeIn2()"
+          class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+          focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300">
+          <i class="fa-regular fa-floppy-disk"></i>
+          	임시저장
+        </button>&nbsp;&nbsp;
+        <button
+          type="button"
+          onclick="fn_clearMakeIn2()"
+          class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+          focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300">
+          <i class="fa-regular fa-times mr-1"></i>
+          	초기화
+        </button>&nbsp;&nbsp;
+        <a id="exportMakePk" onclick="event.preventDefault(); fn_saveMakeInvoice2();"
+		   class="text-white bg-primary-700 hover:bg-secondary-800 border border-primary-700 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-5 py-2 focus:outline-none duration-300 row-start-1">
+		    <i class="fa-solid fa-arrow-turn-down-left fa-flip-horizontal"></i>
+		    <span class="/export/exportSaveInvoice2.do">등록</span>
+		</a>
+		</div>
+      </div>
+    </form>
+    <form name="fileDownForm" method="post">
+		<input type="hidden" name="downCINo" id="downCINo" />
+	</form>
+  </main>
+  
+  <div id="expLoadListPopUp2" class="modal fade fixed top-0 left-0 h-full w-full z-[200] bg-black/50 items-center justify-center duration-300" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" style="display: none; ">
+	<div class="modal-close absolute top-0 left-0 w-full h-full"></div>
+		<div class="modal-dialog modal-xl" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width:800px;" >
+			<div class="modal-content bg-white shadow-lg relative rounded min-w-80 overflow-hidden">
+				<div class="pl-7 pr-5 py-2 text-white bg-primary-900 flex items-center justify-between">
+					<h1 class="expModal-title">
+						<span>불러오기 목록</span>
+					</h1>
+					<button type="button" onclick="expLoadListClose2()" class="modal-close text-2xl px-1.5 py-1 rounded-lg hover:bg-rose-500/70 border-2 border-transparent hover:border-white duration-300 flex items-center justify-center"><i class="far fa-xmark"></i></button>
+				</div>
+				<div class="pl-7 pr-5 py-2 flex items-center justify-end">
+					<button type="button" id="loadDataView" onclick="fn_loadDataView2()" class="px-3 py-2 rounded-lg text-white hover:opacity-50 border-2 border-transparent duration-150 bg-primary-700">
+		                <i class="fa-solid fa-check"></i>선택
+		            </button>&nbsp;
+		            <button type="button" onclick="fn_loadDataDelete2()" class="text-primary-600 bg-primary-100 border border-primary-500 hover:bg-secondary-100
+          				focus:ring-4 focus:ring-secondary-300 rounded px-3 py-2 rounded-lg focus:outline-none duration-300">
+				        <i class="fa-regular fa-xmark"></i>
+				        	삭제
+				    </button>
+				</div>
+				 <div class="modal-body">
+					 <div id="expLoadListPopupTable" class="grow bg-white shadow-sm h-full max-h-[100rem] rounded-lg border border-slate-200 z-0"></div>
+				</div> 
+			</div>
+		</div>
+	</div>
+    <!-- End -->
+	<script>
+	    function formatPhoneNumber(input) {
+	        // 입력값에서 숫자만 추출
+	        let phoneNumber = input.value.replace(/[^0-9]/g, '');
+	        // 최소 6자리 최대 10자리로 제한
+	        phoneNumber = phoneNumber.slice(0, 10);
+	        // 형식 변경
+	        let formattedNumber = '';
+	        for (let i = 0; i < phoneNumber.length; i++) {
+	            if (i === 4) {
+	                formattedNumber += '.'; // 4번째와 6번째 자리에는 '.'
+	            } else if (i === 6) {
+	                formattedNumber += '-'; // 9번째 자리에는 '-'
+	            }
+	            formattedNumber += phoneNumber[i];
+	        }
+	        // 입력 필드에 변경된 값 설정
+	        input.value = formattedNumber;
+	    }
+	</script>
+	<script>initDropdowns();</script>
+</body>
+<footer class="w-full mx-auto flex justify-between justify-self-end items-center shrink-0 bg-primary-900 text-gray-200 px-6 py-2 gap-4">
+    <span>KORD Systems Inc.</span>
+    <span class="mr-auto">Copyright KORD Systems Inc. All rights reserved.</span>
+    <a href="mailto:ioom@kordsystems.com"><i class="fa-regular fa-envelopes"></i>
+      ioom@kordsystems.com
+    </a>
+    <p><i class="fa-regular fa-phone-volume"></i>
+      +82-2-2038-8299
+    </p>
+    <div class="relative inline-flex" x-data="{ open: false, selected: 0 }">
+      <button
+          class="btn justify-between min-w-40 bg-white/30 dark:bg-slate-800 border-slate-200 hover:border-slate-300 text-white hover:text-slate-200 py-1"
+          aria-label="Select date range"
+          aria-haspopup="true"
+          @click.prevent="open = !open"
+          :aria-expanded="open">
+        <span class="flex items-center">
+            <span>참고사이트</span>
+        </span>
+        <svg class="shrink-0 ml-1 fill-current text-slate-400" width="11" height="7" viewBox="0 0 11 7">
+          <path d="M5.4 6.8L0 1.4 1.4 0l4 4 4-4 1.4 1.4z"/>
+        </svg>
+      </button>
+      <div
+          class="z-10 absolute bottom-full left-0 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-1.5 rounded shadow-lg overflow-hidden mt-1"
+          @click.outside="open = false"
+          @keydown.escape.window="open = false"
+          x-show="open"
+          x-transition:enter="transition ease-out duration-100 transform"
+          x-transition:enter-start="opacity-0 -translate-y-2"
+          x-transition:enter-end="opacity-100 translate-y-0"
+          x-transition:leave="transition ease-out duration-100"
+          x-transition:leave-start="opacity-100"
+          x-transition:leave-end="opacity-0"
+          x-cloak>
+        <div class="font-medium text-sm text-slate-600 dark:text-slate-300" x-ref="options">
+		  <a href="https://www.customsservice.co.kr/" target="_blank" @click="open = false">
+		    <button
+		      tabindex="0"
+		      class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+		      :class="selected === 1 && 'text-primary-900'"
+		      @click="selected = 1; open = false"
+		      @focus="open = false"
+		      @focusout="open = false">
+		      <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 1 && 'invisible'" width="12" height="9" viewBox="0 0 12 9">
+		        <path d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+		      </svg>
+		      <span>신한관세법인</span>
+		    </button>
+		  </a>
+		  <a href="https://www.kordsystems.com/" target="_blank" @click="open = false">
+		    <button
+		      tabindex="0"
+		      class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+		      :class="selected === 2 && 'text-primary-900'"
+		      @click="selected = 2; open = false"
+		      @focus="open = false"
+		      @focusout="open = false">
+		      <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 2 && 'invisible'" width="12" height="9" viewBox="0 0 12 9">
+		        <path d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+		      </svg>
+		      <span>코드시스템즈</span>
+		    </button>
+		  </a>
+		  <a href="https://kordpartners.co.kr/" target="_blank" @click="open = false">
+		    <button
+		      tabindex="0"
+		      class="flex items-center w-full hover:bg-slate-50 hover:dark:bg-slate-700/20 py-1 px-3 cursor-pointer"
+		      :class="selected === 3 && 'text-primary-900'"
+		      @click="selected = 3; open = false"
+		      @focus="open = false"
+		      @focusout="open = false">
+		      <svg class="shrink-0 mr-2 fill-current text-primary-400" :class="selected !== 3 && 'invisible'" width="12" height="9" viewBox="0 0 12 9">
+		        <path d="M10.28.28L3.989 6.575 1.695 4.28A1 1 0 00.28 5.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28.28z"/>
+		      </svg>
+		      <span>코드파트너스</span>
+		    </button>
+		  </a>
+	  </div>
+     </div>
+    </div>
+    <!-- End -->
+	 <script>
+	    $(".portal-renderer").slideUp(0)
+	    $("#portal-rendering-button").on("click", function () {
+	      $(".portal-renderer").slideToggle(200)
+	       event.stopPropagation(); // 이벤트 전파 방지
+          $('.dropdown-component').stop().slideUp(200)
+          $(".portal-renderer").stop().slideToggle(200)
+	      $(this).children(".fa-chevron-down").toggleClass("rotate-180")
+	    }); 
+	    
+	   /*  $(".portal-renderer").slideUp(0)
+	    $("#portal-rendering-button").on("click", function () {
+	      $(".portal-renderer").slideToggle(200)
+	      $(this).children(".fa-chevron-down").toggleClass("rotate-180")
+	    }); */
+	    
+    </script> 
+
+  </footer>
+</html>

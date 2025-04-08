@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.11.0.final using JasperReports Library version 6.11.0-0c4056ccaa4d25a5a8c45672d2f764ea3498bebb  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DB_DataSetAll" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="68903f1b-3f3f-4cc1-bfc6-51ad0e2b9f68">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="VCS"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<queryString>
+		<![CDATA[SELECT cmpny_cd, hs_cd, prdct_vnm, PRDCT_ENM FROM item_info
+LIMIT 1]]>
+	</queryString>
+	<field name="cmpny_cd" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="cmpny_cd"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="item_info"/>
+	</field>
+	<field name="hs_cd" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="hs_cd"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="item_info"/>
+	</field>
+	<field name="prdct_vnm" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="prdct_vnm"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="item_info"/>
+	</field>
+	<field name="PRDCT_ENM" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="PRDCT_ENM"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="item_info"/>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="90" splitType="Stretch">
+			<staticText>
+				<reportElement x="220" y="24" width="100" height="30" uuid="05b53341-5d39-4e55-bbc8-ba9c9ed76b35"/>
+				<text><![CDATA[Main]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="61" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="141" height="30" uuid="9ccd6475-f27d-487b-a659-b91b842f9463"/>
+				<textFieldExpression><![CDATA[$F{cmpny_cd}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="310" y="0" width="138" height="30" uuid="3d70d8f7-0637-4e13-b790-0c8cf95d4fbd"/>
+				<textFieldExpression><![CDATA[$F{hs_cd}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="1" y="30" width="138" height="30" uuid="1ca90c41-b917-46d5-aa21-f4a04c131b25"/>
+				<textElement>
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prdct_vnm}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="310" y="30" width="138" height="30" uuid="78116489-61eb-4ccd-909a-7f3068bcfdda"/>
+				<textElement>
+					<font fontName="Noto Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PRDCT_ENM}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="212" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="550" height="212" uuid="4e23791e-eac2-43a5-bb3b-8c592b8d7986"/>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA["subReport.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="45" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="54" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="42" splitType="Stretch"/>
+	</summary>
+</jasperReport>

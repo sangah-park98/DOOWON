@@ -1,0 +1,176 @@
+ <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+  <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+ <!DOCTYPE html>
+ <html lang="ko">
+ <head>
+ 	<meta charset="UTF-8" />
+	<script src="/pf/js/function.js"></script>
+	<script src="/pf/js/cmmn/ftamsg.js"  charset="UTF-8"></script>
+ </head>
+
+ <script type="text/javascript">
+
+ 	/* 메시지 */
+ 	var colMsgNmVn = "${msgNmVn}";
+ 	var colMsgNmEn = "${msgNmEn}";
+ 	var colMsgNmKr = "${msgNmKr}";
+ 	var colMsgType = "${msgType}";
+ 	var colMsgCode = "${msgCode}";
+ 	var colDelYn = "${delYn}";
+
+ 	var msgSearchError = "${searchError}"; //조회중 에러가 발생하였습니다.
+ 	var msgSaveEmpty = "${saveEmpty}"; //저장할 데이터가 없습니다.
+ 	var msgSaveCheck = "${saveCheck}"; //데이터 정합성을 체크해주세요.
+ 	var msgSaveConfirm = "${saveConfirm}"; //저장하시겠습니까?
+ 	var msgSaveSuccess = "${saveSuccess}"; //저장 되었습니다.
+ 	var msgSaveError = "${saveError}"; //저장중 에러가 발생하였습니다.
+
+ </script>
+
+<body class="text-left" id="msg">
+	<div class="main-content">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="tab-content" id="myTabContent">
+					<div class="accordion" id="accordionRightIcon">
+						<div class="card">
+							<div class="card-header header-elements-inline">
+								<h6 class="card-title ul-collapse__icon--size ul-collapse__right-icon mb-0"><a class="text-default" data-toggle="collapse" href="#accordion-item-icon-right-1" aria-expanded="true">${search}</a></h6>
+							</div>
+							<div class="collapse show" id="accordion-item-icon-right-1" data-parent="#accordionRightIcon" style="">
+								<div class="card-body">
+									<div class="form-group col-xl-12 row">
+										<!-- 검색구분 -->
+										<!-- xl lg md sm xs  -->
+										<div class="col-xl-12 col-lg-12 rowflex">
+					                		<label class="ul-form__label ul-form--margin col-lg-1 col-form-label" for="">${msgType}</label>
+					                		<div class="col-xl-11 col-lg-11" style="justify-content:flex-start; display:flex; width:inherit">
+					                			<div class="ul-form__radio-inline inline" id="item-radio" >
+													<label class="ul-radio__position radio radio-primary form-check-inline">
+					                					<input type="radio" name="msg_srch4" value="01"  checked="checked" /><span class="ul-form__radio-font">${msg}</span><span class="checkmark" ></span>
+					                				</label>
+					                				<label class="ul-radio__position radio radio-primary form-check-inline">
+					                					<input type="radio" name="msg_srch4" value="02"  /><span class="ul-form__radio-font">${item}</span><span class="checkmark"></span>
+					                				</label>
+					                			</div>
+					                			<div class="" style="margin-left:auto; display:flex" >
+						                			<button class="btn btn-outline-secondary m-1" type="button" onclick="fn_clearMsg()">${clear}</button>
+						            				<button class="btn btn-primary m-1" type="button" onclick="fn_searchMsg();">${search}</button>
+						                		</div>
+					                		</div>
+						                </div>
+					                </div>
+
+									<div class="custom-separator"></div>
+
+									<div class="form-group col-xl-12 row">
+										<!-- 메시지명(VN) -->
+										<div class="col-xl-4 col-lg-4 rowflex">
+					                		<label class="ul-form__label ul-form--margin col-lg-3 col-form-label" for="">${msgNmVn}</label>
+					                		<div class="col-lg-9">
+					                			<input class="form-control" id="msg_srch1" type="text" onkeyup="enterkey()" placeholder="${msgNmVnMsg}" />
+					                		</div>
+					                	</div>
+
+					                	<!-- 메시지명(EN) -->
+										<div class="col-xl-4 col-lg-4 rowflex">
+					                		<label class="ul-form__label ul-form--margin col-lg-3 col-form-label" for="">${msgNmEn}</label>
+					                		<div class="col-lg-9">
+					                			<input class="form-control" id="msg_srch2" type="text" onkeyup="enterkey()" placeholder="${msgNmEnMsg}" />
+					                		</div>
+					                	</div>
+
+										<!-- 메시지명(KR) -->
+					                	<div class="col-xl-4 col-lg-4 rowflex">
+					                		<label class="ul-form__label ul-form--margin col-lg-3 col-form-label" for="">${msgNmKr}</label>
+					                		<div class="col-lg-9">
+					                			<input class="form-control" id="msg_srch3" type="text" onkeyup="enterkey()" placeholder="${msgNmKrMsg}" />
+					                		</div>
+					                	</div>
+					                </div>
+						        </div>
+						    </div>
+						</div>
+					</div>
+
+					<div class="accordion" id="accordionRightIconTable" style="margin-top:2em;">
+						<div class="card">
+							<div class="card-header header-elements-inline">
+								<h6 class="card-title ul-collapse__icon--size ul-collapse__right-icon mb-0"><a class="text-default" data-toggle="collapse" href="#accordion-item-icon-right-table-1" aria-expanded="true">${msgInfo}</a></h6>
+							</div>
+							<div class="collapse show" id="accordion-item-icon-right-table-1" data-parent="#accordionRightIconTable" style="">
+								<div class="card-body">
+
+									<div class="card-header bg-transparent form-row" style="padding:0 1.25rem">
+
+										<div class="card-header bg-transparent form-row" style="padding:0 1.25rem">
+											<p class="card-title inline" style="line-height:35px; height:35px">${result} : <span id="msgCnt">0</span></p>
+											<c:if test="${writable eq 'Y'}">
+												<div class="form-group inline">
+													<div class="ul-form__radio-inline">
+														<label class="ul-radio__position radio radio-primary form-check-inline" >
+															<input type="radio" name="msgType" value="edit" checked="checked" /><span class="ul-form__radio-font">${edit}</span><span class="checkmark"></span>
+														</label>
+														<label class="ul-radio__position radio radio-primary form-check-inline" >
+															<input type="radio" name="msgType" value="enrol" /><span class="ul-form__radio-font">${enrollment}</span><span class="checkmark"></span>
+														</label>
+													</div>
+												</div>
+											</c:if>
+										</div>
+
+										<div class="text-right" style="flex:auto; margin-left:auto; padding-right:10px; margin-top:1.5px">
+											<button class="btn btn-primary" style="padding-right:10px" type="button" id="btnMsgSave" onclick="fn_saveMsgCheck()">${save}</button>
+										</div>
+
+										<div class="text-right inline-right">
+											<div class="rowWrap">
+												<select class="form-control" id="alignMsg" name="alignMsg" style="text-align:center">
+													<option value="" selected>${orderby} </option>
+													<option value="MSG_NM_VN">${msgNmVn} &uarr; </option>
+													<option value="MSG_NM_VN_DESC">${msgNmVn} &darr; </option>
+													<option value="MSG_NM_EN">${msgNmEn} &uarr; </option>
+													<option value="MSG_NM_EN_DESC">${msgNmEn} &darr; </option>
+													<option value="MSG_NM_KR">${msgNmKr} &uarr; </option>
+													<option value="MSG_NM_KR_DESC">${msgNmKr} &darr; </option>
+												</select>
+												<div class="select-arrow"></div>
+											</div>
+										</div>
+
+										<div class="text-right inline-right-last">
+											<div class="rowWrap">
+												<select class="form-control" id="msgPageCnt" name="msgPageCnt" style="text-align:right">
+													<option value="50" selected>Rows [50]</option>
+													<option value="100">Rows [100]</option>
+													<option value="200">Rows [200]</option>
+													<option value="500">Rows [500]</option>
+												</select>
+												<div class="select-arrow"></div>
+											</div>
+										</div>
+									</div>
+
+									<!-- handson table -->
+									<div id="msgTable" style="margin:10px;"></div>
+
+									<%-- <div class="card-header bg-transparent">
+										<div class="mc-footer">
+											<div class="row text-right">
+												<div class="col-lg-12">
+													<button class="btn btn-primary m-1" type="button" id="btnMsgSave" onclick="fn_saveMsgCheck()">${save}</button>
+												</div>
+											</div>
+										</div>
+									</div> --%>
+
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

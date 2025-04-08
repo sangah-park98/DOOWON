@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.dw.cmmn.service.impl.MsgMapper">
+
+	<!-- 메시지목록 조회 -->
+	<select id="selectPfMsgList" parameterType="searchVO" resultType="egovMap">
+		SELECT MSG_ID
+		     , MSG_NM_EN
+		     , MSG_NM_KR
+		     , DEL_YN
+		  FROM MSG_INFO
+		WHERE DEL_YN = 'N'
+           <if test="srch2 != null and srch2 != ''">
+              AND MSG_NM_EN LIKE CONCAT('%',UPPER(#{srch2}),'%')
+           </if>
+           <if test="srch3 != null and srch3 != ''">
+              AND MSG_NM_KR LIKE CONCAT('%',UPPER(#{srch3}),'%')
+           </if>
+        <choose>
+        	<when test="alignItem == 'MSG_NM_EN'">
+        		ORDER BY MSG_NM_EN
+        	</when>
+        	<when test="alignItem == 'MSG_NM_EN_DESC'">
+        		ORDER BY MSG_NM_EN DESC
+        	</when>
+        	<when test="alignItem == 'MSG_NM_KR'">
+        		ORDER BY MSG_NM_KR
+        	</when>
+        	<when test="alignItem == 'MSG_NM_KR_DESC'">
+        		ORDER BY MSG_NM_KR DESC
+        	</when>
+        	<otherwise>
+        		ORDER BY MSG_ID
+        	</otherwise>
+        </choose>
+          LIMIT #{recordCountPerPage} OFFSET #{startPage}
+	</select>
+
+	<!-- 메시지목록 갯수 조회 -->
+	<select id="selectPfMsgListCnt" parameterType="searchVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM MSG_INFO
+		 WHERE DEL_YN = 'N'
+           <if test="srch2 != null and srch2 != ''">
+              AND MSG_NM_EN LIKE CONCAT('%',UPPER(#{srch2}),'%')
+           </if>
+           <if test="srch3 != null and srch3 != ''">
+              AND MSG_NM_KR LIKE CONCAT('%',UPPER(#{srch3}),'%')
+           </if>
+	</select>
+
+	<!-- 메시지 정보 저장 -->
+	 <update id="insertPfMsgInfo" parameterType="egovframework.dw.cmmn.service.SaveMsgVO">
+		 INSERT
+			INTO MSG_INFO (
+									  MSG_ID
+									, MSG_NM_EN
+									, MSG_NM_KR
+									, DEL_YN
+									, REG_DT
+									, REG_ID
+					) VALUES (
+									  #{msgId}
+									, #{msgNmEn}
+									, #{msgNmKr}
+									, 'N'
+									, DATE_FORMAT(NOW(), '%Y%m%d')
+									, #{regId}
+					) ON DUPLICATE KEY
+							UPDATE
+									  MSG_NM_EN = #{msgNmEn}
+									, MSG_NM_KR = #{msgNmKr}
+									<if test = "delYn != null and delYn != ''">
+										, DEL_YN = #{delYn}
+									</if>
+									<if test = "delYn == null and delYn == ''">
+										, DEL_YN = 'N'
+									</if>  
+									, EDT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+									, EDT_ID = #{edtId}
+	</update>
+
+</mapper>

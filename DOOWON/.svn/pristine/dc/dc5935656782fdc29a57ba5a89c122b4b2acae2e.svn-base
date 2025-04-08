@@ -1,0 +1,78 @@
+package egovframework.pf.api.service;
+
+public class ApiArrangeAllocVO {
+
+	private String mngDeptId;
+	private String orderId;
+	private int sellCharge;
+	private String carNum;
+	private String carTonCode;
+	private String carTypeCode;
+	private String driverName;
+	private String driverTel;
+	private String regNm;
+	private String regTel;
+	
+	public String getMngDeptId() {
+		return mngDeptId;
+	}
+	public void setMngDeptId(String mngDeptId) {
+		this.mngDeptId = mngDeptId;
+	}
+	public String getOrderId() {
+		return orderId;
+	}
+	public void setOrderId(String orderId) {
+		this.orderId = orderId;
+	}
+	public int getSellCharge() {
+		return sellCharge;
+	}
+	public void setSellCharge(int sellCharge) {
+		this.sellCharge = sellCharge;
+	}
+	public String getCarNum() {
+		return carNum;
+	}
+	public void setCarNum(String carNum) {
+		this.carNum = carNum;
+	}
+	public String getCarTonCode() {
+		return carTonCode;
+	}
+	public void setCarTonCode(String carTonCode) {
+		this.carTonCode = carTonCode;
+	}
+	public String getCarTypeCode() {
+		return carTypeCode;
+	}
+	public void setCarTypeCode(String carTypeCode) {
+		this.carTypeCode = carTypeCode;
+	}
+	public String getDriverName() {
+		return driverName;
+	}
+	public void setDriverName(String driverName) {
+		this.driverName = driverName;
+	}
+	public String getDriverTel() {
+		return driverTel;
+	}
+	public void setDriverTel(String driverTel) {
+		this.driverTel = driverTel;
+	}
+	public String getRegNm() {
+		return regNm;
+	}
+	public void setRegNm(String regNm) {
+		this.regNm = regNm;
+	}
+	public String getRegTel() {
+		return regTel;
+	}
+	public void setRegTel(String regTel) {
+		this.regTel = regTel;
+	}
+	
+	
+}

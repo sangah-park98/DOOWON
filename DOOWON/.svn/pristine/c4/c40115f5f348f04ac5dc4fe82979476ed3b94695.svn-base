@@ -1,0 +1,16 @@
+package egovframework.pf.shipping.service;
+
+import java.util.List;
+import egovframework.pf.cmmn.service.SearchVO;
+
+public interface ShippingService {
+
+	List<?> selectShippingViewList(SearchVO vo) throws Exception;
+
+	List<?> selectShippingDstnList(ShippingAddressVO svo) throws Exception;
+
+	void insertAddr(ShippingAddressVO svo) throws Exception;
+
+	void deleteAddr(ShippingAddressVO svo) throws Exception;
+
+}

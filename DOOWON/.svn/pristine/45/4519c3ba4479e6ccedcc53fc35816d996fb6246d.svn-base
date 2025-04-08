@@ -1,0 +1,2177 @@
+var analysis1Table;
+var analysis1ViewSettings;
+var analysis1PopupSettings;
+var analysis1ViewIndex = 0;
+var analysis1ViewScrollTp = true;
+var analysis1ViewCol = [
+	{data: 'markCont', className: "htLeft", width: 180, wordWrap: false, readOnly:true},
+	{data: 'cnt1', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum1', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'cnt2', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum2', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'cnt3', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum3', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'cnt4', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum4', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'cnt5', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum5', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'cnt6', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum6', className: "htRight", width: 150, wordWrap: false, readOnly:true}];
+
+var analysis1ViewHead = [
+	[{rowspan: 2}, {label: 'A', colspan: 2}, {label: 'B', colspan: 2}, {label: 'C', colspan: 2}, {label: 'D', colspan: 2},
+		 {label: 'E', colspan: 2}, {label: '합계', colspan: 2}],
+	["거래구분", "수입(건)", "수입(KRW)", "수입(건)", "수입(KRW)", "수입(건)",
+	 "수입(KRW)", "수입(건)", "수입(KRW)", "수입(건)", "수입(KRW)", "수입(건)",
+	 "수입(KRW)"]];
+
+var analysis2Table;
+var analysis2ViewSettings;
+var analysis2PopupSettings;
+var analysis2ViewIndex = 0;
+var analysis2ViewScrollTp = true;
+var analysis2ViewCol = [
+	{data: 'markCont', className: "htLeft", width: 180, wordWrap: false, readOnly:true},
+	{data: 'cnt1', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum1', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'cnt2', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum2', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'cnt3', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum3', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'cnt4', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum4', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'cnt5', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum5', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'cnt6', className: "htRight", width: 70, wordWrap: false, readOnly:true},
+	{data: 'sum6', className: "htRight", width: 150, wordWrap: false, readOnly:true}];
+
+var analysis2ViewHead = [
+	[{rowspan: 2}, {label: 'A', colspan: 2}, {label: 'B', colspan: 2}, {label: 'C', colspan: 2}, {label: 'D', colspan: 2},
+		 {label: 'E', colspan: 2}, {label: '합계', colspan: 2}],
+	["거래구분", "수출(건)", "수출(KRW)", "수출(건)", "수출(KRW)", "수출(건)",
+	 "수출(KRW)", "수출(건)", "수출(KRW)", "수출(건)", "수출(KRW)", "수출(건)",
+	 "수출(KRW)"]];
+
+var analysis3Table;
+var analysis3ViewSettings;
+var analysis3PopupSettings;
+var analysis3ViewIndex = 0;
+var analysis3ViewScrollTp = true;
+var analysis3ViewCol = [
+	{data: 'supFirm', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'cnt1', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'sum1', className: "htRight", width: 150, wordWrap: false, readOnly:true},
+	{data: 'cnt2', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'sum2', className: "htRight", width: 150, wordWrap: false, readOnly:true},
+	{data: 'cnt3', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'sum3', className: "htRight", width: 150, wordWrap: false, readOnly:true}];
+
+var analysis3ViewHead = [
+	"해외거래처", "일반수입(건)", "수입(KRW)", "기타수입(건)", "수입(KRW)", "수입합계(건)",
+	"수입합계(KRW)"];
+
+var analysis4Table;
+var analysis4ViewSettings;
+var analysis4PopupSettings;
+var analysis4ViewIndex = 0;
+var analysis4ViewScrollTp = true;
+var analysis4ViewCol = [
+	{data: 'buyFirm', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'cnt1', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'sum1', className: "htRight", width: 150, wordWrap: false, readOnly:true},
+	{data: 'cnt2', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'sum2', className: "htRight", width: 150, wordWrap: false, readOnly:true},
+	{data: 'cnt3', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'sum3', className: "htRight", width: 150, wordWrap: false, readOnly:true}];
+
+var analysis4ViewHead = [
+	"해외거래처", "일반수출(건)", "수출(KRW)", "기타수출(건)", "수출(KRW)", "수출합계(건)",
+	"수출합계(KRW)"];
+
+var analysis5Table;
+var analysis5ViewSettings;
+var analysis5PopupSettings;
+var analysis5ViewIndex = 0;
+var analysis5ViewScrollTp = true;
+var analysis5ViewCol = [
+	{data: 'nabFirm', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'fodMark', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'title', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'traMetCont', className: "htLeft", width: 160, wordWrap: false, readOnly:true},
+	{data: 'conCod', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'cnt', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'freKrw', className: "htRight", width: 120, wordWrap: false, readOnly:true},
+	{data: 'totWt', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'totTaxKrw', className: "htRight", width: 150, wordWrap: false, readOnly:true},
+	{data: 'cal1', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'cal2', className: "htRight", width: 100, wordWrap: false, readOnly:true}];
+
+var analysis5ViewHead = [
+	"납세의무자", "적출국", "해외거래처 - 신고번호", "운송형태", "인도조건", "신고건수", "운임",
+	"총중량(KG)", "과세가격(KRW)", "운임/중량(KRW)", "운임/과세가격(%)"];
+
+var analysis6Table;
+var analysis6ViewSettings;
+var analysis6PopupSettings;
+var analysis6ViewIndex = 0;
+var analysis6ViewScrollTp = true;
+var analysis6ViewCol = [
+	{data: 'nabFirm', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'fodMark', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'title', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'traMetCont', className: "htLeft", width: 160, wordWrap: false, readOnly:true},
+	{data: 'conCod', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'cnt', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'insuKrw', className: "htRight", width: 120, wordWrap: false, readOnly:true},
+	{data: 'totWt', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'totTaxKrw', className: "htRight", width: 150, wordWrap: false, readOnly:true},
+	{data: 'cal1', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'cal2', className: "htRight", width: 100, wordWrap: false, readOnly:true}];
+
+var analysis6ViewHead = [
+	"납세의무자", "적출국", "해외거래처 - 신고번호", "운송형태", "인도조건", "신고건수", "보험료",
+	"총중량(KG)", "과세가격(KRW)", "보험료/중량(KRW)", "보험료/과세가격(%)"];
+
+var analysis7Table;
+var analysis7ViewSettings;
+var analysis7PopupSettings;
+var analysis7ViewIndex = 0;
+var analysis7ViewScrollTp = true;
+var analysis7ViewCol = [
+	{data: 'plant', className: "htLeft", width: 150, wordWrap: false, readOnly:true},
+	{data: 'invoice', className: "htLeft", width: 100, wordWrap: false, readOnly:true},
+	{data: 'rptNo', className: "htCenter", width: 130, wordWrap: false, readOnly:true},
+	{data: 'expLisDay', className: "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data: 'totRptKrw', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'excDivi', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'excDiviCont', className: "htLeft", width: 80, wordWrap: false, readOnly:true}];
+
+var analysis7ViewHead = [
+	"PO", "인보이스번호", "신고번호", "수리일자", "신고가격", "수출코드",
+	"외환신고대상여부"];
+
+var analysisCost1Table;
+var analysisCost1ViewSettings;
+var analysisCost1PopupSettings;
+var analysisCost1ViewIndex = 0;
+var analysisCost1ViewScrollTp = true;
+var analysisCost1ViewCol = [
+	{data: 'nabFirm', className: "htLeft", width: 130, wordWrap: false, readOnly:true},
+	{data: 'blNo', className: "htLeft", width: 130, wordWrap: false, readOnly:true},
+	{data: 'rptNo', className: "htCenter", width: 140, wordWrap: false, readOnly:true},
+	{data: 'ranNo', className: "htCenter", width: 65, wordWrap: false, readOnly:true},
+	{data: 'sil', className: "htCenter", width: 65, wordWrap: false, readOnly:true},
+	{data: 'lisDay', className: "htCenter", width: 95, wordWrap: false, readOnly:true},
+	{data: 'rgCode', className: "htCenter", width: 130, wordWrap: false, readOnly:true},
+	{data: 'upi', className: "htRight", width: 90, wordWrap: false, readOnly:true},
+	{data: 'ut', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'conKi', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'supFirm', className: "htLeft", width: 140, wordWrap: false, readOnly:true},
+	{data: 'conCur', className: "htCenter", width: 75, wordWrap: false, readOnly:true},
+	{data: 'upiWon', className: "htRight", width: 110, wordWrap: false, readOnly:true},
+	{data: 'max', className: "htRight", width: 110, wordWrap: false, readOnly:true},	
+	{data: 'min', className: "htRight", width: 110, wordWrap: false, readOnly:true},
+	{data: 'avg', className: "htRight", width: 110, wordWrap: false, readOnly:true},
+	{data: 'maxDiff', className: "htRight", width: 110, wordWrap: false, readOnly:true},
+	{data: 'minDiff', className: "htRight", width: 110, wordWrap: false, readOnly:true},
+	{data: 'avgDiff', className: "htRight", width: 110, wordWrap: false, readOnly:true},
+	{data: 'maxPer', className: "htRight", width: 140, wordWrap: false, readOnly:true},
+	{data: 'minPer', className: "htRight", width: 140, wordWrap: false, readOnly:true},
+	{data: 'avgPer', className: "htRight", width: 140, wordWrap: false, readOnly:true},
+	{data: 'plant', className: "htLeft", width: 150, wordWrap: false, readOnly:true},
+	{data: 'po', className: "htLeft", width: 100, wordWrap: false, readOnly:true}
+];
+
+var analysisCost1ViewHead = [
+	"납세의무자", "B/L", "신고번호", "란", "규격", "수리일자", "자재코드",
+	"신고단가", "신고단위", "결제방법", "해외거래처", "결제통화", "원화단가", "최고단가",
+	"최저단가", "평균단가", "단가차이(최고)", "단가차이(최저)", "단가차이(평균)", "단가차이 비율(최고)",
+	"단가차이 비율(최저)", "단가차이 비율(평균)", "공장코드", "PO"];
+
+var analysisCost2Table;
+var analysisCost2ViewSettings;
+var analysisCost2PopupSettings;
+var analysisCost2ViewIndex = 0;
+var analysisCost2ViewScrollTp = true;
+var analysisCost2ViewCol = [
+	{data: 'nabFirm', className: "htLeft", width: 130, wordWrap: false, readOnly:true},
+	{data: 'blNo', className: "htLeft", width: 150, wordWrap: false, readOnly:true},
+	{data: 'rptNo', className: "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data: 'ranNo', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'sil', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'lisDay', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'rgCode', className: "htCenter", width: 130, wordWrap: false, readOnly:true},
+	{data: 'upi', className: "htRight", width: 150, wordWrap: false, readOnly:true},
+	{data: 'ut', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'conKi', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'supFirm', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'conCur', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'upiWon', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'avg', className: "htRight", width: 130, wordWrap: false, readOnly:true},
+	{data: 'plant', className: "htLeft", width: 150, wordWrap: false, readOnly:true},
+	{data: 'po', className: "htLeft", width: 100, wordWrap: false, readOnly:true}];
+var analysisCost2ViewHead = [
+	"납세의무자", "B/L", "신고번호", "란", "규격", "수리일자", "자재코드",
+	"신고단가", "신고단위", "결제방법", "해외거래처", "결제통화", "원화단가", "평균단가", "공장코드", "PO"];
+
+var analysisCost3Table;
+var analysisCost3ViewSettings;
+var analysisCost3PopupSettings;
+var analysisCost3ViewIndex = 0;
+var analysisCost3ViewScrollTp = true;
+var analysisCost3ViewCol = [
+	{data: 'rgCode', className: "htLeft", width: 150, wordWrap: false, readOnly:true},
+	{data: 'supFirm', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'conCur', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'rptCnt', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'rptSum', className: "htRight", width: 200, wordWrap: false, readOnly:true},
+	{data: 'plant', className: "htLeft", width: 200, wordWrap: false, readOnly:true}];	
+var analysisCost3ViewHead = [
+	"자재코드", "해외거래처", "결제통화", "신고건수", "신고금액(원화)", "공장코드"];
+
+var analysisEtc1Table;
+var analysisEtc1ViewSettings;
+var analysisEtc1PopupSettings;
+var analysisEtc1ViewIndex = 0;
+var analysisEtc1ViewScrollTp = true;
+var analysisEtc1ViewCol = [
+	{data: 'rgCode', className: "htCenter", width: 120, wordWrap: false, readOnly:true},
+	{data: 'hs', className: "htCenter", width: 120, wordWrap: false, readOnly:true},
+	{data: 'stdGName1', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'rptNo', className: "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data: 'lisDay', className: "htCenter", width: 120, wordWrap: false, readOnly:true},
+	{data: 'ranNo', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'sil', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'gsDivi', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'gsRate', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'oriStMark1', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'fodMark', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'qty', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'conAmt', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'conCur', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'upiWon', className: "htRight", width: 200, wordWrap: false, readOnly:true},
+	{data: 'gs', className: "htRight", width: 200, wordWrap: false, readOnly:true}];
+var analysisEtc1ViewHead = [
+	"자재코드", "세번부호", "거래품명", "수입신고번호","수리일자", "란번호", "규격",
+	"관세구분", "관세율", "원산지", "적출국", "수량", "결제금액",
+	"결제통화", "원화금액", "납부관세액"];
+
+var analysisEtc2Table;
+var analysisEtc2ViewSettings;
+var analysisEtc2PopupSettings;
+var analysisEtc2ViewIndex = 0;
+var analysisEtc2ViewScrollTp = true;
+var analysisEtc2ViewCol = [
+	{data: 'rgCode', className: "htCenter", width: 120, wordWrap: false, readOnly:true},
+	{data: 'hs', className: "htCenter", width: 120, wordWrap: false, readOnly:true},
+	{data: 'stdGName1', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'rptNo', className: "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data: 'lisDay', className: "htCenter", width: 120, wordWrap: false, readOnly:true},
+	{data: 'ranNo', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'sil', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'gsDivi', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'gsRate', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'oriStMark1', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'fodMark', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'qty', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'conAmt', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'conCur', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'upiWon', className: "htRight", width: 200, wordWrap: false, readOnly:true},
+	{data: 'gs', className: "htRight", width: 200, wordWrap: false, readOnly:true}];
+var analysisEtc2ViewHead = [
+	"자재코드", "세번부호", "거래품명", "수입신고번호","수리일자", "란번호", "규격",
+	"관세구분", "관세율", "원산지", "적출국", "수량", "결제금액",
+	"결제통화", "원화금액", "납부관세액"];
+
+var analysisEtc3Table;
+var analysisEtc3ViewSettings;
+var analysisEtc3PopupSettings;
+var analysisEtc3ViewIndex = 0;
+var analysisEtc3ViewScrollTp = true;
+var analysisEtc3ViewCol = [
+	{data: 'supFirm', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'rptNo', className: "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data: 'ranNo', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'stdName', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'rmvRptNo', className: "htCenter", width: 150, wordWrap: false, readOnly:true},
+	{data: 'rmvRanNo', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'rmvStdName', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'gsDivi', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'gsRate', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'gs', className: "htRight", width: 150, wordWrap: false, readOnly:true},
+	{data: 'vatDivi', className: "htCenter", width: 80, wordWrap: false, readOnly:true},
+	{data: 'vatRate', className: "htRight", width: 80, wordWrap: false, readOnly:true},
+	{data: 'vat', className: "htRight", width: 200, wordWrap: false, readOnly:true},
+	{data: 'gsRmvMark', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'gsRmvRate', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'rmv', className: "htRight", width: 200, wordWrap: false, readOnly:true},
+	{data: 'vatRmvMark', className: "htCenter", width: 100, wordWrap: false, readOnly:true},
+	{data: 'vatRmvRate', className: "htRight", width: 100, wordWrap: false, readOnly:true},
+	{data: 'vatRmv', className: "htRight", width: 200, wordWrap: false, readOnly:true}];	
+var analysisEtc3ViewHead = [
+	[{label: ''},
+	 {label: '관세감면적용 건 수', colspan: 3},
+	 {label: '관세감면미적용 건 수', colspan: 3},
+	 {label: '총관세액', colspan: 3},
+	 {label: '총부가세액', colspan: 3},
+	 {label: '관세감면세액', colspan: 3},
+	 {label: '부가세감면세액', colspan: 3}],
+	["해외거래처", 
+	 "수입신고번호", "란", "거래품명",
+	 "수입신고번호", "란", "거래품명", 
+	 "관세구분", "관세율", "관세액",
+	 "부가세구분", "부가세율", "부가세액", 
+	 "관세감면부호", "관세감면율", "관세감면세액", 
+	 "부가세감면부호", "부가세감면율", "부가세감면세액"]];
+
+var analysisEtc4Table;
+var analysisEtc4ViewSettings;
+var analysisEtc4PopupSettings;
+var analysisEtc4ViewIndex = 0;
+var analysisEtc4ViewScrollTp = true;
+var analysisEtc4ViewCol = [
+	{data: 'rgCode', className: "htLeft", width: 200, wordWrap: false, readOnly:true},
+	{data: 'rptNo', className: "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data: 'ranNo', className: "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data: 'sil', className: "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data: 'hs', className: "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data: 'taxKiDivi', className: "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data: 'gxRate', className: "htRight", width: 200, wordWrap: false, readOnly:true},
+	{data: 'oriStMark1', className: "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data: 'fodMark', className: "htCenter", width: 200, wordWrap: false, readOnly:true},
+	{data: 'lisDay', className: "htCenter", width: 200, wordWrap: false, readOnly:true}];	
+var analysisEtc4ViewHead = [
+	"자재코드", "수입신고번호", "란", "규격", "HS CODE", "세종",
+	"세율", "원산지", "적출국", "수입신고 수리일"];
+
+
+var gridDefaultSettings = {
+		  columns: null,
+		  colHeaders: null,
+		  columnSorting : true,
+		  hiddenColumns: {
+	    	  copyPasteEnabled: false,
+	    	  indicators: false,
+	    	  columns: false,
+	      },
+		  width: '100%',
+		  autoWrapRow: true,
+		  height: 500,
+		  rowHeights: 25,
+		  rowHeaders: true,
+		  columnHeaderHeight: 25,
+		  stretchH: 'all',
+		  stretchV: 'all',
+		  manualRowResize: true,
+		  manualColumnResize: true,
+		  manualRowMove: false,
+		  manualColumnMove: false,
+		  dropdownMenu: false,
+		  contextMenu: false,
+		  filters: true,
+		  readOnly: true,
+		 // columnSorting: {indicator: true},
+	      autoColumnSize: {samplingRatio: 23},
+	      mergeCells: false,
+	      wordWrap: true,
+	      afterGetColHeader: function(col, TH){
+	    	  
+	      }
+	};
+
+var analysis1Chart;
+var analysis1ChartData;
+var analysis2Chart;
+var analysis2ChartData;
+var analysis3_1Chart;
+var analysis3_2Chart;
+var analysis4_1Chart;
+var analysis4_2Chart;
+var analysisCost1Chart;
+var analysisCost2Chart;
+
+var lineChartConfig = {
+		  type: 'line',
+		  data: null,
+		  options: {
+		    responsive: true,
+		    maintainAspectRatio: false,
+		    plugins: {
+		      legend: {
+		        position: 'top',
+		        display: true,
+		      },
+		      title: {
+		        display: true,
+		        text: 'title'
+		      }
+		    },
+		    scales: {
+      			'bar-y-axis': {
+  					id: 'bar-y-axis',
+  					position: 'left',
+  					beginAtZero: true,
+  					grace: "5%"
+				}
+    		}
+		  }
+	};
+
+var HorizontalBarCartConfig = {
+		  type: 'bar',
+		  data: null,
+		  options: {
+		    indexAxis: 'y',
+		    elements: {
+		      bar: {
+		        borderWidth: 2
+		      }
+		    },
+		    responsive: true,
+		    maintainAspectRatio: false,
+		    plugins: {
+		      legend: {
+		        position: 'right',
+		      },
+		      title: {
+		        display: true,
+		        text: 'title'
+		      }
+		    }
+		  }
+		};
+
+var barChartConfig = {
+		  type: 'bar',
+		  data: null,
+		  options: {
+		    responsive: true,
+		    maintainAspectRatio: false,
+		    plugins: {
+		      legend: {
+		        position: 'top',
+		      },
+		      title: {
+		        display: true,
+		        text: 'Chart.js Combined Line/Bar Chart'
+		      }
+		    }
+		  },
+		};
+
+var doughnutChartConfig = {
+		  type: 'doughnut',
+		  data: null,
+		  options: {
+		    responsive: true,
+		    maintainAspectRatio: false,
+		    plugins: {
+		      legend: {
+		        position: 'top',
+		      },
+		      title: {
+		        display: true,
+		        text: 'title'
+		      }
+		    }
+		  }
+	};
+
+var CHART_COLORS = ['rgb(255, 99, 132)', 'rgb(255, 159, 64)', 'rgb(255, 205, 86)', 'rgb(75, 192, 192)',
+					'rgb(54, 162, 235)', 'rgb(153, 102, 255)', 'rgb(201, 203, 207)'];
+
+(function (){
+	
+	
+});
+
+// ajax global option
+$(document).ajaxStart(function () {
+	//fn_loading(true);
+});
+	   
+$(document).ajaxStop(function () {
+	fn_CloseAnalysis();
+});
+
+$( document ).ready(function() {
+	  //달력 사용시 반드시 넣어주세요.
+      $('.band-calendar').each(function(){ regCal(this) ;})
+	  //캘린더 포맷
+      $('.datepicker').datepicker("option","dateFormat",calFormat);
+      // default 1달
+      fn_analysisChgDate1();
+      
+      // table-container 숨기기
+      $('.table-container').css('display', 'none');
+
+      // 수입실적 table
+      analysis1Table = fn_analysisMakeHandsonGrid("#analysis1Table", analysis1ViewCol, analysis1ViewHead, analysis1ViewSettings, {
+    	  colHeaders: true,
+    	  nestedHeaders: analysis1ViewHead,
+    	  height: 275
+      });
+      
+      // 수출실적 table
+      analysis2Table = fn_analysisMakeHandsonGrid("#analysis2Table", analysis2ViewCol, analysis2ViewHead, analysis2ViewSettings, {
+    	  colHeaders: true,
+    	  nestedHeaders: analysis2ViewHead,
+    	  height: 250
+      });
+      
+      // 해외거래처별 수입실적 table
+      analysis3Table = fn_analysisMakeHandsonGrid("#analysis3Table", analysis3ViewCol, analysis3ViewHead, analysis3ViewSettings, {
+    	  rowHeaders: true,
+		  nestedRows: true,
+		  bindRowsWithHeaders: true,
+		  autoWrapRow: true,
+		  autoWrapCol: true,
+		  dropdownMenu: true,
+		  licenseKey: 'non-commercial-and-evaluation'
+      });
+      
+      // 해외거래처별 수출실적 table
+      analysis4Table = fn_analysisMakeHandsonGrid("#analysis4Table", analysis4ViewCol, analysis4ViewHead, analysis4ViewSettings, {
+    	  rowHeaders: true,
+		  nestedRows: true,
+		  bindRowsWithHeaders: true,
+		  autoWrapRow: true,
+		  autoWrapCol: true,
+		  dropdownMenu: true,
+		  licenseKey: 'non-commercial-and-evaluation'
+      });
+      
+      // 운임 비교 table
+      analysis5Table = fn_analysisMakeHandsonGrid("#analysis5Table", analysis5ViewCol, analysis5ViewHead, analysis5ViewSettings);
+      
+      // 보험료 비교 table
+      analysis6Table = fn_analysisMakeHandsonGrid("#analysis6Table", analysis6ViewCol, analysis6ViewHead, analysis6ViewSettings);
+      
+      // 외환신고대상 수출 건
+      analysis7Table = fn_analysisMakeHandsonGrid("#analysis7Table", analysis7ViewCol, analysis7ViewHead, analysis7ViewSettings);
+      
+      // 수입물품 단가비교 table
+      analysisCost1Table = fn_analysisMakeHandsonGrid("#analysisCost1Table", analysisCost1ViewCol, analysisCost1ViewHead, analysisCost1ViewSettings, {
+    	  hiddenColumns: {
+        	  copyPasteEnabled: false,
+        	  indicators: false,
+        	  columns: [14, 15, 17, 18, 20, 21, 22]
+          }, 
+          dropdownMenu: true,
+		  filters: true,
+          fixedColumnsStart: 8
+      });
+      
+      // 유무상 수입건 과세가격 비교 table
+      analysisCost2Table = fn_analysisMakeHandsonGrid("#analysisCost2Table", analysisCost2ViewCol, analysisCost2ViewHead, analysisCost2ViewSettings, {
+    	  hiddenColumns: {
+        	  copyPasteEnabled: false,
+        	  indicators: false,
+        	  columns: [15, 16, 18, 19, 21, 22]
+          },
+          dropdownMenu: true,
+		  filters: true,
+          fixedColumnsStart: 8
+      });
+      
+      // 동일거래, 결제통화 변경점검 (유사거래건없음) table
+      analysisCost3Table = fn_analysisMakeHandsonGrid("#analysisCost3Table", analysisCost3ViewCol, analysisCost3ViewHead, analysisCost3ViewSettings, null);
+      
+      // 동일자재코드 품목분류 상이점검 table
+      analysisEtc1Table = fn_analysisMakeHandsonGrid("#analysisEtc1Table", analysisEtc1ViewCol, analysisEtc1ViewHead, analysisEtc1ViewSettings, {
+    	  rowHeaders: true,
+		  filters: false,
+    	  fixedColumnsStart: 1
+      });
+      
+      // 동일자재코드 관세구분 상이점검  table
+      analysisEtc2Table = fn_analysisMakeHandsonGrid("#analysisEtc2Table", analysisEtc2ViewCol, analysisEtc2ViewHead, analysisEtc2ViewSettings, {
+    	  rowHeaders: true,
+    	  filters: false,
+    	  fixedColumnsStart: 1
+      });
+      
+      // 감면 적용 일관성 검토 table
+      analysisEtc3Table = fn_analysisMakeHandsonGrid("#analysisEtc3Table", analysisEtc3ViewCol, analysisEtc3ViewHead, analysisEtc3ViewSettings, {
+    	  colHeaders: true,
+    	  rowHeaders: true,
+    	  filters: false,
+    	  nestedHeaders: analysisEtc3ViewHead,
+    	  fixedColumnsStart: 1
+      });
+      
+      // FTA 적정성(직접운송원칙)  table
+      analysisEtc4Table = fn_analysisMakeHandsonGrid("#analysisEtc4Table", analysisEtc4ViewCol, analysisEtc4ViewHead, analysisEtc4ViewSettings, {
+    	  fixedColumnsStart: 2
+      });  
+      
+	  //scroll 이벤트
+	  fn_analysisScrollEventReg();
+	  
+      // 검색시작
+	  analysisHandleSearchTypeChange();
+      //fn_searchWithCallbackAnalysis();
+});
+
+/** 이벤트 Start **/
+$(document).mousedown(function(e){
+	if(e.target.name == "analysisView1_date" || e.target.name == "analysisView2_date"){
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			return;
+		}
+		$(".calendar-popup-container").remove();
+		$('.band-calendar').each(function(){ regCal(this);});
+	}else{
+		if($(".calendar-popup-container").hasClass("calendar-popup-container_active")){
+			$(".calendar-popup-container").attr("class", "calendar-popup-container");
+		}
+	}
+});
+
+$("input:radio[name=analysisView_srch1]").change(function(){
+	$('.table-container').css('display', 'none');
+	analysisHandleSearchTypeChange();
+})
+
+
+$("#analysisCost1Option").change( function(obj){
+	  var option = this.value;
+	  var hot = null;
+	  var plugin = null;
+	  
+	  if(this.id.indexOf('analysisCost1') == 0){
+		  hot  = analysisCost1Table;
+		  plugin = hot.getPlugin('hiddenColumns');
+	  } else {
+		  return false;
+	  };
+	  
+	  plugin.hideColumns([13, 14, 15, 16, 17, 18, 19, 20, 21]);
+	  
+	  if(option == "max"){
+		  plugin.showColumns([13, 16, 19]);
+	  } else if(option == "min"){
+		  plugin.showColumns([14, 17, 20]);
+	  } else if(option == "avg"){
+		  plugin.showColumns([15, 18, 21]);
+	  } else {
+		  return false;
+	  }
+	  
+	  hot.render();
+	});
+
+//row 수 변경시 이벤트
+//$("#kpiImportViewPageCnt, #kpiExportViewPageCnt, #kpiLeadtimeViewPageCnt").change(function(){
+//	fn_searchWithCallbackKpi();
+//});
+
+function analysisEnterkey() {
+	if (window.event.keyCode == 13) {
+		fn_searchWithCallbackAnalysis();
+    }
+}
+
+function fn_analysisScrollEventReg(){
+	
+	$("#analysis3Table .wtHolder").scroll(function(){
+		var scrollTop = $("#analysis3Table .wtHolder").scrollTop();
+		var countPerPage = "50";
+		var rowHeight = analysis3Table.getRowHeight();
+		var addCnt = 745;
+		
+		if(analysis3ViewScrollTp && analysis3ViewIndex != 9999 && scrollTop >= (countPerPage * analysis3ViewIndex * rowHeight) + addCnt){
+			analysis3ViewIndex++;
+			fn_searchWithCallback("/rpt/analysis3.do", analysis3ViewScrollTp, analysis3ViewIndex, analysis3Table, function(){
+				fn_setSummary(analysis3Table, analysis3ViewCol, true);
+			});
+		};
+	});
+	
+	$("#analysis4Table .wtHolder").scroll(function(){
+		var scrollTop = $("#analysis4Table .wtHolder").scrollTop();
+		var countPerPage = "50";
+		var rowHeight = analysis4Table.getRowHeight();
+		var addCnt = 745;
+		
+		if(analysis4ViewScrollTp && analysis4ViewIndex != 9999 && scrollTop >= (countPerPage * analysis4ViewIndex * rowHeight) + addCnt){
+			analysis4ViewIndex++;
+			fn_searchWithCallback("/rpt/analysis4.do", analysis4ViewScrollTp, analysis4ViewIndex, analysis4Table, function(){
+				fn_setSummary(analysis4Table, analysis4ViewCol, true);
+			});
+		};
+	});
+	
+	$("#analysis7Table .wtHolder").scroll(function(){
+		var scrollTop = $("#analysis7Table .wtHolder").scrollTop();
+		var countPerPage = "50";
+		var rowHeight = analysis7Table.getRowHeight();
+		var addCnt = 745;
+		
+		if(analysis7ViewScrollTp && analysis7ViewIndex != 9999 && scrollTop >= (countPerPage * analysis7ViewIndex * rowHeight) + addCnt){
+			analysis7ViewIndex++;
+			fn_searchWithCallback("/rpt/analysis7.do", analysis7ViewScrollTp, analysis7ViewIndex, analysis7Table);
+		};
+	});
+	
+	$("#analysisCost1Table .wtHolder").scroll(function(){
+		var scrollTop = $("#analysisCost1Table .wtHolder").scrollTop();
+		var countPerPage = "50";
+		var rowHeight = analysisCost1Table.getRowHeight();
+		var addCnt = 745;
+		
+		if(analysisCost1ViewScrollTp && analysisCost1ViewIndex != 9999 && scrollTop >= (countPerPage * analysisCost1ViewIndex * rowHeight) + addCnt){
+			analysisCost1ViewIndex++;
+			fn_searchWithCallback("/rpt/analysisCost1.do", analysisCost1ViewScrollTp, analysisCost1ViewIndex, analysisCost1Table);
+		};
+	});
+	
+	$("#analysisCost2Table .wtHolder").scroll(function(){
+		var scrollTop = $("#analysisCost2Table .wtHolder").scrollTop();
+		var countPerPage = "50";
+		var rowHeight = analysisCost2Table.getRowHeight();
+		var addCnt = 745;
+		
+		if(analysisCost2ViewScrollTp && analysisCost2ViewIndex != 9999 && scrollTop >= (countPerPage * analysisCost2ViewIndex * rowHeight) + addCnt){
+			analysisCost2ViewIndex++;
+			fn_searchWithCallback("/rpt/analysisCost2.do", analysisCost2ViewScrollTp, analysisCost2ViewIndex, analysisCost2Table);
+		}
+	});
+	
+	$("#analysisCost3Table .wtHolder").scroll(function(){
+		var scrollTop = $("#analysisCost3Table .wtHolder").scrollTop();
+		var countPerPage = "50";
+		var rowHeight = analysisCost3Table.getRowHeight();
+		var addCnt = 745;
+		
+		if(analysisCost3ViewScrollTp && analysisCost3ViewIndex != 9999 && scrollTop >= (countPerPage * analysisCost3ViewIndex * rowHeight) + addCnt){
+			analysisCost3ViewIndex++;
+			fn_searchWithCallback("/rpt/analysisCost3.do", analysisCost3ViewScrollTp, analysisCost3ViewIndex, analysisCost3Table);
+		}
+	});
+	
+	$("#analysisEtc1Table .wtHolder").scroll(function(){
+		var scrollTop = $("#analysisEtc1Table .wtHolder").scrollTop();
+		var countPerPage = "50";
+		var rowHeight = analysisEtc1Table.getRowHeight();
+		var addCnt = 745;
+		
+		if(analysisEtc1ViewScrollTp && analysisEtc1ViewIndex != 9999 && scrollTop >= (countPerPage * analysisEtc1ViewIndex * rowHeight) + addCnt){
+			analysisEtc1ViewIndex++;
+			fn_searchWithCallback("/rpt/analysisEtc1.do", analysisEtc1ViewScrollTp, analysisEtc1ViewIndex, analysisEtc1Table, function(){
+				fn_mergeCell(analysisEtc1Table, analysisEtc1ViewCol, ["rgCode"]);
+			});
+		}
+	});
+	
+	$("#analysisEtc2Table .wtHolder").scroll(function(){
+		var scrollTop = $("#analysisEtc2Table .wtHolder").scrollTop();
+		var countPerPage = "50";
+		var rowHeight = analysisEtc2Table.getRowHeight();
+		var addCnt = 745;
+		
+		if(analysisEtc2ViewScrollTp && analysisEtc2ViewIndex != 9999 && scrollTop >= (countPerPage * analysisEtc2ViewIndex * rowHeight) + addCnt){
+			analysisEtc2ViewIndex++;
+			fn_searchWithCallback("/rpt/analysisEtc2.do", analysisEtc2ViewScrollTp, analysisEtc2ViewIndex, analysisEtc2Table, function(){
+				fn_mergeCell(analysisEtc2Table, analysisEtc2ViewCol, ["rgCode"]);
+			});
+		}
+	});
+	
+	$("#analysisEtc3Table .wtHolder").scroll(function(){
+		var scrollTop = $("#analysisEtc3Table .wtHolder").scrollTop();
+		var countPerPage = "50";
+		var rowHeight = analysisEtc3Table.getRowHeight();
+		var addCnt = 745;
+		
+		if(analysisEtc3ViewScrollTp && analysisEtc3ViewIndex != 9999 && scrollTop >= (countPerPage * analysisEtc3ViewIndex * rowHeight) + addCnt){
+			analysisEtc3ViewIndex++;
+			fn_searchWithCallback("/rpt/analysisEtc3.do", analysisEtc3ViewScrollTp, analysisEtc3ViewIndex, analysisEtc3Table, function(){
+				fn_mergeCell(analysisEtc3Table, analysisEtc3ViewCol, ["supFirm"]);
+			});
+		}
+	});
+	
+	$("#analysisEtc4Table .wtHolder").scroll(function(){
+		var scrollTop = $("#analysisEtc4Table .wtHolder").scrollTop();
+		var countPerPage = "50";
+		var rowHeight = analysisEtc4Table.getRowHeight();
+		var addCnt = 745;
+		
+		if(analysisEtc4ViewScrollTp && analysisEtc4ViewIndex != 9999 && scrollTop >= (countPerPage * analysisEtc4ViewIndex * rowHeight) + addCnt){
+			analysisEtc4ViewIndex++;
+			fn_searchWithCallback("/rpt/analysisEtc4.do", analysisEtc4ViewScrollTp, analysisEtc4ViewIndex, analysisEtc4Table);
+		}
+	});
+};
+
+//Roll up function
+//$('.table-container').slideUp(0)
+$('.table-block button').each(function (index, el) {
+  $(el).on('click', function () {
+    $(this).parent().next('.table-container').stop().slideToggle(200);
+    $(this).children('.fa-chevron-down').toggleClass('rotate-180')
+  })
+});
+
+
+
+/* 검색 조건 */
+// 검색구분 변경
+function analysisHandleSearchTypeChange(){
+	var type = $("input:radio[name=analysisView_srch1]:checked").val();
+	
+	if(type == "01") {
+		fn_analysisShowSearchOption("analysis");
+		fn_analysisShowTable("analysis");
+	} else if(type == "02") {
+		fn_analysisShowSearchOption("cost");		
+		fn_analysisShowTable("cost");
+		
+	} else if(type == "03") {
+		fn_analysisShowSearchOption("etc");
+		fn_analysisShowTable("etc");
+	}
+	
+	// 테이블 데이터 초기화
+	fn_analysisClearTableData();
+	
+	// 페이지 인덱스 초기화
+	analysis1ViewIndex = 0;
+	analysis2ViewIndex = 0;
+	analysis3ViewIndex = 0;
+	analysis4ViewIndex = 0;
+	analysis5ViewIndex = 0;
+	analysis6ViewIndex = 0;
+	analysis7ViewIndex = 0;
+	
+	analysisCost1ViewIndex = 0;
+	analysisCost2ViewIndex = 0;
+	analysisCost3ViewIndex = 0;
+	
+	analysisEtc1ViewIndex = 0;
+	analysisEtc2ViewIndex = 0;
+	analysisEtc3ViewIndex = 0;
+	analysisEtc4ViewIndex = 0;
+	
+	// 단가 선택 초기화
+	$("#analysisCost1Option  option:eq(0)").prop("selected", true);
+	$("#analysisCost2Option  option:eq(0)").prop("selected", true);
+}
+
+// 검색구분에 따른 테이블 노출/비노출
+function fn_analysisShowTable(type) {
+	var analysisSelectors = ["#analysis1Table", "#analysis2Table", "#analysis3Table", "#analysis4Table",
+							 "#analysis5Table", "#analysis6Table"];
+	var costSelectors = ["#analysisCost1Table", "#analysisCost2Table", "#analysisCost3Table"];
+	var etcSelectors = ["#analysisEtc1Table", "#analysisEtc2Table", "#analysisEtc3Table", "#analysisEtc4Table"];
+	var selectors = [];
+	
+	if(type == "analysis") {
+		selectors = analysisSelectors;
+	} else if(type == "cost") {
+		selectors = costSelectors;
+	} else if(type == "etc") {
+		selectors = etcSelectors;
+	};
+	
+	$("article").hide();
+	
+	for(var i = 0 ; i <= selectors.length ; i++) {
+		$(selectors[i]).parents("article").show();
+	};
+}
+
+// 검색구분에 따른 검색조건 노출/비노출
+function fn_analysisShowSearchOption(option) {
+	if("analysis" == option) {
+		$("#analysisView_srch5").addClass("hidden");
+		$("#analysisView_srch5").prev().addClass("hidden");
+		$("#analysisView_srch5").next().addClass("hidden");
+		
+		$("#analysisView_srch6").addClass("hidden");
+		$("#analysisView_srch6").prev().addClass("hidden");
+	} else if("cost" == option) {
+		$("#analysisView_srch5").removeClass("hidden");
+		$("#analysisView_srch5").prev().removeClass("hidden");
+		$("#analysisView_srch5").next().removeClass("hidden");
+		
+		$("#analysisView_srch6").removeClass("hidden");
+		$("#analysisView_srch6").prev().removeClass("hidden");		
+	} else if("etc" == option) {
+		$("#analysisView_srch5").addClass("hidden");
+		$("#analysisView_srch5").prev().addClass("hidden");
+		$("#analysisView_srch5").next().addClass("hidden");
+		
+		$("#analysisView_srch6").addClass("hidden");
+		$("#analysisView_srch6").prev().addClass("hidden");		
+	}
+}
+
+//검색조건 생성
+function fn_analysisGetSearchForm(index){
+	var sData = {};
+	var type = $("input:radio[name=analysisView_srch1]:checked").val();
+	
+	sData["srch2"] = $("#analysisView_srch3").val();   // 시작일자
+	sData["srch3"] = $("#analysisView_srch4").val();   // 종료일자 
+	
+	if(type == '02') {
+		sData["srch4"] = $("#analysisView_srch5").val();   // 단가차이 이하
+		
+		if($("#analysisView_srch5").val() == '') {
+			alert("단가비율을 입력하세요.");
+			return false;
+		}
+		
+		if($("#analysisView_srch5").val() > 100 ) { 
+			alert("0~100 이하의 값만 유효합니다.");
+			return false;
+		}
+		
+		sData["srch5"] = $("#analysisView_srch6").val();   // 자재코드
+	};
+	
+	sData["recordCountPerPage"] = 50;
+	sData["pageIndex"] = index;
+	
+	return sData;
+};
+
+// 테이블 데이터 초기화
+function fn_analysisClearTableData() {
+	analysis1Table.loadData([]);
+	analysis2Table.loadData([]);
+	analysis3Table.loadData([]);
+	analysis4Table.loadData([]);
+	analysis5Table.loadData([]);
+	analysis6Table.loadData([]);
+	analysis7Table.loadData([]);
+	
+	analysisCost1Table.loadData([]);
+	analysisCost2Table.loadData([]);
+	analysisCost3Table.loadData([]);
+	
+	analysisEtc1Table.loadData([]);
+	analysisEtc2Table.loadData([]);
+	analysisEtc3Table.loadData([]);
+	analysisEtc4Table.loadData([]);
+}
+
+// 초기화
+function fn_analysisClearSerachOption(){
+	fn_analysisChgDate1();
+	$("#analysisView_srch5").val(80);
+	$("#analysisView_srch6").val(120);
+};
+
+//날짜 설정
+function fn_analysisChgDate1() {
+    var date = new Date();
+    var sixMonthsAgo = new Date(date);
+    sixMonthsAgo.setMonth(date.getMonth() - 6);
+
+    var today = date.toISOString().substring(0, 10);
+    var sixMonthsAgoFormatted = sixMonthsAgo.toISOString().substring(0, 10);
+
+    $("#analysisView_srch3").val(sixMonthsAgoFormatted);
+    $("#analysisView_srch4").val(today);
+}
+
+function fn_analysisChgDate2() {
+    var date = new Date();
+    var oneYearAgo = new Date(date);
+    oneYearAgo.setFullYear(date.getFullYear() - 1);
+
+    var today = date.toISOString().substring(0, 10);
+    var oneYearAgoFormatted = oneYearAgo.toISOString().substring(0, 10);
+
+    $("#analysisView_srch3").val(oneYearAgoFormatted);
+    $("#analysisView_srch4").val(today);
+}
+
+function fn_analysisChgDate3() {
+    var date = new Date();
+    var threeYearAgo = new Date(date);
+    threeYearAgo.setFullYear(date.getFullYear() - 3);
+
+    var today = date.toISOString().substring(0, 10);
+    var threeYearAgoFormatted = threeYearAgo.toISOString().substring(0, 10);
+
+    $("#analysisView_srch3").val(threeYearAgoFormatted);
+    $("#analysisView_srch4").val(today);
+}
+
+function fn_analysisChgDate4() {
+    var date = new Date();
+    var fiveYearAgo = new Date(date);
+    fiveYearAgo.setFullYear(date.getFullYear() - 5);
+
+    var today = date.toISOString().substring(0, 10);
+    var fiveYearAgoFormatted = fiveYearAgo.toISOString().substring(0, 10);
+
+    $("#analysisView_srch3").val(fiveYearAgoFormatted);
+    $("#analysisView_srch4").val(today);
+}
+
+
+// handsonGird 생성 함수
+function fn_analysisMakeHandsonGrid(selecor, col, header, settings, customSettings){
+	var viewElement = document.querySelector(selecor);
+    
+    settings = JSON.parse(JSON.stringify(gridDefaultSettings));
+    settings["columns"] = col;
+    settings["colHeaders"] = header;
+    
+    if(customSettings) {
+    	 Object.assign(settings, customSettings);
+    }
+    
+    return new Handsontable(viewElement, settings);
+}
+
+// 검색 - 데이터조회
+function fn_searchWithCallbackAnalysis() {
+	//analysisHandleSearchTypeChange();
+	fn_analysisClearTableData();
+	// table-container 보이기
+	$('.table-container').css('display', 'block');
+	
+	var type = $("input:radio[name=analysisView_srch1]:checked").val();
+	
+	if(type == "01") {
+		$("#anaylsisInfo").html('');
+		var newRow = "";
+		
+		newRow = "<tr><td>5년치 수입실적</td><td id='analySts1'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>" +
+				 "<tr><td>5년치 수출실적</td><td id='analySts2'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>" +
+				 "<tr><td>해외거래처별 수입실적</td><td id='analySts3'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>" +
+				 "<tr><td>해외거래처별 수출실적</td><td id='analySts4'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>" +
+				 "<tr><td>운임 비교</td><td id='analySts5'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>" +
+				 "<tr><td>보험료 비교</td><td id='analySts6'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>";
+		$("#anaylsisInfo").append(newRow);	
+		
+		fn_loadingAnalysis();
+		
+		fn_searchWithCallback("/rpt/analysis1.do", analysis1ViewScrollTp, analysis1ViewIndex, analysis1Table, function(){
+			// table
+			var year = $("#analysisView_srch4").val().substr(0,4);
+			
+			analysis1ViewHead[0][1]["label"] = year -4
+			analysis1ViewHead[0][2]["label"] = year -3
+			analysis1ViewHead[0][3]["label"] = year -2
+			analysis1ViewHead[0][4]["label"] = year -1
+			analysis1ViewHead[0][5]["label"] = $("#analysisView_srch4").val();
+			
+			analysis1Table.updateSettings({
+				nestedHeaders: analysis1ViewHead
+			});
+			
+			fn_setSummary(analysis1Table, analysis1ViewCol);
+		});
+		
+		fn_callAjaxWithCallback("/rpt/analysis1Chart.do", function(data) {
+			// chart
+			var getData = data.resultList;
+			var label = {};
+			
+			for(var i=0; i < getData.length; i++) {
+				var key = getData[i]["date"].substring(0,4) + "-" + getData[i]["date"].substring(4,6);
+				label[key] = key; 
+			}
+			
+			var colors = fn_dynamicColors(7);
+			var data = {labels: Object.keys(label), 
+						datasets: [
+						    {label: '건수', data: [], borderColor: CHART_COLORS[0], backgroundColor: CHART_COLORS[0], order: 1, yAxisID: 'bar-y-axis'},
+						    {label: '금액', data: [], borderColor: CHART_COLORS[1], backgroundColor: CHART_COLORS[1], type: 'line', yAxisID: 'line-y-axis', order: 0},
+					        {label: '일반수입(11)', data: [], borderColor: colors[1], backgroundColor: colors[1], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: false},
+					        {label: '기타 수입승인 면제물품(94)', data: [], borderColor: colors[2], backgroundColor: colors[2], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: true},
+					        {label: '무상 견품 및 광고용품(87)', data: [], borderColor: colors[3], backgroundColor: colors[3], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: true},
+					        {label: '검사·수리 후 재수입(83)', data: [], borderColor: colors[4], backgroundColor: colors[4], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: true},
+					        {label: '대체물품 수입(93)', data: [], borderColor: colors[5], backgroundColor: colors[5], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: true},
+					        {label: '기타 (보세공장, 기타 재수입 등)', data: [], borderColor: colors[6], backgroundColor: colors[6], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: true},
+					    ]};
+			
+			analysis1ChartData = {
+					"sum1": [],
+					"cnt1": [],	
+					"sum2": [],
+					"cnt2": [],
+					"sum3": [],
+					"cnt3": [],
+					"sum4": [],
+					"cnt4": [],
+					"sum5": [],
+					"cnt5": [],
+					"sum6": [],
+					"cnt6": [],
+			};
+					
+			var idx = 0;
+			for(var i=0; i < getData.length; i++) {
+				if(getData[i]["mark"] == "11") {
+					data["datasets"][0]["data"][idx] = getData[i]["cnt"];
+					data["datasets"][1]["data"][idx] = getData[i]["sum"];
+					idx++;
+					
+					analysis1ChartData["sum1"].push(getData[i]["sum"]);
+					analysis1ChartData["cnt1"].push(getData[i]["cnt"]);
+				}else if(getData[i]["mark"] == "94") {
+					analysis1ChartData["sum2"].push(getData[i]["sum"]);
+					analysis1ChartData["cnt2"].push(getData[i]["cnt"]);
+				}else if(getData[i]["mark"] == "87") {
+					analysis1ChartData["sum3"].push(getData[i]["sum"]);
+					analysis1ChartData["cnt3"].push(getData[i]["cnt"]);
+				}else if(getData[i]["mark"] == "83") {
+					analysis1ChartData["sum4"].push(getData[i]["sum"]);
+					analysis1ChartData["cnt4"].push(getData[i]["cnt"]);
+				}else if(getData[i]["mark"] == "93") {
+					analysis1ChartData["sum5"].push(getData[i]["sum"]);
+					analysis1ChartData["cnt5"].push(getData[i]["cnt"]);
+				}else if(getData[i]["mark"] == "9999") {
+					analysis1ChartData["sum6"].push(getData[i]["sum"]);
+					analysis1ChartData["cnt6"].push(getData[i]["cnt"]);
+				};
+			};
+			
+			var option = JSON.parse(JSON.stringify(barChartConfig));
+			option["data"] = data;
+			option["options"]["plugins"]["title"]["text"] = "5년치 수입실적";
+			option["options"]["scales"] = {
+	      			'bar-y-axis': {
+	  					id: 'bar-y-axis',
+	  					type: 'linear',
+	  					position: 'left',
+	  					beginAtZero: true
+					},
+	        		'line-y-axis': {
+	  					id: 'line-y-axis',
+	  					type: 'linear',
+	  					position: 'right',
+	 	 				beginAtZero: true
+	        		}
+	    		}
+        		
+			option.options.plugins.legend.onClick = function (e, legendItem, legend) {
+			    var index = legendItem.datasetIndex;
+			    var ci = legend.chart;
+			    var cnt = legend.legendItems.length;
+			    
+			    if(index == 0 || index == 1) {
+			    	if (ci.isDatasetVisible(index)) {
+			    		ci.hide(index);
+				        legendItem.hidden = true;
+				    } else {
+				    	ci.show(index);
+				        legendItem.hidden = false;
+				    }
+			    } else {
+			    	for(var i=2; i < cnt; i++) {
+			        	ci.hide(i);
+				        legendItem.hidden = true;
+			        }
+			        ci.show(index);
+			        legendItem.hidden = false;
+			        
+			        e.chart.data.datasets[0].data = analysis1ChartData["cnt" + (index -1)];
+			        e.chart.data.datasets[1].data = analysis1ChartData["sum" + (index -1)];
+			        e.chart.update();
+			    }
+			};
+			
+			fn_drawAnalysisChart("analysis1Chart", analysis1Chart, option);
+			$("#analySts1").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		
+		fn_searchWithCallback("/rpt/analysis2.do", analysis2ViewScrollTp, analysis2ViewIndex, analysis2Table, function(){
+			// table
+			var year = $("#analysisView_srch4").val().substr(0,4);
+			
+			analysis2ViewHead[0][1]["label"] = year -4
+			analysis2ViewHead[0][2]["label"] = year -3
+			analysis2ViewHead[0][3]["label"] = year -2
+			analysis2ViewHead[0][4]["label"] = year -1
+			analysis2ViewHead[0][5]["label"] = $("#analysisView_srch4").val();
+			
+			analysis2Table.updateSettings({
+				nestedHeaders: analysis2ViewHead
+			});
+			
+			fn_setSummary(analysis2Table, analysis2ViewCol);
+		});
+
+		fn_callAjaxWithCallback("/rpt/analysis2Chart.do", function(data) {
+			// chart
+			var getData = data.resultList;
+			var label = {};
+			
+			for(var i=0; i < getData.length; i++) {
+				var key = getData[i]["date"].substring(0,4) + "-" + getData[i]["date"].substring(4,6);
+				label[key] = key; 
+			}
+			
+			var colors = fn_dynamicColors(7);
+			var data = {labels: Object.keys(label), 
+						datasets: [
+							{label: '건수', data: [], borderColor: CHART_COLORS[0], backgroundColor: CHART_COLORS[0], order: 1, yAxisID: 'bar-y-axis'},
+						    {label: '금액', data: [], borderColor: CHART_COLORS[1], backgroundColor: CHART_COLORS[1], type: 'line', yAxisID: 'line-y-axis', order: 0},
+					        {label: '일반수출(11)', data: [], borderColor: colors[1], backgroundColor: colors[1], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: false},
+					        {label: '위탁가공을 위한 수출(29)', data: [], borderColor: colors[2], backgroundColor: colors[2], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: true},
+					        {label: '수리 후 재수입 수출(83)', data: [], borderColor: colors[3], backgroundColor: colors[3], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: true},
+					        {label: '기타 수출승인 면제물품(94)', data: [], borderColor: colors[4], backgroundColor: colors[4], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: true},
+					        {label: '기타 (보세공장, 기타 재수출 등)', data: [], borderColor: colors[5], backgroundColor: colors[5], type: 'line', yAxisID: 'line-y-axis', order: 1, hidden: true},
+					    ]};
+			
+			analysis2ChartData = {
+					"sum1": [],
+					"cnt1": [],	
+					"sum2": [],
+					"cnt2": [],
+					"sum3": [],
+					"cnt3": [],
+					"sum4": [],
+					"cnt4": [],
+					"sum5": [],
+					"cnt5": []
+			};
+					
+			var idx = 0;
+			for(var i=0; i < getData.length; i++) {
+				if(getData[i]["mark"] == "11") {
+					data["datasets"][0]["data"][idx] = getData[i]["cnt"];
+					data["datasets"][1]["data"][idx] = getData[i]["sum"];
+					idx++;
+					
+					analysis2ChartData["sum1"].push(getData[i]["sum"]);
+					analysis2ChartData["cnt1"].push(getData[i]["cnt"]);
+				}else if(getData[i]["mark"] == "29") {
+					analysis2ChartData["sum2"].push(getData[i]["sum"]);
+					analysis2ChartData["cnt2"].push(getData[i]["cnt"]);
+				}else if(getData[i]["mark"] == "83") {
+					analysis2ChartData["sum3"].push(getData[i]["sum"]);
+					analysis2ChartData["cnt3"].push(getData[i]["cnt"]);
+				}else if(getData[i]["mark"] == "94") {
+					analysis2ChartData["sum4"].push(getData[i]["sum"]);
+					analysis2ChartData["cnt4"].push(getData[i]["cnt"]);
+				}else if(getData[i]["mark"] == "9999") {
+					analysis2ChartData["sum5"].push(getData[i]["sum"]);
+					analysis2ChartData["cnt5"].push(getData[i]["cnt"]);
+				}
+			};
+			
+			var option = JSON.parse(JSON.stringify(barChartConfig));
+			option["data"] = data;
+			option["options"]["plugins"]["title"]["text"] = "5년치 수출실적";
+			option["options"]["scales"] = {
+	      			'bar-y-axis': {
+	  					id: 'bar-y-axis',
+	  					type: 'linear',
+	  					position: 'left',
+	  					beginAtZero: true
+					},
+	        		'line-y-axis': {
+	  					id: 'line-y-axis',
+	  					type: 'linear',
+	  					position: 'right',
+	 	 				beginAtZero: true
+	        		}
+	    		}
+        		
+			option.options.plugins.legend.onClick = function (e, legendItem, legend) {
+			    var index = legendItem.datasetIndex;
+			    var ci = legend.chart;
+			    var cnt = legend.legendItems.length;
+			    
+			    if(index == 0 || index == 1) {
+			    	if (ci.isDatasetVisible(index)) {
+			    		ci.hide(index);
+				        legendItem.hidden = true;
+				    } else {
+				    	ci.show(index);
+				        legendItem.hidden = false;
+				    }
+			    } else {
+			    	for(var i=2; i < cnt; i++) {
+			        	ci.hide(i);
+				        legendItem.hidden = true;
+			        }
+			        ci.show(index);
+			        legendItem.hidden = false;
+			        
+			        e.chart.data.datasets[0].data = analysis2ChartData["cnt" + (index -1)];
+			        e.chart.data.datasets[1].data = analysis2ChartData["sum" + (index -1)];
+			        e.chart.update();
+			    }
+			};
+			
+			fn_drawAnalysisChart("analysis2Chart", analysis2Chart, option);
+			$("#analySts2").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		
+		fn_searchWithCallback("/rpt/analysis3.do", analysis3ViewScrollTp, analysis3ViewIndex, analysis3Table, function(){
+			// table
+			fn_setSummary(analysis3Table, analysis3ViewCol);
+			
+			// chart
+			var getData = analysis3Table.getSourceData();
+		    getData = getData.filter(function(item, idx){ return !item["summary"]; });
+		    
+		    // 일반 수입 합계, 건수로 정렬
+		    var sumSort = Object.assign([], getData);
+		    var cntSort = Object.assign([], getData);
+		    
+		    sumSort = sumSort.sort(function(a, b) {
+		    	return Number(fn_removeComma(b["sum3"])) - Number(fn_removeComma(a["sum3"]));
+		    });
+		    
+		    cntSort = cntSort.sort(function(a, b) {
+		    	return Number(fn_removeComma(b["cnt3"])) - Number(fn_removeComma(a["cnt3"]));
+		    });
+		    
+		    var colors = fn_dynamicColors(7);
+		    
+		    // 금액차트
+			var labels3_1 = [];
+			var datasets3_1 = [{
+					   		   backgroundColor: "rgba(53,81,103,1)",
+					   		   borderColor: "rgba(53,81,103,.4)",
+					   		   data: []}];
+					
+			
+			for(var i=0; i < 7; i++){
+				if(sumSort[i]) {
+					labels3_1[i] = sumSort[i]["supFirm"];
+					datasets3_1[0]["data"][i] = fn_removeComma(sumSort[i]["sum3"]);
+				}
+			}
+			
+			var option3_1 = JSON.parse(JSON.stringify(HorizontalBarCartConfig));
+			option3_1["data"] = {labels: labels3_1, datasets: datasets3_1};
+			option3_1["options"]["plugins"]["title"]["text"] = "수입금액 TOP7";
+			option3_1["options"]["plugins"]["legend"]["display"] = false; 
+			
+			fn_drawAnalysisChart("analysis3_1Chart", analysis3_1Chart, option3_1);
+			
+			// 건수차트
+			var labels3_2 = [];
+			var datasets3_2 = [{label: "수입건수 TOP7",
+								backgroundColor: "rgba(255,153,0,1)",
+								borderColor: "rgba(255,153,0,.4)",
+					   		    data: []}];
+					
+			
+			for(var i=0; i < 7; i++){
+				if(cntSort[i]) {
+					labels3_2[i] = cntSort[i]["supFirm"];
+					datasets3_2[0]["data"][i] = fn_removeComma(cntSort[i]["cnt3"]);
+				}
+			}
+			
+			var option3_2 = JSON.parse(JSON.stringify(HorizontalBarCartConfig));
+			option3_2["data"] = {labels: labels3_2, datasets: datasets3_2};
+			option3_2["options"]["plugins"]["title"]["text"] = "수입건수 TOP7";
+			option3_2["options"]["plugins"]["legend"]["display"] = false;
+			
+			fn_drawAnalysisChart("analysis3_2Chart", analysis3_2Chart, option3_2);
+			$("#analySts3").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		
+		fn_searchWithCallback("/rpt/analysis4.do", analysis4ViewScrollTp, analysis4ViewIndex, analysis4Table, function(){
+			fn_setSummary(analysis4Table, analysis4ViewCol);
+			
+			// chart
+			var getData = analysis4Table.getSourceData();
+		    getData = getData.filter(function(item, idx){ return !item["summary"]; });
+		    
+		    // 일반 수출  합계, 건수로 정렬
+		    var sumSort = Object.assign([], getData);
+		    var cntSort = Object.assign([], getData);
+		    
+		    sumSort = sumSort.sort(function(a, b) {
+		    	return Number(fn_removeComma(b["sum3"])) - Number(fn_removeComma(a["sum3"]));
+		    });
+		    
+		    cntSort = cntSort.sort(function(a, b) {
+		    	return Number(fn_removeComma(b["cnt3"])) - Number(fn_removeComma(a["cnt3"]));
+		    });
+		    
+		    var colors = fn_dynamicColors(7);
+		    
+		    // 금액차트
+			var labels4_1 = [];
+			var datasets4_1 = [{
+					   		   backgroundColor: "rgba(53,81,103,1)",
+					   		   borderColor: "rgba(53,81,103,.4)",
+					   		   data: []}];
+					
+			
+			for(var i=0; i < 7; i++){
+				if(sumSort[i]) {
+					labels4_1[i] = sumSort[i]["buyFirm"];
+					datasets4_1[0]["data"][i] = fn_removeComma(sumSort[i]["sum3"]);
+				}
+			}
+			
+			var option4_1 = JSON.parse(JSON.stringify(HorizontalBarCartConfig));
+			option4_1["data"] = {labels: labels4_1, datasets: datasets4_1};
+			option4_1["options"]["plugins"]["title"]["text"] = "수출금액 TOP7";
+			option4_1["options"]["plugins"]["legend"]["display"] = false; 
+			
+			fn_drawAnalysisChart("analysis4_1Chart", analysis4_1Chart, option4_1);
+			
+			// 건수차트
+			var labels4_2 = [];
+			var datasets4_2 = [{label: "수입건수 TOP7",
+								backgroundColor: "rgba(255,153,0,1)",
+								borderColor: "rgba(255,153,0,.4)",
+					   		    data: []}];
+					
+			
+			for(var i=0; i < 7; i++){
+				if(cntSort[i]) {
+					labels4_2[i] = cntSort[i]["buyFirm"];
+					datasets4_2[0]["data"][i] = cntSort[i]["cnt3"];
+				}
+			}
+			
+			var option4_2 = JSON.parse(JSON.stringify(HorizontalBarCartConfig));
+			option4_2["data"] = {labels: labels4_2, datasets: datasets4_2};
+			option4_2["options"]["plugins"]["title"]["text"] = "수출건수 TOP7";
+			option4_2["options"]["plugins"]["legend"]["display"] = false;
+			
+			fn_drawAnalysisChart("analysis4_2Chart", analysis4_2Chart, option4_2);
+			
+			$("#analySts4").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		
+		fn_searchWithCallback("/rpt/analysis5.do", analysis5ViewScrollTp, analysis5ViewIndex, analysis5Table, function(){
+			var datas = analysis5Table.getSourceData();
+			$.each(datas, function(index, value){
+			    value["__children"] = value["Children"];
+			    delete value["Children"];
+			    
+			});
+			
+			$("#analysis5Table").html("");
+			analysis5Table = fn_analysisMakeHandsonGrid("#analysis5Table", analysis5ViewCol, analysis5ViewHead, analysis5ViewSettings, {
+				  data: datas,
+				  rowHeaders: true,
+				  nestedRows: true,
+				  bindRowsWithHeaders: 'strict',
+				  //bindRowsWithHeaders: true,
+				  //autoWrapRow: true,
+				  //autoWrapCol: true,
+				  licenseKey: 'non-commercial-and-evaluation'
+		    });
+			
+			if(datas.length > 1) {
+				analysis5Table.getPlugin('nestedRows').collapsingUI.collapseAll();
+			}
+			$("#analySts5").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		
+		fn_searchWithCallback("/rpt/analysis6.do", analysis6ViewScrollTp, analysis6ViewIndex, analysis6Table, function(){
+			var datas = analysis6Table.getSourceData();
+			
+			$.each(datas, function(index, value){
+			    value["__children"] = value["Children"];
+			    delete value["Children"];
+			    
+			});
+			
+			$("#analysis6Table").html("");
+			analysis6Table = fn_analysisMakeHandsonGrid("#analysis6Table", analysis6ViewCol, analysis6ViewHead, analysis6ViewSettings, {
+				  data: datas,
+				  rowHeaders: true,
+				  nestedRows: true,
+				  bindRowsWithHeaders: 'strict',
+				  //bindRowsWithHeaders: true,
+				  //autoWrapRow: true,
+				  //autoWrapCol: true,
+				  licenseKey: 'non-commercial-and-evaluation'
+		    });
+			
+			if(datas.length > 1) {
+				analysis6Table.getPlugin('nestedRows').collapsingUI.collapseAll();
+			}
+			$("#analySts6").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		
+		//fn_searchWithCallback("/rpt/analysis7.do", analysis7ViewScrollTp, analysis7ViewIndex, analysis7Table);
+		
+		
+		
+	} else if(type == "02") {
+		$("#anaylsisInfo").html('');
+		var newRow = "";
+		
+		newRow = "<tr><td>수입물품 단가비교</td><td id='analySts1'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>" +
+				 "<tr><td>유무상 수입건 과세가격 비교</td><td id='analySts2'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>" +
+				 "<tr><td>동일거래, 결제통화 변경점검</td><td id='analySts3'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>";
+		$("#anaylsisInfo").append(newRow);	
+		
+		fn_loadingAnalysis();
+		
+		fn_searchWithCallback("/rpt/analysisCost1.do", analysisCost1ViewScrollTp, analysisCost1ViewIndex, analysisCost1Table ,function(){
+			
+			$("#analySts1").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		fn_callAjaxWithCallback("/rpt/analysisCost1Chart.do", function(data) {
+			
+			// chart
+			var getData = data.resultList;
+			var datasets = []; 
+			var data = {labels: [],
+					  	datasets: []};
+			
+			var day = {};
+			var rgCode = {};
+			
+			for(var i=0; i < getData.length; i++) {
+				day[getData[i]["lisDay"]] = 0;
+				rgCode[getData[i]["rgCode"]] = {};
+			};
+			
+			Object.keys(day).sort().reduce(
+				      (newObj,key) => {
+				         newObj[key] = day[key];
+				         return newObj;
+				      }, {});
+			
+			$.each(rgCode, function(key, val){
+				rgCode[key] = Object.assign({}, day);
+		    });
+			
+			for(var i=0; i < getData.length; i++) {
+				rgCode[getData[i]["rgCode"]][getData[i]["lisDay"]] = getData[i]["max"];
+			}
+			
+			
+			var idx = 1;
+			datasets[0] = {
+					label: '전체',
+					data: [],
+					borderColor: fn_dynamicColors(),
+					fill: false,
+					yAxisID: 'bar-y-axis'
+				};
+			
+			$.each(rgCode, function(key, val){
+				datasets[idx] = {
+						label: key,
+						data: Object.values(rgCode[key]),
+						borderColor: fn_dynamicColors(),
+						fill: false,
+						yAxisID: 'bar-y-axis'
+					};
+				
+				idx++;
+		    });
+					
+			data.labels = Object.keys(day).map(key => key.substring(0,4) + "-" + key.substring(4,6) + "-" + key.substring(6,8)); 
+			data.datasets = datasets;
+			
+			var option = JSON.parse(JSON.stringify(lineChartConfig));
+			option["data"] = data;
+			option["options"]["plugins"]["title"]["text"] = "단가비교 Top7";
+			
+			option.options.plugins.legend.onClick = function (e, legendItem, legend) {
+			    var index = legendItem.datasetIndex;
+			    var ci = legend.chart;
+			    var cnt = legend.legendItems.length;
+			    
+			    if(index == 0) {
+			    	if (ci.isDatasetVisible(index)) {
+				        for(var i=0; i < cnt; i++) {
+				        	ci.hide(i);
+					        legendItem.hidden = true;
+				        }
+				    } else {
+				        for(var i=0; i < cnt; i++) {
+				        	ci.show(i);
+					        legendItem.hidden = false;
+				        }
+				    }
+			    } else {
+			    	if (ci.isDatasetVisible(index)) {
+			    		ci.hide(index);
+				        legendItem.hidden = true;
+				    } else {
+				    	ci.show(index);
+				        legendItem.hidden = false;
+				    }
+			    }
+			};
+			
+			fn_drawAnalysisChart("analysisCost1Chart", analysisCost1Chart, option);
+		});
+		fn_searchWithCallback("/rpt/analysisCost2.do", analysisCost2ViewScrollTp, analysisCost2ViewIndex, analysisCost2Table, function(){
+			$("#analySts2").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		fn_callAjaxWithCallback("/rpt/analysisCost2Chart.do", function(data) {
+			// chart
+			var getData = data.resultList;
+			var labels = [];
+			var datasets = [{label: "무상단가 평균",
+					   		 backgroundColor: "rgba(53,81,103,1)",
+					   		 borderColor: "rgba(53,81,103,.4)",
+					   		 data: []},
+					   		{label: "유상단가 평균",
+					   	     backgroundColor: "rgba(255,153,0,1)",
+					   	     borderColor: "rgba(255,153,0,.4)",
+					   	     data: []}];
+					
+			
+			for(var i=0; i < 7; i++){
+				if(getData[i]) {
+					labels[i] = getData[i]["rgCode"];
+					datasets[0]["data"][i] = getData[i]["gnAvg"];
+					datasets[1]["data"][i] = getData[i]["etcAvg"];
+				}
+			}
+			
+			var option = JSON.parse(JSON.stringify(HorizontalBarCartConfig));
+			option["data"] = {labels: labels, datasets: datasets};
+			option["options"]["plugins"]["title"]["text"] = "무상 평균단가 Top7";
+			
+			
+			fn_drawAnalysisChart("analysisCost2Chart", analysisCost2Chart, option);
+		});
+		fn_searchWithCallback("/rpt/analysisCost3.do", analysisCost3ViewScrollTp, analysisCost3ViewIndex, analysisCost3Table, function(){
+			
+			$("#analySts3").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+	} else if(type == "03") {
+		$("#anaylsisInfo").html('');
+		var newRow = "";
+		
+		newRow = "<tr><td>동일자재코드 품목분류 상이점검</td><td id='analySts1'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>" +
+				 "<tr><td>동일자재코드 관세구분 상이점검</td><td id='analySts2'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>" +
+				 "<tr><td>감면 적용 일관성 검토</td><td id='analySts3'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>" +
+				 "<tr><td>FTA 직접운송원칙</td><td id='analySts4'><img class='loadingTable' src='/pf/css/images/loading-table-unscreen.gif' /></td></tr>";
+		$("#anaylsisInfo").append(newRow);	
+		
+		fn_loadingAnalysis();
+		
+		fn_searchWithCallback("/rpt/analysisEtc1.do", analysisEtc1ViewScrollTp, analysisEtc1ViewIndex, analysisEtc1Table, function(){
+			fn_mergeCell(analysisEtc1Table, analysisEtc1ViewCol, ["rgCode"]);
+			$("#analySts1").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		fn_searchWithCallback("/rpt/analysisEtc2.do", analysisEtc2ViewScrollTp, analysisEtc2ViewIndex, analysisEtc2Table, function(){
+			fn_mergeCell(analysisEtc2Table, analysisEtc2ViewCol, ["rgCode"]);
+			$("#analySts2").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		fn_searchWithCallback("/rpt/analysisEtc3.do", analysisEtc3ViewScrollTp, analysisEtc3ViewIndex, analysisEtc3Table, function(){
+			fn_mergeCell(analysisEtc3Table, analysisEtc3ViewCol, ["supFirm"]);
+			$("#analySts3").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+		fn_searchWithCallback("/rpt/analysisEtc4.do", analysisEtc4ViewScrollTp, analysisEtc4ViewIndex, analysisEtc4Table, function(){
+			
+			$("#analySts4").html('<img class="completeTable" src="/pf/css/images/complete.png" />');
+		});
+	}
+}
+
+function fn_searchWithCallback(url, scrollTp, viewIndex, table, callback) {
+	scrollTp = false;
+	
+	$.ajax({
+		type: "POST",
+		url: url,
+		data: fn_analysisGetSearchForm(viewIndex),
+		beforeSend: function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+	    success: function(data) {
+	    	var getData = table.getSourceData();
+	    	var meargeJson = getData.concat(data.resultList);
+	    	table.loadData(meargeJson);
+	    	scrollTp = true;
+	    	
+	    	if(typeof(callback) == 'function') {
+	    		callback();
+	    	}
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+}
+
+function fn_callAjaxWithCallback(url, callback) {
+	
+	$.ajax({
+		type: "POST",
+		url: url,
+		data: fn_analysisGetSearchForm(),
+		beforeSend: function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+	    success: function(data) {
+	    	if(typeof(callback) == 'function') {
+	    		callback(data);
+	    	}
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+}
+
+function fn_setSummary(table, col, scroll, index) {
+	var configArray = [];
+	
+	if(index){
+		for (let i = 1; i < index.length; i++) {
+	    	configArray.push({sourceColumn: index[i],
+	    					  reversedRowCoords: true,
+	    					  destinationRow: 0,
+	    					  destinationColumn: index[i],
+	    					  type: 'custom',
+	    				      customFunction: function(endpoint){
+	    				    		var col = endpoint.sourceColumn;
+	    				    		var row = endpoint.ranges[0];
+	    				    		var sum = 0;
+	    				    		
+	    				    		for(var i=row[0]; i < row[1]; i++) {
+	    				    			sum += fn_removeComma(table.getDataAtCell(i, col));
+	    				    		}
+	    				    		
+	    				    		return fn_setComma(sum);
+	    				      }
+	    	});
+	    }
+	} else {
+		for (let i = 1; i < table.countCols(); i++) {
+	    	configArray.push({sourceColumn: i,
+	    					  reversedRowCoords: true,
+	    					  destinationRow: 0,
+	    					  destinationColumn: i,
+	    					  type: 'custom',
+	    				      customFunction: function(endpoint){
+	    				    		var col = endpoint.sourceColumn;
+	    				    		var row = endpoint.ranges[0];
+	    				    		var sum = 0;
+	    				    		
+	    				    		for(var i=row[0]; i < row[1]; i++) {
+	    				    			sum += fn_removeComma(table.getDataAtCell(i, col));
+	    				    		}
+	    				    		
+	    				    		return fn_setComma(sum);
+	    				      }
+	    	});
+	    }
+	}
+	
+    var tempObj = {"summary": true}
+    	tempObj[col[0]["data"]] = "합계";
+    var getData = table.getSourceData();
+    
+    // 스크롤 이벤트로 추가 로드시 마지막 row 삭제후 summary 재생성
+    if(scroll) {
+    	getData = getData.filter(function(item, idx){
+    		return !item["summary"];
+    	});
+    }
+    
+	var meargeJson = getData.concat([tempObj]);
+	
+	table.loadData(meargeJson);
+    table.updateSettings({
+    	columns: col,
+    	columnSummary: configArray,
+    	fixedRowsBottom: 1,
+    	className: "htRight"
+    });
+    table.loadData(meargeJson);
+}
+
+function fn_mergeCell(table, col, props){
+	
+	var data = table.getSourceData();
+	var mergeCells = [];
+	var alignCells = [];
+	
+	for(var i=0; i < props.length; i++) {
+		var prop = props[i];
+		var colIdx = 0;
+		var dupCnt = 1;
+		var startIdx = 0;
+		var preVal = null;
+		
+		for(var j=0; j < col.length; j++) {
+			if(col[j]["data"] == prop){
+				colIdx = j;
+				break;
+			}
+		}
+		
+		for(var k=0; k < data.length; k++) {
+			if(k > 0) {
+				if(!data[k][prop]) {
+					data[k][prop] = data[k - 1][prop];
+				};
+				
+				if(data[k][prop] === data[k - 1][prop]) {
+					dupCnt++;
+				} else{
+					if(dupCnt > 1) {
+						mergeCells.push({row: startIdx, col: colIdx, rowspan: dupCnt, colspan: 1});
+						alignCells.push({row: startIdx, col: colIdx, className: 'htCenter htMiddle'});
+					};
+					
+					startIdx = k;
+					dupCnt = 1;
+				}
+				
+				if(k == data.length - 1 && dupCnt > 1){
+					mergeCells.push({row: startIdx, col: colIdx, rowspan: dupCnt, colspan: 1});
+					alignCells.push({row: startIdx, col: colIdx, className: 'htCenter htMiddle'});
+				}
+			}
+		}
+	}
+	
+	table.updateSettings({mergeCells: mergeCells, cell: alignCells});
+}
+
+function fn_drawAnalysisChart(id, chart, option) {
+	document.querySelector('#'+id).remove();
+	document.querySelector('.'+id).innerHTML = "<canvas id='"+ id +"' style='border: 1px dotted gray; width:100%; hight: 100%'></canvas>"
+    
+    var ctx = document.getElementById(id).getContext('2d');
+	chart = new Chart(ctx, option);
+}
+
+function fn_ananlysisExcleDownload(){
+	
+	if(!confirm('Excel 다운로드 작업을 시작하시겠습니까?\n수집량에 따라 시간이 다소 소요될 수 있습니다.\n작업이 완료되면 다운로드 창에서 확인하실 수 있습니다.')) return;
+	
+	fn_loading(true);
+	var type = $("input:radio[name=analysisView_srch1]:checked").val();
+	
+    // 엑셀 옵션
+    var exTitArr = [];
+    var exTit = "";
+    var exColArr = [];
+    var exCol = "";
+    var exTitDivArr = [];
+    var exTitDiv = "";
+    var fileName = "";
+    
+    if(type == "01") {
+    	if($("input:checkbox[name='checkAnalysisExcel']:checked").length == 0) {
+    		alert("다운로드 항목을 선택해주세요.");
+    		return false;
+    	}
+    	
+    	fileName = "수출입현황";
+    	
+    	$.each($("input:checkbox[name='checkAnalysisExcel']:checked"), function (index, el) {
+    		var val = $(el).val();
+    		var name = $(el).siblings().find("span").text().replace(/ /g,"_");
+    		
+    		exTitDivArr.push(val + "|" + name);
+    		
+    		if(val == "1") {
+    			var year = $("#analysisView_srch4").val().substr(0,4);
+    			
+    			analysis1ViewHead[0][1]["label"] = year -4
+    			analysis1ViewHead[0][2]["label"] = year -3
+    			analysis1ViewHead[0][3]["label"] = year -2
+    			analysis1ViewHead[0][4]["label"] = year -1
+    			analysis1ViewHead[0][5]["label"] = $("#analysisView_srch4").val();
+    			
+    			exColArr.push(fn_getExcelCol(analysis1ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysis1ViewHead));
+    		}else if(val == "2") {
+    			var year = $("#analysisView_srch4").val().substr(0,4);
+    			
+    			analysis2ViewHead[0][1]["label"] = year -4
+    			analysis2ViewHead[0][2]["label"] = year -3
+    			analysis2ViewHead[0][3]["label"] = year -2
+    			analysis2ViewHead[0][4]["label"] = year -1
+    			analysis2ViewHead[0][5]["label"] = $("#analysisView_srch4").val();
+    			
+    			exColArr.push(fn_getExcelCol(analysis2ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysis2ViewHead));
+    		}else if(val == "3") {
+    			exColArr.push(fn_getExcelCol(analysis3ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysis3ViewHead));
+    		}else if(val == "4") {
+    			exColArr.push(fn_getExcelCol(analysis4ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysis4ViewHead));
+    		}else if(val == "5") {
+    			exColArr.push(fn_getExcelCol(analysis5ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysis5ViewHead));
+    		}else if(val == "6") {
+    			exColArr.push(fn_getExcelCol(analysis6ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysis6ViewHead));
+    		}
+    		/*else if(val == "7") {
+    			exColArr.push(fn_getExcelCol(analysis7ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysis7ViewHead));
+    		}*/
+    	});
+    } else if(type == "02") {
+    	if($("input:checkbox[name='checkCostExcel']:checked").length == 0) {
+    		alert("다운로드 항목을 선택해주세요.");
+    		return false;
+    	}
+    	
+    	fileName = "단가분석";
+    	
+    	$.each($("input:checkbox[name='checkCostExcel']:checked"), function (index, el) {
+    		var val = $(el).val();
+    		var name = $(el).siblings().find("span").text().replace(/ /g,"_");
+    		exTitDivArr.push(val + "|" + name);
+    		
+    		if(val == "1") {
+    			exColArr.push(fn_getExcelCol(analysisCost1ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysisCost1ViewHead));
+    		}else if(val == "2") {
+    			exColArr.push(fn_getExcelCol(analysisCost2ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysisCost2ViewHead));
+    		}else if(val == "3") {
+    			exColArr.push(fn_getExcelCol(analysisCost3ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysisCost3ViewHead));
+    		}
+    	});
+    } else if(type == "03") {
+    	if($("input:checkbox[name='checkEtcExcel']:checked").length == 0) {
+    		alert("선택된 항목이 없습니다.");
+    		return false;
+    	}
+    	
+    	fileName = "수출입_데이터분석";
+    	
+    	$.each($("input:checkbox[name='checkEtcExcel']:checked"), function (index, el) {
+    		var val = $(el).val();
+    		var name = $(el).siblings().find("span").text().replace(/ /g,"_");
+    		exTitDivArr.push(val + "|" + name);
+    		
+    		if(val == "1") {
+    			exColArr.push(fn_getExcelCol(analysisEtc1ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysisEtc1ViewHead));
+    		}else if(val == "2") {
+    			exColArr.push(fn_getExcelCol(analysisEtc2ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysisEtc2ViewHead));
+    		}else if(val == "3") {
+    			exColArr.push(fn_getExcelCol(analysisEtc3ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysisEtc3ViewHead));
+    		}else if(val == "4") {
+    			exColArr.push(fn_getExcelCol(analysisEtc4ViewCol));
+    	    	exTitArr.push(fn_getExcelHead(analysisEtc4ViewHead));
+    		}
+    	});
+    };
+    
+    exCol = exColArr.join("|||");
+	exTit = exTitArr.join("||||");
+	exTitDiv = exTitDivArr.join("||");
+	
+	var parameters = {exCol : "", exTit: "", exTitDiv: "", exType: "", srch40: ""};
+	
+    // 검색옵션
+    $.each(fn_analysisGetSearchForm(type), function(attrName, attrValue){
+    	parameters[attrName] = attrValue;
+    });
+	
+	parameters.exCol = exCol.replace(/ /g,"_");
+	parameters.exTit = exTit.replace(/ /g,"_");
+	parameters.exTitDiv = exTitDiv.replace(/ /g,"_");
+	parameters.exType = type;
+	parameters.srch40 = fileName;
+	
+	
+	$.ajax({
+		 url: "/analysis/downloadExcel.do",
+		 data: parameters,
+		 type: 'POST',
+		 cache: false,
+		 timeout: 3600000,
+		 xhrFields: {
+			 responseType: "blob",
+		 },
+	    success: function(blob, status, xhr) {
+	    	try {
+				// check for a filename
+				 var fileName = "";
+				 var disposition = xhr.getResponseHeader("Content-Disposition");
+
+			       if (disposition && disposition.indexOf("attachment") !== -1) {
+			      	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+			           var matches = filenameRegex.exec(disposition);
+
+			           if (matches != null && matches[1]) {
+			               fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+			           }
+			       }
+
+			       // for IE
+			       if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+			           window.navigator.msSaveOrOpenBlob(blob, fileName);
+			       } else {
+			           var URL = window.URL || window.webkitURL;
+			           var downloadUrl = URL.createObjectURL(blob);
+
+			           if (fileName) {
+			               var a = document.createElement("a");
+
+			               // for safari
+			               if (a.download === undefined) {
+			                   window.location.href = downloadUrl;
+			               } else {
+			                   a.href = downloadUrl;
+			                   a.download = fileName;
+			                   document.body.appendChild(a);
+			                   a.click();
+			               }
+			           } else {
+			               window.location.href = downloadUrl;
+			           }
+			       }
+			       fn_loading(false);
+			} catch (e) {
+				console.log(e);
+				fn_loading(false);
+			};
+	    },
+	    error: function(e, textStatus, errorThrown) {
+	    	if(e.status == 400){
+	    		alert("Your request is up. Please log back in if you wish continue");
+	    		location.href = document.referrer;
+	    	} else {
+	        	console.log(errorThrown);
+	    	}
+	    }
+	});
+}
+
+function fn_getExcelCol(viewCol) {
+	return viewCol.map(item => item['data'] + '|' + item['className'] + '|' + item['width']).join("||");
+}
+
+function fn_getExcelHead(viewHead){
+	var result = [];
+	
+	if(viewHead.length > 1 && typeof(viewHead[0][0]) == 'object') {
+		for(var i=0; i < viewHead.length; i++) {
+			if(i == viewHead.length -1){
+				result.push(viewHead[i].join("|null||") + "|null");
+			}else {
+				result.push(viewHead[i].map(item => (item['label'] ? item['label'] : 'null') + '|' + (item['colspan'] ? item['colspan'] : 'null')).join("||"));
+			}
+		}
+		return result.join("|||");
+	}else{
+		return viewHead.join("|null||") + "|null";
+	};
+}
+
+function fn_setComma(num) {
+	return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function fn_removeComma(num) {
+	if(num) {
+		return parseInt(num.replace(/,/g, ""));
+	} else {
+		return num;
+	}
+}
+
+function fn_dynamicColors(cnt) {
+	if(!cnt) {
+		var r = Math.floor(Math.random() * 127 + 128);
+	    var g = Math.floor(Math.random() * 127 + 128);
+	    var b = Math.floor(Math.random() * 127 + 128);
+	    return "rgb(" + r + "," + g + "," + b + ")";
+	}
+	
+	var result = [];
+	
+	for(var i=0; i < cnt; i++) {
+		var r = Math.floor(Math.random() * 127 + 128);
+	    var g = Math.floor(Math.random() * 127 + 128);
+	    var b = Math.floor(Math.random() * 127 + 128);
+	    result.push("rgb(" + r + "," + g + "," + b + ")");
+	}
+    
+	return result;
+};
+
+function fn_skipped(ctx, value){
+	return ctx.p0.skip || ctx.p1.skip ? value : undefined;
+}
+
+var numberValidator = function (value, callback) {
+	var tmpStr='';
+	var valueStr = (''+value).replace(/\s/g, '');
+	for(var i = 0 ; i<valueStr.length; i++){
+		tmpStr =valueStr.substring(i, i+1);
+		if(    tmpStr == '0' || tmpStr == '1' || tmpStr == '2'
+                        || tmpStr == '3' || tmpStr == '4' || tmpStr == '5'
+                        || tmpStr == '6' || tmpStr == '7' || tmpStr == '8'
+                        || tmpStr == '9' || tmpStr == ',' || tmpStr == '.'){
+
+		}else{
+			callback(false);
+			break;
+		}
+		callback(true);
+	}
+
+};
+
+function fn_loadingAnalysis() {
+	
+
+	//업로드 Modal Action
+	const modalAnalysis = document.querySelector('.modal-popup-analysis')
+	const modalAnaly = document.querySelector('.modal-analysis')
+	modalAnalysis.classList.remove('hidden')
+	modalAnalysis.classList.add('flex')
+	modalAnaly.classList.remove('hidden')
+	modalAnaly.classList.add('block')
+
+
+}
+
+
+function fn_CloseAnalysis() {
+	const modalAnalysis = document.querySelector('.modal-popup-analysis')
+	//const contactModal = document.querySelector('.contact-modal')
+	const modalAnaly = document.querySelector('.modal-analysis')
+	modalAnalysis.classList.remove('flex')
+	modalAnalysis.classList.add('hidden')
+	modalAnaly.classList.remove('block')
+	modalAnaly.classList.add('hidden')
+	popupState = false
+}
+
+
+modalCloseAnalysis = document.querySelector('.modal-close-analysis')
+modalCloseAnalysis.addEventListener('click', () => {
+ const modalAnalysis = document.querySelector('.modal-popup-analysis')
+ //const contactModal = document.querySelector('.contact-modal')
+ const modalAnaly = document.querySelector('.modal-analysis')
+ modalAnalysis.classList.remove('flex')
+ modalAnalysis.classList.add('hidden')
+ modalAnaly.classList.remove('block')
+ modalAnaly.classList.add('hidden')
+ popupState = false
+})

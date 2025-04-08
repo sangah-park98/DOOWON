@@ -1,0 +1,846 @@
+var noticeHot;
+var noticeSettings;
+var noticeIndex = 9999;
+var noticeScrollTp = true;
+var noticeSeq;
+var pageNumber;
+
+
+$( document ).ready(function() {
+	 generateNoticePagingButtons();
+	 fn_noticeSearch(null);
+});
+
+function generateNoticePagingButtons() {
+    var noticePaginationButtonsDiv = document.getElementById('noticePagingButtons');
+    noticePaginationButtonsDiv.innerHTML = '';
+
+    var pageSize = 10; // 한 페이지당 보여줄 버튼의 수 
+    var currentPage = 1; // 현재 페이지
+    var pageCount = totCnt; // 전체 페이지 수
+    var startPage = Math.floor((currentPage - 1) / pageSize) * pageSize + 1; // 현재 그룹의 시작 페이지
+    var endPage = Math.min(startPage + pageSize - 1, pageCount); // 현재 그룹의 끝 페이지
+
+    // 페이지 버튼 생성
+    for (var i = startPage; i <= endPage; i++) {
+        var button = document.createElement('button');
+        button.textContent = i;
+        button.className = 'noticePagenation-link hover:text-primary-400 duration-200';
+        button.setAttribute('type', 'button');
+        noticePaginationButtonsDiv.appendChild(button);
+        noticePaginationButtonsDiv.appendChild(document.createTextNode('\u00A0')); // 공백 추가
+    }
+}
+
+function  generateNoticePagingButtons2(nextPage){
+	var noticePaginationButtonsDiv = document.getElementById('noticePagingButtons');
+	noticePaginationButtonsDiv.innerHTML = '';
+	
+	var pageSize = 10; 
+    var currentPage = 1;
+    var pageCount = totCnt;
+    var startPage = Math.floor((currentPage - 1) / pageSize) * pageSize + 1; 
+    var endPage = Math.min(startPage + pageSize - 1, pageCount);
+	
+	for (var i = nextPage; i <= totCnt; i++) {
+        var button = document.createElement('button');
+        button.textContent = i;
+        button.className = 'noticePagenation-link hover:text-primary-400 duration-200';
+        button.setAttribute('type', 'button');
+        noticePaginationButtonsDiv.appendChild(button);
+        noticePaginationButtonsDiv.appendChild(document.createTextNode('\u00A0'));
+    }
+}
+
+function  generateNoticePagingButtons3(backPage){
+	var noticePaginationButtonsDiv = document.getElementById('noticePagingButtons');
+	noticePaginationButtonsDiv.innerHTML = '';
+	
+	var pageSize = 10;
+	var currentPage = (backPage-9); 
+	var pageCount = totCnt;
+	var startPage = Math.floor((currentPage - 1) / pageSize) * pageSize + 1; // 현재 그룹의 시작 페이지
+	var endPage = Math.min(startPage + pageSize - 1, pageCount);
+	
+	for (var i = currentPage; i <= backPage; i++) {
+		var button = document.createElement('button');
+		button.textContent = i;
+		button.className = 'noticePagenation-link hover:text-primary-400 duration-200';
+		button.setAttribute('type', 'button');
+		noticePaginationButtonsDiv.appendChild(button);
+		noticePaginationButtonsDiv.appendChild(document.createTextNode('\u00A0'));
+	}
+}
+
+function  generateNoticePagingButtons4(pageNumber){
+	var noticePaginationButtonsDiv = document.getElementById('noticePagingButtons');
+	noticePaginationButtonsDiv.innerHTML = '';
+	var pageSize = 10; 
+	var pageCount = totCnt;
+	var startPage = Math.floor( pageNumber / pageSize) * pageSize + 1; 
+	var endPage = pageNumber;
+	
+	for (var i = startPage; i <= endPage; i++) {
+		var button = document.createElement('button');
+		button.textContent = i;
+		button.className = 'noticePagenation-link hover:text-primary-400 duration-200';
+		button.setAttribute('type', 'button');
+		noticePaginationButtonsDiv.appendChild(button);
+		noticePaginationButtonsDiv.appendChild(document.createTextNode('\u00A0'));
+	}
+}
+
+//등록팝업 호출
+function fn_newRegist(row){
+	if(row == undefined){
+		$("#noticeFileForm").show();
+		$("#noticeFileDownForm").hide();
+		$("#attach3").hide();
+		$("#attach4").hide();
+	}else{
+		var rowData = noticeHot.getSourceDataAtRow(row);
+		fn_searchPopNotice(rowData.noticeSeq);
+	}
+	$("#noticePop").find("input").val(null);
+	$("#noticePop").find("textarea").val(null);
+	$("#noticePop").find("select").val("N");
+	$("#noticePop").modal("show");
+
+};
+
+//팝업검색
+function fn_searchPopNotice(noticeSeq){
+	var sData = {};
+	sData["srch9"] = noticeSeq;
+
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/selectNoticeInfo.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	if(data.result.fileOrgNm == undefined || data.result.fileOrgNm == ""){
+        		$("#noticeFileForm").show();
+        		$("#noticeFileDownForm").hide();
+        		$("#attach3").hide();
+        		$("#attach4").hide();
+        	}else{
+        		$("#noticeFileForm").hide();
+        		$("#noticeFileDownForm").show();
+        		$("#attach3").show();
+        		$("#attach4").show();
+        	}
+
+        	$.each(data.result, function(key, value){
+        		$("#noticePop").find("input[name='" + key + "']").val(value);
+        		$("#noticePop").find("textarea[name='" + key + "']").val(value);
+        		if(key == "delYn"){
+        			$("#noticePop").find("select[name='delYn']").val(value);
+        		}else if(key == "noticeType"){
+        			$("#noticePop").find("select[name='noticeType']").val(value);
+        		}
+        	});
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+
+//첨부파일 다운로드
+function fn_downNoticeFile(){
+	document.noticeFileDownForm.action = "/cmmn/downloadNoticeFile.do";
+	document.noticeFileDownForm.submit();
+};
+
+
+/*
+pageNumbers = document.querySelectorAll('.noticePagenation-link');
+pageNumbers.forEach(pageNumber => {
+    pageNumber.addEventListener('click', fn_noticeSearch);
+});
+*/
+
+noticePage = document.getElementById('noticePagingButtons');
+noticePage.addEventListener('click', function(event) {
+    if (event.target.classList.contains('noticePagenation-link')) {
+    	fn_noticeSearch2(event);
+
+        $('.noticePagenation-link').css({
+            'background-color': 'transparent',
+            'color': 'initial',
+            'font-weight': 'initial'
+        }).removeClass('active');
+
+        $(event.target).css({
+            'background-color': 'rgb(45, 126, 98)',
+            'color': 'white',
+            'margin-right': '10px',
+            'font-weight': '500'
+        }).addClass('active');
+    }
+});
+
+
+
+function fn_noticeSearch(event){
+	
+	generateNoticePagingButtons();
+	
+	var htmlContent;
+	if(event==null) {
+		htmlContent = 1;
+	} else {
+		htmlContent = event;
+		htmlContent = event.target.innerHTML.trim();
+	}
+    $('button.noticePagenation-link').css({
+	    'background-color': 'transparent',
+	    'color': 'initial',
+	    'width': '20px',
+	    'height': '20px',
+	    'border-radius': '10px',
+	    'display': 'inline-block',
+	    'margin-right': '10px',
+	    'font-weight': 'initial'
+	});
+
+	if (htmlContent == 1) {
+	    $('button.noticePagenation-link').each(function() {
+	        if ($(this).text().trim() === '1') {
+	            $(this).css({
+	                'background-color': 'rgb(45, 126, 98)',
+	                'color': 'white',
+	                'font-weight': '500'
+	            });
+	            $(this).addClass('notice-active');
+	        }
+	    });
+	}
+    var sData = {};
+	sData["recordCountPerPage"] = (htmlContent-1)*10;
+	
+	$.ajax({
+	    type: "POST",
+	    url: "/cmmn/selectMainNoticeViewList.do",
+	    data: sData,
+	    beforeSend: function(xmlHttpRequest) {
+	        xmlHttpRequest.setRequestHeader("AJAX", "true");
+	    },
+	    dataType: "json",
+	    success: function(data) {
+	        var noticeList = $('#noticeList');
+	        noticeList.empty(); // 이전 내용 지우기
+
+	        $.each(data.resultList, function(index, item) {
+	            var row = $('<tr>');
+	            var numberCell = $('<td>').css('text-align', 'center');
+	            var titleKrCell = $('<td>').css({
+	                'text-align': 'center',
+	                'cursor': 'pointer'
+	            });
+	            if (item.noticeType === 'Y') {
+	                numberCell.html('<i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i> <b>' + item.noticeSeq + '</b>');
+	                titleKrCell.html('<b>' + item.titleKr + '</b>');
+	            } else {
+	                numberCell.text(item.noticeSeq);
+	                titleKrCell.text(item.titleKr);
+	            }
+	            row.append(numberCell);
+	            row.append(titleKrCell); 
+	            row.append($('<td>').text(item.userName).css('text-align', 'center'));
+
+	            var formattedDate = item.noticeDt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+	            row.append($('<td>').text(formattedDate).css('text-align', 'center'));
+	            noticeList.append(row);
+	        });
+	    },
+	});
+}
+
+
+function fn_noticeSearch2(event){
+	
+	var htmlContent;
+	htmlContent = event.target.innerHTML.trim();
+
+    var sData = {};
+	sData["recordCountPerPage"] = (htmlContent-1)*10;
+	
+	$.ajax({
+	    type: "POST",
+	    url: "/cmmn/selectMainNoticeViewList.do",
+	    data: sData,
+	    beforeSend: function(xmlHttpRequest) {
+	        xmlHttpRequest.setRequestHeader("AJAX", "true");
+	    },
+	    dataType: "json",
+	    success: function(data) {
+	        var noticeList = $('#noticeList');
+	        noticeList.empty(); // 이전 내용 지우기
+
+	        $.each(data.resultList, function(index, item) {
+	            var row = $('<tr>');
+	            var numberCell = $('<td>').css('text-align', 'center');
+	            var titleKrCell = $('<td>').css({
+	                'text-align': 'center',
+	                'cursor': 'pointer'
+	            });
+	            if (item.noticeType === 'Y') {
+	                numberCell.html('<i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i> <b>' + item.noticeSeq + '</b>');
+	                titleKrCell.html('<b>' + item.titleKr + '</b>');
+	            } else {
+	                numberCell.text(item.noticeSeq);
+	                titleKrCell.text(item.titleKr);
+	            }
+	            row.append(numberCell);
+	            row.append(titleKrCell); 
+	            row.append($('<td>').text(item.userName).css('text-align', 'center'));
+
+	            var formattedDate = item.noticeDt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+	            row.append($('<td>').text(formattedDate).css('text-align', 'center'));
+	            noticeList.append(row);
+	        });
+	    },
+	});
+}
+
+
+$(document).on('click', '#noticeList td:nth-child(2)', function() {
+    var noticeSeq = $(this).closest('tr').find('td:eq(0)').text();
+    $('#noticeTitlePopUp').show();
+    fn_modalContentPopUp(noticeSeq);
+});
+
+
+function noticePopUpClose(){
+	$("#noticeTitlePopUp").hide();
+}
+
+
+function fn_modalContentPopUp(noticeSeq){
+	var sData = {};
+	sData["srch3"] = noticeSeq;
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/selectModalViewList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	fillModalContent(data.resultList);
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+};
+
+function fillModalContent(resultList) {
+	
+	document.getElementById('noticeUpdateSave').style.display = 'none';
+    var notice = resultList[0];
+    var noticeDt = notice.noticeDt;
+    var year = noticeDt.substring(0, 4);
+    var month = noticeDt.substring(4, 6);
+    var day = noticeDt.substring(6, 8);
+    var formattedNoticeDt = year + "." + month + "." + day;
+    
+    var edtDt = notice.edtDt;
+  
+    document.querySelector('.notice-modal h3').textContent = notice.titleKr;
+    document.querySelector('.notice-modal span').textContent = notice.date;
+    document.querySelector('.notice-modal span').textContent = notice.edtDt;
+    document.querySelector('.notice-modal textarea').textContent = notice.cnKr;
+    
+    var strHtml = "";
+    if (notice.fileOrgNm) {
+        strHtml = '<a href="#" id="noticeDownload" style="color:#030303"><i class="fa-regular fa-floppy-disk"></i> 첨부파일 : ' + notice.fileOrgNm + '</a>';
+    }
+    
+    var dateInfo = document.querySelector('.notice-modal .text-sm');
+    if(edtDt == '' || edtDt == null ) {
+    	dateInfo.textContent = '등록일: ' + formattedNoticeDt;
+    } else {
+    	var edtyear = edtDt.substring(0, 4);
+	    var edtmonth = edtDt.substring(4, 6);
+	    var edtday = edtDt.substring(6, 8);
+	    var formattedEdtDt = edtyear + "." + edtmonth + "." + edtday;
+    	dateInfo.textContent = '등록일: ' + formattedNoticeDt + ' , 수정일: ' + formattedEdtDt;
+    }
+    dateInfo.style.fontSize = '13px';
+    
+    document.getElementById('noticeTitlePopUp').style.display = 'block';
+    document.querySelector('.notice-modal .text-base').innerHTML = strHtml;
+    
+    var noticeDownloadLink = document.getElementById('noticeDownload');
+    if (notice.fileOrgNm) {
+	    noticeDownloadLink.addEventListener('mouseenter', function() {
+	    noticeDownloadLink.style.color = 'rgb(45 126 98)';
+	    noticeDownloadLink.style.fontWeight = 'bold';
+	    });
+	
+		noticeDownloadLink.addEventListener('mouseleave', function() {
+			 noticeDownloadLink.style.color = '#030303';
+			 noticeDownloadLink.style.fontWeight = '';
+		});
+    }
+    
+    if (grpCd == "KORD Mst") {
+    	 document.getElementById("noticeEdit").style.display = "block";
+    	 document.getElementById("noticeDelete").style.display = "block";
+    } else {
+    	 document.getElementById("noticeEdit").style.display = "none";
+    	 document.getElementById("noticeDelete").style.display = "none";
+    }
+    
+    $("#noticeSeq").val(notice.noticeSeq);
+}
+
+// 첨부파일
+$(document).on('click', '#noticeDownload', function(){
+	
+	const htmlContent = event.target.innerHTML.trim();
+	const fileOrgNm = htmlContent.split(' 첨부파일 : ')[1];
+    $("#noticeFileDown").val(fileOrgNm);
+    console.log($("#noticeFileDown").val());
+    document.noticeFileDownForm.action = "/cmmn/noticeFileDown.do";
+    document.noticeFileDownForm.submit();
+})
+
+
+function noticeWrite(){
+	$('#noticeWritePopUp').show();
+	
+}
+
+function noticeWriteClose(){
+	$("#noticeWritePopUp").hide();
+}
+
+function noticeWriteSave(){
+    var titleKr = document.getElementById("noticeTitleInput").value;
+    var cnKr = document.getElementById("noticeContentInput").value;
+    var fileInput = document.getElementById("noticeFileInput");
+    var fileOrgNm = ""; 
+
+    if (fileInput.files.length > 0) {
+        fileOrgNm = fileInput.files[0].name;
+    }
+    var noticeType = document.getElementById("noticeType").checked ? "Y" : "N";
+    
+    if (titleKr.trim() == null ||  titleKr.trim() == "" || cnKr.trim() == null ||  cnKr.trim() == "") {
+        alert("제목과 내용을 입력해주세요."); 
+        return; 
+    }
+    
+    var formData = new FormData();
+    formData.append("titleKr", titleKr);
+    formData.append("cnKr", cnKr);
+    formData.append("noticeType", noticeType);
+    formData.append("fileOrgNm", fileOrgNm);
+
+    if (fileInput.files.length > 0) {
+        formData.append("file", fileInput.files[0]);
+    }
+
+    
+    $.ajax({
+        type: "POST",
+        url: "/cmmn/insertNoticeInputList.do",
+        data: formData,
+        beforeSend: function(xmlHttpRequest) {
+            xmlHttpRequest.setRequestHeader("AJAX", "true");
+        },
+        processData: false, // 파일 데이터는 처리하지 않도록 설정
+        contentType: false, // 기본 Content-Type 헤더 설정을 사용하지 않도록 설정
+        dataType: "json",
+        success : function(data) {
+        	alert('저장이 완료되었습니다.');
+        	const modalNoticeWrite = document.querySelector('#noticeWritePopUp');
+        	modalNoticeWrite.style.display = 'none'; 
+        	popupState = false;
+        	fn_noticeSearch();
+			
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+function fn_clearNoticeWrite(){
+	$("#noticeTitleInput").val("");
+	$("#noticeContentInput").val("");
+	$("#noticeFileInput").val("");
+	$("#selectedFileName").text("");
+};
+
+
+document.getElementById("noticeFileInput").addEventListener("change", function() {
+    var fileName = this.files[0].name;
+    document.getElementById("selectedFileName").textContent = fileName;
+});
+
+
+function noticeDelete() {
+	if(!confirm('삭제 하시겠습니까?'))return;
+	
+	sData = {};
+	sData["srch3"] = $("#noticeSeq").val();
+	
+	$.ajax({
+		type : "POST",
+		url : "/cmmn/deleteNoticeViewList.do",
+		data : sData,
+		beforeSend : function(xmlHttpRequest){
+			xmlHttpRequest.setRequestHeader("AJAX", "true");
+		},
+		dataType: "json",
+        success : function(data) {
+        	alert('삭제가 완료되었습니다.');
+            const modalNoticeView = document.querySelector('#noticeTitlePopUp');
+            modalNoticeView.style.display = 'none';
+            popupState = false;
+            generateNoticePagingButtons();
+            fn_noticeSearch();
+        },
+        error : function(e, textStatus, errorThrown) {
+        	if(e.status == 400){
+        		alert("Your request is up. Please log back in if you wish continue");
+        		location.href = document.referrer;
+        	} else {
+	        	console.log(errorThrown);
+	        	alert(msgSearchError);
+        	}
+        }
+	});
+}
+
+
+function noticeUpdate() {
+    var editButton = document.getElementById('noticeEdit');
+    var deleteButton = document.getElementById('noticeDelete');
+
+    editButton.style.display = 'none';
+    deleteButton.style.display = 'none';
+    document.getElementById('noticeUpdateSave').style.display = 'block';
+
+    var titleElement = document.querySelector('.notice-modal h3');
+    var titleText = titleElement.textContent;
+    var cnElement = document.querySelector('.notice-modal textarea');
+    var cnText = cnElement.textContent;
+
+    titleElement.innerHTML = '<h2 class="font-bold text-xl mr-3" style="display: inline;">제목 </h2><input type="text" id="editTitleInput" style="width: 700px; display: inline;" value="' + titleText + '">';
+    cnElement.outerHTML = '<textarea id="editContentInput" class="mt-4 pt-4 border-t text-lg" style="width:800px; height:300px;">' + cnText + '</textarea>';
+    
+}
+
+
+function noticeUpdateSave() {
+    var editButton = document.getElementById('noticeEdit');
+    var deleteButton = document.getElementById('noticeDelete');
+
+    editButton.style.display = 'none';
+    deleteButton.style.display = 'none';
+    document.getElementById('noticeUpdateSave').style.display = 'block';
+
+    var titleElement = document.querySelector('.notice-modal h3 input');
+    var titleText = titleElement.value; 
+    var cnElement = document.querySelector('.notice-modal textarea');
+    var cnText = cnElement.value; 
+
+    titleElement.outerHTML = '<input type="text" id="editTitleInput" style="width: 700px; display: inline;" value="' + titleText + '">';
+    cnElement.outerHTML = '<textarea id="editContentInput" class="mt-4 pt-4 border-t text-lg" style="width:800px; height:300px;">' + cnText + '</textarea>';
+
+    var editTitle = document.getElementById('editTitleInput').value;
+    var editContent = document.getElementById('editContentInput').textContent;
+
+    var sData = {
+        srch3: $("#noticeSeq").val(),
+        srch4: editContent,
+        srch5: editTitle
+    };
+    $.ajax({
+        type: "POST",
+        url: "/cmmn/updateNoticeViewList.do",
+        data: sData,
+        beforeSend: function (xmlHttpRequest) {
+            xmlHttpRequest.setRequestHeader("AJAX", "true");
+        },
+        dataType: "json",
+        success: function (data) {
+            alert('수정이 완료되었습니다.');
+            const modalNoticeView = document.querySelector('#noticeTitlePopUp');
+            modalNoticeView.style.display = 'none';
+            popupState = false;
+            fn_noticeSearch();
+        },
+        error: function (e, textStatus, errorThrown) {
+            if (e.status == 400) {
+                alert("Your request is up. Please log back in if you wish continue");
+                location.href = document.referrer;
+            } else {
+                console.log(errorThrown);
+                alert(msgSearchError);
+            }
+        }
+    });
+}
+
+
+function noticeBackBtn() {
+	var htmlContent;
+	if(event==null) {
+	    htmlContent = 1;
+	} else {
+	    htmlContent = event.target.innerHTML.trim();
+	}
+
+	var currentPage = parseInt($('.noticePagenation-link.notice-active').text().trim());
+
+	var backPage = currentPage - 1;
+	if (backPage < 1) {
+	    backPage = 1;
+	}
+
+	if(backPage % 10 == 0) {
+		generateNoticePagingButtons3(backPage);
+	}
+	var recordCountPerPage = (backPage - 1) * 10;
+
+	$('button.noticePagenation-link').css({
+	    'background-color': 'transparent', 
+	    'color': 'initial',
+	    'width': '20px',
+	    'height': '20px', 
+	    'border-radius': '10px', 
+	    'display': 'inline-block', 
+	    'margin-right': '10px',
+	    'font-weight': 'initial'
+	});
+	$('.noticePagenation-link').removeClass('active');
+	
+	$('button.noticePagenation-link').each(function() {
+	    if ($(this).text().trim() === backPage.toString()) {
+	        $(this).css({
+	            'background-color': 'rgb(45, 126, 98)', 
+	            'color': 'white',
+	            'font-weight': '500'
+	        });
+	        $(this).addClass('notice-active');
+	    }
+	});
+
+	 var sData = {};
+	 sData["recordCountPerPage"] = recordCountPerPage;
+	
+	 $.ajax({
+	    type: "POST",
+	    url: "/cmmn/selectMainNoticeViewList.do",
+	    data: sData,
+	    beforeSend: function(xmlHttpRequest) {
+	        xmlHttpRequest.setRequestHeader("AJAX", "true");
+	    },
+	    dataType: "json",
+	    success: function(data) {
+	        var noticeList = $('#noticeList');
+	        noticeList.empty();
+
+	        $.each(data.resultList, function(index, item) {
+	            var row = $('<tr>');
+	            var numberCell = $('<td>').css('text-align', 'center');
+	            var titleKrCell = $('<td>').css({
+	                'text-align': 'center',
+	                'cursor': 'pointer'
+	            });
+	            if (item.noticeType === 'Y') {
+	                numberCell.html('<i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i> <b>' + item.noticeSeq + '</b>');
+	                titleKrCell.html('<b>' + item.titleKr + '</b>');
+	            } else {
+	                numberCell.text(item.noticeSeq);
+	                titleKrCell.text(item.titleKr);
+	            }
+	            row.append(numberCell);
+	            row.append(titleKrCell); 
+	            row.append($('<td>').text(item.userName).css('text-align', 'center'));
+
+	            var formattedDate = item.noticeDt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+	            row.append($('<td>').text(formattedDate).css('text-align', 'center'));
+	            noticeList.append(row);
+	        });
+	    },
+	});
+}
+
+function noticeNextBtn() {
+	var currentPage = parseInt($('.noticePagenation-link.notice-active').text().trim());
+	var nextPage = currentPage + 1;
+	var recordCountPerPage = (nextPage - 1) * 10;
+	
+    if(nextPage % 10 == 1) {
+    	generateNoticePagingButtons2(nextPage);
+    }
+
+	$('button.noticePagenation-link').css({
+	    'background-color': 'transparent', 
+	    'color': 'initial',
+	    'width': '20px',
+	    'height': '20px', 
+	    'border-radius': '10px', 
+	    'display': 'inline-block', 
+	    'margin-right': '10px',
+	    'font-weight': 'initial'
+	});
+	$('.noticePagenation-link').removeClass('notice-active');
+	$('button.noticePagenation-link').each(function() {
+	    if ($(this).text().trim() === nextPage.toString()) {
+	        $(this).css({
+	            'background-color': 'rgb(45, 126, 98)', 
+	            'color': 'white',
+	            'font-weight': '500'
+	        });
+	        $(this).addClass('notice-active');
+	    }
+	});
+
+	 var sData = {};
+	 sData["recordCountPerPage"] = recordCountPerPage;
+	
+	 $.ajax({
+	    type: "POST",
+	    url: "/cmmn/selectMainNoticeViewList.do",
+	    data: sData,
+	    beforeSend: function(xmlHttpRequest) {
+	        xmlHttpRequest.setRequestHeader("AJAX", "true");
+	    },
+	    dataType: "json",
+	    success: function(data) {
+	        var noticeList = $('#noticeList');
+	        noticeList.empty();
+
+	        $.each(data.resultList, function(index, item) {
+	            var row = $('<tr>');
+	            var numberCell = $('<td>').css('text-align', 'center');
+	            var titleKrCell = $('<td>').css({
+	                'text-align': 'center',
+	                'cursor': 'pointer'
+	            });
+	            if (item.noticeType === 'Y') {
+	                numberCell.html('<i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i> <b>' + item.noticeSeq + '</b>');
+	                titleKrCell.html('<b>' + item.titleKr + '</b>');
+	            } else {
+	                numberCell.text(item.noticeSeq);
+	                titleKrCell.text(item.titleKr);
+	            }
+	            row.append(numberCell);
+	            row.append(titleKrCell); 
+	            row.append($('<td>').text(item.userName).css('text-align', 'center'));
+
+	            var formattedDate = item.noticeDt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+	            row.append($('<td>').text(formattedDate).css('text-align', 'center'));
+	            noticeList.append(row);
+	        });
+	    },
+	});
+}
+
+
+
+function noticeEndPage(pageNumber) {
+	var htmlContent;
+	if(event==null) {
+		htmlContent = 1;
+	} else {
+		htmlContent = event.target.innerHTML.trim();
+	}
+	var pageNumber;
+	generateNoticePagingButtons4(pageNumber);
+	var recordCountPerPage = (pageNumber - 1) * 10;
+
+	$('button.noticePagenation-link').css({
+	    'background-color': 'transparent', 
+	    'color': 'initial',
+	    'width': '20px',
+	    'height': '20px', 
+	    'border-radius': '10px', 
+	    'display': 'inline-block', 
+	    'margin-right': '10px',
+	    'font-weight': 'initial'
+	});
+
+	$('button.noticePagenation-link').each(function() {
+	    if ($(this).text().trim() === pageNumber.toString()) {
+	        $(this).css({
+	            'background-color': 'rgb(45, 126, 98)', 
+	            'color': 'white',
+	            'font-weight': '500'
+	        });
+	        $(this).addClass('active');
+	    }
+	});
+
+    var sData = {};
+	sData["recordCountPerPage"] = recordCountPerPage;
+	
+	$.ajax({
+	    type: "POST",
+	    url: "/cmmn/selectMainNoticeViewList.do",
+	    data: sData,
+	    beforeSend: function(xmlHttpRequest) {
+	        xmlHttpRequest.setRequestHeader("AJAX", "true");
+	    },
+	    dataType: "json",
+	    success: function(data) {
+	        var noticeList = $('#noticeList');
+	        noticeList.empty();
+
+	        $.each(data.resultList, function(index, item) {
+	            var row = $('<tr>');
+	            var numberCell = $('<td>').css('text-align', 'center');
+	            var titleKrCell = $('<td>').css({
+	                'text-align': 'center',
+	                'cursor': 'pointer'
+	            });
+	            if (item.noticeType === 'Y') {
+	                numberCell.html('<i class="fa-duotone fa-sparkles shrink-0 text-yellow-500"></i> <b>' + item.noticeSeq + '</b>');
+	                titleKrCell.html('<b>' + item.titleKr + '</b>');
+	            } else {
+	                numberCell.text(item.noticeSeq);
+	                titleKrCell.text(item.titleKr);
+	            }
+	            row.append(numberCell);
+	            row.append(titleKrCell); 
+	            row.append($('<td>').text(item.userName).css('text-align', 'center'));
+
+	            var formattedDate = item.noticeDt.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+	            row.append($('<td>').text(formattedDate).css('text-align', 'center'));
+	            noticeList.append(row);
+	        });
+	    },
+	});
+}

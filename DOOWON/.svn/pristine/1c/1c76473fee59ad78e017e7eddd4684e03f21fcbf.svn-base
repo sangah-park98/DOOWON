@@ -1,0 +1,2874 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.item.service.impl.pfItemMapper">
+
+	<select id="selectItemViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			<!--a.currencyCnt, 
+			a.unitCnt,  -->
+			COUNT(*) OVER() AS CNT,
+			c.itemCnt,
+			a.hsCnt,
+			a.itemCode, 
+		    a.goodsName,
+		    a.description,
+		    a.qtyUnit,
+		    a.price,
+		    a.average,
+		    a.hs,
+		    a.lawCd,
+		    a.currency,
+			CASE
+				WHEN MAX(GREATEST(hsCnt, currencyCnt, unitCnt)) = c.itemCnt THEN '점검 완료'
+				WHEN MAX(currencyCnt) > 1 OR MAX(hsCnt) > 1 OR MAX(unitCnt) > 1 THEN '점검 필요' 
+			ELSE '양호' END AS itemStatus, 
+			firstLisDay, 
+			lastLisDay,
+			MAX(c.memo) AS memo
+		FROM(
+			SELECT
+			 	a.item_code AS itemCode,
+				b.EXC_GNAME AS goodsName,
+				b.ITEM_DESC AS description,
+				CONCAT(a.qty, ' ', a.unit) AS qtyUnit,
+				CONCAT(a.amount, ' ', a.currency) AS price,
+				a.average AS average,
+				a.hs AS hs,
+				a.law_cd AS lawCd,
+				a.currency,
+				DATE_FORMAT(a.first_lis_day, '%Y-%m-%d') AS firstLisDay,
+				DATE_FORMAT(a.last_lis_day, '%Y-%m-%d') AS lastLisDay,
+				a.currencyCnt,
+				a.hsCnt,
+				a.unitCnt
+			FROM (
+				SELECT
+					cmpny_cd,
+					item_code,
+					MAX(max_seq) max_seq,
+					FORMAT(qty, 2) AS qty,
+					unit,
+					currency,
+					FORMAT(amount, 2) AS amount,
+					FORMAT(average, 2) AS average,
+					CONCAT(SUBSTRING(HS, 1, 4), '.', SUBSTRING(HS, 5, 2), '-', SUBSTRING(HS, 7, 4)) AS hs,
+					law_cd,
+					MIN(first_lis_day) first_lis_day, 
+					MAX(last_lis_day) last_lis_day,
+					COUNT(DISTINCT hs) AS hsCnt,
+					COUNT(DISTINCT currency) AS currencyCnt,
+					COUNT(DISTINCT unit) AS unitCnt
+				FROM item_info2 a
+				WHERE 1=1
+				<if test="list != null and list.size() > 0">
+		            AND cmpny_cd IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+	       		</if>
+				<choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+				GROUP BY cmpny_cd, item_code
+			) a
+			INNER JOIN (
+				SELECT * FROM item_info2 WHERE 1=1
+				<if test="list != null and list.size() > 0">
+		            AND cmpny_cd IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+	        	</if>
+				<choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+			) b 
+			ON a.cmpny_cd = b.CMPNY_CD
+			AND a.item_code = b.item_code
+			AND a.max_seq = b.MAX_SEQ
+		) A
+		LEFT JOIN (
+		    SELECT item_code, COUNT(*) AS itemCnt, MAX(memo) AS memo
+		    FROM item_checked
+		    GROUP BY item_code
+		) c 
+		ON A.itemCode = c.item_code
+		WHERE 1=1
+		<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+			AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+		</if>
+		<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+			AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+		</if>
+		GROUP BY itemCode
+		<choose>
+	        <when test="srch14 == '02'">
+	         	HAVING itemStatus = '양호'
+	        </when>
+	         <when test="srch14 == '03'">
+	          	HAVING itemStatus = '점검 필요'
+	        </when>
+	        <when test="srch14 == '04'">
+	          	HAVING itemStatus = '점검 완료'
+	        </when>
+	        <otherwise>
+    		</otherwise>
+	    </choose>
+		<choose>
+	        <when test="srch10 == '01'">
+	        	ORDER BY lastLisDay DESC, firstLisDay DESC, goodsName ASC, itemCode ASC
+	        </when>
+	        <otherwise>
+	          	ORDER BY firstLisDay DESC, lastLisDay DESC, goodsName ASC, itemCode ASC
+	        </otherwise>
+        </choose>
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}; 
+	</select>
+	
+	<select id="selectDuplicationItemViewList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			COUNT(*) over() AS CNT,
+		    a.itemCode, 
+		    a.goodsName,
+		    a.description,
+		    a.qtyUnit,
+		    a.price,
+		    a.average,
+		    a.hs,
+		    a.lawCd,
+		    a.firstLisDay,
+		    a.lastLisDay,
+			<!-- a.currencyCnt, 다른 단위수 -->
+			<!-- a.hsCnt, 다른 세번수 -->
+			<!-- i.item_code, 검토한 세번 -->
+			a.currency,
+    		CASE 
+    			WHEN i.item_code IS NOT NULL THEN '점검 완료'
+	      		WHEN a.currencyCnt > 1 OR a.hsCnt > 1 THEN '점검 필요' 
+        	ELSE '양호'
+    		END AS itemStatus
+		FROM (
+			SELECT 
+				a.cmpny_cd,
+			    a.item_code AS itemCode, 
+			    exc_gname AS goodsName, 
+			    item_desc AS description,
+				CONCAT(SUBSTRING(HS, 1, 4), '.', SUBSTRING(HS, 5, 2), '-', SUBSTRING(HS, 7, 4)) AS hs,
+				a.currency,
+			    h.hsCnt,
+			    c.currencyCnt,
+			    CONCAT(FORMAT(qty, 2), ' ', unit) AS qtyUnit,
+			    CONCAT(FORMAT(amount, 2), ' ', currency) AS price,
+			    FORMAT(average, 2) AS average,
+			    DATE_FORMAT(first_lis_day, '%Y-%m-%d') AS firstLisDay, 
+			    DATE_FORMAT(last_lis_day, '%Y-%m-%d') AS lastLisDay,
+			    a.LAW_CD AS lawCd
+			FROM item_info2 AS a
+			
+			LEFT JOIN (
+				SELECT 
+					COUNT(DISTINCT hs) AS hsCnt, cmpny_cd, item_code
+				FROM item_info2
+				WHERE 1=1
+			    <choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+			    GROUP BY cmpny_cd, item_code
+		    ) h
+		    ON a.cmpny_cd = h.cmpny_cd
+     		AND a.item_code = h.item_code
+		     
+		   LEFT JOIN (
+				SELECT 
+					COUNT(DISTINCT currency) AS currencyCnt, cmpny_cd, item_code 
+		     	FROM item_info2
+		     	WHERE 1=1
+		     	<choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+			    GROUP BY cmpny_cd, item_code
+		    ) c
+		    ON a.cmpny_cd = c.cmpny_cd
+     		AND a.item_code = c.item_code
+     		WHERE 1=1
+			<if test="list != null and list.size() > 0">
+		    	AND a.cmpny_cd IN 
+		        <foreach item="id" collection="list" open="(" separator="," close=")">
+		        	#{id}
+		        </foreach>
+		  	</if>
+		  	<choose>
+		        <when test="srch10 == '01'">
+		            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		        </when>
+		   	</choose>
+		) A
+		LEFT JOIN item_checked i
+    	ON a.cmpny_cd = i.cmpny_Cd
+    	AND a.itemCode = i.item_code
+    	AND a.hs = i.hs
+    	AND a.currency = i.currency
+		<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+		AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+		</if>
+		<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+		AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+		</if>
+		<choose>
+	        <when test="srch10 == '01'">
+	          	ORDER BY a.itemCode ASC, a.lastLisDay DESC, a.firstLisDay DESC, a.goodsName ASC
+	        </when>
+	        <otherwise>
+	        	ORDER BY a.itemCode ASC, a.firstLisDay DESC, a.lastLisDay DESC, a.goodsName ASC 	
+	        </otherwise>
+	    </choose>
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+	
+	<select id="selectItemViewImpList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			COUNT(*) OVER() AS CNT,
+			a.itemCode, 
+		    a.goodsName,
+		    a.description,
+		    a.qtyUnit,
+		    a.price,
+		    a.average,
+		    a.hs,
+		    a.hscnt,
+		    a.lawCd,
+		    a.currency,
+			CASE
+				WHEN MAX(GREATEST(hsCnt, currencyCnt, unitCnt)) = c.itemCnt THEN '점검 완료'
+				WHEN MAX(currencyCnt) > 1 OR MAX(hsCnt) > 1 OR MAX(unitCnt) > 1 THEN '점검 필요' 
+			ELSE '양호' END AS itemStatus, 
+			firstLisDay, 
+			lastLisDay,
+			MAX(c.memo) AS memo
+		FROM(
+			SELECT 
+			 	a.item_code AS itemCode, 
+				b.EXC_GNAME AS goodsName, 
+				b.ITEM_DESC AS description, 
+				CONCAT(a.qty, ' ', a.unit) AS qtyUnit,
+				CONCAT(a.amount, ' ', a.currency) AS price,
+				a.currencyCnt,
+				a.average AS average,
+				a.hs AS hs,
+				a.hsCnt,
+				a.unitCnt,
+				a.law_cd AS lawCd,
+				a.currency,
+				DATE_FORMAT(a.first_lis_day, '%Y-%m-%d') AS firstLisDay, 
+				DATE_FORMAT(a.last_lis_day, '%Y-%m-%d') AS lastLisDay
+			FROM (
+				SELECT
+					cmpny_cd, 
+					item_code, 
+					MAX(max_seq) max_seq,
+					MIN(first_lis_day) first_lis_day, 
+					MAX(last_lis_day) last_lis_day,
+					CONCAT(SUBSTRING(HS, 1, 4), '.', SUBSTRING(HS, 5, 2), '-', SUBSTRING(HS, 7, 4)) AS hs,
+					FORMAT(qty, 2) AS qty,
+					unit,
+					FORMAT(amount, 2) AS amount,
+					FORMAT(average, 2) AS average,
+					currency,
+					law_cd,
+					COUNT(DISTINCT hs) AS hsCnt,
+					COUNT(DISTINCT currency) AS currencyCnt,
+					COUNT(DISTINCT unit) AS unitCnt
+				FROM item_info2 a
+				WHERE 1=1
+				<if test="list != null and list.size() > 0">
+		            AND cmpny_cd IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+	       		</if>
+	       		AND trade_type = 'imp'
+				<choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+				GROUP BY cmpny_cd, item_code
+			) a
+			INNER JOIN (
+				SELECT * FROM item_info2 WHERE 1=1
+				<if test="list != null and list.size() > 0">
+		            AND cmpny_cd IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+	        	</if>
+				<choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+			) b 
+			ON a.cmpny_cd = b.CMPNY_CD
+			AND a.item_code = b.item_code
+			AND a.max_seq = b.MAX_SEQ
+		) A
+		LEFT JOIN (
+		    SELECT item_code, COUNT(*) AS itemCnt, MAX(memo) AS memo 
+		    FROM item_checked
+		    GROUP BY item_code
+		) c 
+		ON A.itemCode = c.item_code
+		GROUP BY itemCode
+		<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+			AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+		</if>
+		<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+			AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+		</if>
+		<choose>
+	        <when test="srch14 == '02'">
+	         	HAVING itemStatus = '양호'
+	        </when>
+	         <when test="srch14 == '03'">
+	          	HAVING itemStatus = '점검 필요'
+	        </when>
+	        <when test="srch14 == '04'">
+	          	HAVING itemStatus = '점검 완료'
+	        </when>
+	        <otherwise>
+    		</otherwise>
+	    </choose>
+		<choose>
+	        <when test="srch10 == '01'">
+	        	ORDER BY lastLisDay DESC, firstLisDay DESC, goodsName ASC, itemCode ASC
+	        </when>
+	        <otherwise>
+	          	ORDER BY firstLisDay DESC, lastLisDay DESC, goodsName ASC, itemCode ASC
+	        </otherwise>
+        </choose>
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}; 
+	</select>
+	
+	<select id="selectDuplicationItemViewImpList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			COUNT(*) over() AS CNT,
+		    a.itemCode, 
+		    a.goodsName,
+		    a.description,
+		    a.qtyUnit,
+		    a.price,
+		    a.average,
+		    a.hs,
+		    a.lawCd,
+		    a.firstLisDay,
+		    a.lastLisDay,
+			<!-- a.currencyCnt, 다른 단위수 -->
+			<!-- a.hsCnt, 다른 세번수 -->
+			<!-- i.item_code, 검토한 세번 -->
+			a.currency,
+    		CASE WHEN i.item_code IS NOT NULL THEN '점검 완료'
+	      	WHEN a.currencyCnt > 1 OR a.hsCnt > 1 THEN '점검 필요' 
+        	ELSE '양호'
+    		END AS itemStatus,
+    		i.memo AS memo
+		FROM (
+			SELECT 
+				a.cmpny_cd,
+			    a.item_code AS itemCode, 
+			    exc_gname AS goodsName, 
+			    item_desc AS description,
+				hs,
+				a.currency,
+			    h.hsCnt,
+			    c.currencyCnt,
+			    CONCAT(FORMAT(qty, 2), ' ', unit) AS qtyUnit,
+			    CONCAT(FORMAT(amount, 2), ' ', currency) AS price,
+			    FORMAT(average, 2) AS average,
+			    DATE_FORMAT(first_lis_day, '%Y-%m-%d') AS firstLisDay, 
+			    DATE_FORMAT(last_lis_day, '%Y-%m-%d') AS lastLisDay,
+			    a.LAW_CD AS lawCd
+			FROM item_info2 AS a
+			
+			LEFT JOIN (
+				SELECT 
+					COUNT(DISTINCT hs) AS hsCnt, cmpny_cd, item_code
+				FROM item_info2
+				WHERE 1=1
+			    <choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+			    GROUP BY cmpny_cd, item_code
+		    ) h
+		    ON a.cmpny_cd = h.cmpny_cd
+     		AND a.item_code = h.item_code
+		     
+		   LEFT JOIN (
+				SELECT 
+					COUNT(DISTINCT currency) AS currencyCnt, cmpny_cd, item_code 
+		     	FROM item_info2
+		     	WHERE 1=1
+		     	<choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+			    GROUP BY cmpny_cd, item_code
+		    ) c
+		    ON a.cmpny_cd = c.cmpny_cd
+     		AND a.item_code = c.item_code
+     		WHERE 1=1
+			<if test="list != null and list.size() > 0">
+		    	AND a.cmpny_cd IN 
+		        <foreach item="id" collection="list" open="(" separator="," close=")">
+		        	#{id}
+		        </foreach>
+		  	</if>
+		  	AND trade_type = 'imp'
+		  	<choose>
+		        <when test="srch10 == '01'">
+		            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		        </when>
+		   	</choose>
+		) A
+		LEFT JOIN item_checked i
+    	ON a.cmpny_cd = i.cmpny_Cd
+    	AND a.itemCode = i.item_code
+    	AND a.hs = i.hs
+    	AND a.currency = i.currency
+		<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+		AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+		</if>
+		<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+		AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+		</if>
+		<choose>
+	        <when test="srch10 == '01'">
+	          	ORDER BY a.itemCode ASC, a.lastLisDay DESC, a.firstLisDay DESC, a.goodsName ASC
+	        </when>
+	        <otherwise>
+	        	ORDER BY a.itemCode ASC, a.firstLisDay DESC, a.lastLisDay DESC, a.goodsName ASC 	
+	        </otherwise>
+	    </choose>
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+	
+	<select id="selectItemViewExpList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			COUNT(*) OVER() AS CNT,
+			a.itemCode, 
+		    a.goodsName,
+		    a.description,
+		    a.qtyUnit,
+		    a.price,
+		    a.average,
+		    a.hs,
+		    a.hscnt,
+		    a.lawCd,
+		    a.currency,
+			CASE
+				WHEN MAX(GREATEST(hsCnt, currencyCnt, unitCnt)) = c.itemCnt THEN '점검 완료'
+				WHEN MAX(currencyCnt) > 1 OR MAX(hsCnt) > 1 OR MAX(unitCnt) > 1 THEN '점검 필요' 
+				ELSE '양호' 
+			END AS itemStatus, 
+			firstLisDay, 
+			lastLisDay,
+			MAX(c.memo) AS memo
+		FROM(
+			SELECT 
+			 	a.item_code AS itemCode, 
+				b.EXC_GNAME AS goodsName, 
+				b.ITEM_DESC AS description, 
+				CONCAT(a.qty, ' ', a.unit) AS qtyUnit,
+				CONCAT(a.amount, ' ', a.currency) AS price,
+				a.currencyCnt,
+				a.average AS average,
+				a.hs AS hs,
+				a.hsCnt,
+				a.unitCnt,
+				a.law_cd AS lawCd,
+				a.currency,
+				DATE_FORMAT(a.first_lis_day, '%Y-%m-%d') AS firstLisDay, 
+				DATE_FORMAT(a.last_lis_day, '%Y-%m-%d') AS lastLisDay
+			FROM (
+				SELECT
+					cmpny_cd, 
+					item_code, 
+					MAX(max_seq) max_seq,
+					MIN(first_lis_day) first_lis_day, 
+					MAX(last_lis_day) last_lis_day,
+					CONCAT(SUBSTRING(HS, 1, 4), '.', SUBSTRING(HS, 5, 2), '-', SUBSTRING(HS, 7, 4)) AS hs,
+					FORMAT(qty, 2) AS qty,
+					unit,
+					FORMAT(amount, 2) AS amount,
+					FORMAT(average, 2) AS average,
+					currency,
+					law_cd,
+					COUNT(DISTINCT hs) AS hsCnt,
+					COUNT(DISTINCT currency) AS currencyCnt,
+					COUNT(DISTINCT unit) AS unitCnt
+				FROM item_info2 a
+				WHERE 1=1
+				<if test="list != null and list.size() > 0">
+		            AND cmpny_cd IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+	       		</if>
+	       		AND trade_type = 'exp'
+				<choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+				GROUP BY cmpny_cd, item_code
+			) a
+			INNER JOIN (
+				SELECT * FROM item_info2 WHERE 1=1
+				<if test="list != null and list.size() > 0">
+		            AND cmpny_cd IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+	        	</if>
+				<choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+			) b 
+			ON a.cmpny_cd = b.CMPNY_CD
+			AND a.item_code = b.item_code
+			AND a.max_seq = b.MAX_SEQ
+		) A
+		LEFT JOIN (
+		    SELECT item_code, COUNT(*) AS itemCnt, MAX(memo) AS memo 
+		    FROM item_checked
+		    GROUP BY item_code
+		) c 
+		ON A.itemCode = c.item_code
+		GROUP BY itemCode
+		<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+			AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+		</if>
+		<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+			AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+		</if>
+		<choose>
+	        <when test="srch14 == '02'">
+	         	HAVING itemStatus = '양호'
+	        </when>
+	         <when test="srch14 == '03'">
+	          	HAVING itemStatus = '점검 필요'
+	        </when>
+	        <when test="srch14 == '04'">
+	          	HAVING itemStatus = '점검 완료'
+	        </when>
+	        <otherwise>
+    		</otherwise>
+	    </choose>
+		<choose>
+	        <when test="srch10 == '01'">
+	        	ORDER BY lastLisDay DESC, firstLisDay DESC, goodsName ASC, itemCode ASC
+	        </when>
+	        <otherwise>
+	          	ORDER BY firstLisDay DESC, lastLisDay DESC, goodsName ASC, itemCode ASC
+	        </otherwise>
+        </choose>
+		LIMIT #{recordCountPerPage} OFFSET #{startPage}; 
+	</select>
+	
+	<select id="selectDuplicationItemViewExpList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			COUNT(*) over() AS CNT,
+		    a.itemCode, 
+		    a.goodsName,
+		    a.description,
+		    a.qtyUnit,
+		    a.price,
+		    a.average,
+		    a.hs,
+		    a.lawCd,
+		    a.firstLisDay,
+		    a.lastLisDay,
+			<!-- a.currencyCnt, 다른 단위수 -->
+			<!-- a.hsCnt, 다른 세번수 -->
+			<!-- i.item_code, 검토한 세번 -->
+			<!-- a.currency, 단위 --> 
+    		CASE WHEN i.item_code IS NOT NULL THEN '점검 완료'
+	      	WHEN a.currencyCnt > 1 OR a.hsCnt > 1 THEN '점검 필요' 
+        	ELSE '양호'
+    		END AS itemStatus,
+    		i.memo AS memo
+		FROM (
+			SELECT 
+				a.cmpny_cd,
+			    a.item_code AS itemCode, 
+			    exc_gname AS goodsName, 
+			    item_desc AS description,
+				hs,
+				a.currency,
+			    h.hsCnt,
+			    c.currencyCnt,
+			    CONCAT(FORMAT(qty, 2), ' ', unit) AS qtyUnit,
+			    CONCAT(FORMAT(amount, 2), ' ', currency) AS price,
+			    FORMAT(average, 2) AS average,
+			    DATE_FORMAT(first_lis_day, '%Y-%m-%d') AS firstLisDay, 
+			    DATE_FORMAT(last_lis_day, '%Y-%m-%d') AS lastLisDay,
+			    a.LAW_CD AS lawCd
+			FROM item_info2 AS a
+			
+			LEFT JOIN (
+				SELECT 
+					COUNT(DISTINCT hs) AS hsCnt, cmpny_cd, item_code
+				FROM item_info2
+				WHERE 1=1
+			    <choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+			    GROUP BY cmpny_cd, item_code
+		    ) h
+		    ON a.cmpny_cd = h.cmpny_cd
+     		AND a.item_code = h.item_code
+		     
+		   LEFT JOIN (
+				SELECT 
+					COUNT(DISTINCT currency) AS currencyCnt, cmpny_cd, item_code 
+		     	FROM item_info2
+		     	WHERE 1=1
+		     	<choose>
+			        <when test="srch10 == '01'">
+			            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			        </when>
+			    </choose>
+			    GROUP BY cmpny_cd, item_code
+		    ) c
+		    ON a.cmpny_cd = c.cmpny_cd
+     		AND a.item_code = c.item_code
+     		WHERE 1=1
+			<if test="list != null and list.size() > 0">
+		    	AND a.cmpny_cd IN 
+		        <foreach item="id" collection="list" open="(" separator="," close=")">
+		        	#{id}
+		        </foreach>
+		  	</if>
+		  	AND trade_type = 'exp'
+		  	<choose>
+		        <when test="srch10 == '01'">
+		            AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		        </when>
+		   	</choose>
+		) A
+		LEFT JOIN item_checked i
+    	ON a.cmpny_cd = i.cmpny_Cd
+    	AND a.itemCode = i.item_code
+    	AND a.hs = i.hs
+    	AND a.currency = i.currency
+		<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
+		AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+		</if>
+		<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
+		AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+		</if>
+		<choose>
+	        <when test="srch10 == '01'">
+	          	ORDER BY a.itemCode ASC, a.lastLisDay DESC, a.firstLisDay DESC, a.goodsName ASC
+	        </when>
+	        <otherwise>
+	        	ORDER BY a.itemCode ASC, a.firstLisDay DESC, a.lastLisDay DESC, a.goodsName ASC 	
+	        </otherwise>
+	    </choose>
+		LIMIT #{recordCountPerPage} OFFSET #{startPage};
+	</select>
+	
+	<select id="selectItemCodeChkList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    a.item_code, 
+		    a.exc_gname, 
+		    a.item_desc, 
+		    a.unit, 
+		    a.currency, 
+		    CONCAT(SUBSTRING(a.hs, 1, 4), '.', SUBSTRING(a.hs, 5, 2), '-', SUBSTRING(a.hs, 7, 4)) AS hs
+		FROM item_info2 a
+		LEFT JOIN item_checked c 
+		    ON a.CMPNY_CD = c.CMPNY_CD 
+		    AND a.ITEM_CODE = c.ITEM_CODE 
+		    AND a.HS = c.HS 
+		    AND a.UNIT = c.UNIT 
+		    AND a.CURRENCY = c.CURRENCY
+		WHERE 1=1 
+		<if test="list != null and list.size() > 0">
+            AND a.cmpny_cd IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.item_code = #{srch1}
+       	AND c.item_code IS NULL
+       	GROUP BY a.unit, a.currency, hs
+	</select>
+	
+	<insert id="insertItemChkedList" parameterType="egovframework.pf.item.service.ItemCheckedVO">
+		INSERT INTO item_checked (
+			cmpny_cd,
+			item_status,
+			item_code,
+			exc_Gname,
+			item_desc,
+			hs,
+			unit,
+			currency,
+			memo,
+			memo_seq,
+			reg_dt,
+			reg_id,
+			del_yn
+		) VALUES (
+			#{cmpnyCd},
+			#{itemStatus},
+			#{itemCode},
+			#{excGname},
+			#{itemDesc},
+			REPLACE(REPLACE(#{hs}, '.', ''), '-', ''),
+			#{unit},
+			#{currency},
+			#{memo},
+			#{memoSeq},
+			DATE_FORMAT(NOW(), '%Y%m%d'),
+	  		#{regId},
+	  		'N'
+		) ON DUPLICATE KEY UPDATE
+			cmpny_cd = #{cmpnyCd},
+			item_status = #{itemStatus},
+			item_code = #{itemCode},
+			exc_Gname = #{excGname},
+			item_desc = #{itemDesc},
+			hs = REPLACE(REPLACE(#{hs}, '.', ''), '-', ''),
+			unit = #{unit},
+			currency = #{currency},
+			memo = #{memo},
+			memo_seq = #{memoSeq},
+			edt_dt = DATE_FORMAT(NOW(), '%Y%m%d'),
+		    edt_id = #{regId},
+		    del_yn = 'N'
+	</insert>
+	
+	<select id="selectItemCodeMemoList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			c.item_code, 
+		    DATE_FORMAT(STR_TO_DATE(c.reg_dt, '%Y%m%d'), '%Y-%m-%d') AS reg_dt,
+		    u.usr_nm,
+		    c.memo,
+		    c.memo_seq
+		FROM item_checked c
+		LEFT JOIN user_info u ON u.usr_id = c.reg_id
+		WHERE c.item_code = #{srch1}
+		GROUP BY c.item_code, c.memo_seq
+	</select>
+	
+	<select id="selectItemChkDetailList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			c.item_code,
+			DATE_FORMAT(STR_TO_DATE(c.reg_dt, '%Y%m%d'), '%Y-%m-%d') AS reg_dt,
+			c.item_desc AS description,
+			c.unit,
+		 	c.currency,
+		 	CONCAT(SUBSTRING(c.hs, 1, 4), '.', 
+		           SUBSTRING(c.hs, 5, 2), '-', 
+		           SUBSTRING(c.hs, 7, 4)) AS hs
+		FROM item_checked c
+		LEFT JOIN item_info2 i 
+	   		ON c.item_code = i.item_code 
+	   		AND c.cmpny_cd = i.cmpny_cd
+	   		AND c.unit = i.unit
+	   		AND c.currency = i.currency
+	   		AND c.hs = i.hs
+	   	LEFT JOIN user_info u ON u.usr_id = c.reg_id
+		WHERE 1=1
+		<if test="list != null and list.size() > 0">
+            AND a.cmpny_cd IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND c.item_code = #{srch1}
+       	GROUP BY unit, currency, hs
+		ORDER BY reg_dt DESC
+	</select>
+	
+	<update id="updateItemMemoList" parameterType="egovframework.pf.item.service.ItemCheckedVO">
+		UPDATE item_checked SET
+		    memo = #{memo},
+		    edt_dt = DATE_FORMAT(NOW(), '%Y%m%d'),
+		    edt_id = #{regId}
+		WHERE item_code = #{itemCode}
+		AND hs = #{hs}
+		AND currency = #{currency}
+		<if test="list != null and list.size() > 0">
+            AND cmpny_cd IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+	</update>
+	
+	<delete id="deleteItemMemoList" parameterType="egovframework.pf.item.service.ItemCheckedVO">
+		UPDATE item_checked SET memo = NULL 
+		WHERE item_code = #{itemCode}
+		AND hs = #{hs}
+		AND currency = #{currency}
+		<if test="list != null and list.size() > 0">
+            AND cmpny_cd IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+	</delete>
+	
+	<select id="selectItemChkMemoList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			c.item_code,
+			DATE_FORMAT(STR_TO_DATE(c.reg_dt, '%Y%m%d'), '%Y-%m-%d') AS reg_dt, 
+			u.usr_nm, 
+			c.memo,
+			c.memo_seq
+		FROM item_checked c
+		LEFT JOIN item_info2 i 
+	   		ON c.item_code = i.item_code 
+	   		AND c.cmpny_cd = i.cmpny_cd
+	   		AND c.unit = i.unit
+	   		AND c.currency = i.currency
+	   		AND c.hs = i.hs
+	   	LEFT JOIN user_info u ON u.usr_id = c.reg_id
+		WHERE c.item_code = #{srch1}
+		ORDER BY reg_dt DESC
+	</select>
+	
+	<delete id="deleteItemChkDetailList" parameterType="egovframework.pf.item.service.ItemCheckedVO">
+		DELETE FROM item_checked
+		WHERE unit = #{unit}
+		AND currency = #{currency}
+		AND hs = REPLACE(REPLACE(#{hs}, '-', ''), '.', '')
+		<if test="list != null and list.size() > 0">
+            AND cmpny_cd IN
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+	</delete>
+	
+	<select id="selectItemHsCodeDiffList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END AS itemCode, 
+		    CONCAT(SUBSTRING(b.HS, 1, 4), '.',
+		           SUBSTRING(b.HS, 5, 2), '-',
+		           SUBSTRING(b.HS, 7, 4)) AS hs,
+		    d.item_desc AS goodsName,
+		    a.nab_firm AS cmpnyNm,
+		    COUNT(DISTINCT a.rpt_no) AS rptNo,
+		    '' AS taxKi,
+		    '' AS gsRate,
+		    '' AS price,
+		    '' AS currency,
+		    '' AS totTaxSum,
+		    '' AS reporter
+		FROM cusdec929A1 a
+		INNER JOIN CUSDEC929B1 b
+		    ON a.sn = b.sna1 
+		    AND a.rpt_no = b.rpt_no 
+		    AND a.BRANCH = b.BRANCH 
+		    AND a.CUS_PRG = b.CUS_PRG
+		INNER JOIN cusdec929C1 c
+		    ON a.sn = c.sna1
+		    AND b.sn = c.snb1
+		    AND a.rpt_no = c.rpt_no
+		    AND a.BRANCH = c.BRANCH
+		    AND a.CUS_PRG = c.CUS_PRG
+		LEFT JOIN item_info2 d
+		    ON b.hs = d.HS
+		    AND a.nab_sdno = d.cmpny_cd
+		    AND CONCAT_WS(' ', TRIM(c.IMP_GName1), TRIM(c.IMP_GName2), TRIM(c.IMP_GName3), TRIM(c.Compoent1), TRIM(c.Compoent2)) = d.ITEM_DESC
+		    AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = d.item_code
+		    WHERE 1=1
+	    <if test="list != null and list.size() > 0">
+            AND a.nab_sdno IN
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00'
+       	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+       	<choose>
+		    <when test="srch10 == '01'">
+		        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+<!--        	<choose>
+		    <when test="srch10 == '01'">
+		        AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose> -->
+       	GROUP BY itemCode, hs, goodsName, cmpnyNm
+	    
+	    UNION
+
+		SELECT 
+		    CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode, 
+		    CONCAT(SUBSTRING(b.HS, 1, 4), '.', 
+		           SUBSTRING(b.HS, 5, 2), '-', 
+		           SUBSTRING(b.HS, 7, 4)) AS hs,
+		    d.item_desc AS goodsName,
+		    a.exp_firm AS cmpnyNm,
+		    COUNT(DISTINCT a.rpt_no) AS rptNo,
+		    '' AS taxKi,
+		    '' AS gsRate,
+		    '' AS price,
+		    '' AS currency,
+		    '' AS totTaxSum,
+		    '' AS reporter
+		FROM CUSDEC830A1 a
+		INNER JOIN CUSDEC830B1 b 
+		    ON a.SN = b.SNA1
+		    AND a.rpt_no = b.rpt_no 
+		    AND a.BRANCH = b.BRANCH 
+		    AND a.CUS_PRG = b.CUS_PRG
+		INNER JOIN CUSDEC830C1 c 
+		    ON a.SN = c.SNA1 
+		    AND c.SNB1 = b.SN
+		    AND a.rpt_no = c.rpt_no 
+		    AND a.BRANCH = c.BRANCH 
+		    AND a.CUS_PRG = c.CUS_PRG
+		LEFT JOIN item_info2 d
+		    ON b.hs = d.HS
+		    AND a.exp_sdno = d.cmpny_cd
+		    AND CONCAT_WS(' ', TRIM(c.Gnm1), TRIM(c.Gnm2), TRIM(c.Gnm3), TRIM(c.Gnm4), TRIM(c.Gnm5), TRIM(c.Gnm6), TRIM(c.Comp1), TRIM(c.Comp2)) = d.ITEM_DESC
+		    AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = d.item_code
+		WHERE 1=1    
+		<if test="list != null and list.size() > 0">
+            AND a.exp_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00'
+		AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+		<!-- <choose>
+		    <when test="srch10 == '01'">
+		        AND last_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose> -->
+		<choose>
+		    <when test="srch10 == '01'">
+		        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+		GROUP BY itemCode, hs, goodsName, cmpnyNm
+		ORDER BY rptNo DESC, itemCode, hs
+	</select>
+	
+	<select id="selectItemHsCodeDiffSubList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+	      	CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+	               SUBSTRING(a.rpt_no, 6, 2), '-', 
+	               SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+	      	b.ran_no AS ran, 
+	      	c.sil AS sil,
+	      	b.Gs_Divi AS taxKi,
+	      	b.Gs_Rate AS gsRate,
+	    	FORMAT(ROUND(c.amt, 0), 0) AS price,
+	      	a.con_cur AS currency,
+	      	FORMAT(ROUND(a.tot_tax_sum, 0), 0) AS totTaxSum,
+	      	IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+	  	FROM cusdec929A1 a
+	   	LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+	  	ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+	  
+	  	INNER JOIN cusdec929B1 b 
+	  	ON a.sn = b.sna1 
+	  	AND a.rpt_no = b.rpt_no AND a.BRANCH = b.BRANCH AND a.CUS_PRG = b.CUS_PRG
+	  
+	  	INNER JOIN cusdec929C1 c 
+	  	ON a.sn = c.sna1 AND b.sn = c.snb1 and a.rpt_no = c.rpt_no AND a.BRANCH = c.BRANCH AND a.CUS_PRG = c.CUS_PRG
+	  	WHERE 1=1
+	  	<if test="list != null and list.size() > 0">
+            AND a.nab_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00'
+      	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+      	AND b.hs = REPLACE(REPLACE(#{srch4}, '-', ''), '.', '')
+      	AND CONCAT_WS(' ', TRIM(c.IMP_GName1), TRIM(c.IMP_GName2), TRIM(c.IMP_GName3), TRIM(c.Compoent1), TRIM(c.Compoent2)) = #{srch5}
+      	<choose>
+		    <when test="srch10 == '01'">
+		        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+      
+        UNION 
+
+  		SELECT 
+      		CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+             	   SUBSTRING(a.rpt_no, 6, 2), '-', 
+             	   SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+      		b.ran_no AS ran, 
+      		c.sil AS sil,
+      		NULL AS taxKi, 
+      		NULL AS gsRate,
+      		FORMAT(ROUND(c.amt, 0), 0) AS price,
+      		a.cur AS currency,
+      		NULL AS totTaxSum,
+      		IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+  		FROM CUSDEC830A1 a
+  		LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+  		ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+  
+  		INNER JOIN CUSDEC830B1 b ON a.SN = b.SNA1
+       	AND a.rpt_no = b.rpt_no 
+       	AND a.BRANCH = b.BRANCH 
+       	AND a.CUS_PRG = b.CUS_PRG
+       
+  		INNER JOIN CUSDEC830C1 c ON a.SN = c.SNA1 AND c.SNB1 = b.SN
+      	AND a.rpt_no = c.rpt_no
+      	AND a.BRANCH = c.BRANCH 
+      	AND a.CUS_PRG = c.CUS_PRG
+ 		WHERE 1=1
+ 		<if test="list != null and list.size() > 0">
+            AND a.exp_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00' 
+      	AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END)= #{srch1}
+      	AND b.hs = REPLACE(REPLACE(#{srch4}, '-', ''), '.', '')
+      	AND CONCAT_WS(' ', TRIM(c.Gnm1), TRIM(c.Gnm2), TRIM(c.Gnm3), TRIM(c.Gnm4), TRIM(c.Gnm5), TRIM(c.Gnm6), TRIM(c.Comp1), TRIM(c.Comp2)) = #{srch5}
+      	<choose>
+		    <when test="srch10 == '01'">
+		        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+     </select>
+     
+     <select id="selectItemHsCodeDiffImpList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END AS itemCode, 
+		    CONCAT(SUBSTRING(b.HS, 1, 4), '.', 
+		           SUBSTRING(b.HS, 5, 2), '-', 
+		           SUBSTRING(b.HS, 7, 4)) AS hs,
+		    d.item_desc AS goodsName,
+		    a.nab_firm AS cmpnyNm,
+		    COUNT(DISTINCT a.rpt_no) AS rptNo,
+		    '' AS taxKi,
+		    '' AS gsRate,
+		    '' AS price,
+		    '' AS currency,
+		    '' AS totTaxSum,
+		    '' AS reporter
+		FROM cusdec929A1 a
+		INNER JOIN CUSDEC929B1 b 
+		    ON a.sn = b.sna1 
+		    AND a.rpt_no = b.rpt_no 
+		    AND a.BRANCH = b.BRANCH 
+		    AND a.CUS_PRG = b.CUS_PRG
+		INNER JOIN cusdec929C1 c 
+		    ON a.sn = c.sna1 
+		    AND b.sn = c.snb1 
+		    AND a.rpt_no = c.rpt_no 
+		    AND a.BRANCH = c.BRANCH 
+		    AND a.CUS_PRG = c.CUS_PRG
+		LEFT JOIN item_info2 d
+		    ON b.hs = d.HS
+		    AND a.nab_sdno = d.cmpny_cd
+		    AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = d.item_code
+		    WHERE 1=1
+	    <if test="list != null and list.size() > 0">
+            AND a.nab_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00'
+       	<choose>
+		    <when test="srch10 == '01'">
+		        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+       	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+       	GROUP BY itemCode, hs, goodsName, cmpnyNm
+	</select>
+	
+	<select id="selectItemHsCodeDiffImpSubList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+	      	CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+	               SUBSTRING(a.rpt_no, 6, 2), '-', 
+	               SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+	      	b.ran_no AS ran, 
+	      	c.sil AS sil,
+	      	b.Gs_Divi AS taxKi,
+	      	b.Gs_Rate AS gsRate,
+	    	FORMAT(ROUND(c.amt, 0), 0) AS price,
+	      	a.con_cur AS currency,
+	      	FORMAT(ROUND(a.tot_tax_sum, 0), 0) AS totTaxSum,
+	      	IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+	  	FROM cusdec929A1 a
+	   	LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+	  	ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+	  
+	  	INNER JOIN cusdec929B1 b 
+	  	ON a.sn = b.sna1 
+	  	AND a.rpt_no = b.rpt_no AND a.BRANCH = b.BRANCH AND a.CUS_PRG = b.CUS_PRG
+	  
+	  	INNER JOIN cusdec929C1 c 
+	  	ON a.sn = c.sna1 AND b.sn = c.snb1 and a.rpt_no = c.rpt_no AND a.BRANCH = c.BRANCH AND a.CUS_PRG = c.CUS_PRG
+	  	WHERE 1=1
+	  	<if test="list != null and list.size() > 0">
+            AND a.nab_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00'
+       	<choose>
+		    <when test="srch10 == '01'">
+		        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+      	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+      	AND b.hs = REPLACE(REPLACE(#{srch4}, '-', ''), '.', '')
+    </select>
+    
+    <select id="selectItemHsCodeDiffExpList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode, 
+		    CONCAT(SUBSTRING(b.HS, 1, 4), '.', 
+		           SUBSTRING(b.HS, 5, 2), '-', 
+		           SUBSTRING(b.HS, 7, 4)) AS hs,
+		    d.item_desc AS goodsName,
+		    a.exp_firm AS cmpnyNm,
+		    COUNT(DISTINCT a.rpt_no) AS rptNo,
+		    '' AS taxKi,
+		    '' AS gsRate,
+		    '' AS price,
+		    '' AS currency,
+		    '' AS totTaxSum,
+		    '' AS reporter
+		FROM CUSDEC830A1 a
+		INNER JOIN CUSDEC830B1 b 
+		    ON a.SN = b.SNA1
+		    AND a.rpt_no = b.rpt_no 
+		    AND a.BRANCH = b.BRANCH 
+		    AND a.CUS_PRG = b.CUS_PRG
+		INNER JOIN CUSDEC830C1 c 
+		    ON a.SN = c.SNA1 
+		    AND c.SNB1 = b.SN
+		    AND a.rpt_no = c.rpt_no 
+		    AND a.BRANCH = c.BRANCH 
+		    AND a.CUS_PRG = c.CUS_PRG
+		LEFT JOIN item_info2 d
+		    ON b.hs = d.HS
+		    AND a.exp_sdno = d.cmpny_cd
+		    AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = d.item_code
+		WHERE 1=1    
+		<if test="list != null and list.size() > 0">
+            AND a.exp_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00'
+       	<choose>
+		    <when test="srch10 == '01'">
+		        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+		AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+		GROUP BY itemCode, hs, goodsName, cmpnyNm
+		ORDER BY rptNo DESC, itemCode, hs
+	</select>
+	
+	<select id="selectItemHsCodeDiffExpSubList" parameterType="searchVO" resultType="egovMap">
+  		SELECT 
+      		CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+             	   SUBSTRING(a.rpt_no, 6, 2), '-', 
+             	   SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+      		b.ran_no AS ran, 
+      		c.sil AS sil,
+      		NULL AS taxKi, 
+      		NULL AS gsRate,
+      		FORMAT(ROUND(c.amt, 0), 0) AS price,
+      		a.cur AS currency,
+      		NULL AS totTaxSum,
+      		IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+  		FROM CUSDEC830A1 a
+  		LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+  		ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+  
+  		INNER JOIN CUSDEC830B1 b ON a.SN = b.SNA1
+       	AND a.rpt_no = b.rpt_no 
+       	AND a.BRANCH = b.BRANCH 
+       	AND a.CUS_PRG = b.CUS_PRG
+       
+  		INNER JOIN CUSDEC830C1 c 
+  		ON a.SN = c.SNA1 
+  		AND c.SNB1 = b.SN
+      	AND a.rpt_no = c.rpt_no 
+      	AND a.BRANCH = c.BRANCH 
+      	AND a.CUS_PRG = c.CUS_PRG
+ 		WHERE 1=1
+ 		<if test="list != null and list.size() > 0">
+            AND a.exp_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00'
+       	<choose>
+		    <when test="srch10 == '01'">
+		        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+      	AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END)= #{srch1}
+      	AND b.hs = REPLACE(REPLACE(#{srch4}, '-', ''), '.', '')
+    </select>
+	
+	<!-- <select id="selectItemPriceList" parameterType="searchVO" resultType="egovMap">
+		SELECT * FROM (
+			SELECT 
+			    B.itemCode,
+			    FORMAT(ROUND(MAX(B.maxCalc), 2), 2) AS maxPrice, 
+			    FORMAT(ROUND(MIN(B.minCalc), 2), 2) AS minPrice, 
+			    FORMAT(C.avgPrice, 2) AS avgPrice
+			FROM (
+			    SELECT 
+			    	CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END AS itemCode, 
+			        ROUND(a.Con_Rate_Usd, 1) * ROUND(c.upi, 2) AS maxCalc,
+			        ROUND(a.Con_Rate_Usd, 1) * ROUND(c.upi, 2) AS minCalc
+			    FROM cusdec929A1 a
+			    INNER JOIN cusdec929B1 b 
+			        ON a.sn = b.sna1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = b.BRANCH 
+			        AND a.CUS_PRG = b.CUS_PRG
+			    INNER JOIN cusdec929C1 c 
+			        ON a.sn = c.sna1 
+			        AND b.sn = c.snb1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = c.BRANCH 
+			        AND a.CUS_PRG = c.CUS_PRG
+			    WHERE 1=1 
+				<if test="list != null and list.size() > 0">
+		            AND a.nab_sdno IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+		       	</if>
+	      		AND a.Rpt_Seq = '00' 
+	   			AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+	   			<choose>
+				    <when test="srch10 == '01'">
+				        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+				    </when>
+				</choose>
+    		) B
+	    	CROSS JOIN (
+			    SELECT 
+			    	ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) / SUM(c.qty), 4) AS avgPrice
+			    FROM cusdec929A1 a
+			    INNER JOIN cusdec929B1 b 
+			        ON a.sn = b.sna1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = b.BRANCH 
+			        AND a.CUS_PRG = b.CUS_PRG
+			    INNER JOIN cusdec929C1 c 
+			        ON a.sn = c.sna1 
+			        AND b.sn = c.snb1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = c.BRANCH 
+			        AND a.CUS_PRG = c.CUS_PRG
+			    WHERE 1=1 
+				<if test="list != null and list.size() > 0">
+		            AND a.nab_sdno IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+		       	</if>
+	      		AND a.Rpt_Seq = '00' 
+	   			AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+	   		) C
+   			GROUP BY B.itemCode
+	 	) AS A
+		WHERE itemCode IS NOT NULL
+		
+		UNION
+ 
+		SELECT * FROM (
+			SELECT 
+			    B.itemCode,
+			    FORMAT(ROUND(MAX(B.maxCalc), 2), 2) AS maxPrice, 
+			    FORMAT(ROUND(MIN(B.minCalc), 2), 2) AS minPrice, 
+			    FORMAT(C.avgPrice, 2) AS avgPrice
+			FROM (
+			    SELECT 
+			        CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode, 
+			        ROUND(a.exc_rate_usd, 1) * ROUND(c.price, 2) AS maxCalc,
+			        ROUND(a.exc_rate_usd, 1) * ROUND(c.price, 2) AS minCalc
+			    FROM cusdec830A1 a
+			    INNER JOIN cusdec830b1 b 
+			        ON a.sn = b.sna1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = b.BRANCH 
+			        AND a.CUS_PRG = b.CUS_PRG
+			    INNER JOIN cusdec830C1 c 
+			        ON a.sn = c.sna1 
+			        AND b.sn = c.snb1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = c.BRANCH 
+			        AND a.CUS_PRG = c.CUS_PRG
+			    WHERE 1=1
+			    <if test="list != null and list.size() > 0">
+		            AND a.exp_sdno IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+		       	</if>
+	      		AND a.Rpt_Seq = '00' 
+	   			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+	   			<choose>
+				    <when test="srch10 == '01'">
+				        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+				    </when>
+				</choose>
+	   		) B
+			CROSS JOIN (
+			    SELECT 
+			    	ROUND(SUM(a.exc_rate_usd * c.price * c.qty) / SUM(c.qty), 4) AS avgPrice
+			    FROM cusdec830A1 a
+			    INNER JOIN cusdec830b1 b 
+			        ON a.sn = b.sna1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = b.BRANCH 
+			        AND a.CUS_PRG = b.CUS_PRG
+			    INNER JOIN cusdec830c1 c 
+			        ON a.sn = c.sna1 
+			        AND b.sn = c.snb1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = c.BRANCH 
+			        AND a.CUS_PRG = c.CUS_PRG
+			    WHERE 1=1
+			    <if test="list != null and list.size() > 0">
+		            AND a.exp_sdno IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+		       	</if>
+	      		AND a.Rpt_Seq = '00' 
+	   			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+	   			<choose>
+				    <when test="srch10 == '01'">
+				        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+				    </when>
+				</choose>
+	   		) C
+	   		GROUP BY B.itemCode
+	 	) AS B
+		WHERE itemCode IS NOT NULL
+	</select> -->
+	
+	<select id="selectItemPriceImpList" parameterType="searchVO" resultType="egovMap">
+		SELECT * FROM (
+			SELECT 
+				'수입' AS category,
+			    B.itemCode,
+			    FORMAT(ROUND(MAX(B.maxCalc), 2), 2) AS maxPrice, 
+			    FORMAT(ROUND(MIN(B.minCalc), 2), 2) AS minPrice, 
+			    FORMAT(C.avgPrice, 2) AS avgPrice
+			FROM (
+			    SELECT 
+			    	CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END AS itemCode, 
+			        ROUND(a.Con_Rate_Usd, 1) * ROUND(c.upi, 2) AS maxCalc,
+			        ROUND(a.Con_Rate_Usd, 1) * ROUND(c.upi, 2) AS minCalc
+			    FROM cusdec929A1 a
+			    INNER JOIN cusdec929B1 b 
+			        ON a.sn = b.sna1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = b.BRANCH 
+			        AND a.CUS_PRG = b.CUS_PRG
+			    INNER JOIN cusdec929C1 c 
+			        ON a.sn = c.sna1 
+			        AND b.sn = c.snb1 
+			        AND a.rpt_no = c.rpt_no 
+			        AND a.BRANCH = c.BRANCH 
+			        AND a.CUS_PRG = c.CUS_PRG
+			    WHERE 1=1 
+				<if test="list != null and list.size() > 0">
+		            AND a.nab_sdno IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+		       	</if>
+	      		AND a.Rpt_Seq = '00' 
+	   			AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+	   			<choose>
+				    <when test="srch10 == '01'">
+				        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+				    </when>
+				</choose>
+    		) B
+	    	CROSS JOIN (
+			    SELECT 
+			    	ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) / SUM(c.qty), 4) AS avgPrice
+			    FROM cusdec929A1 a
+			    INNER JOIN cusdec929B1 b 
+			        ON a.sn = b.sna1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = b.BRANCH 
+			        AND a.CUS_PRG = b.CUS_PRG
+			    INNER JOIN cusdec929C1 c 
+			        ON a.sn = c.sna1 
+			        AND b.sn = c.snb1 
+			        AND a.rpt_no = c.rpt_no 
+			        AND a.BRANCH = c.BRANCH 
+			        AND a.CUS_PRG = c.CUS_PRG
+			    WHERE 1=1 
+				<if test="list != null and list.size() > 0">
+		            AND a.nab_sdno IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+		       	</if>
+	      		AND a.Rpt_Seq = '00' 
+	   			AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+	   			<choose>
+				    <when test="srch10 == '01'">
+				        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+				    </when>
+				</choose>
+	   		) C
+   			GROUP BY B.itemCode
+	 	) AS A
+		WHERE itemCode IS NOT NULL
+	</select>
+	
+	<select id="selectItemPriceExpList" parameterType="searchVO" resultType="egovMap">
+		SELECT * FROM (
+			SELECT 
+				'수출' AS category,
+			    B.itemCode,
+			    FORMAT(ROUND(MAX(B.maxCalc), 2), 2) AS maxPrice, 
+			    FORMAT(ROUND(MIN(B.minCalc), 2), 2) AS minPrice, 
+			    FORMAT(C.avgPrice, 2) AS avgPrice
+			FROM (
+			    SELECT 
+			        CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode, 
+			        ROUND(a.exc_rate_usd, 1) * ROUND(c.price, 2) AS maxCalc,
+			        ROUND(a.exc_rate_usd, 1) * ROUND(c.price, 2) AS minCalc
+			    FROM cusdec830A1 a
+			    INNER JOIN cusdec830b1 b 
+			        ON a.sn = b.sna1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = b.BRANCH 
+			        AND a.CUS_PRG = b.CUS_PRG
+			    INNER JOIN cusdec830C1 c 
+			        ON a.sn = c.sna1 
+			        AND b.sn = c.snb1 
+			        AND a.rpt_no = c.rpt_no 
+			        AND a.BRANCH = c.BRANCH 
+			        AND a.CUS_PRG = c.CUS_PRG
+			    WHERE 1=1
+			    <if test="list != null and list.size() > 0">
+		            AND a.exp_sdno IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+		       	</if>
+	      		AND a.Rpt_Seq = '00' 
+	   			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+	   			<choose>
+				    <when test="srch10 == '01'">
+				        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+				    </when>
+				</choose>
+	   		) B
+			CROSS JOIN (
+			    SELECT 
+			    	ROUND(SUM(a.exc_rate_usd * c.price * c.qty) / SUM(c.qty), 4) AS avgPrice
+			    FROM cusdec830A1 a
+			    INNER JOIN cusdec830b1 b 
+			        ON a.sn = b.sna1 
+			        AND a.rpt_no = b.rpt_no 
+			        AND a.BRANCH = b.BRANCH 
+			        AND a.CUS_PRG = b.CUS_PRG
+			    INNER JOIN cusdec830c1 c 
+			        ON a.sn = c.sna1 
+			        AND b.sn = c.snb1 
+			        AND a.rpt_no = c.rpt_no 
+			        AND a.BRANCH = c.BRANCH 
+			        AND a.CUS_PRG = c.CUS_PRG
+			    WHERE 1=1
+			    <if test="list != null and list.size() > 0">
+		            AND a.exp_sdno IN 
+		            <foreach item="id" collection="list" open="(" separator="," close=")">
+		                #{id}
+		            </foreach>
+		       	</if>
+	      		AND a.Rpt_Seq = '00' 
+	   			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+	   			<choose>
+				    <when test="srch10 == '01'">
+				        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+				    </when>
+				</choose>
+	   		) C
+	   		GROUP BY B.itemCode
+	 	) AS B
+		WHERE itemCode IS NOT NULL
+	</select>
+	
+	<select id="selectItemOutOfRateList" parameterType="searchVO" resultType="egovMap">
+		WITH rate AS (
+		    SELECT 
+		        a.nab_Firm,
+		        a.blNo,
+		        CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+		        b.ran_no AS ran, 
+		        c.sil AS sil,
+		        CONCAT(
+		        	CASE WHEN a.Lis_Day != '' THEN 
+		               	CONCAT(SUBSTRING(a.Lis_Day, 1, 4), '-', 
+		                       SUBSTRING(a.Lis_Day, 5, 2), '-', 
+		                       SUBSTRING(a.Lis_Day, 7, 2), ' ')
+		                ELSE '' END
+		        ) AS lisDay,
+		        CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END AS itemCode, 
+		        ROUND(c.upi, 3) AS upi,
+		        c.ut,
+		        a.Con_Ki,
+		        a.sup_firm,
+		        a.con_cur AS currency, 
+		        CASE 
+		            WHEN ROUND(a.Con_Rate_Usd, 1) * c.upi = FLOOR(ROUND(a.Con_Rate_Usd, 1) * c.upi) THEN 
+		                 ROUND(a.Con_Rate_Usd, 1) * c.upi
+		            ELSE 
+		                FORMAT(ROUND(a.Con_Rate_Usd, 1) * c.upi, 2)
+		        END AS wonPrice,
+		        CASE 
+		            WHEN ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4) = FLOOR(ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4)) THEN 
+		                 ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4)
+		            ELSE 
+		                FORMAT(ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4), 2)
+		        END AS avgPrice,
+
+		        ROUND(((ROUND(a.Con_Rate_Usd, 1) * c.upi) - 
+		               (SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER ())) / 
+		               (SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2) 
+		        AS inputVal,
+				CONCAT(ROUND((ROUND(a.Con_Rate_Usd, 1) * c.upi) / (SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2), '%') 
+				AS unitDiff
+			FROM cusdec929A1 a
+			INNER JOIN cusdec929B1 b 
+		        ON a.sn = b.sna1 
+		        AND a.rpt_no = b.rpt_no 
+		        AND a.BRANCH = b.BRANCH 
+		        AND a.CUS_PRG = b.CUS_PRG
+			INNER JOIN cusdec929C1 c 
+		        ON a.sn = c.sna1 
+		        AND b.sn = c.snb1 
+		        AND a.rpt_no = c.rpt_no 
+		        AND a.BRANCH = c.BRANCH 
+		        AND a.CUS_PRG = c.CUS_PRG
+		    WHERE 1=1
+		    <if test="list != null and list.size() > 0">
+	            AND a.nab_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	       	AND a.Rpt_Seq = '00' 
+       		AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+       		<choose>
+			    <when test="srch10 == '01'">
+			        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+       		
+       		UNION 	 
+	 
+			SELECT 
+				a.exp_Firm,
+				a.blNo,
+				CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+				b.ran_no AS ran, 
+				c.sil AS sil,
+				CONCAT(
+					CASE WHEN a.Exp_Lis_Day != '' THEN 
+						CONCAT(SUBSTRING(a.Exp_Lis_Day, 1, 4), '-', 
+							   SUBSTRING(a.Exp_Lis_Day, 5, 2), '-', 
+							   SUBSTRING(a.Exp_Lis_Day, 7, 2), ' ')
+						ELSE '' END
+				) AS lisDay,
+				CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode,
+				ROUND(c.price, 3) AS price,
+				a.ut,
+				a.con_met,
+				a.buy_firm,
+				a.cur AS currency,
+				ROUND(a.exc_rate_usd, 1) * c.price AS wonPrice,
+			   	ROUND(SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER (), 4) AS avgPrice,
+			   	ROUND(((ROUND(a.exc_rate_usd, 1) * c.price) - 
+			            (SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER ())) / 
+			            (SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2) 
+			    AS inputVal,
+			   	CONCAT(
+			   		ROUND((ROUND(a.exc_rate_usd, 1) * c.price) / (SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2)
+			   	, '%') AS unitDiff
+			FROM CUSDEC830A1 a
+			
+			INNER JOIN CUSDEC830B1 b 
+				ON a.SN = b.SNA1 
+				AND a.rpt_no = b.rpt_no 
+				AND a.BRANCH = b.BRANCH 
+				AND a.CUS_PRG = b.CUS_PRG
+			INNER JOIN CUSDEC830C1 c 
+				ON a.SN = c.SNA1 
+				AND c.SNB1 = b.SN 
+				AND a.rpt_no = c.rpt_no 
+				AND a.BRANCH = c.BRANCH 
+				AND a.CUS_PRG = c.CUS_PRG
+			<if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+      		AND a.Rpt_Seq = '00' 
+   			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+   			<choose>
+			    <when test="srch10 == '01'">
+			        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+   		)
+		SELECT * FROM rate WHERE ABS(COALESCE(inputVal, 10)) > #{srch4}
+	</select>
+	
+	<select id="selectItemOutOfRateImpList" parameterType="searchVO" resultType="egovMap">
+		WITH rate AS (
+		    SELECT 
+		        a.nab_Firm,
+		        a.blNo,
+		        CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+		        b.ran_no AS ran, 
+		        c.sil AS sil,
+		        CONCAT(
+		        	CASE WHEN a.Lis_Day != '' THEN 
+		               	CONCAT(SUBSTRING(a.Lis_Day, 1, 4), '-', 
+		                       SUBSTRING(a.Lis_Day, 5, 2), '-', 
+		                       SUBSTRING(a.Lis_Day, 7, 2), ' ')
+		                ELSE '' END
+		        ) AS lisDay,
+		        CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END AS itemCode, 
+		        ROUND(c.upi, 3) AS upi,
+		        c.ut,
+		        a.Con_Ki,
+		        a.sup_firm,
+		        a.con_cur AS currency, 
+		        CASE 
+		            WHEN ROUND(a.Con_Rate_Usd, 1) * c.upi = FLOOR(ROUND(a.Con_Rate_Usd, 1) * c.upi) THEN 
+		                 ROUND(a.Con_Rate_Usd, 1) * c.upi
+		            ELSE 
+		                FORMAT(ROUND(a.Con_Rate_Usd, 1) * c.upi, 2)
+		        END AS wonPrice,
+		        CASE 
+		            WHEN ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4) = FLOOR(ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4)) THEN 
+		                 ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4)
+		            ELSE 
+		                FORMAT(ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4), 2)
+		        END AS avgPrice,
+
+		        ROUND(((ROUND(a.Con_Rate_Usd, 1) * c.upi) - 
+		               (SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER ())) / 
+		               (SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2) 
+		        AS inputVal,
+				CONCAT(ROUND((ROUND(a.Con_Rate_Usd, 1) * c.upi) / (SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2), '%') 
+				AS unitDiff
+			FROM cusdec929A1 a
+			INNER JOIN cusdec929B1 b 
+		        ON a.sn = b.sna1 
+		        AND a.rpt_no = b.rpt_no 
+		        AND a.BRANCH = b.BRANCH 
+		        AND a.CUS_PRG = b.CUS_PRG
+			INNER JOIN cusdec929C1 c 
+		        ON a.sn = c.sna1 
+		        AND b.sn = c.snb1 
+		        AND a.rpt_no = c.rpt_no 
+		        AND a.BRANCH = c.BRANCH 
+		        AND a.CUS_PRG = c.CUS_PRG
+		    WHERE 1=1
+		    <if test="list != null and list.size() > 0">
+	            AND a.nab_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	       	AND a.Rpt_Seq = '00' 
+       		AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+       		<choose>
+			    <when test="srch10 == '01'">
+			        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+   		)
+		SELECT * FROM rate
+		WHERE ABS(inputVal) > #{srch4}
+	</select>
+	
+	<select id="selectItemOutOfRateExpList" parameterType="searchVO" resultType="egovMap">
+		WITH rate AS (
+			SELECT 
+				a.exp_Firm,
+				a.blNo,
+				CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+				b.ran_no AS ran, 
+				c.sil AS sil,
+				CONCAT(
+					CASE WHEN a.Exp_Lis_Day != '' THEN 
+						CONCAT(SUBSTRING(a.Exp_Lis_Day, 1, 4), '-', 
+							   SUBSTRING(a.Exp_Lis_Day, 5, 2), '-', 
+							   SUBSTRING(a.Exp_Lis_Day, 7, 2), ' ')
+						ELSE '' END
+				) AS lisDay,
+				CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode,
+				ROUND(c.price, 3) AS price,
+				a.ut,
+				a.con_met,
+				a.buy_firm,
+				a.cur AS currency,
+				ROUND(a.exc_rate_usd, 1) * c.price AS wonPrice,
+			   	ROUND(SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER (), 4) AS avgPrice,
+			   	ROUND(((ROUND(a.exc_rate_usd, 1) * c.price) - 
+			            (SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER ())) / 
+			            (SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2) 
+			    AS inputVal,
+			   	CONCAT(
+			   		ROUND((ROUND(a.exc_rate_usd, 1) * c.price) / (SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2)
+			   	, '%') AS unitDiff
+			FROM CUSDEC830A1 a
+			
+			INNER JOIN CUSDEC830B1 b 
+				ON a.SN = b.SNA1 
+				AND a.rpt_no = b.rpt_no 
+				AND a.BRANCH = b.BRANCH 
+				AND a.CUS_PRG = b.CUS_PRG
+			INNER JOIN CUSDEC830C1 c 
+				ON a.SN = c.SNA1 
+				AND c.SNB1 = b.SN 
+				AND a.rpt_no = c.rpt_no 
+				AND a.BRANCH = c.BRANCH 
+				AND a.CUS_PRG = c.CUS_PRG
+			<if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+      		AND a.Rpt_Seq = '00' 
+   			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+   			<choose>
+			    <when test="srch10 == '01'">
+			        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+   		)
+		SELECT * FROM rate
+		WHERE ABS(inputVal) > #{srch4}
+	</select>
+	
+	<select id="selectItemPriceChart" parameterType="searchVO" resultType="egovMap">
+		WITH RECURSIVE calendar AS (
+		    SELECT DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 2 YEAR), '%Y-%m-01') AS lis_day
+		    UNION ALL
+		    SELECT DATE_ADD(lis_day, INTERVAL 1 MONTH)
+		    FROM calendar
+		    <![CDATA[ WHERE lis_day < LAST_DAY(CURDATE()) ]]>
+		),
+		imp_avg_range AS (
+		    SELECT 
+		        lis_day,
+		        ROUND(SUM(Con_Rate_Usd * Upi * qty) / SUM(qty), 4) AS avgPrice
+		    FROM (
+		        SELECT 
+		            lis_day,
+		            Con_Rate_Usd,
+		            c.Upi,
+		            c.qty
+		        FROM cusdec929A1 a
+		        INNER JOIN cusdec929B1 b 
+		            ON a.sn = b.sna1 
+		            AND a.rpt_no = b.rpt_no 
+		            AND a.BRANCH = b.BRANCH 
+		            AND a.CUS_PRG = b.CUS_PRG
+		        INNER JOIN cusdec929C1 c 
+		            ON a.sn = c.sna1 
+		            AND b.sn = c.snb1 
+		            AND a.rpt_no = c.rpt_no 
+		            AND a.BRANCH = c.BRANCH 
+		            AND a.CUS_PRG = c.CUS_PRG
+		        WHERE 1=1
+		    <if test="list != null and list.size() > 0">
+	            AND a.nab_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	       	AND a.Rpt_Seq = '00' 
+       		AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+       		AND lis_day BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 2 YEAR), '%Y-%m-01') AND CURDATE() 
+		    ) AS A
+		    GROUP BY lis_day
+		),
+		exp_avg_range AS (
+		    SELECT 
+		        exp_lis_day,
+		        ROUND(SUM(exc_rate_usd * price * qty) / SUM(qty), 4) AS avgPrice
+		    FROM (
+		        SELECT 
+		            exp_lis_day,
+		            exc_rate_usd,
+		            c.price,
+		            c.qty
+		        FROM cusdec830A1 a
+		        INNER JOIN cusdec830B1 b 
+		            ON a.sn = b.sna1 
+		            AND a.rpt_no = b.rpt_no 
+		            AND a.BRANCH = b.BRANCH 
+		            AND a.CUS_PRG = b.CUS_PRG
+		        INNER JOIN cusdec830C1 c 
+		            ON a.sn = c.sna1 
+		            AND b.sn = c.snb1 
+		            AND a.rpt_no = c.rpt_no 
+		            AND a.BRANCH = c.BRANCH 
+		            AND a.CUS_PRG = c.CUS_PRG
+		            <if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+      		AND a.Rpt_Seq = '00' 
+   			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+   			AND exp_lis_day BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 2 YEAR), '%Y-%m-01') AND CURDATE() 
+		    ) AS A
+		    GROUP BY exp_lis_day
+		)
+		
+		SELECT 
+		    DATE_FORMAT(c.lis_day, '%Y-%m') AS date,
+		    COALESCE(ROUND(SUM(imp.avgPrice) / COUNT(imp.avgPrice), 2), 0) AS impMlyAvg,
+		    COALESCE(ROUND(SUM(exp.avgPrice) / COUNT(exp.avgPrice), 2), 0) AS expMlyAvg
+		FROM calendar c
+		LEFT JOIN imp_avg_range imp ON DATE_FORMAT(c.lis_day, '%Y-%m') = DATE_FORMAT(imp.lis_day, '%Y-%m')
+		LEFT JOIN exp_avg_range exp ON DATE_FORMAT(c.lis_day, '%Y-%m') = DATE_FORMAT(exp.exp_lis_day, '%Y-%m')
+		GROUP BY c.lis_day
+		ORDER BY c.lis_day DESC
+	</select>
+	
+	<select id="selectItemRptNoList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    a.nab_Firm,
+		    a.blNo,
+		    CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+		    b.ran_no AS ran, 
+		    c.sil AS sil,
+		    CONCAT(CASE WHEN a.Lis_Day != '' THEN 
+					CONCAT(SUBSTRING(a.Lis_Day, 1, 4), '-', 
+					   	   SUBSTRING(a.Lis_Day, 5, 2), '-', 
+					       SUBSTRING(a.Lis_Day, 7, 2), ' ')
+				   ELSE '' END
+			) AS lisDay,
+		    CASE 
+		        WHEN c.RG_code = '' THEN c.IMP_GName1 
+		        ELSE c.RG_code 
+		    END AS itemCode,
+		    ROUND(c.upi, 3) AS upi,
+		    c.ut,
+		    a.Con_Ki,
+		    a.sup_firm,
+		    a.con_cur AS currency,
+		    CASE 
+	        WHEN ROUND(a.Con_Rate_Usd, 1) * c.upi = FLOOR(ROUND(a.Con_Rate_Usd, 1) * c.upi) THEN 
+	             ROUND(a.Con_Rate_Usd, 1) * c.upi
+	        ELSE 
+	            FORMAT(ROUND(a.Con_Rate_Usd, 1) * c.upi, 2)
+    		END AS wonPrice,
+		    CASE 
+		        WHEN ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4) = FLOOR(ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4)) THEN 
+		             ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4)
+		        ELSE 
+		            FORMAT(ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4), 2)
+		    END AS avgPrice,
+		    CONCAT(ROUND((ROUND(a.Con_Rate_Usd, 1) * c.upi) / (SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2), '%') AS unitDiff
+		FROM cusdec929A1 a
+		INNER JOIN cusdec929B1 b 
+		    ON a.sn = b.sna1 
+		    AND a.rpt_no = b.rpt_no 
+		    AND a.BRANCH = b.BRANCH 
+		    AND a.CUS_PRG = b.CUS_PRG
+		INNER JOIN cusdec929C1 c 
+		    ON a.sn = c.sna1 
+		    AND b.sn = c.snb1 
+		    AND a.rpt_no = c.rpt_no 
+		    AND a.BRANCH = c.BRANCH 
+		    AND a.CUS_PRG = c.CUS_PRG
+		WHERE 1=1
+		<if test="list != null and list.size() > 0">
+            AND a.nab_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	<choose>
+		    <when test="srch10 == '01'">
+		        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+       	AND a.Rpt_Seq = '00' 
+    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+    	
+    	UNION
+
+		SELECT 
+			a.exp_Firm,
+			b.mg_code,
+			CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+			b.ran_no AS ran, 
+			c.sil AS sil,
+			CONCAT(CASE WHEN a.Exp_Lis_Day != '' THEN 
+						CONCAT(SUBSTRING(a.Exp_Lis_Day, 1, 4), '-', 
+							    SUBSTRING(a.Exp_Lis_Day, 5, 2), '-', 
+							    SUBSTRING(a.Exp_Lis_Day, 7, 2), ' ')
+							    ELSE '' END
+					) AS expLisDay,
+			CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode,
+			ROUND(c.price, 3) AS price,
+			a.ut,
+			a.con_met,
+			a.buy_firm,
+			a.cur AS currency,
+		   	CASE 
+		        WHEN ROUND(a.exc_rate_usd, 1) * c.price = FLOOR(ROUND(a.exc_rate_usd, 1) * c.price) THEN 
+		             ROUND(a.exc_rate_usd, 1) * c.price
+		        ELSE 
+		            FORMAT(ROUND(a.exc_rate_usd, 1) * c.price, 2)
+    		END AS wonPrice,
+		    CASE 
+		        WHEN ROUND(SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER (), 4) = FLOOR(ROUND(SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER (), 4)) THEN 
+		             ROUND(SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER (), 4)
+		        ELSE 
+		            FORMAT(ROUND(SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER (), 4), 2)
+		    END AS avgPrice,
+		   	CONCAT(ROUND((ROUND(a.exc_rate_usd, 1) * c.price) / (SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2), '%') AS unitDiff
+		FROM CUSDEC830A1 a
+		INNER JOIN CUSDEC830B1 b 
+			ON a.SN = b.SNA1 
+			AND a.rpt_no = b.rpt_no 
+			AND a.BRANCH = b.BRANCH 
+			AND a.CUS_PRG = b.CUS_PRG
+		INNER JOIN CUSDEC830C1 c 
+			ON a.SN = c.SNA1 
+			AND c.SNB1 = b.SN 
+			AND a.rpt_no = c.rpt_no 
+			AND a.BRANCH = c.BRANCH 
+			AND a.CUS_PRG = c.CUS_PRG
+		<if test="list != null and list.size() > 0">
+            AND a.exp_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	<choose>
+		    <when test="srch10 == '01'">
+		        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+   		AND a.Rpt_Seq = '00' 
+		AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+	</select>
+	
+	<select id="selectItemRptNoImpList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+		    a.nab_Firm,
+		    a.blNo,
+		    CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+		    b.ran_no AS ran, 
+		    c.sil AS sil,
+		    CONCAT(CASE WHEN a.Lis_Day != '' THEN 
+					CONCAT(SUBSTRING(a.Lis_Day, 1, 4), '-', 
+					   	   SUBSTRING(a.Lis_Day, 5, 2), '-', 
+					       SUBSTRING(a.Lis_Day, 7, 2), ' ')
+				   ELSE '' END
+			) AS lisDay,
+		    CASE 
+		        WHEN c.RG_code = '' THEN c.IMP_GName1 
+		        ELSE c.RG_code 
+		    END AS itemCode,
+		    ROUND(c.upi, 3) AS upi,
+		    c.ut,
+		    a.Con_Ki,
+		    a.sup_firm,
+		    a.con_cur AS currency,
+		    CASE 
+	        WHEN ROUND(a.Con_Rate_Usd, 1) * c.upi = FLOOR(ROUND(a.Con_Rate_Usd, 1) * c.upi) THEN 
+	             ROUND(a.Con_Rate_Usd, 1) * c.upi
+	        ELSE 
+	            FORMAT(ROUND(a.Con_Rate_Usd, 1) * c.upi, 2)
+    		END AS wonPrice,
+		    CASE 
+		        WHEN ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4) = FLOOR(ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4)) THEN 
+		             ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4)
+		        ELSE 
+		            FORMAT(ROUND(SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER (), 4), 2)
+		    END AS avgPrice,
+		    CONCAT(ROUND((ROUND(a.Con_Rate_Usd, 1) * c.upi) / (SUM(a.Con_Rate_Usd * c.upi * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2), '%') AS unitDiff
+		FROM cusdec929A1 a
+		INNER JOIN cusdec929B1 b 
+		    ON a.sn = b.sna1 
+		    AND a.rpt_no = b.rpt_no 
+		    AND a.BRANCH = b.BRANCH 
+		    AND a.CUS_PRG = b.CUS_PRG
+		INNER JOIN cusdec929C1 c 
+		    ON a.sn = c.sna1 
+		    AND b.sn = c.snb1 
+		    AND a.rpt_no = c.rpt_no 
+		    AND a.BRANCH = c.BRANCH 
+		    AND a.CUS_PRG = c.CUS_PRG
+		WHERE 1=1
+		<if test="list != null and list.size() > 0">
+            AND a.nab_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	<choose>
+		    <when test="srch10 == '01'">
+		        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+       	AND a.Rpt_Seq = '00' 
+    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+	</select>
+	
+	<select id="selectItemRptNoExpList" parameterType="searchVO" resultType="egovMap">
+		SELECT 
+			a.exp_Firm,
+			b.mg_code,
+			CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+			b.ran_no AS ran, 
+			c.sil AS sil,
+			CONCAT(CASE WHEN a.Exp_Lis_Day != '' THEN 
+						CONCAT(SUBSTRING(a.Exp_Lis_Day, 1, 4), '-', 
+							    SUBSTRING(a.Exp_Lis_Day, 5, 2), '-', 
+							    SUBSTRING(a.Exp_Lis_Day, 7, 2), ' ')
+							    ELSE '' END
+					) AS expLisDay,
+			CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode,
+			ROUND(c.price, 3) AS price,
+			a.ut,
+			a.con_met,
+			a.buy_firm,
+			a.cur AS currency,
+		   	CASE 
+		        WHEN ROUND(a.exc_rate_usd, 1) * c.price = FLOOR(ROUND(a.exc_rate_usd, 1) * c.price) THEN 
+		             ROUND(a.exc_rate_usd, 1) * c.price
+		        ELSE 
+		            FORMAT(ROUND(a.exc_rate_usd, 1) * c.price, 2)
+    		END AS wonPrice,
+		    CASE 
+		        WHEN ROUND(SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER (), 4) = FLOOR(ROUND(SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER (), 4)) THEN 
+		             ROUND(SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER (), 4)
+		        ELSE 
+		            FORMAT(ROUND(SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER (), 4), 2)
+		    END AS avgPrice,
+		   	CONCAT(ROUND((ROUND(a.exc_rate_usd, 1) * c.price) / (SUM(a.exc_rate_usd * c.price * c.qty) OVER () / SUM(c.qty) OVER ()) * 100, 2), '%') AS unitDiff
+		FROM CUSDEC830A1 a
+		INNER JOIN CUSDEC830B1 b 
+			ON a.SN = b.SNA1 
+			AND a.rpt_no = b.rpt_no 
+			AND a.BRANCH = b.BRANCH 
+			AND a.CUS_PRG = b.CUS_PRG
+		INNER JOIN CUSDEC830C1 c 
+			ON a.SN = c.SNA1 
+			AND c.SNB1 = b.SN 
+			AND a.rpt_no = c.rpt_no 
+			AND a.BRANCH = c.BRANCH 
+			AND a.CUS_PRG = c.CUS_PRG
+		<if test="list != null and list.size() > 0">
+            AND a.exp_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	<choose>
+		    <when test="srch10 == '01'">
+		        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+   		AND a.Rpt_Seq = '00' 
+		AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+	</select>
+	
+	<select id="selectHsList" parameterType="searchVO" resultType="egovMap">
+		SELECT hs FROM item_info2 WHERE item_code = #{srch1}
+	</select>
+	
+	<select id="selectItemLawCdList" parameterType="searchVO" resultType="egovMap">
+		SELECT itemCode, hs, goodsName, cmpnyNm, cont, includeCnt, excludeCnt
+		FROM (
+		    SELECT
+		    	CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END AS itemCode, 
+		        CONCAT(SUBSTRING(b.HS, 1, 4), '.', SUBSTRING(b.HS, 5, 2), '-', SUBSTRING(b.HS, 7, 4)) AS hs, 
+		        GROUP_CONCAT(DISTINCT b.Std_GName1 ORDER BY b.Std_GName1 SEPARATOR ', ') AS goodsName, 
+		        a.Nab_Firm AS cmpnyNm, 
+		        f.cont,
+		        0 AS includeCnt,
+		        COUNT(e.Exclude_DtlCD) AS excludeCnt
+		    FROM cusdec929a1 a
+		    INNER JOIN cusdec929B1 b ON a.sn = b.sna1 AND a.rpt_no = b.rpt_no AND a.BRANCH = b.BRANCH AND a.CUS_PRG = b.CUS_PRG
+		    INNER JOIN CUSDEC929C1 c ON a.SN = c.SNA1 AND b.sn = c.SNB1 AND a.rpt_no = c.rpt_no AND a.BRANCH = c.BRANCH AND a.CUS_PRG = c.CUS_PRG
+		    LEFT JOIN cusdec929c4 e ON a.sn = e.sna1 AND b.sn = e.snb1 AND a.rpt_no = e.rpt_no AND a.branch = e.branch AND a.cus_prg = e.cus_prg AND c.Ran_No = e.Ran_No
+		    LEFT OUTER JOIN (SELECT DISTINCT CODE, cont FROM cdstd WHERE divi = '법령코드') f ON c.RG_code = f.code
+		    WHERE 1=1
+			<if test="list != null and list.size() > 0">
+	            AND a.nab_sdno IN
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	       	AND a.Rpt_Seq = '00' 
+	    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+	    	<choose>
+			    <when test="srch10 == '01'">
+			        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+	    	GROUP BY itemCode, b.hs, cmpnyNm, cont
+	    	HAVING COUNT(e.Exclude_DtlCD) > 0
+		) AS A
+			
+		UNION ALL
+			
+		SELECT itemCode, hs, goodsName, cmpnyNm, cont, includeCnt, excludeCnt
+		FROM (
+		    SELECT 
+		    	CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END AS itemCode, 
+		        CONCAT(SUBSTRING(b.HS, 1, 4), '.', SUBSTRING(b.HS, 5, 2), '-', SUBSTRING(b.HS, 7, 4)) AS hs, 
+		        GROUP_CONCAT(DISTINCT b.Std_GName1 ORDER BY b.Std_GName1 SEPARATOR ', ') AS goodsName, 
+		        a.Nab_Firm AS cmpnyNm, 
+		        f.cont,
+		        0 AS excludeCnt,
+		        (SELECT COUNT(*) FROM 
+		        	(SELECT a.rpt_no FROM cusdec929a1 a 
+		                INNER JOIN cusdec929b1 b ON a.sn = b.sna1 AND a.rpt_no = b.rpt_no AND a.branch = b.branch AND a.cus_prg = b.cus_prg
+		                INNER JOIN cusdec929c1 c ON a.sn = c.sna1 AND b.sn  = c.snb1 AND a.rpt_no = c.rpt_no AND a.branch = c.branch AND a.cus_prg = c.cus_prg
+		                LEFT JOIN cusdec929d1 d ON a.sn = d.sna1 AND b.sn = d.snb1 AND c.sn = d.snc1 AND a.rpt_no = d.rpt_no AND a.branch = d.branch AND a.cus_prg = d.cus_prg
+		                WHERE 1=1
+		                <if test="list != null and list.size() > 0">
+				            AND a.nab_sdno IN 
+				            <foreach item="id" collection="list" open="(" separator="," close=")">
+				                #{id}
+				            </foreach>
+				       	</if>
+				       	AND a.Rpt_Seq = '00' 
+				    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+				    	AND d.VIT_NO IS NOT NULL
+				    	<choose>
+						    <when test="srch10 == '01'">
+						        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+						    </when>
+						</choose>
+					) AS totalCnt
+           		) AS includeCnt
+    		FROM cusdec929a1 a
+    		INNER JOIN cusdec929B1 b ON a.sn = b.sna1 AND a.rpt_no = b.rpt_no AND a.BRANCH = b.BRANCH AND a.CUS_PRG = b.CUS_PRG
+    		INNER JOIN CUSDEC929C1 c ON a.SN = c.SNA1 AND b.sn = c.SNB1 AND a.rpt_no = c.rpt_no AND a.BRANCH = c.BRANCH AND a.CUS_PRG = c.CUS_PRG
+    		LEFT OUTER JOIN (SELECT DISTINCT CODE, cont FROM cdstd WHERE divi = '법령코드') f 
+        		ON c.RG_code = f.code
+   			WHERE 1=1
+   			AND a.Rpt_Seq = '00' 
+   			<if test="list != null and list.size() > 0">
+	            AND a.nab_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+	    	<choose>
+			    <when test="srch10 == '01'">
+			        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+			GROUP BY itemCode, b.hs, cmpnyNm, cont
+			HAVING includeCnt > 0
+		) AS B
+
+		UNION ALL
+		
+		SELECT itemCode, hs, goodsName, cmpnyNm, cont, includeCnt, excludeCnt
+		FROM (
+		    SELECT 
+		    	CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode, 
+		        CONCAT(SUBSTRING(b.HS, 1, 4), '.', SUBSTRING(b.HS, 5, 2), '-', SUBSTRING(b.HS, 7, 4)) AS hs, 
+		        GROUP_CONCAT(DISTINCT b.Std_Gnm ORDER BY b.Std_Gnm SEPARATOR ', ') AS goodsName, 
+		        a.exp_Firm AS cmpnyNm, 
+		        f.cont,
+		        0 AS includeCnt,
+		        COUNT(e.Exclude_DtlCD) AS excludeCnt
+		    FROM cusdec830a1 a
+		    INNER JOIN cusdec830B1 b ON a.sn = b.sna1 AND a.rpt_no = b.rpt_no AND a.BRANCH = b.BRANCH AND a.CUS_PRG = b.CUS_PRG
+		    INNER JOIN CUSDEC830C1 c ON a.SN = c.SNA1 AND b.sn = c.SNB1 AND a.rpt_no = c.rpt_no AND a.BRANCH = c.BRANCH AND a.CUS_PRG = c.CUS_PRG
+		    LEFT JOIN cusdec830d1 e ON a.sn = e.sna1 AND b.sn = e.snb1 AND a.rpt_no = e.rpt_no AND a.branch = e.branch AND a.cus_prg = e.cus_prg AND c.Ran_No = e.Ran_No
+		    LEFT OUTER JOIN (SELECT DISTINCT CODE, cont FROM cdstd WHERE divi = '법령코드') f ON c.Mg_Cd = f.code
+		    WHERE 1=1
+		    <if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	       	AND a.Rpt_Seq = '00'
+	       	<choose>
+			    <when test="srch10 == '01'">
+			        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+			GROUP BY itemCode, b.hs, cmpnyNm, cont
+			HAVING COUNT(e.Exclude_DtlCD) > 0
+		) AS C
+		
+		UNION ALL
+		
+		SELECT itemCode, hs, goodsName, cmpnyNm, cont, includeCnt, excludeCnt
+		FROM (
+		    SELECT 
+		    	CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode,  
+		        CONCAT(SUBSTRING(b.HS, 1, 4), '.', SUBSTRING(b.HS, 5, 2), '-', SUBSTRING(b.HS, 7, 4)) AS hs, 
+		        GROUP_CONCAT(DISTINCT b.Std_Gnm ORDER BY b.Std_Gnm SEPARATOR ', ') AS goodsName, 
+		        a.exp_Firm AS cmpnyNm, 
+		        f.cont,
+		        0 AS excludeCnt,
+		        SUM(CASE WHEN d.law_nm IS NOT NULL then 1 ELSE 0 END) AS includeCnt
+		    FROM cusdec830a1 a 
+            INNER JOIN cusdec830b1 b ON a.sn = b.sna1 AND a.rpt_no = b.rpt_no AND a.branch = b.branch AND a.cus_prg = b.cus_prg
+            INNER JOIN cusdec830c1 c ON a.sn = c.sna1 AND b.sn  = c.snb1 AND a.rpt_no = c.rpt_no AND a.branch = c.branch AND a.cus_prg = c.cus_prg
+            LEFT JOIN cusdec830d1 d ON a.sn = d.sna1 AND b.sn = d.snb1 AND c.sn = d.snc1 AND a.rpt_no = d.rpt_no AND a.branch = d.branch AND a.cus_prg = d.cus_prg
+		    LEFT OUTER JOIN (SELECT DISTINCT CODE, cont FROM cdstd WHERE divi = '법령코드') f ON c.Mg_Cd = f.code
+		   	WHERE 1=1
+		   	AND a.Rpt_Seq = '00' 
+			<if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	       	<choose>
+			    <when test="srch10 == '01'">
+			        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+			GROUP BY itemCode, b.hs, cmpnyNm, cont
+			HAVING SUM(CASE WHEN d.law_nm IS NOT NULL then 1 ELSE 0 END) > 0
+		) AS D
+		ORDER BY itemCode, hs
+	</select>
+	
+	<select id="selectItemLawCdImpList" parameterType="searchVO" resultType="egovMap">
+		SELECT itemCode, hs, goodsName, cmpnyNm, cont, includeCnt, excludeCnt
+		FROM (
+		    SELECT
+		    	CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END AS itemCode, 
+		        CONCAT(SUBSTRING(b.HS, 1, 4), '.', SUBSTRING(b.HS, 5, 2), '-', SUBSTRING(b.HS, 7, 4)) AS hs, 
+		        GROUP_CONCAT(DISTINCT b.Std_GName1 ORDER BY b.Std_GName1 SEPARATOR ', ') AS goodsName, 
+		        a.Nab_Firm AS cmpnyNm, 
+		        f.cont,
+		        0 AS includeCnt,
+		        COUNT(e.Exclude_DtlCD) AS excludeCnt
+		    FROM cusdec929a1 a
+		    INNER JOIN cusdec929B1 b ON a.sn = b.sna1 AND a.rpt_no = b.rpt_no AND a.BRANCH = b.BRANCH AND a.CUS_PRG = b.CUS_PRG
+		    INNER JOIN CUSDEC929C1 c ON a.SN = c.SNA1 AND b.sn = c.SNB1 AND a.rpt_no = c.rpt_no AND a.BRANCH = c.BRANCH AND a.CUS_PRG = c.CUS_PRG
+		    LEFT JOIN cusdec929c4 e ON a.sn = e.sna1 AND b.sn = e.snb1 AND a.rpt_no = e.rpt_no AND a.branch = e.branch AND a.cus_prg = e.cus_prg AND c.Ran_No = e.Ran_No
+		    LEFT OUTER JOIN (SELECT DISTINCT CODE, cont FROM cdstd WHERE divi = '법령코드') f ON c.RG_code = f.code
+		    WHERE 1=1
+			<if test="list != null and list.size() > 0">
+	            AND a.nab_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	       	AND a.Rpt_Seq = '00' 
+	    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+	    	<choose>
+			    <when test="srch10 == '01'">
+			        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+	    	GROUP BY itemCode, b.hs, cmpnyNm, cont
+	    	HAVING COUNT(e.Exclude_DtlCD) > 0
+		) AS A
+			
+		UNION ALL
+			
+		SELECT itemCode, hs, goodsName, cmpnyNm, cont, includeCnt, excludeCnt
+		FROM (
+		    SELECT 
+		    	CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END AS itemCode, 
+		        CONCAT(SUBSTRING(b.HS, 1, 4), '.', SUBSTRING(b.HS, 5, 2), '-', SUBSTRING(b.HS, 7, 4)) AS hs, 
+		        GROUP_CONCAT(DISTINCT b.Std_GName1 ORDER BY b.Std_GName1 SEPARATOR ', ') AS goodsName, 
+		        a.Nab_Firm AS cmpnyNm, 
+		        f.cont,
+		        0 AS excludeCnt,
+		        (SELECT COUNT(*) FROM 
+		        	(SELECT a.rpt_no FROM cusdec929a1 a 
+		                INNER JOIN cusdec929b1 b ON a.sn = b.sna1 AND a.rpt_no = b.rpt_no AND a.branch = b.branch AND a.cus_prg = b.cus_prg
+		                INNER JOIN cusdec929c1 c ON a.sn = c.sna1 AND b.sn  = c.snb1 AND a.rpt_no = c.rpt_no AND a.branch = c.branch AND a.cus_prg = c.cus_prg
+		                LEFT JOIN cusdec929d1 d ON a.sn = d.sna1 AND b.sn = d.snb1 AND c.sn = d.snc1 AND a.rpt_no = d.rpt_no AND a.branch = d.branch AND a.cus_prg = d.cus_prg
+		                WHERE 1=1
+		                <if test="list != null and list.size() > 0">
+				            AND a.nab_sdno IN 
+				            <foreach item="id" collection="list" open="(" separator="," close=")">
+				                #{id}
+				            </foreach>
+				       	</if>
+				       	AND a.Rpt_Seq = '00' 
+				    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+				    	AND d.VIT_NO IS NOT NULL
+				    	<choose>
+						    <when test="srch10 == '01'">
+						        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+						    </when>
+						</choose>
+					) AS totalCnt
+           		) AS includeCnt
+    		FROM cusdec929a1 a
+    		INNER JOIN cusdec929B1 b ON a.sn = b.sna1 AND a.rpt_no = b.rpt_no AND a.BRANCH = b.BRANCH AND a.CUS_PRG = b.CUS_PRG
+    		INNER JOIN CUSDEC929C1 c ON a.SN = c.SNA1 AND b.sn = c.SNB1 AND a.rpt_no = c.rpt_no AND a.BRANCH = c.BRANCH AND a.CUS_PRG = c.CUS_PRG
+    		LEFT OUTER JOIN (SELECT DISTINCT CODE, cont FROM cdstd WHERE divi = '법령코드') f 
+        		ON c.RG_code = f.code
+   			WHERE 1=1
+   			AND a.Rpt_Seq = '00' 
+   			<if test="list != null and list.size() > 0">
+	            AND a.nab_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+	    	<choose>
+			    <when test="srch10 == '01'">
+			        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+			GROUP BY itemCode, b.hs, cmpnyNm, cont
+			HAVING includeCnt > 0
+		) AS B
+		ORDER BY itemCode, hs
+	</select>
+	
+	<select id="selectItemLawCdExpList" parameterType="searchVO" resultType="egovMap">
+		SELECT itemCode, hs, goodsName, cmpnyNm, cont, includeCnt, excludeCnt
+		FROM (
+		    SELECT 
+		    	CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode, 
+		        CONCAT(SUBSTRING(b.HS, 1, 4), '.', SUBSTRING(b.HS, 5, 2), '-', SUBSTRING(b.HS, 7, 4)) AS hs, 
+		        GROUP_CONCAT(DISTINCT b.Std_Gnm ORDER BY b.Std_Gnm SEPARATOR ', ') AS goodsName,  
+		        a.exp_Firm AS cmpnyNm, 
+		        f.cont,
+		        0 AS includeCnt,
+		        COUNT(e.Exclude_DtlCD) AS excludeCnt
+		    FROM cusdec830a1 a
+		    INNER JOIN cusdec830B1 b ON a.sn = b.sna1 AND a.rpt_no = b.rpt_no AND a.BRANCH = b.BRANCH AND a.CUS_PRG = b.CUS_PRG
+		    INNER JOIN CUSDEC830C1 c ON a.SN = c.SNA1 AND b.sn = c.SNB1 AND a.rpt_no = c.rpt_no AND a.BRANCH = c.BRANCH AND a.CUS_PRG = c.CUS_PRG
+		    LEFT JOIN cusdec830d1 e ON a.sn = e.sna1 AND b.sn = e.snb1 AND a.rpt_no = e.rpt_no AND a.branch = e.branch AND a.cus_prg = e.cus_prg AND c.Ran_No = e.Ran_No
+		    LEFT OUTER JOIN (SELECT DISTINCT CODE, cont FROM cdstd WHERE divi = '법령코드') f ON c.Mg_Cd = f.code
+		    WHERE 1=1
+		    <if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	       	AND a.Rpt_Seq = '00'
+	       	<choose>
+			    <when test="srch10 == '01'">
+			        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+			GROUP BY itemCode, b.hs, cmpnyNm, cont
+			HAVING COUNT(e.Exclude_DtlCD) > 0
+		) AS C
+		
+		UNION ALL
+		
+		SELECT itemCode, hs, goodsName, cmpnyNm, cont, includeCnt, excludeCnt
+		FROM (
+		    SELECT 
+		    	CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END AS itemCode,  
+		        CONCAT(SUBSTRING(b.HS, 1, 4), '.', SUBSTRING(b.HS, 5, 2), '-', SUBSTRING(b.HS, 7, 4)) AS hs, 
+		        GROUP_CONCAT(DISTINCT b.Std_Gnm ORDER BY b.Std_Gnm SEPARATOR ', ') AS goodsName, 
+		        a.exp_Firm AS cmpnyNm, 
+		        f.cont,
+		        0 AS excludeCnt,
+		        SUM(case when d.law_nm IS NOT NULL then 1 ELSE 0 END) AS includeCnt
+		    FROM cusdec830a1 a
+		    INNER JOIN cusdec830b1 b ON a.sn = b.sna1 AND a.rpt_no = b.rpt_no AND a.BRANCH = b.BRANCH AND a.CUS_PRG = b.CUS_PRG
+		    INNER JOIN cusdec830c1 c ON a.SN = c.SNA1 AND b.sn = c.SNB1 AND a.rpt_no = c.rpt_no AND a.BRANCH = c.BRANCH AND a.CUS_PRG = c.CUS_PRG
+		    INNER JOIN cusdec830d1 d ON a.sn = d.sna1 AND b.sn = d.snb1 AND c.sn = d.snc1 AND a.rpt_no = d.rpt_no AND a.branch = d.branch AND a.cus_prg = d.cus_prg
+		    LEFT OUTER JOIN (SELECT DISTINCT CODE, cont FROM cdstd WHERE divi = '법령코드') f ON c.Mg_Cd = f.code
+		   	WHERE 1=1
+		   	AND a.Rpt_Seq = '00' 
+			<if test="list != null and list.size() > 0">
+	            AND a.exp_sdno IN 
+	            <foreach item="id" collection="list" open="(" separator="," close=")">
+	                #{id}
+	            </foreach>
+	       	</if>
+	       	<choose>
+			    <when test="srch10 == '01'">
+			        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+			    </when>
+			</choose>
+			AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+			GROUP BY itemCode, b.hs, cmpnyNm, cont
+			HAVING includeCnt > 0
+		) AS D
+		ORDER BY itemCode, hs
+	</select>
+	
+	<select id="selectItemLawCdApprovalList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+	               SUBSTRING(a.rpt_no, 6, 2), '-', 
+	               SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+			c.ran_no,
+			c.Sil,
+			d.VIT_NM AS document,
+			d.VIT_NO AS approvalNo,
+			'' AS excludeCd,
+			'' AS excludeReason,
+			IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+		FROM cusdec929a1 a 
+		INNER JOIN cusdec929b1 b
+			ON a.sn = b.sna1
+			AND a.rpt_no = b.rpt_no
+			AND a.branch = b.branch
+			AND a.cus_prg = b.cus_prg
+		INNER JOIN cusdec929c1 c
+			ON a.sn = c.sna1
+			AND b.sn  = c.snb1
+			AND a.rpt_no = c.rpt_no
+			AND a.branch = c.branch
+			AND a.cus_prg = c.cus_prg
+		LEFT JOIN cusdec929d1 d
+			ON a.sn = d.sna1
+			AND b.sn  = d.snb1
+			AND c.sn = d.snc1
+			AND a.rpt_no = d.rpt_no
+			AND a.branch = d.branch
+			AND a.cus_prg = d.cus_prg
+		LEFT JOIN cusdec929c4 e
+			ON a.sn = e.sna1
+			AND b.sn  = e.snb1
+			AND a.rpt_no = e.rpt_no
+			AND a.branch = e.branch
+			AND a.cus_prg = e.cus_prg
+		LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+			ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+			WHERE 1=1
+		<if test="list != null and list.size() > 0">
+            AND a.nab_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00' 
+    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+    	AND d.VIT_NO IS NOT NULL
+    	<choose>
+		    <when test="srch10 == '01'">
+		        AND a.lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+		
+		UNION
+		
+		SELECT
+			CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+	               SUBSTRING(a.rpt_no, 6, 2), '-', 
+	               SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+			c.ran_no,
+			c.Sil,
+			d.pub_nm AS document,
+			d.VIT_NO AS approvalNo,
+			'' AS excludeCd,
+			'' AS excludeReason,
+			IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+		FROM cusdec830a1 a 
+		INNER JOIN cusdec830b1 b
+			ON a.sn = b.sna1
+			AND a.rpt_no = b.rpt_no
+			AND a.branch = b.branch
+			AND a.cus_prg = b.cus_prg
+		INNER JOIN cusdec830c1 c
+			ON a.sn = c.sna1
+			AND b.sn  = c.snb1
+			AND a.rpt_no = c.rpt_no
+			AND a.branch = c.branch
+			AND a.cus_prg = c.cus_prg
+		LEFT JOIN cusdec830d1 d
+			ON a.sn = d.sna1
+			AND b.sn  = d.snb1
+			AND c.sn = d.snc1
+			AND a.rpt_no = d.rpt_no
+			AND a.branch = d.branch
+			AND a.cus_prg = d.cus_prg
+		LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+			ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+		WHERE 1=1
+		<if test="list != null and list.size() > 0">
+            AND a.exp_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+   		AND a.Rpt_Seq = '00' 
+		AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+		AND d.VIT_NO IS NOT NULL
+		<choose>
+		    <when test="srch10 == '01'">
+		        AND a.exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+	</select>
+	
+	<select id="selectItemLawCdApprovalImpList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+	               SUBSTRING(a.rpt_no, 6, 2), '-', 
+	               SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+			c.ran_no,
+			c.Sil,
+			d.VIT_NM AS document,
+			d.VIT_NO AS approvalNo,
+			'' AS excludeCd,
+			'' AS excludeReason,
+			IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+		FROM cusdec929a1 a 
+		INNER JOIN cusdec929b1 b
+			ON a.sn = b.sna1
+			AND a.rpt_no = b.rpt_no
+			AND a.branch = b.branch
+			AND a.cus_prg = b.cus_prg
+		INNER JOIN cusdec929c1 c
+			ON a.sn = c.sna1
+			AND b.sn  = c.snb1
+			AND a.rpt_no = c.rpt_no
+			AND a.branch = c.branch
+			AND a.cus_prg = c.cus_prg
+		LEFT JOIN cusdec929d1 d
+			ON a.sn = d.sna1
+			AND b.sn  = d.snb1
+			AND c.sn = d.snc1
+			AND a.rpt_no = d.rpt_no
+			AND a.branch = d.branch
+			AND a.cus_prg = d.cus_prg
+		LEFT JOIN cusdec929c4 e
+			ON a.sn = e.sna1
+			AND b.sn  = e.snb1
+			AND a.rpt_no = e.rpt_no
+			AND a.branch = e.branch
+			AND a.cus_prg = e.cus_prg
+		LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+			ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+			WHERE 1=1
+		<if test="list != null and list.size() > 0">
+            AND a.nab_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00' 
+    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+    	AND d.VIT_NO IS NOT NULL
+    	<choose>
+		    <when test="srch10 == '01'">
+		        AND a.lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+	</select>
+	
+	<select id="selectItemLawCdApprovalExpList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+	               SUBSTRING(a.rpt_no, 6, 2), '-', 
+	               SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+			c.ran_no,
+			c.Sil,
+			d.pub_nm AS document,
+			d.VIT_NO AS approvalNo,
+			'' AS excludeCd,
+			'' AS excludeReason,
+			IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+		FROM cusdec830a1 a 
+		INNER JOIN cusdec830b1 b
+			ON a.sn = b.sna1
+			AND a.rpt_no = b.rpt_no
+			AND a.branch = b.branch
+			AND a.cus_prg = b.cus_prg
+		INNER JOIN cusdec830c1 c
+			ON a.sn = c.sna1
+			AND b.sn  = c.snb1
+			AND a.rpt_no = c.rpt_no
+			AND a.branch = c.branch
+			AND a.cus_prg = c.cus_prg
+		LEFT JOIN cusdec830d1 d
+			ON a.sn = d.sna1
+			AND b.sn  = d.snb1
+			AND c.sn = d.snc1
+			AND a.rpt_no = d.rpt_no
+			AND a.branch = d.branch
+			AND a.cus_prg = d.cus_prg
+		LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+			ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+		WHERE 1=1
+		<if test="list != null and list.size() > 0">
+            AND a.exp_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+   		AND a.Rpt_Seq = '00' 
+		AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+		AND d.VIT_NO IS NOT NULL
+		<choose>
+		    <when test="srch10 == '01'">
+		        AND a.exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+	</select>
+	
+	<select id="selectItemLawCdExcludeList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+	               SUBSTRING(a.rpt_no, 6, 2), '-', 
+	               SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+			c.ran_no,
+			c.Sil,
+			'' AS document,
+			'' AS approvalNo,
+			e.Exclude_DtlCD AS excludeCd,
+			e.Exclude_Txt1 AS excludeReason,
+			IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+		FROM cusdec929a1 a 
+		INNER JOIN cusdec929b1 b
+			ON a.sn = b.sna1
+			AND a.rpt_no = b.rpt_no
+			AND a.branch = b.branch
+			AND a.cus_prg = b.cus_prg
+		INNER JOIN cusdec929c1 c
+			ON a.sn = c.sna1
+			AND b.sn  = c.snb1
+			AND a.rpt_no = c.rpt_no
+			AND a.branch = c.branch
+			AND a.cus_prg = c.cus_prg
+		LEFT JOIN cusdec929c4 e
+			ON a.sn = e.sna1
+			AND b.sn  = e.snb1
+			AND a.rpt_no = e.rpt_no
+			AND a.branch = e.branch
+			AND a.cus_prg = e.cus_prg
+			AND c.Ran_No = e.Ran_No
+		LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+			ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+		WHERE 1=1
+		<if test="list != null and list.size() > 0">
+            AND a.nab_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00' 
+    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+    	<choose>
+		    <when test="srch10 == '01'">
+		        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+		AND e.Exclude_DtlCD IS NOT NULL
+	
+		UNION
+		
+		SELECT
+			CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+	               SUBSTRING(a.rpt_no, 6, 2), '-', 
+	               SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+			c.ran_no,
+			c.Sil,
+			'' AS document,
+			'' AS approvalNo,
+			e.Exclude_DtlCD AS excludeCd,
+			e.reason AS excludeReason,
+			IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+		FROM cusdec830a1 a 
+		INNER JOIN cusdec830b1 b
+			ON a.sn = b.sna1
+			AND a.rpt_no = b.rpt_no
+			AND a.branch = b.branch
+			AND a.cus_prg = b.cus_prg
+		INNER JOIN cusdec830c1 c
+			ON a.sn = c.sna1
+			AND b.sn  = c.snb1
+			AND a.rpt_no = c.rpt_no
+			AND a.branch = c.branch
+			AND a.cus_prg = c.cus_prg
+		LEFT JOIN cusdec830d1 e
+			ON a.sn = e.sna1
+			AND b.sn  = e.snb1
+			AND a.rpt_no = e.rpt_no
+			AND a.branch = e.branch
+			AND a.cus_prg = e.cus_prg
+			AND c.Ran_No = e.Ran_No
+			AND c.sn = e.snc1
+		LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+			ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+		WHERE 1=1
+		<if test="list != null and list.size() > 0">
+	        AND a.exp_sdno IN 
+	        <foreach item="id" collection="list" open="(" separator="," close=")">
+	            #{id}
+	        </foreach>
+	   	</if>
+	  	AND a.Rpt_Seq = '00' 
+		AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+		<choose>
+		    <when test="srch10 == '01'">
+		        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+		AND e.Exclude_DtlCD IS NOT NULL
+	</select>
+	
+	<select id="selectItemLawCdExcludeImpList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+	               SUBSTRING(a.rpt_no, 6, 2), '-', 
+	               SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+			c.ran_no,
+			c.Sil,
+			'' AS document,
+			'' AS approvalNo,
+			e.Exclude_DtlCD AS excludeCd,
+			e.Exclude_Txt1 AS excludeReason,
+			IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+		FROM cusdec929a1 a 
+		INNER JOIN cusdec929b1 b
+			ON a.sn = b.sna1
+			AND a.rpt_no = b.rpt_no
+			AND a.branch = b.branch
+			AND a.cus_prg = b.cus_prg
+		INNER JOIN cusdec929c1 c
+			ON a.sn = c.sna1
+			AND b.sn  = c.snb1
+			AND a.rpt_no = c.rpt_no
+			AND a.branch = c.branch
+			AND a.cus_prg = c.cus_prg
+		LEFT JOIN cusdec929c4 e
+			ON a.sn = e.sna1
+			AND b.sn  = e.snb1
+			AND a.rpt_no = e.rpt_no
+			AND a.branch = e.branch
+			AND a.cus_prg = e.cus_prg
+			AND c.Ran_No = e.Ran_No
+		LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+			ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+		WHERE 1=1
+		<if test="list != null and list.size() > 0">
+            AND a.nab_sdno IN 
+            <foreach item="id" collection="list" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+       	</if>
+       	AND a.Rpt_Seq = '00' 
+    	AND (CASE WHEN c.RG_code = '' THEN c.IMP_GName1 ELSE c.RG_code END) = #{srch1}
+    	<choose>
+		    <when test="srch10 == '01'">
+		        AND lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+		AND e.Exclude_DtlCD IS NOT NULL
+	</select>
+	
+	<select id="selectItemLawCdExcludeExpList" parameterType="searchVO" resultType="egovMap">
+		SELECT
+			CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', 
+	               SUBSTRING(a.rpt_no, 6, 2), '-', 
+	               SUBSTRING(a.rpt_no, 8, 7)) AS rptNo,
+			c.ran_no,
+			c.Sil,
+			'' AS document,
+			'' AS approvalNo,
+			e.Exclude_DtlCD AS excludeCd,
+			e.reason AS excludeReason,
+			IFNULL(I.cmmn_nm,'타관세법인') AS reporter
+		FROM cusdec830a1 a 
+		INNER JOIN cusdec830b1 b
+			ON a.sn = b.sna1
+			AND a.rpt_no = b.rpt_no
+			AND a.branch = b.branch
+			AND a.cus_prg = b.cus_prg
+		INNER JOIN cusdec830c1 c
+			ON a.sn = c.sna1
+			AND b.sn  = c.snb1
+			AND a.rpt_no = c.rpt_no
+			AND a.branch = c.branch
+			AND a.cus_prg = c.cus_prg
+		LEFT JOIN cusdec830d1 e
+			ON a.sn = e.sna1
+			AND b.sn  = e.snb1
+			AND a.rpt_no = e.rpt_no
+			AND a.branch = e.branch
+			AND a.cus_prg = e.cus_prg
+			AND c.Ran_No = e.Ran_No
+			AND c.sn = e.snc1
+		LEFT JOIN (select cmmn_cd, cmmn_nm from cmmn_cd where grp_cd = 'IMPSHRPTCD') I
+			ON I.cmmn_cd = SUBSTRING(a.rpt_no, 1, 5)
+		WHERE 1=1
+		<if test="list != null and list.size() > 0">
+	        AND a.exp_sdno IN 
+	        <foreach item="id" collection="list" open="(" separator="," close=")">
+	            #{id}
+	        </foreach>
+	   	</if>
+	  	AND a.Rpt_Seq = '00' 
+		AND (CASE WHEN c.Mg_Cd = '' THEN c.Gnm1 ELSE c.Mg_Cd END) = #{srch1}
+		<choose>
+		    <when test="srch10 == '01'">
+		        AND exp_lis_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
+		    </when>
+		</choose>
+		AND e.Exclude_DtlCD IS NOT NULL
+	</select>
+</mapper>

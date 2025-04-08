@@ -1,0 +1,101 @@
+package egovframework.pf.item.service;
+
+import java.util.List;
+import java.util.Map;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+
+public interface pfItemService {
+
+	List<?> selectItemViewList(SearchVO vo) throws Exception;
+	
+	int selectItemViewListCnt(SearchVO vo) throws Exception;
+	
+	List<?> selectItemViewImpList(SearchVO vo) throws Exception;
+	
+	int selectItemViewimportListCnt(SearchVO vo) throws Exception;
+	
+	List<?> selectItemViewExpList(SearchVO vo) throws Exception;
+	
+	int selectItemViewExportListCnt(SearchVO vo) throws Exception;
+	
+	List<?> selectDuplicationItemViewList(SearchVO vo)throws Exception;
+	
+	int selectDuplicationItemViewListCnt(SearchVO vo)throws Exception;
+	
+	List<?> selectDuplicationItemViewImpList(SearchVO vo)throws Exception;
+	
+	int selectDuplicationItemViewImpListCnt(SearchVO vo)throws Exception;
+	
+	List<?> selectDuplicationItemViewExpList(SearchVO vo)throws Exception;
+	
+	int selectDuplicationItemViewExpListCnt(SearchVO vo)throws Exception;
+	
+	List<?> selectItemCodeChkList(SearchVO vo) throws Exception;
+
+	void insertItemChkedList(ItemCheckedVO ivo) throws Exception;
+
+	List<?> selectItemCodeMemoList(SearchVO vo) throws Exception;
+
+	void updateItemMemoList(ItemCheckedVO ivo) throws Exception;
+
+	void deleteItemMemoList(ItemCheckedVO ivo) throws Exception;
+
+	List<?> selectItemChkDetailList(SearchVO vo) throws Exception;
+	
+	void deleteItemChkDetailList(ItemCheckedVO ivo) throws Exception;
+	
+	List<?> selectItemHsCodeDiffList(SearchVO vo) throws Exception;
+	
+	List<?> selectItemHsCodeDiffSubList(SearchVO subVo) throws Exception;
+	
+	List<?> selectItemHsCodeDiffImpList(SearchVO vo) throws Exception;
+	
+	List<?> selectItemHsCodeDiffImpSubList(SearchVO subVo) throws Exception;
+	
+	List<?> selectItemHsCodeDiffExpList(SearchVO vo) throws Exception;
+	
+	List<?> selectItemHsCodeDiffExpSubList(SearchVO subVo) throws Exception;
+	
+	List<?> selectItemPriceList(SearchVO vo) throws Exception;
+	
+	List<?> selectItemPriceImpList(SearchVO vo) throws Exception;
+	
+	List<?> selectItemPriceExpList(SearchVO vo) throws Exception;
+
+	List<?> selectItemOutOfRateList(SearchVO vo) throws Exception;
+	
+	List<?> selectItemOutOfRateImpList(SearchVO vo) throws Exception;
+	
+	List<?> selectItemOutOfRateExpList(SearchVO vo) throws Exception;
+	
+	List<?> selectItemPriceChart(SearchVO vo) throws Exception;
+	
+	List<?> selectItemRptNoList(SearchVO vo) throws Exception;
+	
+	List<?> selectItemRptNoImpList(SearchVO vo) throws Exception;
+	
+	List<?> selectItemRptNoExpList(SearchVO vo) throws Exception;
+
+	List<?> selectItemLawCdList(SearchVO vo) throws Exception;
+
+	List<?> selectItemLawCdApprovalList(SearchVO subVo) throws Exception;
+
+	List<?> selectItemLawCdExcludeList(SearchVO subVo) throws Exception;
+
+	List<?> selectItemLawCdImpList(SearchVO vo) throws Exception;
+
+	List<?> selectItemLawCdApprovalImpList(SearchVO subVo) throws Exception;
+
+	List<?> selectItemLawCdExcludeImpList(SearchVO subVo) throws Exception;
+
+	List<?> selectItemLawCdExpList(SearchVO vo) throws Exception;
+
+	List<?> selectItemLawCdApprovalExpList(SearchVO subVo) throws Exception;
+
+	List<?> selectItemLawCdExcludeExpList(SearchVO subVo) throws Exception;
+
+	List<?> selectItemChkMemoList(SearchVO vo) throws Exception;
+	
+}

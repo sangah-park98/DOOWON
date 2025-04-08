@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.pf.api.service.impl.ApiShippingMapper">
+
+	<update id="updateOrderId" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			order_id = #{orderId}
+		WHERE rpt_no = #{rptNo}
+		AND bl_no = #{blNo}
+		AND ct_no = #{ctNo}
+	</update>
+	
+	<update id="stateChange" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			order_state = #{orderState}
+		WHERE order_id = #{orderId}
+	</update>
+	
+	<update id="arrangeAlloc" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			order_state = #{orderState},
+			fixed_charge = #{fixedCharge},
+			car_no = #{carNo},
+			car_nm = #{carNm},
+			car_phn_no = #{carPhnNo}
+		WHERE order_id = #{orderId}
+	</update>
+	
+	<update id="allocCancel" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			reg_id = #{regId}
+		WHERE order_id = #{orderId}
+	</update>
+	
+	<update id="orderCancel" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		UPDATE shipping_order SET
+			reg_id = #{regId}
+		WHERE order_id = #{orderId}
+	</update>
+	
+	<insert id="stateOrderAdd" parameterType="egovframework.pf.shipping.service.ShippingOrderVO">
+		INSERT INTO
+		shipping_order (
+			cmpny_nm,
+			corp_no,
+			bl_no, 
+			rpt_no,
+			order_id,
+			recv_nm,
+			arrive_addr,
+			arrive_dt,
+			fixed_charge,
+			reg_dt
+		)
+		VALUES(
+			#{cmpnyNm},
+			#{corpNo},
+			#{blNo},
+			#{rptNo},
+			#{orderId},
+			#{recvNm},
+			#{arriveAddr},
+			#{arriveDt},
+			#{fixedCharge},
+			DATE_FORMAT(NOW(), '%Y%m%d')
+		)
+	</insert>
+	
+</mapper>

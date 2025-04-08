@@ -1,0 +1,25 @@
+package egovframework.pf.news.service.impl;
+
+import java.util.List;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.notice.service.saveNoticeVO;
+import egovframework.rte.psl.dataaccess.mapper.Mapper;
+
+@Mapper("pfNewsMapper")
+public interface pfNewsMapper {
+
+	List<?> selectNewsViewList(SearchVO vo) throws Exception;
+
+	int selectNewsViewtotCnt(SearchVO vo) throws Exception;
+
+	List<?> selectNewsModalViewList(SearchVO vo) throws Exception;
+	
+	void deleteNewsViewList(SearchVO vo) throws Exception;
+
+	void updateNewsActive(SearchVO vo) throws Exception;
+
+	List<?> selectNewsActiveStatus(SearchVO vo) throws Exception;
+
+	List<?> selectNewsViewAllList(SearchVO vo) throws Exception;
+}

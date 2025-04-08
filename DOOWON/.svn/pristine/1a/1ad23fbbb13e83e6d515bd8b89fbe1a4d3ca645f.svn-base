@@ -1,0 +1,121 @@
+package egovframework.pf.rpt.service;
+
+import java.util.List;
+
+import egovframework.pf.cmmn.service.SearchVO;
+
+/**
+ * @Class Name : AnalysisService.java
+ * @Description : AnalysisService Class
+ * @Modification Information
+ * @
+ * @         수정일            		       수정자           			수정내용
+ * @    ----------------    ------------    ---------------------------
+ * @       2024.04.15         	이재성         			최초 생성
+ *
+ * @author 이재성
+ * @since 2024.04.15
+ * @version 1.0
+ * @see
+ *
+ *  Copyright (C) by KordSystems All right reserved.
+ */
+
+public interface AnalysisService {
+	
+	// 수입실적
+	List<?> selectAnalysis1List(SearchVO vo)throws Exception;
+	
+	// 수입실적 차트
+	List<?> selectAnalysis1Chart(SearchVO vo)throws Exception;
+	
+	// 수출실적
+	List<?> selectAnalysis2List(SearchVO vo)throws Exception;
+	
+	// 수출실적 차트
+	List<?> selectAnalysis2Chart(SearchVO vo)throws Exception;
+	
+	// 해외거래처별 수입실적
+	List<?> selectAnalysis3List(SearchVO vo)throws Exception;
+	
+	// 해외거래처별 수입실적 갯수
+	int selectAnalysis3ListCnt(SearchVO vo)throws Exception;
+	
+	// 해외거래처별 수출실적
+	List<?> selectAnalysis4List(SearchVO vo)throws Exception;
+	
+	// 해외거래처별 수출실적 갯수
+	int selectAnalysis4ListCnt(SearchVO vo)throws Exception;
+	
+	// 운임 비교
+	List<?> selectAnalysis5List(SearchVO vo)throws Exception;
+	
+	// 운임 비교 갯수
+	int selectAnalysis5ListCnt(SearchVO vo)throws Exception;
+	
+	// 운임 비교 서브 리스트
+	List<?> selectAnalysis5SubList(SearchVO vo)throws Exception;
+	
+	// 보험료 비교
+	List<?> selectAnalysis6List(SearchVO vo)throws Exception;
+	
+	// 보험료비교 갯수
+	int selectAnalysis6ListCnt(SearchVO vo)throws Exception;
+	
+	// 보험료 비교 서브 리스트
+	List<?> selectAnalysis6SubList(SearchVO vo)throws Exception; 
+	
+	// 외환신고대상 수출
+	List<?> selectAnalysis7List(SearchVO vo)throws Exception;
+	
+	// 외환신고대상 수출 갯수
+	int selectAnalysis7ListCnt(SearchVO vo)throws Exception;
+	
+	// 수입물품 단가비교
+	List<?> selectCost1List(SearchVO vo)throws Exception;
+	
+	// 수입물품 단가비교 갯수
+	int selectCost1ListCnt(SearchVO vo)throws Exception;
+	
+	// 수입물품 단가비교 차트
+	List<?> selectCost1Chart(SearchVO vo)throws Exception;
+	
+	// 유무상 수입건 과세가격 비교
+	List<?> selectCost2List(SearchVO vo)throws Exception;
+	
+	// 유무상 수입건 과세가격 비교 갯수
+	int selectCost2ListCnt(SearchVO vo)throws Exception;
+	
+	// 유무상 수입건 과세가격 비교 차트
+	List<?> selectCost2Chart(SearchVO vo)throws Exception;
+	
+	// 동일거래, 결제통화 변경점검
+	List<?> selectCost3List(SearchVO vo)throws Exception;
+	
+	// 동일거래, 결제통화 변경점검 갯수
+	int selectCost3ListCnt(SearchVO vo)throws Exception;
+	
+	// 동일자재코드 품목분류 상이점검
+	List<?> selectEtc1List(SearchVO vo)throws Exception;
+	
+	// 동일자재코드 품목분류, 세율 상이점검 갯수
+	int selectEtc1ListCnt(SearchVO vo)throws Exception;
+	
+	// 동일자재코드 관세구분 상이점검
+	List<?> selectEtc2List(SearchVO vo)throws Exception;
+	
+	// 동일자재코드 관세구분 상이점검 갯수
+	int selectEtc2ListCnt(SearchVO vo)throws Exception;
+
+	// FTA 적정성(직접운송원칙)
+	List<?> selectEtc3List(SearchVO vo)throws Exception;
+	
+	// FTA 적정성(직접운송원칙) 갯수
+	int selectEtc3ListCnt(SearchVO vo)throws Exception;
+	
+	// FTA 적용누락
+	List<?> selectEtc4List(SearchVO vo)throws Exception;
+	
+	// FTA 적용누락 갯수
+	int selectEtc4ListCnt(SearchVO vo)throws Exception;		
+}

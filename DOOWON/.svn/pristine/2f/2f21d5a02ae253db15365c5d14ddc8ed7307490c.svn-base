@@ -1,0 +1,589 @@
+package egovframework.pf.util;
+
+import java.io.PrintWriter;
+import java.net.URLEncoder;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFDataFormat;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.web.multipart.MultipartFile;
+
+import egovframework.pf.cmmn.service.SearchVO;
+import egovframework.pf.cmmn.service.UserSessionVO;
+import egovframework.rte.psl.dataaccess.util.EgovMap;
+
+public class ExcelUtil {
+	
+	// 엑셀파일 생성
+	public static void generateExcelFile(XSSFWorkbook wb, String fileName, HttpServletResponse response) throws Exception {
+		boolean resultType = true;
+	
+		Date date = new Date();
+		SimpleDateFormat sdf= new SimpleDateFormat("yyyyMMdd", Locale.KOREA);
+		String fileNameDt = sdf.format(date);
+	
+		fileName = fileName+" "+fileNameDt+".xlsx";
+		fileName = URLEncoder.encode(fileName, "UTF-8");
+		fileName = fileName.replaceAll("\\+", "%20");
+		try {
+			//타입 및 파일명 지정
+			response.setContentType("application/vnd.ms-excel");
+			response.setHeader("Content-disposition", "attachment; filename="+fileName);
+			OutputStream outputStream = response.getOutputStream();
+	        wb.write(outputStream);
+	        outputStream.flush();
+		} catch(Exception e) {
+			resultType = false;
+	        e.printStackTrace(); // 예외 발생 시 로그 남기기
+		} finally {
+			if (!resultType) {
+				response.reset();
+				response.setCharacterEncoding("UTF-8");
+				response.setContentType("text/html;charset=UTF-8");
+	
+				 try (PrintWriter outC = response.getWriter()) {
+		                outC.println("<script>alert('파일 생성에 문제가 발생했습니다.'); history.back();</script>");
+		                outC.flush();
+		            } catch (IOException ex) {
+		                ex.printStackTrace(); // 예외 발생 시 로그 남기기
+		            }
+			}
+	
+			if (wb != null) {
+	            try {
+	                wb.close(); // 자원 정리
+	            } catch (IOException ex) {
+	                ex.printStackTrace(); // 예외 발생 시 로그 남기기
+	            }
+	        }
+		}
+	}
+	
+	 // 셀 스타일 생성 메서드 (재사용)
+    private static XSSFCellStyle createTitleCellStyle(XSSFWorkbook wb) {
+        XSSFCellStyle style = wb.createCellStyle();
+        XSSFFont font = wb.createFont();
+
+        font.setFontHeightInPoints((short) 18);
+        font.setFontName("맑은 고딕");
+        font.setBold(true);
+        font.setUnderline(XSSFFont.U_SINGLE);
+
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setFont(font);
+
+        return style;
+    }
+    
+    // 헤더 셀 스타일 생성 메서드 (재사용)
+    private static XSSFCellStyle createHeaderCellStyle(XSSFWorkbook wb) {
+        XSSFCellStyle style = wb.createCellStyle();
+        XSSFFont font = wb.createFont();
+
+        font.setFontHeightInPoints((short) 10);
+        font.setFontName("맑은 고딕");
+        font.setBold(true);
+
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setFont(font);
+
+        return style;
+    }
+
+    // 데이터 셀 스타일 생성 메서드 (재사용)
+    private static XSSFCellStyle createDataCellStyle(XSSFWorkbook wb, HorizontalAlignment alignment) {
+        XSSFCellStyle style = wb.createCellStyle();
+        XSSFFont font = wb.createFont();
+
+        font.setFontHeightInPoints((short) 10);
+        font.setFontName("맑은 고딕");
+
+        style.setAlignment(alignment);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setFont(font);
+
+        return style;
+    }
+	
+	// sheet 생성 및 메인 타이틀 생성
+	public static XSSFSheet createSheetWithTitleRow(XSSFWorkbook wb, String sheetName, int colSize) {
+		sheetName = sheetName.replaceAll("_", " ");
+        XSSFSheet sheet = wb.createSheet(sheetName);
+        XSSFRow row = sheet.createRow(0);
+
+        XSSFCell cell = row.createCell(0);
+        XSSFCellStyle style = createTitleCellStyle(wb);
+
+        cell.setCellStyle(style);
+        cell.setCellValue(sheetName);
+
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, colSize));
+	   
+		return sheet;
+	}
+	
+	// main title 하단에 summaryContent 생성
+	public static XSSFSheet createSummaryCont(XSSFSheet sheet, ArrayList<String> conts) {
+		sheet.createRow(sheet.getLastRowNum() +1); // 서머리 콘텐츠 상단에 빈줄 삽입
+		
+		// 오늘 날짜 포맷 설정
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String currentDate = sdf.format(new Date());
+
+		for(String cont : conts) {
+			XSSFRow row = sheet.createRow(sheet.getLastRowNum() +1);
+			XSSFCell cell = row.createCell(0);
+		   
+			cell.setCellValue("출력일 : " + currentDate);
+		}
+	   
+		return sheet;
+	};
+    
+	// summaryContent 하단에 MainTable생성 
+	public static XSSFSheet createMainTable(XSSFSheet sheet, List<?> resultList, SearchVO vo) {
+        XSSFWorkbook wb = sheet.getWorkbook();
+        XSSFRow row = sheet.createRow(sheet.getLastRowNum() + 1); // 메인 테이블 상단에 빈줄 삽입
+        XSSFCell cell = null;
+        XSSFCellStyle headerStyle = createHeaderCellStyle(wb);
+        XSSFCellStyle dataStyleCenter = createDataCellStyle(wb, HorizontalAlignment.CENTER);
+        XSSFCellStyle dataStyleLeft = createDataCellStyle(wb, HorizontalAlignment.LEFT);
+        XSSFCellStyle dataStyleRight = createDataCellStyle(wb, HorizontalAlignment.RIGHT);
+        XSSFDataFormat df = wb.createDataFormat();
+
+        // 헤더부
+        for (String str : vo.getExTit().split("\\|\\|\\|")) {
+            String[] header = str.split("\\|\\|");
+            row = sheet.createRow(sheet.getLastRowNum() + 1);
+            row.setHeight((short) 400);
+
+            XSSFCell firstCell = row.createCell(0);
+
+            firstCell.setCellStyle(headerStyle);
+
+            for (String headerOptions : header) {
+                String[] valueAndOption = headerOptions.split("\\|");
+                valueAndOption[1] = "".equals(valueAndOption[1]) ? "0" : valueAndOption[1];
+
+                cell = row.createCell(row.getLastCellNum());
+
+                cell.setCellStyle(headerStyle);
+                cell.setCellValue("null".equals(valueAndOption[0]) ? "" : valueAndOption[0]);
+                sheet.setColumnWidth(cell.getColumnIndex(), 5000);
+
+                int mergeCnt = 0;
+
+                if (!"null".equals(valueAndOption[1])) {
+                    mergeCnt = Integer.parseInt(valueAndOption[1]);
+                }
+
+                if (mergeCnt > 1) {
+                    int startIdx = cell.getColumnIndex();
+
+                    for (int i = 0; i < (mergeCnt - 1); i++) {
+                        cell = row.createCell(row.getLastCellNum());
+                        cell.setCellStyle(headerStyle);
+                    }
+
+                    sheet.addMergedRegion(new CellRangeAddress(row.getRowNum(), row.getRowNum(), startIdx, cell.getColumnIndex()));
+                }
+            }
+        }
+
+        // 데이터부
+        if (resultList == null || resultList.size() < 1) {
+            row = sheet.createRow(sheet.getLastRowNum() + 1);
+            cell = row.createCell(0);
+            cell.setCellValue("조회된 데이터가 없습니다.");
+        }
+
+        String[] colOptios = vo.getExCol().split("\\|\\|");
+        boolean completeSetWidth = false;
+        int rowNum = 1;
+
+        for (Object result : resultList) {
+            EgovMap map = (EgovMap) result;
+            row = sheet.createRow(sheet.getLastRowNum() + 1);
+
+            XSSFCell firstCell = row.createCell(0);
+            firstCell.setCellStyle(dataStyleCenter);
+            firstCell.setCellValue(String.valueOf(rowNum));
+
+            sheet.setColumnWidth(0, 1200);
+
+            for (String options : colOptios) {
+                String[] attrs = options.split("\\|");
+                cell = row.createCell(row.getLastCellNum());
+
+                switch (attrs[1]) {
+                    case "htCenter":
+                        cell.setCellStyle(dataStyleCenter);
+                        cell.setCellValue(map.containsKey(attrs[0]) ? String.valueOf(map.get(attrs[0])) : "");
+                        break;
+                    case "htLeft":
+                        cell.setCellStyle(dataStyleLeft);
+                        cell.setCellValue(map.containsKey(attrs[0]) ? String.valueOf(map.get(attrs[0])) : "");
+                        break;
+                    case "htRight":
+                        String rightVal = map.containsKey(attrs[0]) ? String.valueOf(map.get(attrs[0])) : "";
+                        Double dVal = (double) 0;
+
+                        if (rightVal.contains("%")) {
+                            rightVal = rightVal.replaceAll("%", "");
+                            rightVal = StringUtils.isNotEmpty(rightVal) ? rightVal : "0";
+                            cell.setCellStyle(dataStyleRight);
+                            cell.setCellType(CellType.NUMERIC);
+                            cell.setCellValue(Double.parseDouble(rightVal) / 100);
+                        } else {
+                            rightVal = rightVal.replaceAll(",", "");
+                            dVal = Double.parseDouble(StringUtils.isNotEmpty(rightVal) ? rightVal : "0");
+                            cell.setCellStyle(dataStyleRight);
+                            cell.setCellType(CellType.NUMERIC);
+                            cell.setCellValue(dVal);
+                        }
+                        break;
+                }
+
+                if (!completeSetWidth) {
+                    if ("htCenter".equals(attrs[1])) {
+                        sheet.setColumnWidth(cell.getColumnIndex(), 4000);
+                    } else if ("htLeft".equals(attrs[1])) {
+                        sheet.setColumnWidth(cell.getColumnIndex(), 8000);
+                    } else if ("htRight".equals(attrs[1])) {
+                        sheet.setColumnWidth(cell.getColumnIndex(), 5000);
+                    }
+                }
+            }
+
+            completeSetWidth = true;
+            rowNum++;
+        }
+
+        return sheet;
+    }
+	
+	// 데이터부 하단에 합계표시
+	// 0,1번째 셀을 제외한 모든컴럼 표시
+	public static XSSFSheet createSummary(XSSFSheet sheet) {
+		XSSFWorkbook wb = sheet.getWorkbook();
+		XSSFRow row = sheet.createRow(sheet.getLastRowNum() +1);
+		XSSFCellStyle style = wb.createCellStyle();
+		XSSFFont font = wb.createFont();
+		XSSFDataFormat df = wb.createDataFormat();
+		
+		style = wb.createCellStyle();
+		font = wb.createFont();
+		
+		font.setFontHeightInPoints((short)9);
+		font.setFontName("맑은 고딕");
+		font.setBold(true);
+       
+		style.setFont(font);
+		style.setAlignment(HorizontalAlignment.CENTER); 
+		style.setBorderTop(BorderStyle.THIN);
+		style.setBorderLeft(BorderStyle.THIN);
+		style.setBorderRight(BorderStyle.THIN);
+		style.setBorderBottom(BorderStyle.THIN);
+		
+		XSSFCell cell = row.createCell(0);
+		cell.setCellStyle(style);
+		cell.setCellValue("합계");
+		
+		cell = row.createCell(1);
+		cell.setCellStyle(style);
+		
+		sheet.addMergedRegion(new CellRangeAddress(row.getRowNum(), row.getRowNum(), 0, 1));
+		
+		XSSFCell tempCell = null;
+		int startRowNum = 0;
+		
+		for(int i=sheet.getLastRowNum()-1; i > 0; i--) {
+			tempCell = sheet.getRow(i).getCell(0);
+			
+			if("1".equals(tempCell.getStringCellValue())) {
+				startRowNum = i;
+				break;
+			}
+		}
+		
+		style = wb.createCellStyle();
+		font = wb.createFont();
+		
+		font.setFontHeightInPoints((short)9);
+		font.setFontName("맑은 고딕");
+		font.setBold(true);
+       
+		style.setFont(font);
+		style.setAlignment(HorizontalAlignment.RIGHT); 
+		style.setBorderTop(BorderStyle.THIN);
+		style.setBorderLeft(BorderStyle.THIN);
+		style.setBorderRight(BorderStyle.THIN);
+		style.setBorderBottom(BorderStyle.THIN);
+		style.setDataFormat(df.getFormat("#,##0"));
+		
+		for(int i=2; i < sheet.getRow(sheet.getLastRowNum()-1).getLastCellNum(); i++) {
+			XSSFCell formulaCell = row.createCell(i);
+			String startRef = sheet.getRow(startRowNum).getCell(i).getReference();
+			String endRef = sheet.getRow(sheet.getLastRowNum() - 1).getCell(i).getReference();
+			
+			formulaCell.setCellStyle(style);
+			formulaCell.setCellFormula("SUM(".concat(startRef).concat(":").concat(endRef).concat(")"));
+			formulaCell.setCellValue("SUM(".concat(startRef).concat(":").concat(endRef).concat(")"));
+		}
+		return sheet;
+	}
+	
+	public static XSSFSheet createSummary(XSSFSheet sheet, ArrayList<Double> summaryDats) {
+		XSSFWorkbook wb = sheet.getWorkbook();
+		XSSFRow row = sheet.createRow(sheet.getLastRowNum() +1);
+		XSSFCellStyle style = wb.createCellStyle();
+		XSSFFont font = wb.createFont();
+		XSSFDataFormat df = wb.createDataFormat();
+		
+		style = wb.createCellStyle();
+		font = wb.createFont();
+		
+		font.setFontHeightInPoints((short)9);
+		font.setFontName("맑은 고딕");
+		font.setBold(true);
+       
+		style.setFont(font);
+		style.setAlignment(HorizontalAlignment.CENTER); 
+		style.setBorderTop(BorderStyle.THIN);
+		style.setBorderLeft(BorderStyle.THIN);
+		style.setBorderRight(BorderStyle.THIN);
+		style.setBorderBottom(BorderStyle.THIN);
+		
+		XSSFCell cell = row.createCell(0);
+		cell.setCellStyle(style);
+		cell.setCellValue("합계");
+		
+		cell = row.createCell(1);
+		cell.setCellStyle(style);
+		
+		sheet.addMergedRegion(new CellRangeAddress(row.getRowNum(), row.getRowNum(), 0, 1));
+		
+		
+		font = wb.createFont();
+		
+		font.setFontHeightInPoints((short)9);
+		font.setFontName("맑은 고딕");
+		font.setBold(true);
+       
+		for(int i=0; i < summaryDats.size(); i++) {
+			cell = row.createCell(i +2);
+			style = wb.createCellStyle();
+			
+			if(summaryDats.get(i) == null) {
+				style.setFont(font);
+				style.setBorderTop(BorderStyle.THIN);
+				style.setBorderLeft(BorderStyle.THIN);
+				style.setBorderRight(BorderStyle.THIN);
+				style.setBorderBottom(BorderStyle.THIN);
+				style.setAlignment(HorizontalAlignment.CENTER);
+				
+				cell.setCellStyle(style);
+				cell.setCellType(CellType.STRING);
+				cell.setCellValue("");
+			} else {
+				style.setDataFormat(df.getFormat("#,##0"));
+				style.setFont(font);
+				style.setBorderTop(BorderStyle.THIN);
+				style.setBorderLeft(BorderStyle.THIN);
+				style.setBorderRight(BorderStyle.THIN);
+				style.setBorderBottom(BorderStyle.THIN);
+				style.setAlignment(HorizontalAlignment.RIGHT);
+				
+				cell.setCellStyle(style);
+				cell.setCellType(CellType.NUMERIC);
+				cell.setCellValue(summaryDats.get(i));
+			}
+		}
+		return sheet;
+	}
+	
+	public static XSSFRichTextString getRichTextString(XSSFSheet sheet, String str, String[] params, short color) {
+		XSSFRichTextString richString  = new XSSFRichTextString(str);
+		XSSFFont font = sheet.getWorkbook().createFont();
+		font.setColor(color);
+		
+		int beforeIdx = 0;
+		
+		for(int i=0; i < params.length; i++) {
+			int strIdx =  str.indexOf(params[i], beforeIdx);
+			beforeIdx = str.indexOf(params[i], beforeIdx) + params[i].length();
+			System.out.println(strIdx + " :: " + str.substring(strIdx, strIdx + params[i].length()));
+			richString.applyFont(strIdx, strIdx + params[i].length(), font);
+		}
+		
+		return richString;
+	}
+	
+	//엑셀 파일 업로드 
+	@SuppressWarnings("resource")
+	public static Map<String, Object> excelUpload(MultipartFile[] excelFiles, UserSessionVO loginUser) throws Exception {
+		DataFormatter formatter = new DataFormatter();
+		
+		Map<String, Object> excelData = new HashMap<String, Object>();
+		
+		//엑셀데이터 가공
+		for (MultipartFile excelFile : excelFiles) {
+			
+			Workbook workbook;
+			InputStream inputStream = excelFile.getInputStream();
+			
+			System.out.println(excelFile.getOriginalFilename());
+			
+			//2. xls확장자와 xlsx확장자 분기처리
+            if(excelFile.getOriginalFilename().endsWith(".xls")) {
+                workbook = new XSSFWorkbook(inputStream);
+            } else if (excelFile.getOriginalFilename().endsWith(".xlsx")) {
+                workbook = new XSSFWorkbook(inputStream);
+            } else {
+                throw new Exception("NOT_FILE_FORMAT");
+            }
+            
+            //3. 첫번째 시트가져오기 
+            Sheet sheet = workbook.getSheetAt(0);
+            int rowCount = sheet.getPhysicalNumberOfRows();
+            
+            //4. column갯수 , row 갯수 구하기
+            int columnCount = 0;
+            int rowIndex = 0;
+            int minus = 1;
+            // 비어 있지 않은 행 찾기
+            while (rowIndex < rowCount) {
+                Row row = sheet.getRow(rowIndex);
+                if (row != null) {
+                    if (row.getPhysicalNumberOfCells() > 0){
+                        columnCount = row.getPhysicalNumberOfCells();
+                        break;
+                    } else {
+                        minus++; 
+                    }
+
+                }
+                rowIndex++;
+            }
+            
+            rowCount = sheet.getPhysicalNumberOfRows() - minus;                     // rowCount갯수 (헤더제외)
+            excelData.put("columnCount", columnCount);
+            excelData.put("rowCount", rowCount);
+
+            String fileFullName = excelFile.getOriginalFilename();
+            String fileName = fileFullName.substring(0, fileFullName.lastIndexOf("."));
+            excelData.put("fileName", fileName);
+            
+            //5. 데이터 가공
+            List<Map<String,Object>> dataList = new ArrayList<Map<String,Object>>();    //데이터 row list
+            for (int i = rowIndex+1 ; i < (rowCount + rowIndex + 1); i++) {
+                Row row = sheet.getRow(i);
+                if (row != null) {
+                    Map<String, Object> data = new HashMap<String, Object>();
+                    int j = 0;
+                    data.put("REG_ID", loginUser.getId());
+                    for (int k = 0; k <= columnCount; k++) {
+                        Cell cell = row.getCell(k);
+                        if (cell != null) {
+                            data.put("excel_" + k, setExcelDataProcess(cell));
+                        } else {
+                            data.put("excel_" + k, null);
+                        }
+                    }
+                    dataList.add(data);
+                }
+            }
+            excelData.put("dataList", dataList);
+        }
+        return excelData;
+    }
+	
+    public static Object setExcelDataProcess(Cell cell)throws Exception{
+        Object value = "";
+        DataFormatter formatter = new DataFormatter();
+        switch (cell.getCellType()) {
+            case STRING:
+                value = cell.getStringCellValue().trim().isEmpty() == true ? null: cell.getStringCellValue();
+                break;
+            case NUMERIC:
+                value = formatter.formatCellValue(cell) == "" ? null : (isCellDateFormatted(cell) == true ? getDateFromCell(cell) : formatter.formatCellValue(cell));
+                break;
+            case BOOLEAN:
+                value = cell.getBooleanCellValue();
+                break;
+            case BLANK:
+                value =  null;
+                break;
+            default:
+                value =  null;
+                break;
+        }
+        return value;
+    }
+    
+    public static boolean isCellDateFormatted(Cell cell) throws Exception{
+        if (DateUtil.isCellDateFormatted(cell)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public static String getDateFromCell(Cell cell) throws ParseException {
+    	Locale defaultLocale = Locale.getDefault();
+    	String inputDate = String.valueOf(cell);
+    	DateFormat inputFormat;
+    	DateFormat outputFormat;
+    	String outputString = "";
+    	
+    	inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+    	outputFormat = new SimpleDateFormat("yyyy-MM-dd");
+    	
+    	Date date = inputFormat.parse(inputDate);
+		outputString = outputFormat.format(date);
+
+        return outputString;
+    }
+}
