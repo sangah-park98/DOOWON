@@ -17,5 +17,12 @@ public interface remainsQtyService {
 
 	List<?> getImporterList() throws Exception;
 
+	List<?> getExpFirmList() throws Exception;
+
+	List<?> getTaStIsoList() throws Exception;
+	
+	List<?> getCaseTypeList() throws Exception;
+	
 	void deleteRemainsInputList(remainsInfoVO vo) throws Exception;
+
 }

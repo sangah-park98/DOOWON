@@ -42,22 +42,50 @@ $( document ).ready(function() {
 	    var selectVal = $(this).val();
 	    var $inputField = $("#remainsSrchType3");
 	    $inputField.empty().append('<option value="" selected>선택하세요.</option>');
-
-	    if (selectVal === "importer") {
-	        $.ajax({
+	    
+	    if(selectVal === "exp_firm" || selectVal === "importer") {
+	    	 $.ajax({
 	            type: "POST",
-	            url: "/remains/getImporterList.do",
+	            url: "/remains/getExpFirmList.do",
 	            data: { searchType: selectVal },
 	            dataType: "json",
 	            success: function(data) {
 	                if (data.resultList && data.resultList.length > 0) {
 	                    $.each(data.resultList, function(index, item) {
-	                        $("<option>").val(item.buyFirm).text(item.buyFirm).appendTo($inputField);
+	                        $("<option>").val(item.expFirm).text(item.expFirm).appendTo($inputField);
 	                    });
 	                }
 	            },
 	        });
-	    }
+	     } else if(selectVal === "Ta_St_isoNm") {
+	    	 $.ajax({
+	            type: "POST",
+	            url: "/remains/getTaStIsoList.do",
+	            data: { searchType: selectVal },
+	            dataType: "json",
+	            success: function(data) {
+	                if (data.resultList && data.resultList.length > 0) {
+	                    $.each(data.resultList, function(index, item) {
+	                        $("<option>").val(item.taStIsonm).text(item.taStIsonm).appendTo($inputField);
+	                    });
+	                }
+	            },
+	        });
+		 } else {
+			 $.ajax({
+	            type: "POST",
+	            url: "/remains/getCaseTypeList.do",
+	            data: { searchType: selectVal },
+	            dataType: "json",
+	            success: function(data) {
+	                if (data.resultList && data.resultList.length > 0) {
+	                    $.each(data.resultList, function(index, item) {
+	                        $("<option>").val(item.gnm1).text(item.gnm1).appendTo($inputField);
+	                    });
+	                }
+	            },
+			 });
+		 }
 	});
 });
 
@@ -266,7 +294,7 @@ function fn_setRemainsViewForm(){
 	sData["srchText1"] = $("#remainsSrchText1").val();
 	
 	sData["srchType2"] = $("#remainsSrchType2 option:selected").val();
-	sData["srchText2"] = $("#remainsSrchText2").val();
+	sData["srchType3"] = $("#remainsSrchType3 option:selected").val();
 	return sData;
 };
 
@@ -286,16 +314,15 @@ function fn_remainsQtyClear(){
 	
 	$("#remainsSrchType1").val("");
 	$("#remainsSrchType2").val("");
-	
+	$("#remainsSrchType3").val("");
 	$("#remainsSrchText1").val("");
-	$("#remainsSrchText2").val("");
 };
 
 
 function fn_remainsViewTableHeader(){
 	this.remainsViewHeader = [
 		 "수출신고번호", "수출화주", "해외거래처", "목적국", "란번호", "규격번호",
-		 "HS CODE", "용기 Type", "규격1", "수출수량", "수입자", "소진수량", "잔량"
+		 "HS CODE", "용기 Type", "규격1", "최초수량", "수입자", "소진수량", "잔량"
 	] ;
 }
 
@@ -318,22 +345,32 @@ function fn_remainsViewTableCol(){
             $(td).text(value || '');
         }
     };
+    
+    var remainsColorRenderer = function(instance, td, row, col, _, value) {
+	    Handsontable.dom.empty(td);
+	    td.innerHTML = value;
+	    td.style.whiteSpace = "nowrap";
+	    td.style.textAlign = 'center';
+	    if (Number(value) < 0) {
+	    	td.style.backgroundColor = '#FFCCCC';
+	    }
+	};
 
 	this.remainsViewCol = [
-		{data : 'rptNo', className : "htCenter", width: 150, wordWrap: false, className : "htCenter", readOnly:true, renderer: rptNoDownRenderer},
-		{data : 'expFirm', className : "htCenter", width: 200, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'buyFirm', className : "htCenter", width: 200, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'taStIso', className : "htCenter", width: 60, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'ranNo', className : "htCenter", width: 60, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'sil', className : "htCenter", width: 60, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptNo', className : "htCenter", width: 150, wordWrap: false, readOnly:true, renderer: rptNoDownRenderer},
+		{data : 'expFirm', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
+		{data : 'buyFirm', className : "htCenter", width: 250, wordWrap: false, readOnly:true},
+		{data : 'taStIsonm', className : "htCenter", width: 80, wordWrap: false, readOnly:true},
+		{data : 'ranNo', className : "htCenter", width: 60, wordWrap: false, readOnly:true},
+		{data : 'sil', className : "htCenter", width: 60, wordWrap: false, readOnly:true},
 		
-		{data : 'hs', className : "htCenter", width: 120, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'caseType', className : "htCenter", width: 160, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'gnm1', className : "htCenter", width: 230, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'qty', className : "htCenter", width: 120, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'importer', className : "htCenter", width: 120, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'usedQty', className : "htCenter", width: 120, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'remainsQty', className : "htCenter", width: 120, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'hs', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
+		{data : 'caseType', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
+		{data : 'gnm1', className : "htCenter", width: 230, wordWrap: false, readOnly:true},
+		{data : 'qty', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
+		{data : 'importer', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+		{data : 'usedQty', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
+		{data : 'remainsQty', className : "htCenter", width: 120, wordWrap: false, readOnly:true, renderer: remainsColorRenderer},
 	] ;
 }
 
@@ -379,11 +416,16 @@ function fn_handsonGridViewOption(col, header, hidden){
 			var expFirm = dataList[dataList.length-1].expFirm;
 			var ranNo = dataList[dataList.length-1].ranNo;
 			var sil = dataList[dataList.length-1].sil;
+			var remainsQty = dataList[dataList.length-1].remainsQty;
+			
 			$("#rptNo").val(rptNo);
 			$("#expFirm").val(expFirm);
             $("#lanNo").val(ranNo);
             $("#sil").val(sil);
-			fn_searchRemainsInput();
+            $("#remainsQty").val(remainsQty);
+            $("input[name=remainsInputType][value=read]").prop("checked", true).trigger("change");
+            fn_searchRemainsInput();
+
 			selectedRptNo = rptNo;
 		}
 	};
@@ -483,7 +525,7 @@ $("#popOverTable .wtHolder").scroll(function(){
 function fn_remainsInputTableHeader(){
 	var tableType = $("input[name=remainsInputType]:checked").val();
 	this.remainsInputHeader = (tableType == "read") ? [
-		"", "수출신고번호", "수출화주", "수입자", "기존수량", "소진수량", "잔량", "사용근거 (INVOICE 번호)", "사용일자", "사용자 ID", "A"
+		"", "수출신고번호", "수출화주", "수입자", "최초수량", "소진수량", "잔량", "사용근거 (INVOICE 번호)", "사용일자", "사용자 ID", "A"
 	] : [
 		"수출신고번호", "수출화주", "수입자", "소진수량", "사용근거 (INVOICE 번호)"
 	] ;
@@ -495,27 +537,27 @@ function fn_remainsInputTableCol(){
 
 	this.remainsInputCol =  (tableType == "read") ? [
 		{data : 'checkBox', width:30, className : "htCenter",type: 'checkbox', checkedTemplate: 'yes', uncheckedTemplate: 'no', readOnly:false},
-		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'expFirm', className : "htCenter", width: 200, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'importer', className : "htCenter", width: 200, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'qty', className : "htCenter", width: 80, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'usedQty', className : "htCenter", width: 80, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'remainsQty', className : "htCenter", width: 80, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'usedRsn', className : "htCenter", width: 160, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'usedDt', className : "htCenter", width: 120, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'regId', className : "htCenter", width: 100, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'usedDt2', className : "htCenter", width: 100, wordWrap: false, className : "htCenter", readOnly:true},
-	]:[		
-		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, className : "htCenter", readOnly:true},
-		{data : 'expFirm', className : "htCenter", width: 200, wordWrap: false, className : "htCenter", readOnly:true},
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false, readOnly:true},
+		{data : 'expFirm', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+		{data : 'importer', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
+		{data : 'qty', className : "htCenter", width: 80, wordWrap: false, readOnly:true},
+		{data : 'usedQty', className : "htCenter", width: 80, wordWrap: false, readOnly:true},
+		{data : 'remainsQty', className : "htCenter", width: 80, wordWrap: false, readOnly:true},
+		{data : 'usedRsn', className : "htCenter", width: 160, wordWrap: false, readOnly:true},
+		{data : 'usedDt', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
+		{data : 'regId', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+		{data : 'usedDt2', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
+	]:[
+		{data : 'rptNo', className : "htCenter", width: 160, wordWrap: false},
+		{data : 'expFirm', className : "htCenter", width: 200, wordWrap: false},
 		{data: 'importer', className: "htCenter", width: 200, wordWrap: false, type: 'autocomplete', 
 			source: function(query, process) {
                 fn_getImporterList(process);
             },
             strict: false
         },
-		{data : 'usedQty', className : "htCenter", width: 60, wordWrap: false, className : "htCenter"},
-		{data : 'usedRsn', className : "htCenter", width: 100, wordWrap: false, className : "htCenter"},
+		{data : 'usedQty', className : "htCenter", width: 60, wordWrap: false},
+		{data : 'usedRsn', className : "htCenter", width: 100, wordWrap: false},
 	];
 }
 
@@ -560,7 +602,8 @@ function fn_handsonRemainsInputOption(col, header, hidden){
 		mergeCells : false,
 		wordWrap : true,
 		afterGetColHeader: function(col, TH){
-        	if(col == 0){
+			var tableType = $("input[name=remainsInputType]:checked").val();
+        	if(col == 0 && tableType !== "enrol"){
         		TH.innerHTML = "<input type='checkbox' class='checker' id='id_inputDelAllChk' onclick='fn_inputDelAllChk();'>";
         	}
         }
@@ -611,13 +654,22 @@ function fn_changeInputTypeView(type){
 		remainsInputHot.setDataAtCell(0, 0, rptNo);
 	    remainsInputHot.setDataAtCell(0, 1, expFirm);
 	}
+	if($("input[name=remainsInputType]:checked").val() != "read"){
+		var rptNo = document.getElementById("rptNo").value.replace(/^(\d{5})(\d{2})(\d{6}X?)$/, "$1-$2-$3");
+		var expFirm = document.getElementById("expFirm").value;
+		remainsInputHot.loadData([]);
+		remainsInputHot.alter('insert_row_below', 1, 1);
+		remainsInputHot.setDataAtCell(0, 0, rptNo);
+	    remainsInputHot.setDataAtCell(0, 1, expFirm); // 수출화주
+	    remainsInputHot.setDataAtCell(0, 2, expFirm); // 수입자
+	}
 };
 
 
 function fn_inputDelAllChk(){
 	var check = "" ;
 	var changeArr = [];
-	if ( $("#id_inputDelAllChk").prop("checked") == false) {
+	if ($("#id_inputDelAllChk").prop("checked") == false) {
 		check = "yes" ;
 		isAllChecked = true;
 	} else {
@@ -646,16 +698,11 @@ function fn_remainsInputDel() {
     for (let i = 0; i < rowData.length; i++) {
         if (rowData[i].checkBox === "yes") {
         	rowData[i].usedDt = rowData[i].usedDt2;
-        	let item = {};
-            for (let key in rowData[i]) {
-                item[key] = rowData[i][key];
-            }
-            item.lanNo = item.ranNo;
-            delete item.ranNo;
-            list.push(item);
+            list.push(rowData[i]);
             cnt++;
         }
     }
+    
     if (cnt == 0){
     	alert("삭제할 내역을 선택해주세요.");
     	return;
@@ -673,10 +720,12 @@ function fn_remainsInputDel() {
             success: function(data) {
             	if (data.status === "success") {
             		alert("삭제되었습니다.");
-	                for (let i = list.length - 1; i >= 0; i--) {
-	                	remainsInputHot.alter('remove_row', list[i]);
-	                }
-	                fn_searchRemainsInput();
+            		for (let i = list.length - 1; i >= 0; i--) {
+            			remainsInputHot.alter('remove_row', list[i]);
+                    }
+            		setTimeout(function() {
+            			fn_searchRemainsView();
+        	        }, 500);
             	}
             },
             error: function(xhr, textStatus, errorThrown) {
@@ -734,11 +783,11 @@ function fn_searchRemainsInput(){
 function fn_getImporterList(callback) {
     $.ajax({
         type: "POST",
-        url: "/remains/getImporterList.do",
+        url: "/remains/getExpFirmList.do",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data) {
-            var importerList = data.resultList.map(item => item.buyFirm);
+            var importerList = data.resultList.map(item => item.expFirm);
             callback(importerList);
         },
         error: function(e) {
@@ -751,8 +800,28 @@ function fn_getImporterList(callback) {
 function fn_remainsInputSave(){
 	if(!confirm("저장하시겠습니까?")){return;}
 	
-	let sData = [];
+	var remainsQty = document.getElementById("remainsQty").value;
 	var rowData = remainsInputHot.getSourceData();
+	var usedQty = rowData.map(item => item.usedQty);
+	var usedRsn = rowData.map(item => item.usedRsn);
+	
+	if (!rowData.every(item => !isNaN(item.usedQty) && item.usedQty !== '' && item.usedQty !== null)) {
+		alert("입력한 수량을 확인해주세요.");
+		return;
+	}
+	if (!rowData.every(item => item.usedRsn !== '' && item.usedRsn !== null)) {
+		alert("INVOICE 번호를 입력해 주세요.");
+		return;
+	}
+	if (!remainsQty || Number(remainsQty) === 0) {
+		alert("입력한 수량이 잔량보다 많아 저장할 수 없습니다.");
+		return;
+	}
+	if (usedQty > Number(remainsQty)) {
+		alert("입력한 수량이 잔량보다 많아 저장할 수 없습니다.");
+		return;
+	}
+	let sData = [];
 	var lanNo = document.getElementById("lanNo").value;
 	var sil = document.getElementById("sil").value;
 	
@@ -786,7 +855,8 @@ function fn_remainsInputSave(){
 			remainsInputHot.updateSettings(fn_handsonRemainsInputOption(col2, header2, hidden2));
 			
 			setTimeout(function() {
-				fn_searchRemainsInput(rptNo);
+				fn_searchRemainsView();
+				fn_searchRemainsInput();
 	        }, 500);
 			
 		},
@@ -805,8 +875,6 @@ function fn_remainsInputSave(){
 
 
 function fn_remainsViewExcelDown(){
-	// var type = $("input:radio[name=remainsView_srch1]:checked").val();
-	const hiddenIndices = [0];
 	fn_loading(true);
 
 	var exTitArr = [];
@@ -816,77 +884,73 @@ function fn_remainsViewExcelDown(){
     var exTitDivArr = [];
     var exTitDiv = "";
 	
-	let expViewCol = new fn_expViewTableCol();
-	let expViewHeader = new fn_expViewTableHeader();
-    
-    exColArr.push(fn_getExcelCol(expViewCol.expViewCol.filter((item, index) => !hiddenIndices.includes(index))));
-	exTitArr.push(fn_getExcelHead(expViewHeader.expViewHeader.filter((item, index) => !hiddenIndices.includes(index))));
+	let remainsViewCol = new fn_remainsViewTableCol();
+	let remainsViewHeader = new fn_remainsViewTableHeader();
 	
+	exColArr.push(fn_getExcelCol(remainsViewCol.remainsViewCol));
+    exTitArr.push(fn_getExcelHead(remainsViewHeader.remainsViewHeader));
+    
  	exCol = exColArr.join("|||");
 	exTit = exTitArr.join("||||");
-	exTitDiv = "1|수츨신고현황";
-		
+	exTitDiv = "1|잔량관리현황";
+	
 	var parameters = {exCol : "", exTit: "", exTitDiv: "", exType: "", srch40: ""};
 	
     // 검색옵션
-	$.each(fn_setExportViewForm(), function(attrName, attrValue){
+	$.each(fn_setRemainsViewForm(), function(attrName, attrValue){
 		parameters[attrName] = attrValue;
 	});
 		
 	parameters.exCol = exCol.replace(/ /g,"_");
 	parameters.exTit = exTit.replace(/ /g,"_");
 	parameters.exTitDiv = exTitDiv.replace(/ /g,"_");
-	parameters.exType = type;
-	parameters.srch40 = "수출신고현황";
+	parameters.srch40 = "잔량관리현황";
 	
 	$.ajax({
-		 url: "/export/exportDownloadExcel.do",
-		 data: parameters,
-		 type: 'POST',
-		 cache: false,
-		 timeout: 200000,
-		 xhrFields: {
-			 responseType: "blob",
-		 },
+		url: "/remains/remainsQtyExcelDown.do",
+		data: parameters,
+		type: 'POST',
+		cache: false,
+		timeout: 200000,
+		xhrFields: {
+			responseType: "blob",
+		},
 	    success: function(blob, status, xhr) {
 	    	try {
-				// check for a filename
-				 var fileName = "";
-				 var disposition = xhr.getResponseHeader("Content-Disposition");
+	    		var fileName = "";
+				var disposition = xhr.getResponseHeader("Content-Disposition");
 
-			       if (disposition && disposition.indexOf("attachment") !== -1) {
-			      	 var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-			           var matches = filenameRegex.exec(disposition);
+			    if (disposition && disposition.indexOf("attachment") !== -1) {
+			    	var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+			        var matches = filenameRegex.exec(disposition);
 
-			           if (matches != null && matches[1]) {
-			               fileName = decodeURI(matches[1].replace(/['"]/g, ""));
-			           }
-			       }
+			        if (matches != null && matches[1]) {
+			        	fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+			        }
+			    }
 
-			       // for IE
-			       if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-			           window.navigator.msSaveOrOpenBlob(blob, fileName);
-			       } else {
-			           var URL = window.URL || window.webkitURL;
-			           var downloadUrl = URL.createObjectURL(blob);
+			    if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+			    	window.navigator.msSaveOrOpenBlob(blob, fileName);
+			    } else {
+			    	var URL = window.URL || window.webkitURL;
+			        var downloadUrl = URL.createObjectURL(blob);
 
-			           if (fileName) {
-			               var a = document.createElement("a");
+			        if (fileName) {
+			        	var a = document.createElement("a");
 
-			               // for safari
-			               if (a.download === undefined) {
-			                   window.location.href = downloadUrl;
-			               } else {
-			                   a.href = downloadUrl;
-			                   a.download = fileName;
-			                   document.body.appendChild(a);
-			                   a.click();
-			               }
-			           } else {
-			               window.location.href = downloadUrl;
-			           }
-			       }
-		       fn_loading(false);
+			        	if (a.download === undefined) {
+			        		window.location.href = downloadUrl;
+			            } else {
+			            	a.href = downloadUrl;
+			                a.download = fileName;
+			                document.body.appendChild(a);
+			                a.click();
+			            }
+			        } else {
+			        	window.location.href = downloadUrl;
+			        }
+			    }
+			    fn_loading(false);
 			} catch (e) {
 				console.log(e);
 				fn_loading(false);

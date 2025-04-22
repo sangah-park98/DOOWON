@@ -43,6 +43,18 @@ public class remainsQtyServiceImpl extends EgovAbstractMapper implements remains
 		return remainsQtyMapper.getImporterList();
 	}
 	@Override
+	public List<?> getExpFirmList() throws Exception {
+		return remainsQtyMapper.getExpFirmList();
+	}
+	@Override
+	public List<?> getTaStIsoList() throws Exception {
+		return remainsQtyMapper.getTaStIsoList();
+	}
+	@Override
+	public List<?> getCaseTypeList() throws Exception {
+		return remainsQtyMapper.getCaseTypeList();
+	}
+	@Override
 	public void deleteRemainsInputList(remainsInfoVO vo) throws Exception {
 		remainsQtyMapper.deleteRemainsInputList(vo);
 	}

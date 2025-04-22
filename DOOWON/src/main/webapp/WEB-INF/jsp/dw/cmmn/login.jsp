@@ -193,15 +193,16 @@
     <p>Copyright KORD Systems Inc. All rights reserved.</p>
   </div>
   <div class="flex items-center justify-center gap-3 leading-relaxed">
-    <a class="block" href="mailto:ioom@kordsystems.com">
+    <!-- <a class="block" href="mailto:ioom@kordsystems.com">
       <i class="fa-regular fa-envelopes"></i>
       	ioom@kordsystems.com
-    </a>
+    </a> -->
     <span>|</span>
     <a class="block">
       <i class="fa-regular fa-phone-volume"></i>
       +82-2-2038-8299
     </a>
+    <span>|</span>
   </div>
 </footer>
 </body>

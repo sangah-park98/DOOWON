@@ -3,33 +3,47 @@
 <mapper namespace="egovframework.dw.remains.service.impl.remainsQtyMapper">
 
 	<select id="selectRemainsViewList" parameterType="searchVO" resultType="egovMap">
-		SELECT 
+		SELECT
 			COUNT(*) over() AS cnt,
 			rpt_Day,
 			rpt_no,
 			exp_firm,
 			buy_firm,
-			Ta_St_iso,
+			Ta_St_isoNm,
 			ran_no,
 			sil,
 			hs,
-			'' AS caseType,
+			caseType,
 			gnm1,
 			qty,
 			importer,
 			used_qty,
 			remains_qty
 		FROM (
-			SELECT 
+			SELECT
 				CASE WHEN a.Rpt_Day != '' THEN DATE_FORMAT(a.Rpt_Day, '%Y-%m-%d') ELSE '' END AS rpt_Day, 
 				CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no, 
 				a.exp_firm,
 				a.buy_firm,
-				a.Ta_St_iso,
+				a.Ta_St_isoNm,
 				b.ran_no,
 				c.Sil,
 				CONCAT(SUBSTRING(b.hs, 1, 4), '.', SUBSTRING(b.hs, 5, 2), '-', SUBSTRING(b.hs, 7, 4)) AS hs,
-				'' AS caseType,
+				CASE 
+		    		WHEN gnm1 LIKE 'RETURNABLE %' THEN REPLACE(gnm1, 'RETURNABLE ', '')
+		    		WHEN gnm1 LIKE 'PLASTIC BOX (RETURN CARGO, PACKING GOODS)%' THEN 'PLASTIC BOX'
+		    		WHEN gnm1 LIKE 'PLASTIC BOX (RETURN NCARGO, PACKING GOODS)%' THEN 'PLASTIC BOX'
+		    		WHEN gnm1 LIKE 'PLASTIC BOX (RETURN CARCO, PACKING GOODS)%' THEN 'PLASTIC BOX'
+		    		WHEN gnm1 LIKE 'PLASTIC BOX(RETURN CARGO, PACKING GOODS)%' THEN 'PLASTIC BOX'
+		    		WHEN gnm1 LIKE ' PLASTIC BOX(RETURN CARGO, PACKING GOODS)%' THEN 'PLASTIC BOX'
+		    		WHEN gnm1 LIKE ' PLASTIC BOX (RETURN CARGO, PACKING GOODS)%' THEN 'PLASTIC BOX'
+		    		WHEN gnm1 LIKE 'PLASTIC BOX(RETURN)%' THEN 'PLASTIC BOX'
+		    		WHEN gnm1 LIKE 'PLASTIC BOX (RETURN CARGO)%' THEN 'PLASTIC BOX'
+		    		WHEN gnm1 LIKE ' PLASTIC BOX (RETURN CARGO)%' THEN 'PLASTIC BOX'
+		    		WHEN gnm1 LIKE 'PLASTIC BOX(RETURN CARGO) %' THEN 'PLASTIC BOX'
+		    		WHEN gnm1 LIKE 'PLASTIC BOX (RETURN CARGO) %' THEN 'PLASTIC BOX'
+		    		ELSE gnm1
+		  		END AS caseType,
 				c.Gnm1,
 				FORMAT(c.qty, 0) AS qty,
 				r.importer,
@@ -40,6 +54,19 @@
 			LEFT JOIN platform.cusdec830c1 c ON a.rpt_no = c.rpt_no AND a.SN = c.SNA1 AND b.SN = c.SNB1
 			LEFT JOIN remains_info r ON a.rpt_no = r.rpt_no AND b.ran_no = r.lan_no AND c.sil = r.sil
 			WHERE a.rpt_seq = '00'
+			AND b.hs IN ('3923100000', '7310290000', '3923900000')
+			AND c.gnm1 IS NOT NULL
+			AND (
+			    c.gnm1 LIKE '%DANPLA BOX%' OR
+			    c.gnm1 LIKE '%PA2%' OR
+			    c.gnm1 LIKE '%PA3%' OR
+			    c.gnm1 LIKE '%PA5%' OR
+			    c.gnm1 LIKE '%KA4%' OR
+			    c.gnm1 LIKE '%KA5%' OR
+			    c.gnm1 LIKE '%D-TYPE%' OR
+			    c.gnm1 LIKE '%PLASTIC BOX%' OR
+			    c.gnm1 LIKE '%A-TYPE%'
+			)
             <choose>
             	<when test="srch8 == '01'">
                     AND A.rpt_day BETWEEN REPLACE(#{srch2}, '-', '') AND REPLACE(#{srch3}, '-', '')
@@ -54,12 +81,7 @@
 			<if test="srch5 != null and srch5 != ''">
 			AND a.rpt_no IN (SELECT DISTINCT RPT_NO FROM cusdec830b1selrdy WHERE mg_code like CONCAT('%',UPPER(#{srch5}),'%'))
 			</if>
-			<if test="list != null and list.size() > 0">
-	            AND a.exp_sdno IN
-	            <foreach item="id" collection="list" open="(" separator="," close=")">
-	                #{id}
-	            </foreach>
-        	</if>
+	        AND a.exp_sdno IN ('1298118421', '2118180957', '3128103345', '3128109408')
         	GROUP BY a.rpt_no, a.exp_firm, a.buy_firm, b.ran_no, c.sil
         	<choose>
 		        <when test="srch1 == '02'">
@@ -74,8 +96,8 @@
 		<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
 		AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
 		</if>
-		<if test="srchType2 != null and srchType2 != '' and srchText2 != null and srchText2 != ''">
-		AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchText2}),'%')
+		<if test="srchType2 != null and srchType2 != '' and srchType3 != null and srchType3 != ''">
+		AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchType3}),'%')
 		</if>
 		ORDER BY rpt_day desc, rpt_no desc
 	 	LIMIT #{recordCountPerPage} OFFSET #{startPage};
@@ -100,58 +122,110 @@
 		WHERE 1=1
 		AND exp_firm = #{expFirm}
 		AND importer = #{importer}
-		AND rpt_no = #{rptNo}
+		AND rpt_no = REPLACE(#{rptNo},'-','')
 		AND lan_no = #{lanNo}
 		AND sil = #{sil}
 		AND used_qty = #{usedQty}
-		AND used_dt = #{usedDt}
+		AND used_dt = #{usedDt2}
 		AND reg_id = #{regId}
 	</delete>
 	
 	<select id="selectRemainsInputList" parameterType="searchVO" resultType="egovMap">
- 		WITH cte AS (
-		    SELECT
-		        r.rpt_no,
-		        c.qty AS qty,
-		        r.used_qty,
-		        r.seq,
-		        r.used_dt,
-		        SUM(r.used_qty) OVER (PARTITION BY r.rpt_no ORDER BY r.seq ASC) AS sum_used_qty,
-		        (c.qty - SUM(r.used_qty) OVER (PARTITION BY r.rpt_no ORDER BY r.seq ASC)) AS remains_qty
-		    FROM remains_info r
-		    LEFT JOIN platform.cusdec830c1 c 
-		        ON c.rpt_no = r.rpt_no 
-		        AND c.ran_no = r.lan_no 
-		        AND c.sil = r.sil
-		    WHERE r.rpt_no = #{srch1}
-		    AND r.lan_no = #{srch2}
-		    AND r.sil = #{srch3}
+ 		WITH cte_cusdec AS (
+		    SELECT * FROM (
+		        SELECT *,
+		        	ROW_NUMBER() OVER (PARTITION BY rpt_no, ran_no, sil ORDER BY rpt_no, ran_no, sil) AS rn
+		        FROM platform.cusdec830c1
+		    ) t
+		    WHERE rn = 1
 		)
 		SELECT 
-		    COUNT(*) OVER() AS CNT,
-		    r.rpt_no,
+			COUNT(*) OVER() AS CNT,
+		    CONCAT(SUBSTRING(r.rpt_no, 1, 5), '-', SUBSTRING(r.rpt_no, 6, 2), '-', SUBSTRING(r.rpt_no, 8, 7)) AS rpt_no,
+		    r.lan_no,
+		    r.sil,
 		    r.exp_firm,
 		    r.importer,
-		    FORMAT(c.qty,0) AS qty,
+		    FORMAT(c.qty - COALESCE(
+		    				SUM(r.used_qty) OVER (
+				           		PARTITION BY r.rpt_no, r.lan_no, r.sil
+				            	ORDER BY r.used_dt, r.reg_id
+				            	ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0
+				            ) ,0
+				   ) AS qty,
 		    FORMAT(r.used_qty, 0) AS used_qty,
-		    FORMAT(cte.remains_qty, 0) AS remains_qty,
+		    FORMAT(c.qty - COALESCE(
+		    				SUM(r.used_qty) OVER (
+					            PARTITION BY r.rpt_no, r.lan_no, r.sil
+					            ORDER BY r.used_dt, r.reg_id
+					            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        					), 0), 0
+        		  ) AS remains_qty,
+		    FORMAT(c.qty - COALESCE(SUM(r.used_qty) OVER (PARTITION BY r.rpt_no, r.lan_no, r.sil), 0), 0) AS remains_qty,
 		    r.used_rsn,
 		    DATE_FORMAT(r.used_dt, '%Y-%m-%d') AS used_dt,
 		    r.used_dt AS used_dt2,
-		    r.reg_id,
-		    c.Ran_No,
-		    c.sil
+		    r.reg_id
 		FROM remains_info r
-		LEFT JOIN platform.cusdec830a1 a ON a.rpt_no = r.rpt_no
-		LEFT JOIN platform.cusdec830c1 c ON c.rpt_no = r.rpt_no AND a.SN = c.SNA1 AND c.ran_no = r.lan_no AND c.sil = r.sil
-		LEFT JOIN cte ON cte.rpt_no = r.rpt_no AND cte.seq = r.seq
-		WHERE r.rpt_no = #{srch1}
-		ORDER BY r.used_dt DESC
+		LEFT JOIN cte_cusdec c ON r.rpt_no = c.rpt_no AND c.ran_no = r.lan_no AND c.sil = r.sil
+		WHERE r.rpt_no = #{srch1} AND r.lan_no = #{srch2} AND r.sil = #{srch3}
+		ORDER BY used_dt DESC
+	 </select>
+	 
+	 <select id="getExpFirmList" parameterType="searchVO" resultType="egovMap">
+ 		SELECT DISTINCT exp_firm FROM platform.cusdec830a1
+		WHERE exp_sdno IN ('1298118421', '2118180957', '3128103345', '3128109408')
+		AND exp_firm NOT IN ('(주)두원 화성공장')
 	 </select>
 	 
 	 <select id="getImporterList" parameterType="searchVO" resultType="egovMap">
  		SELECT DISTINCT buy_firm FROM platform.cusdec830a1
 		WHERE exp_sdno IN ('1298118421', '2118180957', '3128103345', '3128109408')
+		ORDER BY buy_firm ASC
+	 </select>
+	 
+	 <select id="getTaStIsoList" parameterType="searchVO" resultType="egovMap">
+ 		SELECT DISTINCT Ta_St_isoNm FROM platform.cusdec830a1
+		WHERE exp_sdno IN ('1298118421', '2118180957', '3128103345', '3128109408')
+		AND Ta_St_isoNm IN ('PR.CHNA', 'INDNSIA', 'INDIA')
+	 </select>
+	 
+	 <select id="getCaseTypeList" parameterType="searchVO" resultType="egovMap">
+ 		SELECT DISTINCT REPLACE(c.gnm1, 'RETURNABLE ', '') AS gnm1 FROM platform.cusdec830a1 a
+		LEFT JOIN platform.cusdec830b1 b ON a.rpt_no = b.rpt_no AND a.SN = b.SNA1
+		LEFT JOIN platform.cusdec830c1 c ON a.rpt_no = c.rpt_no AND a.SN = c.SNA1 AND b.SN = c.SNB1
+		WHERE exp_sdno IN ('1298118421', '2118180957', '3128103345', '3128109408')
+		AND b.hs IN ('3923100000', '7310290000', '3923900000')
+		AND c.gnm1 IN (
+			'DANPLA BOX', 
+			'RETURNABLE PA2 BOX',
+			'RETURNABLE PA4 BOX',
+			'RETURNABLE PA5 BOX',
+			'RETURNABLE KA4 BOX',
+			'RETURNABLE KA5 BOX',
+			'RETURNABLE NAP522 BOX',
+			'D-TYPE',
+			'BOX (RETURN)',
+			'PAD (RETURN)',
+			'PLASTIC BOX',
+			'A-TYPE',
+			'PA3'
+		)
+		ORDER BY CASE c.gnm1
+			WHEN 'DANPLA BOX' THEN 1
+		  	WHEN 'RETURNABLE PA2 BOX' THEN 2
+		  	WHEN 'RETURNABLE PA4 BOX' THEN 3
+		  	WHEN 'RETURNABLE PA5 BOX' THEN 4
+		  	WHEN 'RETURNABLE KA4 BOX' THEN 5
+		  	WHEN 'RETURNABLE KA5 BOX' THEN 6
+		  	WHEN 'RETURNABLE NAP522 BOX' THEN 7
+		  	WHEN 'D-TYPE' THEN 8
+		  	WHEN 'BOX (RETURN)' THEN 9
+		  	WHEN 'PAD (RETURN)' THEN 10
+		  	WHEN 'PLASTIC BOX' THEN 11
+		  	WHEN 'A-TYPE' THEN 12
+		  	WHEN 'PA3' THEN 13
+		END
 	 </select>
 	 
 	 <insert id="insertRemainsInputList" parameterType="searchVO">

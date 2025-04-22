@@ -12,6 +12,7 @@ public class remainsInfoVO {
     private String remainsQty;
     private String usedRsn;
     private String usedDt;
+    private String usedDt2;
     private String delYn;
     private String regId;
     private String edtDt;
@@ -76,6 +77,12 @@ public class remainsInfoVO {
 	}
 	public void setUsedDt(String usedDt) {
 		this.usedDt = usedDt;
+	}
+	public String getUsedDt2() {
+		return usedDt2;
+	}
+	public void setUsedDt2(String usedDt2) {
+		this.usedDt2 = usedDt2;
 	}
 	public String getDelYn() {
 		return delYn;

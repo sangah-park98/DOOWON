@@ -18,6 +18,13 @@ public interface remainsQtyMapper {
 	void insertRemainsInputList(remainsInfoVO rvo) throws Exception;
 
 	List<?> getImporterList() throws Exception;
+	
+	List<?> getExpFirmList() throws Exception;
+
+	List<?> getTaStIsoList() throws Exception;
+	
+	List<?> getCaseTypeList() throws Exception;
 
 	void deleteRemainsInputList(remainsInfoVO vo) throws Exception;
+
 }

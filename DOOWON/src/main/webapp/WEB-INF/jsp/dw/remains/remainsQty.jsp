@@ -54,16 +54,6 @@
           	   name="remainsView_srch1" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
         <span>무</span>
       </label>
-      <!-- <label for="default-radio-4">
-        <input id="default-radio-4" type="radio" value="04"
-          	   name="remainsView_srch1" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-        <span>신고 전</span>
-      </label>
-      <label for="default-radio-5">
-        <input id="default-radio-5" type="radio" value="05"
-          	   name="remainsView_srch1" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-        <span>신고 후</span>
-      </label> -->
     </div>
     
     <label class="col-start-1 row-start-2 col-span-1 row-span-1 flex items-center font-medium text-gray-900 pr-2">
@@ -156,7 +146,7 @@
     <select id="remainsSrchType2" style="width:100px;" class="row-start-4 col-start-7 col-span-1 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-500 focus:border-primary-500 block px-1 py-1">
     	<option value="" selected>조건선택</option>
       	<option value="exp_firm">수출화주</option>
-      	<option value="Ta_St_iso">목적국</option>
+      	<option value="Ta_St_isoNm">목적국</option>
       	<option value="caseType">용기 Type</option>
       	<option value="importer">수입자</option>
     </select>
@@ -165,7 +155,6 @@
 	</select>
   </form>
   
-
 
 <div id="transInfo-container" class="mx-auto p-3 border border-gray-300 w-full">
   <div class="flex items-center justify-between mb-3">
@@ -223,7 +212,7 @@
 	<div class="flex items-center justify-between w-full shrink-0">
     	<div class="flex items-center gap-4">
     		<p class="card-title inline"><i class="fa-duotone fa-chart-network text-primary-900"></i>&nbsp;
-	    		보정 정보<!-- : <span id="tradeGapLanPageCnt">0</span> -->
+	    		잔량 이력<!-- : <span id="tradeGapLanPageCnt">0</span> -->
 	    	</p>
       		<label for="default-radio-6" style="margin-left:20px;">
       			<input id="default-radio-6" type="radio" name="remainsInputType" value="read" checked class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
@@ -246,13 +235,14 @@
 		    </button>
 		    <button type="button" id="remainsInputDel" onclick="fn_remainsInputDel()" 
 		      class="text-white bg-primary-700 hover:bg-secondary-800 focus:ring-4 focus:ring-secondary-300 font-medium rounded px-2.5 py-1.5 focus:outline-noneduration-300 row-start-1 text-base">
-		      <i class="fa-regular fa-floppy-disk"></i>
+		      <i class="fa-regular fa-xmark"></i>
 		      	삭제
 		    </button>
 		</div>
     </div>
     <input type="hidden" id="rptNo">
     <input type="hidden" id="expFirm">
+    <input type="hidden" id="remainsQty">
     <input type="hidden" id="lanNo">
     <input type="hidden" id="sil">
 	<div id="remainsInputTable" class="grow bg-white shadow-sm rounded-lg border border-slate-200 z-0"></div>

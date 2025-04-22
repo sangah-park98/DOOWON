@@ -5,6 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +21,10 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -48,9 +55,8 @@ public class RemainsQtyController {
 	@Resource(name = "CmmnService")
 	private CmmnService CmmnService;
 	
-	
 	@RequestMapping(value = "/remains/remainsQty.do")
-	public String exportView(HttpServletRequest request, Model model) throws Exception {
+	public String remainsQtyView(HttpServletRequest request, Model model) throws Exception {
 		HttpSession httpSession = request.getSession(true);
 		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
 		model.addAttribute("grpCd", userVO.getGrpCd());
@@ -91,6 +97,30 @@ public class RemainsQtyController {
 	@RequestMapping(value = "/remains/getImporterList.do", method = RequestMethod.POST)
 	public ModelAndView getImporterList(HttpServletRequest request, ModelMap model) throws Exception {
 		List<?> resultList = remainsqtyService.getImporterList();
+		ModelAndView mav = new ModelAndView("jsonView");
+		mav.addObject("resultList", resultList);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/remains/getExpFirmList.do", method = RequestMethod.POST)
+	public ModelAndView getExpFirmList(HttpServletRequest request, ModelMap model) throws Exception {
+		List<?> resultList = remainsqtyService.getExpFirmList();
+		ModelAndView mav = new ModelAndView("jsonView");
+		mav.addObject("resultList", resultList);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/remains/getTaStIsoList.do", method = RequestMethod.POST)
+	public ModelAndView getTaStIsoList(HttpServletRequest request, ModelMap model) throws Exception {
+		List<?> resultList = remainsqtyService.getTaStIsoList();
+		ModelAndView mav = new ModelAndView("jsonView");
+		mav.addObject("resultList", resultList);
+		return mav;
+	}
+	
+	@RequestMapping(value = "/remains/getCaseTypeList.do", method = RequestMethod.POST)
+	public ModelAndView getCaseTypeList(HttpServletRequest request, ModelMap model) throws Exception {
+		List<?> resultList = remainsqtyService.getCaseTypeList();
 		ModelAndView mav = new ModelAndView("jsonView");
 		mav.addObject("resultList", resultList);
 		return mav;
@@ -139,9 +169,16 @@ public class RemainsQtyController {
 		String saveDir = docuPath;
 		File file = new File(saveDir + "/" + docuFile);
 		String encodedFileName = URLEncoder.encode(docuOrgFile, "UTF-8").replaceAll("\\+", "%20");
-		response.setHeader("Content-Disposition", "attachment;filename=\"" + encodedFileName + "\";");
-
-		FileInputStream fileInputStream = new FileInputStream(file);
+		// response.setHeader("Content-Disposition", "attachment;filename=\"" + encodedFileName + "\";");
+		response.setContentType("application/octet-stream");
+		response.setHeader("Content-Disposition", "attachment; filename=\"" + encodedFileName + "\"");
+		response.setHeader("Content-Transfer-Encoding", "binary");
+		response.setHeader("Pragma", "no-cache");
+		response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+		response.setDateHeader("Expires", 0);
+		
+		
+		/*FileInputStream fileInputStream = new FileInputStream(file);
 		ServletOutputStream servletOutputStream = response.getOutputStream();
 
 		byte b [] = new byte[1024];
@@ -154,7 +191,19 @@ public class RemainsQtyController {
 
 		servletOutputStream.flush();
 		servletOutputStream.close();
-		fileInputStream.close();
+		fileInputStream.close();*/
+		
+		try (FileInputStream fileInputStream = new FileInputStream(file);
+		ServletOutputStream servletOutputStream = response.getOutputStream()) {
+
+			byte[] buffer = new byte[4096];
+			int bytesRead;
+			while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+				servletOutputStream.write(buffer, 0, bytesRead);
+			}
+
+			servletOutputStream.flush();
+		}
 	}
 	
 	@PostMapping(value = "/remains/remainsZipFileCreate.do")
@@ -222,4 +271,93 @@ public class RemainsQtyController {
   		fileInputStream.close();
   	}
 	
+	@RequestMapping(value = "/remains/remainsQtyExcelDown.do")
+	public ModelAndView remainsQtyExcelDown(@ModelAttribute("searchVO") SearchVO vo, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		HttpSession httpSession = request.getSession(true);
+		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
+		ModelAndView mv = new ModelAndView("jsonView");
+		String resultCode="200";
+		
+		try {
+			ModelAndView dataMv = new ModelAndView();
+			List<?> resultList = new ArrayList<>();
+	    
+			XSSFWorkbook workBook = new XSSFWorkbook();
+			String[] colUnion = {};
+			String[] haedUnion =  {};
+			String[] divUnion = {};
+			int unionIdx = 0;
+				
+			colUnion = vo.getExCol().split("\\|\\|\\|");
+			haedUnion = vo.getExTit().split("\\|\\|\\|\\|");
+			divUnion = vo.getExTitDiv().split("\\|\\|", -1);
+			
+			for(String div : divUnion) {
+				String divIdx = div.split("\\|")[0];
+				String divName = div.split("\\|")[1];
+				
+				XSSFSheet sheet = egovframework.dw.util.ExcelUtil.createSheetWithTitleRow(workBook, divName, colUnion[unionIdx].split("\\|\\|").length);
+				
+				SearchVO sheetSearchVo = new SearchVO();
+				sheetSearchVo.setList(userVO.getCorpNos());
+				sheetSearchVo.setRecordCountPerPage(99999999);
+				sheetSearchVo.setStartPage(0);
+				
+				sheetSearchVo.setSrch2((String) vo.getSrch2());
+				sheetSearchVo.setSrch3((String) vo.getSrch3());
+				sheetSearchVo.setSrch4((String) vo.getSrch4());
+				sheetSearchVo.setSrch5((String) vo.getSrch5());
+				sheetSearchVo.setSrch8((String) vo.getSrch8());
+				
+				
+				switch (divIdx) {
+					case "1":
+						dataMv = this.selectRemainsViewList(sheetSearchVo, request, new ModelMap());
+						resultList = (List<?>) dataMv.getModel().get("resultList");
+						break;
+					default:
+						break;
+				}
+				
+				ArrayList<String> conts = new ArrayList<String>();
+				conts.add("1");
+				sheetSearchVo.setExCol(colUnion[unionIdx]);
+				sheetSearchVo.setExTit(haedUnion[unionIdx]);
+				sheet = egovframework.dw.util.ExcelUtil.createMainTable(sheet, resultList, sheetSearchVo);
+				
+				unionIdx++;
+			}
+			
+			// cell 너비 조정 및 하단 타임 스탬프
+			int sheetCnt = workBook.getNumberOfSheets();
+			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			Date now = new Date();
+			String nowTime = sdf1.format(now);
+			
+			for(int i=0; i < sheetCnt; i++) {
+				XSSFSheet tempSheet = workBook.getSheetAt(i);
+				int columnToHide1 = 1;
+			    int columnToHide2 = 2;
+			    tempSheet.setColumnHidden(columnToHide1, true);
+			    tempSheet.setColumnHidden(columnToHide2, true);
+				int cellCnt = tempSheet.getPhysicalNumberOfRows();
+				
+				for(int j=1; j < cellCnt; j++) {
+					tempSheet.autoSizeColumn(j);
+				}
+				
+				tempSheet.createRow(tempSheet.getLastRowNum() +1);
+				XSSFRow row = tempSheet.createRow(tempSheet.getLastRowNum() +1);
+				XSSFCell cell = row.createCell(0);
+				cell.setCellValue(nowTime);
+			}
+			egovframework.dw.util.ExcelUtil.generateExcelFile(workBook, (vo.getSrch40().replace("_", " ")), response);
+
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		mv.addObject("resultCode", resultCode);
+		return mv;
+	}
 }
