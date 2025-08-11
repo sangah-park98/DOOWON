@@ -9,6 +9,7 @@
 			rpt_no,
 			exp_firm,
 			buy_firm,
+			Exp_Lis_Day,
 			Ta_St_isoNm,
 			ran_no,
 			sil,
@@ -25,6 +26,7 @@
 				CONCAT(SUBSTRING(a.rpt_no, 1, 5), '-', SUBSTRING(a.rpt_no, 6, 2), '-', SUBSTRING(a.rpt_no, 8, 7)) AS rpt_no, 
 				a.exp_firm,
 				a.buy_firm,
+				CASE WHEN a.Exp_Lis_Day != '' THEN DATE_FORMAT(a.Exp_Lis_Day, '%Y-%m-%d') ELSE '' END AS Exp_Lis_Day,
 				a.Ta_St_isoNm,
 				b.ran_no,
 				c.Sil,
@@ -42,8 +44,10 @@
 		    		WHEN gnm1 LIKE ' PLASTIC BOX (RETURN CARGO)%' THEN 'PLASTIC BOX'
 		    		WHEN gnm1 LIKE 'PLASTIC BOX(RETURN CARGO) %' THEN 'PLASTIC BOX'
 		    		WHEN gnm1 LIKE 'PLASTIC BOX (RETURN CARGO) %' THEN 'PLASTIC BOX'
-		    		ELSE gnm1
-		  		END AS caseType,
+					WHEN gnm1 LIKE 'IRON CARRIER (RETURN)%' THEN 'IRON CARRIER (RETURN)' 
+					WHEN gnm1 LIKE 'IRON CARRIER(RETURN)%' THEN 'IRON CARRIER (RETURN)' 
+					WHEN gnm1 LIKE ' IRON CARRIER (RETURN)%' THEN 'IRON CARRIER (RETURN)' 
+		    		ELSE gnm1 END AS caseType,
 				c.Gnm1,
 				FORMAT(c.qty, 0) AS qty,
 				r.importer,
@@ -56,8 +60,10 @@
 			WHERE a.rpt_seq = '00'
 			AND b.hs IN ('3923100000', '7310290000', '3923900000')
 			AND c.gnm1 IS NOT NULL
+			AND (a.Exp_Lis_Day != DATE_FORMAT(CURDATE(), '%Y%m%d') AND a.Exp_Lis_Day != '')
 			AND (
 			    c.gnm1 LIKE '%DANPLA BOX%' OR
+			    c.gnm1 LIKE '%(RETURN)%' OR
 			    c.gnm1 LIKE '%PA2%' OR
 			    c.gnm1 LIKE '%PA3%' OR
 			    c.gnm1 LIKE '%PA5%' OR
@@ -65,7 +71,8 @@
 			    c.gnm1 LIKE '%KA5%' OR
 			    c.gnm1 LIKE '%D-TYPE%' OR
 			    c.gnm1 LIKE '%PLASTIC BOX%' OR
-			    c.gnm1 LIKE '%A-TYPE%'
+			    c.gnm1 LIKE '%A-TYPE%' OR 
+				c.gnm1 LIKE '%IRON CARRIER(RETURN)%'
 			)
             <choose>
             	<when test="srch8 == '01'">
@@ -94,12 +101,18 @@
 		) AS EXPORT
 		WHERE 1=1
 		<if test="srchType1 != null and srchType1 != '' and srchText1 != null and srchText1 != ''">
-		AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
+			AND ${srchType1} LIKE CONCAT('%',UPPER(#{srchText1}),'%')
 		</if>
 		<if test="srchType2 != null and srchType2 != '' and srchType3 != null and srchType3 != ''">
-		AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchType3}),'%')
+			AND REPLACE(REPLACE(REPLACE(UPPER(${srchType2}), ' ', ''), '(', ''), ')', '') 
+	    	LIKE CONCAT('%', REPLACE(REPLACE(REPLACE(UPPER(#{srchType3}), ' ', ''), '(', ''), ')', ''), '%')
+		<!-- AND ${srchType2} LIKE CONCAT('%',UPPER(#{srchType3}),'%') -->
 		</if>
-		ORDER BY rpt_day desc, rpt_no desc
+		<if test="srchType4 != null and srchType4 != '' and srchType5 != null and srchType5 != ''">
+			AND REPLACE(REPLACE(REPLACE(UPPER(${srchType4}), ' ', ''), '(', ''), ')', '') 
+	    	LIKE CONCAT('%', REPLACE(REPLACE(REPLACE(UPPER(#{srchType5}), ' ', ''), '(', ''), ')', ''), '%')
+		</if>
+		ORDER BY exp_lis_day
 	 	LIMIT #{recordCountPerPage} OFFSET #{startPage};
 	</select>
 	
@@ -114,7 +127,8 @@
 		   invoice_no,
 		   CONCAT(SUBSTRING(upload_dt, 1, 4), '-', SUBSTRING(upload_dt, 5, 2), '-', SUBSTRING(upload_dt, 7, 2)) AS upload_dt
 		FROM platform.file_info
-		WHERE rpt_no = #{srch1};
+		WHERE rpt_no = #{srch1}
+		AND docu_type = 'DC'
 	</select>
 	
  	<delete id="deleteRemainsInputList" parameterType="searchVO">
@@ -209,7 +223,8 @@
 			'PAD (RETURN)',
 			'PLASTIC BOX',
 			'A-TYPE',
-			'PA3'
+			'PA3',
+			'IRON CARRIER (RETURN)'
 		)
 		ORDER BY CASE c.gnm1
 			WHEN 'DANPLA BOX' THEN 1
@@ -225,6 +240,7 @@
 		  	WHEN 'PLASTIC BOX' THEN 11
 		  	WHEN 'A-TYPE' THEN 12
 		  	WHEN 'PA3' THEN 13
+		  	WHEN 'IRON CARRIER (RETURN)' THEN 14
 		END
 	 </select>
 	 

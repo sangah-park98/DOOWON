@@ -129,10 +129,25 @@ public class SearchVO extends UserSessionVO{
 	private String srchType4;
 	private String srchText4;
 	
+	private String srchType5;
+	private String srchText5;
+	
 	private String pwd;
 
 	
 	
+	public String getSrchType5() {
+		return srchType5;
+	}
+	public void setSrchType5(String srchType5) {
+		this.srchType5 = srchType5;
+	}
+	public String getSrchText5() {
+		return srchText5;
+	}
+	public void setSrchText5(String srchText5) {
+		this.srchText5 = srchText5;
+	}
 	public String getSrchType3() {
 		return srchType3;
 	}

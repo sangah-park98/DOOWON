@@ -59,7 +59,7 @@ public class RemainsQtyController {
 	public String remainsQtyView(HttpServletRequest request, Model model) throws Exception {
 		HttpSession httpSession = request.getSession(true);
 		UserSessionVO userVO = (UserSessionVO) httpSession.getAttribute("USER");
-		model.addAttribute("grpCd", userVO.getGrpCd());
+		model.addAttribute("regId", userVO.getId());
 		return "remains/remainsQty";
 	}
 
@@ -158,7 +158,7 @@ public class RemainsQtyController {
 		remainsqtyService.insertRemainsInputList(voList, userVO);
 		return "success";
 	}
-	
+
 	@RequestMapping(value = "/remains/downloadFile.do")
 	public void downloadFile(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String docuPath = request.getParameter("docuPath");
@@ -169,30 +169,15 @@ public class RemainsQtyController {
 		String saveDir = docuPath;
 		File file = new File(saveDir + "/" + docuFile);
 		String encodedFileName = URLEncoder.encode(docuOrgFile, "UTF-8").replaceAll("\\+", "%20");
-		// response.setHeader("Content-Disposition", "attachment;filename=\"" + encodedFileName + "\";");
+		System.out.println("파일 경로: " + file.getAbsolutePath());
+		System.out.println("파일 존재 여부: " + file.exists());
+		System.out.println("파일 크기: " + file.length());
 		response.setContentType("application/octet-stream");
 		response.setHeader("Content-Disposition", "attachment; filename=\"" + encodedFileName + "\"");
 		response.setHeader("Content-Transfer-Encoding", "binary");
 		response.setHeader("Pragma", "no-cache");
 		response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 		response.setDateHeader("Expires", 0);
-		
-		
-		/*FileInputStream fileInputStream = new FileInputStream(file);
-		ServletOutputStream servletOutputStream = response.getOutputStream();
-
-		byte b [] = new byte[1024];
-		int data = 0;
-
-		while((data=(fileInputStream.read(b, 0, b.length))) != -1)
-		{
-			servletOutputStream.write(b, 0, data);
-		}
-
-		servletOutputStream.flush();
-		servletOutputStream.close();
-		fileInputStream.close();*/
-		
 		try (FileInputStream fileInputStream = new FileInputStream(file);
 		ServletOutputStream servletOutputStream = response.getOutputStream()) {
 

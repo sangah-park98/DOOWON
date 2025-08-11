@@ -21,8 +21,9 @@ $( document ).ready(function() {
 	var today = new Date().toISOString().substring(0,10);
 	var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
 	var yesterDay = new Date(new Date().setDate(dayday - 1)).toISOString().substring(0,10);
-	$("#remainsView_srch2").val(mtoday);
-	$("#remainsView_srch3").val(today);
+	
+	$("#remainsView_srch2").val("2025-03-01");
+	$("#remainsView_srch3").val(yesterDay);
 	
 	var remainsViewElement = document.querySelector('#remainsViewTable');
 	var remainsViewElementContainer = remainsViewElement.parentNode;
@@ -87,6 +88,56 @@ $( document ).ready(function() {
 			 });
 		 }
 	});
+	
+	$("#remainsSrchType4").change(function() {
+	    var selectVal = $(this).val();
+	    var $inputField = $("#remainsSrchType5");
+	    $inputField.empty().append('<option value="" selected>선택하세요.</option>');
+	    
+	    if(selectVal === "exp_firm" || selectVal === "importer") {
+	    	 $.ajax({
+	            type: "POST",
+	            url: "/remains/getExpFirmList.do",
+	            data: { searchType: selectVal },
+	            dataType: "json",
+	            success: function(data) {
+	                if (data.resultList && data.resultList.length > 0) {
+	                    $.each(data.resultList, function(index, item) {
+	                        $("<option>").val(item.expFirm).text(item.expFirm).appendTo($inputField);
+	                    });
+	                }
+	            },
+	        });
+	     } else if(selectVal === "Ta_St_isoNm") {
+	    	 $.ajax({
+	            type: "POST",
+	            url: "/remains/getTaStIsoList.do",
+	            data: { searchType: selectVal },
+	            dataType: "json",
+	            success: function(data) {
+	                if (data.resultList && data.resultList.length > 0) {
+	                    $.each(data.resultList, function(index, item) {
+	                        $("<option>").val(item.taStIsonm).text(item.taStIsonm).appendTo($inputField);
+	                    });
+	                }
+	            },
+	        });
+		 } else {
+			 $.ajax({
+	            type: "POST",
+	            url: "/remains/getCaseTypeList.do",
+	            data: { searchType: selectVal },
+	            dataType: "json",
+	            success: function(data) {
+	                if (data.resultList && data.resultList.length > 0) {
+	                    $.each(data.resultList, function(index, item) {
+	                        $("<option>").val(item.gnm1).text(item.gnm1).appendTo($inputField);
+	                    });
+	                }
+	            },
+			 });
+		 }
+	});
 });
 
 $(document).mousedown(function(e){
@@ -103,15 +154,20 @@ $(document).mousedown(function(e){
 	}
 });
 
+function fn_logOut() {
+	if (!confirm("로그아웃 하시겠습니까?")) {
+		return;
+	}
+document.logoutForm.submit();
+}
 
 function fn_todayBtn() {
 	var date = new Date();
 	var month = date.getMonth();
 	var dayday = date.getDate();
 	var day = date.getDay();
-	var today = new Date().toISOString().substring(0,10).replace(/-/g,'-');
-	var mtoday = new Date(new Date().setMonth(month - 1)).toISOString().substring(0,10).replace(/-/g,'-');
-	  
+	var today = new Date().toISOString().substring(0,10);
+	
 	$("#remainsView_srch2").val(today);
 	$("#remainsView_srch3").val(today);
 }
@@ -120,22 +176,22 @@ function fn_weekBtn() {
 	var month = date.getMonth();
 	var dayday = date.getDate();
 	var day = date.getDay();
-	var today = new Date().toISOString().substring(0,10).replace(/-/g,'-');
+	var yesterDay = new Date(new Date().setDate(dayday - 1)).toISOString().substring(0,10); 
 	var mtoday = new Date(new Date().setDate(dayday - day)).toISOString().substring(0,10).replace(/-/g,'-');
 	
 	$("#remainsView_srch2").val(mtoday);
-	$("#remainsView_srch3").val(today);
+	$("#remainsView_srch3").val(yesterDay);
 }
 function fn_monthBtn() {
 	var date = new Date();
 	var month = date.getMonth();
 	var dayday = date.getDate();
 	var day = date.getDay();
-	var today = new Date().toISOString().substring(0,10).replace(/-/g,'-');
+	var yesterDay = new Date(new Date().setDate(dayday - 1)).toISOString().substring(0,10);
 	var mtoday = new Date(new Date().setDate(dayday - dayday + 1)).toISOString().substring(0,10).replace(/-/g,'-');
 	
 	$("#remainsView_srch2").val(mtoday);
-	$("#remainsView_srch3").val(today);
+	$("#remainsView_srch3").val(yesterDay);
 }
 function fn_lastMonthBtn() {
 	var date = new Date();
@@ -150,13 +206,93 @@ function fn_lastMonthBtn() {
   	endDt.setMonth(endDt.getMonth(), 1);
   	endDt.setDate(endDt.getDate() - 1);
 	
-	var today = startDt.toISOString().substring(0,10).replace(/-/g,'-')
+	var today = new Date().toISOString().substring(0,10);
+	var yesterDay = new Date(new Date().setDate(dayday - 1)).toISOString().substring(0,10);
 	var mtoday = endDt.toISOString().substring(0,10).replace(/-/g,'-')
 	
-	$("#remainsView_srch2").val(today);
-	$("#remainsView_srch3").val(mtoday);
+	$("#remainsView_srch2").val(mtoday);
+	$("#remainsView_srch3").val(today);
 }
 
+function dateDeadLine(inputElement) {
+    if (inputElement._flatpickr) {
+        inputElement._flatpickr.open();
+        return;
+    }
+
+    var today = new Date();
+    var calendar1 = new Date(today);
+    calendar1.setDate(today.getDate() - 6);
+    var yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    var defaultDate = calendar1.toISOString().split('T')[0];
+    var maxDate = yesterday.toISOString().split('T')[0];
+
+    flatpickr(inputElement, {
+        minDate: "2025-02-03",
+        maxDate: maxDate,
+        disableMobile: true,
+        defaultDate: defaultDate,
+        onOpen: function () {
+            setTimeout(() => applyCustomStyles(inputElement), 0);
+        },
+        onMonthChange: function () {
+            setTimeout(() => applyCustomStyles(inputElement), 0);
+        },
+        onYearChange: function () {
+            setTimeout(() => applyCustomStyles(inputElement), 0);
+        },
+        onClose: function () {
+            inputElement.blur();
+        }
+    });
+
+    inputElement._flatpickr.open();
+
+    function applyCustomStyles(inputElement) {
+        const calendar = inputElement._flatpickr.calendarContainer;
+        if (calendar) {
+        	calendar.style.padding = '6px';
+            const days = calendar.querySelectorAll('.flatpickr-day');
+            days.forEach(day => {
+                day.style.width = '24px';
+                day.style.height = '24px';
+                day.style.fontSize = '13px';
+                day.style.lineHeight = '24px';
+            });
+
+            const selectedDay = calendar.querySelector('.flatpickr-day.selected');
+            if (selectedDay) {
+                selectedDay.style.borderRadius = '0';
+            }
+
+            const weekdayContainer = calendar.querySelector('.flatpickr-weekdaycontainer');
+            if (weekdayContainer) {
+                weekdayContainer.style.backgroundColor = '#e8e8e8';
+                weekdayContainer.style.borderBottom = '1px solid #dee2e6';
+                weekdayContainer.style.padding = '5px 0';
+
+                const weekdays = weekdayContainer.querySelectorAll('.flatpickr-weekday');
+                weekdays.forEach(weekday => {
+                    weekday.style.color = '#6c757d';
+                    weekday.style.fontSize = '12px';
+                    weekday.style.fontWeight = 'bold';
+                });
+            }
+            
+            const disabledDays = calendar.querySelectorAll('.flatpickr-day.flatpickr-disabled');
+            disabledDays.forEach(day => {
+                day.style.pointerEvents = 'none';
+                day.style.cursor = 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 16 16%22%3E%3Cpolygon points=%220,0 16,0 8,16%22 fill=%22black%22 /%3E%3C/svg%3E") 8 8, auto'; 
+            });
+        }
+    }
+}
+
+function dateDeadLine2(inputElement) {
+    dateDeadLine(inputElement);
+}
 
 $("select[name=remainsViewPageRow]").change(function(){
 	fn_searchRemainsView();
@@ -295,6 +431,9 @@ function fn_setRemainsViewForm(){
 	
 	sData["srchType2"] = $("#remainsSrchType2 option:selected").val();
 	sData["srchType3"] = $("#remainsSrchType3 option:selected").val();
+	
+	sData["srchType4"] = $("#remainsSrchType4 option:selected").val();
+	sData["srchType5"] = $("#remainsSrchType5 option:selected").val();
 	return sData;
 };
 
@@ -302,12 +441,12 @@ function fn_remainsQtyClear(){
 	var date = new Date();
 	var month = date.getMonth();
 	var dayday = date.getDate();
-	var today = new Date().toISOString().substring(0,10);
+	var yesterDay = new Date(new Date().setDate(dayday - 1)).toISOString().substring(0,10);
 	var mtoday = new Date(new Date().setDate(dayday - 6)).toISOString().substring(0,10);
   
 	$("input:radio[name=remainsView_srch1][value=01]").prop('checked', true);
 	$("#remainsView_srch2").val(mtoday);
-	$("#remainsView_srch3").val(today);
+	$("#remainsView_srch3").val(yesterDay);
 	$("#remainsView_srch4").val("");
 	$("#remainsView_srch5").val("");
 	$("#remainsDtType").val("01");
@@ -315,14 +454,16 @@ function fn_remainsQtyClear(){
 	$("#remainsSrchType1").val("");
 	$("#remainsSrchType2").val("");
 	$("#remainsSrchType3").val("");
+	$("#remainsSrchType4").val("");
+	$("#remainsSrchType5").val("");
 	$("#remainsSrchText1").val("");
 };
 
 
 function fn_remainsViewTableHeader(){
 	this.remainsViewHeader = [
-		 "수출신고번호", "수출화주", "해외거래처", "목적국", "란번호", "규격번호",
-		 "HS CODE", "용기 Type", "규격1", "최초수량", "수입자", "소진수량", "잔량"
+		"수출신고번호", "수출화주", "해외거래처", "수리일자", "목적국", "란번호", "규격번호",
+		"HS CODE", "용기 Type", "규격1", "최초수량", "수입자", "소진수량", "잔량"
 	] ;
 }
 
@@ -333,12 +474,14 @@ function fn_remainsViewTableCol(){
         $(td).empty();
 
         if (value != '' && value != null) {
-            var $textSpan = $('<span style="cursor:pointer;">')
-                .html('&nbsp;' + value + '&nbsp;')
+            $(td)
+                .css('cursor', 'pointer')
                 .attr('onclick', 'fn_remainsRptNoDown(' + row + ',' + col + ')');
 
-            var $downBtn = $('<i class="fa-regular fa-download" style="cursor:pointer; margin-left:5px;"></i>')
-                .attr('onclick', 'fn_remainsRptNoDown(' + row + ',' + col + ')');
+            var $textSpan = $('<span>')
+                .html('&nbsp;' + value + '&nbsp;');
+
+            var $downBtn = $('<i class="fa-regular fa-download" style="margin-left:5px;"></i>');
 
             $(td).append($textSpan).append($downBtn);
         } else {
@@ -360,12 +503,13 @@ function fn_remainsViewTableCol(){
 		{data : 'rptNo', className : "htCenter", width: 150, wordWrap: false, readOnly:true, renderer: rptNoDownRenderer},
 		{data : 'expFirm', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
 		{data : 'buyFirm', className : "htCenter", width: 250, wordWrap: false, readOnly:true},
+		{data : 'expLisDay', className : "htCenter", width: 100, wordWrap: false, readOnly:true},
 		{data : 'taStIsonm', className : "htCenter", width: 80, wordWrap: false, readOnly:true},
 		{data : 'ranNo', className : "htCenter", width: 60, wordWrap: false, readOnly:true},
 		{data : 'sil', className : "htCenter", width: 60, wordWrap: false, readOnly:true},
 		
 		{data : 'hs', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
-		{data : 'caseType', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
+		{data : 'caseType', className : "htCenter", width: 150, wordWrap: false, readOnly:true},
 		{data : 'gnm1', className : "htCenter", width: 230, wordWrap: false, readOnly:true},
 		{data : 'qty', className : "htCenter", width: 120, wordWrap: false, readOnly:true},
 		{data : 'importer', className : "htCenter", width: 200, wordWrap: false, readOnly:true},
@@ -483,6 +627,10 @@ function fn_remainsRptNoDown(row, col) {
 		dataType : 'json',
 		async: false,
         success : function(data) {
+        	if (!data.resultList || data.resultList.length === 0) {
+    	        alert("선택하신 수출신고필증은 다운로드할 수 없습니다.\n문의처: 070-4343-7732");
+    	        return;
+        	}
         	$("#docuPath").val(data.resultList[0].docuPath);
     	    $("#docuFile").val(data.resultList[0].docuFile);
     	    $("#docuOrgFile").val(data.resultList[0].docuOrgFile);
@@ -569,9 +717,9 @@ function fn_remainsInputTableHidden(){
 
 function fn_handsonRemainsInputOption(col, header, hidden){
 	var tableType = $("input:radio[name=remainsInputType]:checked").val();
-	 if (remainsInputHot) {
-		 remainsInputHot.loadData([]);
-	 }
+	if (remainsInputHot) {
+		remainsInputHot.loadData([]);
+	}
 	remainsInputSettings = {
 		columns : col,
 		colHeaders : header,
@@ -697,6 +845,10 @@ function fn_remainsInputDel() {
     var cnt = 0;
     for (let i = 0; i < rowData.length; i++) {
         if (rowData[i].checkBox === "yes") {
+        	if (rowData[i].regId !== regId) {
+                alert("본인이 등록한 정보만 삭제할 수 있습니다.");
+                return;
+            }
         	rowData[i].usedDt = rowData[i].usedDt2;
             list.push(rowData[i]);
             cnt++;

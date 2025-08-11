@@ -650,14 +650,7 @@ function fn_changeCmpnyInfo(cd) {
 	document.mainForm.submit();
 };
 
-// 로그아웃
-function fn_logout() {
-	if (!confirm(msgLogout)) { // "로그아웃 하시겠습니까?"
-		return;
-	}
 
-	document.logoutForm.submit();
-};
 
 //드롭다운 공통
 function fn_dropdown(list){
